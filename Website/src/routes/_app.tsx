@@ -11,6 +11,7 @@ import { BottomNavbar } from "@/features/app/Navbar/BottomNavbar";
 import { DesktopNavbar } from "@/features/app/Navbar/DesktopNavbar";
 import { MobileNavbar } from "@/features/app/Navbar/MobileNavbar";
 import { Sidebar } from "@/features/app/Sidebar/Sidebar";
+import { Loader } from "@/features/app/Loader/Loader";
 
 export const Route = createFileRoute("/_app")({
   component: AppLayout,
@@ -35,7 +36,7 @@ function AppLayout() {
   return (
     <AuthContext.Provider value={authContextValue}>
       {isPending ? (
-        <div>Loading...</div>
+        <Loader />
       ) : (
         <Stack>
           {/* Header */}
