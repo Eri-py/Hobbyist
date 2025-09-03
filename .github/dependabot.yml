@@ -7,8 +7,8 @@ version: 2
 updates:
   # Enable version updates for npm
   - package-ecosystem: "npm"
-    # Look for `package.json` and `lock` files in the `Client` directory
-    directory: "/WebClient/"
+    # Look for `package.json` and `lock` files in the `Website` directory
+    directory: "/Website/"
     # Check the npm registry for updates every day (weekdays)
     schedule:
       interval: "daily"
@@ -17,6 +17,6 @@ updates:
   - package-ecosystem: "nuget"
     # Look for package files in the `ApiServer` directory
     directory: "/ApiServer/"
-    # Check the for updates every Wednesday
+    # Check the for updates every day (weekdays)
     schedule:
       interval: "daily"
