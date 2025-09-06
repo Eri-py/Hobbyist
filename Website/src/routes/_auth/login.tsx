@@ -89,7 +89,7 @@ function Login() {
     }
   };
 
-  const onSubmit = async (formData: loginFormSchema) => {
+  const onSubmit = (formData: loginFormSchema) => {
     completeLoginMutation.mutate(formData);
   };
 
@@ -98,7 +98,6 @@ function Login() {
       paddingBlock={2}
       paddingInline={1}
       gap={2}
-      onSubmit={methods.handleSubmit(onSubmit)}
       sx={{
         maxWidth: { xs: "100%", sm: "480px" },
         height: "fit-content",
