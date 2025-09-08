@@ -115,29 +115,41 @@ public class JwtService(
 
     public async Task<Result<AuthResult>> VerifyRefreshTokenAsync(string refreshToken)
     {
-        var token = await context
-            .RefreshTokens.Include(t => t.User)
-            .FirstOrDefaultAsync(t => t.TokenHash == HashToken(refreshToken));
+        using var transaction = await context.Database.BeginTransactionAsync();
+        try
+        {
+            var token = await context
+                .RefreshTokens.Include(t => t.User)
+                .FirstOrDefaultAsync(t => t.TokenHash == HashToken(refreshToken));
 
-        if (token is null)
-            return Result.NotFound("Invalid refresh token");
+            if (token is null)
+                return Result.NotFound("Invalid refresh token");
 
-        var newRefreshToken = CreateRefreshToken(AuthConfig.RefreshTokenValidForDays);
-        var accessToken = CreateAccessToken(token.User!, AuthConfig.AccessTokenValidForMinutes);
+            var newRefreshToken = CreateRefreshToken(AuthConfig.RefreshTokenValidForDays);
+            var accessToken = CreateAccessToken(token.User!, AuthConfig.AccessTokenValidForMinutes);
 
-        // Update the refresh token.
-        token.TokenHash = HashToken(newRefreshToken.Value);
-        await context.SaveChangesAsync();
+            // Update with new values
+            token.TokenHash = HashToken(newRefreshToken.Value);
+            token.TokenExpiresAt = newRefreshToken.ExpiresAt;
 
-        return Result<AuthResult>.Success(
-            new()
-            {
-                AccessToken = accessToken.Value,
-                RefreshToken = newRefreshToken.Value,
-                AccessTokenExpiresAt = accessToken.ExpiresAt,
-                RefreshTokenExpiresAt = token.TokenExpiresAt,
-            }
-        );
+            await context.SaveChangesAsync();
+            await transaction.CommitAsync();
+
+            return Result<AuthResult>.Success(
+                new()
+                {
+                    AccessToken = accessToken.Value,
+                    RefreshToken = newRefreshToken.Value,
+                    AccessTokenExpiresAt = accessToken.ExpiresAt,
+                    RefreshTokenExpiresAt = newRefreshToken.ExpiresAt,
+                }
+            );
+        }
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
     }
 
     private static class CryptoRandom

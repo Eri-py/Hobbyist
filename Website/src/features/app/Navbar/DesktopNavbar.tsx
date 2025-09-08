@@ -14,7 +14,7 @@ import { useAuth } from "@/features/app/hooks/useAuth";
 import { useNavigate } from "@tanstack/react-router";
 import { useNavigationButtons } from "../hooks/useNavigationButtons";
 import { NavbarContainer } from "./components/NavbarContainer";
-import { Searchbar } from "./Searchbar/Searchbar";
+import { Searchbar } from "../Searchbar/Searchbar";
 
 const CustomBadge = styled(Badge)`
   & .${badgeClasses.badge} {

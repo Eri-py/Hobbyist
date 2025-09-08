@@ -1,6 +1,6 @@
-import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
 import { ThemeProvider, useTheme } from "@mui/material/styles";
-import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
 
 import { LogoWithName } from "@/shared/components/Logo";
 import { useBreakpoint } from "@/shared/hooks/useBreakpoint";
@@ -17,6 +17,7 @@ function RouteComponent() {
   const { isSmOrLarger } = useBreakpoint();
   const desktopTheme = mainTheme(false); // Use light mode for desktop
   const theme = isSmOrLarger ? desktopTheme : defaultTheme;
+  const navigate = useNavigate();
 
   const authContextValue = {
     theme: theme,
@@ -26,9 +27,21 @@ function RouteComponent() {
   const content = (
     <FormContainer>
       {isSmOrLarger && (
-        <Box sx={{ position: "absolute", top: "2rem", left: "3rem" }}>
+        <Button
+          variant="text"
+          disableRipple
+          sx={{
+            "&:hover": {
+              background: "none",
+            },
+            position: "absolute",
+            top: "2rem",
+            left: "3rem",
+          }}
+          onClick={() => navigate({ to: "/" })}
+        >
           <LogoWithName size="large" color="white" />
-        </Box>
+        </Button>
       )}
       <AuthLayoutContext.Provider value={authContextValue}>
         <Outlet />
