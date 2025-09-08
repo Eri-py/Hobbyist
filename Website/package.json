@@ -17,7 +17,7 @@
     "@mui/material": "^7.1.2",
     "@tanstack/react-query": "^5.87.1",
     "@tanstack/react-router": "^1.131.35",
-    "@tanstack/react-router-devtools": "^1.131.35",
+    "@tanstack/react-router-devtools": "^1.131.36",
     "axios": "^1.11.0",
     "date-fns": "^4.1.0",
     "js-cookie": "^3.0.5",
