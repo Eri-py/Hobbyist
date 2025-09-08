@@ -28,6 +28,7 @@ function AppLayout() {
     queryKey: ["userDetails"],
     queryFn: getUserDetails,
     refetchOnWindowFocus: false,
+    staleTime: 15 * 60 * 1000,
   });
 
   const authContextValue = {
