@@ -3,9 +3,9 @@ import Stack from "@mui/material/Stack";
 import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
 import LockIcon from "@mui/icons-material/Lock";
 
-import { AuthFooter } from "../components/AuthFooter";
-import { CustomFormHeader, CustomTextField } from "../components/CustomInputs";
-import { OAuthButtonGroup } from "../components/OAuthButtonGroup";
+import { CustomFormHeader, CustomTextField } from "../CustomInputs";
+import { AuthFooter } from "../AuthFooter";
+import { OAuthButtonGroup } from "../OAuthButtonGroup";
 
 type UsernameAndPasswordProps = {
   handleNext: () => void;

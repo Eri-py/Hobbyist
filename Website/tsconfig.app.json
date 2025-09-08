@@ -29,7 +29,10 @@
       "@/shared/hooks/*": ["shared/hooks/*"],
       "@/shared/components/*": ["shared/components/*"],
       "@/shared/themes/*": ["shared/themes/*"],
-      "@/features/*": ["features/*"]
+      "@/features/*": ["features/*"],
+      "@/components/*": ["components/*"],
+      "@/hooks/*": ["hooks/*"],
+      "@/providers/*": ["providers/*"]
     }
   },
   "include": ["src"]

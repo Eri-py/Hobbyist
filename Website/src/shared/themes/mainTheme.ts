@@ -38,6 +38,11 @@ export const mainTheme = (isDarkMode: boolean) =>
           },
         },
       },
+      MuiButtonBase: {
+        defaultProps: {
+          disableTouchRipple: true,
+        },
+      },
       MuiButton: {
         styleOverrides: {
           root: {

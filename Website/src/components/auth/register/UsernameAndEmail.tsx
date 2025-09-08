@@ -3,9 +3,9 @@ import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
 import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 
-import { OAuthButtonGroup } from "../components/OAuthButtonGroup";
-import { CustomFormHeader, CustomTextField } from "../components/CustomInputs";
-import { AuthFooter } from "../components/AuthFooter";
+import { OAuthButtonGroup } from "../OAuthButtonGroup";
+import { CustomFormHeader, CustomTextField } from "../CustomInputs";
+import { AuthFooter } from "../AuthFooter";
 
 type usernameAndEmailProps = {
   handleNext: () => void;

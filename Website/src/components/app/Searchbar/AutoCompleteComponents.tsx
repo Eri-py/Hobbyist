@@ -6,7 +6,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import CloseIcon from "@mui/icons-material/Close";
 import Stack from "@mui/material/Stack";
-import type { SearchOption } from "../../hooks/useSearch";
+import type { SearchOption } from "@/hooks/app/useSearch";
 
 type AutoCompleteOptionItemProps = {
   props: HTMLAttributes<HTMLLIElement> & { key: Key };

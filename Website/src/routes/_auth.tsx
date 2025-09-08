@@ -5,8 +5,8 @@ import Button from "@mui/material/Button";
 import { LogoWithName } from "@/shared/components/Logo";
 import { useBreakpoint } from "@/shared/hooks/useBreakpoint";
 import { mainTheme } from "@/shared/themes/mainTheme";
-import { FormContainer } from "@/features/auth/components/FormContainer";
-import { AuthLayoutContext } from "@/features/auth/hooks/useAuthLayout";
+import { FormContainer } from "../components/auth/FormContainer";
+import { AuthLayoutContext } from "../hooks/auth/useAuthLayout";
 
 export const Route = createFileRoute("/_auth")({
   component: RouteComponent,

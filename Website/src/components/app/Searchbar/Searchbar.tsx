@@ -2,9 +2,9 @@ import { type FormEvent } from "react";
 
 import Autocomplete from "@mui/material/Autocomplete";
 
-import { AutoCompleteGroup, AutoCompleteOptionItem } from "./components/AutoCompleteComponents";
-import { useSearch } from "../hooks/useSearch";
-import { SearchInput } from "./components/SearchInput";
+import { AutoCompleteGroup, AutoCompleteOptionItem } from "./AutoCompleteComponents";
+import { SearchInput } from "./SearchInput";
+import { useSearch } from "@/hooks/app/useSearch";
 
 type SearchbarProps = {
   autoFocus?: boolean;

@@ -20,19 +20,18 @@ import {
 import { HorizontalLinearStepper } from "@/shared/components/HorizontalLinearStepper";
 import { LogoWithName } from "@/shared/components/Logo";
 import { useServerError, type ServerError } from "@/shared/hooks/useServerError";
+import { OtpPage } from "@/components/auth/OtpPage";
+import { Password } from "@/components/auth/register/Password";
+import { PersonalDetails } from "@/components/auth/register/PersonalDetails";
+import { UsernameAndEmail } from "@/components/auth/register/UsernameAndEmail";
 import {
-  dateOfBirthSchema,
-  emailSchema,
-  nameSchema,
-  passwordSchema,
   usernameSchema,
-} from "@/features/auth/Schemas";
-import { OtpPage } from "@/features/auth/components/OtpPage";
-import { Password } from "@/features/auth/RegisterSteps/Password";
-import { PersonalDetails } from "@/features/auth/RegisterSteps/PersonalDetails";
-import { UsernameAndEmail } from "@/features/auth/RegisterSteps/UsernameAndEmail";
-
-import { useAuthLayout } from "@/features/auth/hooks/useAuthLayout";
+  emailSchema,
+  passwordSchema,
+  nameSchema,
+  dateOfBirthSchema,
+} from "@/components/auth/Schemas";
+import { useAuthLayout } from "@/hooks/auth/useAuthLayout";
 
 export const Route = createFileRoute("/_auth/register")({
   component: Register,

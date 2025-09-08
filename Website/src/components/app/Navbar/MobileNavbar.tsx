@@ -8,8 +8,9 @@ import Button from "@mui/material/Button";
 import ChatIcon from "@mui/icons-material/Chat";
 
 import { LogoWithName } from "@/shared/components/Logo";
-import { useAuth } from "@/features/app/hooks/useAuth";
-import { NavbarContainer } from "./components/NavbarContainer";
+import { NavbarContainer } from "./NavbarContainer";
+import { useAuth } from "@/hooks/app/useAuth";
+import { useMobileNavbar } from "@/hooks/app/useMobileNavbar";
 
 const CustomBadge = styled(Badge)`
   & .${badgeClasses.badge} {
@@ -18,12 +19,9 @@ const CustomBadge = styled(Badge)`
   }
 `;
 
-type MobileNavbarProps = {
-  onSearchClick: () => void;
-};
-
-export function MobileNavbar({ onSearchClick }: MobileNavbarProps) {
+export function MobileNavbar() {
   const { isAuthenticated } = useAuth();
+  const { openMobileSearchOverlay } = useMobileNavbar();
 
   return (
     <NavbarContainer>
@@ -43,7 +41,7 @@ export function MobileNavbar({ onSearchClick }: MobileNavbarProps) {
         </Button>
 
         <Stack direction="row" alignItems="center">
-          <IconButton onClick={onSearchClick}>
+          <IconButton onClick={openMobileSearchOverlay}>
             <SearchIcon />
           </IconButton>
 

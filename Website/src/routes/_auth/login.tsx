@@ -16,11 +16,11 @@ import {
   type completeLoginRequest,
   completeLogin,
 } from "@/api/AuthApi";
-import { OtpPage } from "@/features/auth/components/OtpPage";
-import { UsernameAndPassword } from "@/features/auth/LoginSteps/UsernameAndPassword";
 import { LogoWithName } from "@/shared/components/Logo";
 import { useServerError, type ServerError } from "@/shared/hooks/useServerError";
-import { useAuthLayout } from "@/features/auth/hooks/useAuthLayout";
+import { UsernameAndPassword } from "@/components/auth/login/UsernameAndPassword";
+import { OtpPage } from "@/components/auth/OtpPage";
+import { useAuthLayout } from "@/hooks/auth/useAuthLayout";
 
 export const Route = createFileRoute("/_auth/login")({
   component: Login,
