@@ -4,7 +4,7 @@ import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
 import MenuIcon from "@mui/icons-material/Menu";
 
-import { LogoWithName } from "@/shared/components/Logo";
+import { LogoWithName } from "@/components/shared/Logo";
 
 import { NavbarContainer } from "./NavbarContainer";
 import { useDesktopNavbar } from "@/hooks/app/useDesktopNavbar";

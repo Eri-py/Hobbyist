@@ -2,7 +2,7 @@ import { createFileRoute, Outlet } from "@tanstack/react-router";
 
 import Stack from "@mui/material/Stack";
 
-import { useBreakpoint } from "@/shared/hooks/useBreakpoint";
+import { useBreakpoint } from "@/hooks/shared/useBreakpoint";
 import { DesktopNavbar } from "@/components/app/Navbar/DesktopNavbar";
 import { BottomNavbar } from "@/components/app/Navbar/BottomNavbar";
 import { MobileNavbar } from "@/components/app/Navbar/MobileNavbar";

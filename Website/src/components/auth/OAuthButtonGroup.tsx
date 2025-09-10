@@ -6,7 +6,7 @@ import Divider from "@mui/material/Divider";
 import Typography from "@mui/material/Typography";
 import IconButton from "@mui/material/IconButton";
 
-import { FacebookIcon, GoogleIcon } from "@/shared/components/CustomIcons";
+import { FacebookIcon, GoogleIcon } from "@/components/shared/CustomIcons";
 
 const CustomIconButton = styled(IconButton)(({ theme }) => ({
   border: `1px solid ${theme.palette.primary.main}`,

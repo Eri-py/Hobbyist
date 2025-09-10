@@ -9,7 +9,7 @@ import ChatIcon from "@mui/icons-material/Chat";
 import AddIcon from "@mui/icons-material/Add";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 
-import { useNavigationButtons } from "@/shared/hooks/useNavigationButtons";
+import { useNavigationButtons } from "@/hooks/shared/useNavigationButtons";
 import { useAuth } from "../../hooks/app/useAuth";
 
 const CustomBadge = styled(Badge)`

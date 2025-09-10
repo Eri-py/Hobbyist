@@ -16,11 +16,11 @@ import {
   type completeLoginRequest,
   completeLogin,
 } from "@/api/AuthApi";
-import { LogoWithName } from "@/shared/components/Logo";
-import { useServerError, type ServerError } from "@/shared/hooks/useServerError";
+import { LogoWithName } from "@/components/shared/Logo";
+import { useServerError, type ServerError } from "@/hooks/shared/useServerError";
 import { UsernameAndPassword } from "@/components/auth/login/UsernameAndPassword";
 import { OtpPage } from "@/components/auth/OtpPage";
-import { useBreakpoint } from "@/shared/hooks/useBreakpoint";
+import { useBreakpoint } from "@/hooks/shared/useBreakpoint";
 import { useTheme } from "@mui/material/styles";
 
 export const Route = createFileRoute("/_auth/login")({

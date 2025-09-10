@@ -26,13 +26,10 @@
     "baseUrl": "src",
     "paths": {
       "@/api/*": ["api/*"],
-      "@/shared/hooks/*": ["shared/hooks/*"],
-      "@/shared/components/*": ["shared/components/*"],
-      "@/shared/themes/*": ["shared/themes/*"],
-      "@/features/*": ["features/*"],
       "@/components/*": ["components/*"],
       "@/hooks/*": ["hooks/*"],
-      "@/providers/*": ["providers/*"]
+      "@/providers/*": ["providers/*"],
+      "@/themes/*": ["themes/*"]
     }
   },
   "include": ["src"]

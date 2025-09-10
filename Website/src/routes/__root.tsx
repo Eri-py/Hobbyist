@@ -5,9 +5,9 @@ import { ThemeProvider } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import CssBaseline from "@mui/material/CssBaseline";
 
-import { BreakpointContext } from "@/shared/hooks/useBreakpoint";
-import { mainTheme } from "@/shared/themes/mainTheme";
-import { ThemeToggleContext, type ThemeToggleTypes } from "@/shared/hooks/useThemeToggle";
+import { BreakpointContext } from "@/hooks/shared/useBreakpoint";
+import { mainTheme } from "@/themes/mainTheme";
+import { ThemeToggleContext, type ThemeToggleTypes } from "@/hooks/shared/useThemeToggle";
 
 export const Route = createRootRoute({
   component: Root,

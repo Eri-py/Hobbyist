@@ -3,7 +3,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import type { AxiosResponse } from "axios";
 
-import { useDebounce } from "@/shared/hooks/useDebounce";
+import { useDebounce } from "@/hooks/shared/useDebounce";
 import {
   getSearchHistory,
   getSearchSuggestions,

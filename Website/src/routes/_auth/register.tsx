@@ -17,9 +17,9 @@ import {
   type completeRegistrationRequest,
   completeRegistration,
 } from "@/api/AuthApi";
-import { HorizontalLinearStepper } from "@/shared/components/HorizontalLinearStepper";
-import { LogoWithName } from "@/shared/components/Logo";
-import { useServerError, type ServerError } from "@/shared/hooks/useServerError";
+import { HorizontalLinearStepper } from "@/components/shared/HorizontalLinearStepper";
+import { LogoWithName } from "@/components/shared/Logo";
+import { useServerError, type ServerError } from "@/hooks/shared/useServerError";
 import { OtpPage } from "@/components/auth/OtpPage";
 import { Password } from "@/components/auth/register/Password";
 import { PersonalDetails } from "@/components/auth/register/PersonalDetails";
@@ -32,7 +32,7 @@ import {
   dateOfBirthSchema,
 } from "@/components/auth/Schemas";
 import { useTheme } from "@mui/material/styles";
-import { useBreakpoint } from "@/shared/hooks/useBreakpoint";
+import { useBreakpoint } from "@/hooks/shared/useBreakpoint";
 
 export const Route = createFileRoute("/_auth/register")({
   component: Register,

@@ -1,4 +1,4 @@
-import { Logo } from "@/shared/components/Logo";
+import { Logo } from "@/components/shared/Logo";
 import Box from "@mui/material/Box";
 
 export function Loader() {

@@ -1,4 +1,4 @@
-import { useBreakpoint } from "@/shared/hooks/useBreakpoint";
+import { useBreakpoint } from "@/hooks/shared/useBreakpoint";
 import Box from "@mui/material/Box";
 import { alpha, useTheme } from "@mui/material/styles";
 import type { ReactNode } from "react";

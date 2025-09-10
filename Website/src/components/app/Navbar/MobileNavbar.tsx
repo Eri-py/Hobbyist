@@ -7,7 +7,7 @@ import Badge, { badgeClasses } from "@mui/material/Badge";
 import Button from "@mui/material/Button";
 import ChatIcon from "@mui/icons-material/Chat";
 
-import { LogoWithName } from "@/shared/components/Logo";
+import { LogoWithName } from "@/components/shared/Logo";
 import { NavbarContainer } from "./NavbarContainer";
 import { useAuth } from "@/hooks/app/useAuth";
 import { useMobileNavbar } from "@/hooks/app/useMobileNavbar";

@@ -15,11 +15,11 @@ import Collapse from "@mui/material/Collapse";
 import EventIcon from "@mui/icons-material/Event";
 import FormControlLabel from "@mui/material/FormControlLabel";
 
-import { useThemeToggle } from "@/shared/hooks/useThemeToggle";
+import { useThemeToggle } from "@/hooks/shared/useThemeToggle";
 import { useLocation } from "@tanstack/react-router";
 import { ThemeSwitch } from "./ThemeSwitch";
 import { useSidebar } from "@/hooks/app/useSidebar";
-import { useNavigationButtons } from "@/shared/hooks/useNavigationButtons";
+import { useNavigationButtons } from "@/hooks/shared/useNavigationButtons";
 
 // Currently supported sidbar tabs
 const navigationItems: { label: string; icon: ReactElement }[] = [
