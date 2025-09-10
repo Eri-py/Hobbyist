@@ -167,15 +167,7 @@ export function Sidebar() {
 
       <Stack component="footer" paddingBottom="1rem">
         <FormControlLabel
-          control={
-            <ThemeSwitch
-              sx={{ m: 1 }}
-              checked={mode === "dark"}
-              onChange={() => {
-                toggleTheme();
-              }}
-            />
-          }
+          control={<ThemeSwitch sx={{ m: 1 }} checked={mode === "dark"} onChange={toggleTheme} />}
           label={isSidebarOpen ? "Toggle theme" : ""}
           slotProps={{
             typography: {

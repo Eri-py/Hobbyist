@@ -1,7 +1,7 @@
 import type { getUserResponse } from "@/api/AuthApi";
 import { createContext, useContext } from "react";
 
-type AuthContextTypes = getUserResponse;
+export type AuthContextTypes = getUserResponse;
 export const AuthContext = createContext<AuthContextTypes | null>(null);
 
 export function useAuth() {
