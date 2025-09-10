@@ -1,18 +1,35 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { PostTile } from "@/shared/components/PostTile";
-import { useMobileSearchOverlay } from "@/features/app/hooks/useMobileSearchOverlay";
+import { useEffect } from "react";
+
+import { PostTile } from "@/components/shared/PostTile";
+import { Searchbar } from "@/components/app/Searchbar/Searchbar";
+import { useDesktopNavbar } from "@/hooks/app/useDesktopNavbar";
+import { LeftButtonGroup } from "@/components/home/LeftButtonGroup";
 
 export const Route = createFileRoute("/_app/")({
   component: HomePage,
 });
 
 function HomePage() {
-  const { isMobileSearchOverlayOpen } = useMobileSearchOverlay();
-  return isMobileSearchOverlayOpen ? (
-    <div>Overlay</div>
-  ) : (
+  const { setSearchbar, setLeftButtonGroup } = useDesktopNavbar();
+
+  // Set and clear searchbar on homepage mount and unmount
+  useEffect(() => {
+    setSearchbar(<Searchbar />);
+    return () => {
+      setSearchbar(<div></div>);
+    };
+  }, [setSearchbar]);
+
+  useEffect(() => {
+    setLeftButtonGroup(<LeftButtonGroup />);
+    return () => {
+      setLeftButtonGroup(<div></div>);
+    };
+  }, [setLeftButtonGroup]);
+
+  return (
     <>
-      <PostTile />
       <PostTile />
       <PostTile />
       <PostTile />

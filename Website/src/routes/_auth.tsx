@@ -1,28 +1,20 @@
 import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
-import { ThemeProvider, useTheme } from "@mui/material/styles";
+import { ThemeProvider } from "@mui/material/styles";
 import Button from "@mui/material/Button";
 
-import { LogoWithName } from "@/shared/components/Logo";
-import { useBreakpoint } from "@/shared/hooks/useBreakpoint";
-import { mainTheme } from "@/shared/themes/mainTheme";
-import { FormContainer } from "@/features/auth/components/FormContainer";
-import { AuthLayoutContext } from "@/features/auth/hooks/useAuthLayout";
+import { LogoWithName } from "@/components/shared/Logo";
+import { useBreakpoint } from "@/hooks/shared/useBreakpoint";
+import { mainTheme } from "@/themes/mainTheme";
+import { FormContainer } from "@/components/auth/FormContainer";
 
 export const Route = createFileRoute("/_auth")({
-  component: RouteComponent,
+  component: AuthLayout,
 });
 
-function RouteComponent() {
-  const defaultTheme = useTheme();
+function AuthLayout() {
   const { isSmOrLarger } = useBreakpoint();
-  const desktopTheme = mainTheme(false); // Use light mode for desktop
-  const theme = isSmOrLarger ? desktopTheme : defaultTheme;
+  const desktopTheme = mainTheme(false);
   const navigate = useNavigate();
-
-  const authContextValue = {
-    theme: theme,
-    isSmOrLarger: isSmOrLarger,
-  };
 
   const content = (
     <FormContainer>
@@ -43,9 +35,7 @@ function RouteComponent() {
           <LogoWithName size="large" color="white" />
         </Button>
       )}
-      <AuthLayoutContext.Provider value={authContextValue}>
-        <Outlet />
-      </AuthLayoutContext.Provider>
+      <Outlet />
     </FormContainer>
   );
 

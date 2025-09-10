@@ -17,22 +17,22 @@ import {
   type completeRegistrationRequest,
   completeRegistration,
 } from "@/api/AuthApi";
-import { HorizontalLinearStepper } from "@/shared/components/HorizontalLinearStepper";
-import { LogoWithName } from "@/shared/components/Logo";
-import { useServerError, type ServerError } from "@/shared/hooks/useServerError";
+import { HorizontalLinearStepper } from "@/components/shared/HorizontalLinearStepper";
+import { LogoWithName } from "@/components/shared/Logo";
+import { useServerError, type ServerError } from "@/hooks/shared/useServerError";
+import { OtpPage } from "@/components/auth/OtpPage";
+import { Password } from "@/components/auth/register/Password";
+import { PersonalDetails } from "@/components/auth/register/PersonalDetails";
+import { UsernameAndEmail } from "@/components/auth/register/UsernameAndEmail";
 import {
-  dateOfBirthSchema,
-  emailSchema,
-  nameSchema,
-  passwordSchema,
   usernameSchema,
-} from "@/features/auth/Schemas";
-import { OtpPage } from "@/features/auth/components/OtpPage";
-import { Password } from "@/features/auth/RegisterSteps/Password";
-import { PersonalDetails } from "@/features/auth/RegisterSteps/PersonalDetails";
-import { UsernameAndEmail } from "@/features/auth/RegisterSteps/UsernameAndEmail";
-
-import { useAuthLayout } from "@/features/auth/hooks/useAuthLayout";
+  emailSchema,
+  passwordSchema,
+  nameSchema,
+  dateOfBirthSchema,
+} from "@/components/auth/Schemas";
+import { useTheme } from "@mui/material/styles";
+import { useBreakpoint } from "@/hooks/shared/useBreakpoint";
 
 export const Route = createFileRoute("/_auth/register")({
   component: Register,
@@ -68,9 +68,9 @@ const registrationStepLabels: string[] = [
 function Register() {
   const [step, setStep] = useState<number>(0);
   const [otpExpiresAt, setOtpExpiresAt] = useState<string | null>(null);
-
   const { serverError, continueDisabled, handleServerError, clearServerError } = useServerError();
-  const { isSmOrLarger, theme } = useAuthLayout();
+  const theme = useTheme();
+  const isSmOrLarger = useBreakpoint();
   const navigate = useNavigate();
 
   const methods = useForm<registrationFormSchema>({
