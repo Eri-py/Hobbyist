@@ -31,7 +31,8 @@ import {
   nameSchema,
   dateOfBirthSchema,
 } from "@/components/auth/Schemas";
-import { useAuthLayout } from "@/hooks/auth/useAuthLayout";
+import { useTheme } from "@mui/material/styles";
+import { useBreakpoint } from "@/shared/hooks/useBreakpoint";
 
 export const Route = createFileRoute("/_auth/register")({
   component: Register,
@@ -67,9 +68,9 @@ const registrationStepLabels: string[] = [
 function Register() {
   const [step, setStep] = useState<number>(0);
   const [otpExpiresAt, setOtpExpiresAt] = useState<string | null>(null);
-
   const { serverError, continueDisabled, handleServerError, clearServerError } = useServerError();
-  const { isSmOrLarger, theme } = useAuthLayout();
+  const theme = useTheme();
+  const isSmOrLarger = useBreakpoint();
   const navigate = useNavigate();
 
   const methods = useForm<registrationFormSchema>({

@@ -20,7 +20,8 @@ import { LogoWithName } from "@/shared/components/Logo";
 import { useServerError, type ServerError } from "@/shared/hooks/useServerError";
 import { UsernameAndPassword } from "@/components/auth/login/UsernameAndPassword";
 import { OtpPage } from "@/components/auth/OtpPage";
-import { useAuthLayout } from "@/hooks/auth/useAuthLayout";
+import { useBreakpoint } from "@/shared/hooks/useBreakpoint";
+import { useTheme } from "@mui/material/styles";
 
 export const Route = createFileRoute("/_auth/login")({
   component: Login,
@@ -43,7 +44,8 @@ function Login() {
 
   const { serverError, continueDisabled, handleServerError, clearServerError } = useServerError();
   const navigate = useNavigate();
-  const { theme, isSmOrLarger } = useAuthLayout();
+  const theme = useTheme();
+  const isSmOrLarger = useBreakpoint();
 
   const methods = useForm<loginFormSchema>({
     mode: "onChange",
