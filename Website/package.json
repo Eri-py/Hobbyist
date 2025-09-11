@@ -25,7 +25,7 @@
     "@mui/icons-material": "^7.3.2",
     "@mui/material": "^7.1.2",
     "@tanstack/react-query": "^5.87.4",
-    "@tanstack/react-router": "^1.131.35",
+    "@tanstack/react-router": "^1.131.40",
     "@tanstack/react-router-devtools": "^1.131.36",
     "axios": "^1.11.0",
     "date-fns": "^4.1.0",
