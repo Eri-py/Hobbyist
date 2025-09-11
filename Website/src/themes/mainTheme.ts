@@ -19,8 +19,8 @@ export const mainTheme = (isDarkMode: boolean) =>
       ...(isDarkMode
         ? {
             background: {
-              default: "#181818",
-              paper: "#171616",
+              default: "#121212",
+              paper: "#1a1a1a",
             },
           }
         : {

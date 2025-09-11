@@ -3,6 +3,15 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": "^24.0.0"
+    },
+    "os": {
+      "name": "win32"
+    }
+  },
   "scripts": {
     "dev": "vite --port 3000 --host",
     "build": "tsc -b && vite build",
