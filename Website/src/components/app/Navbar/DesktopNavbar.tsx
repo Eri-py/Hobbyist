@@ -11,7 +11,7 @@ import { useDesktopNavbar } from "@/hooks/app/useDesktopNavbar";
 import { useSidebar } from "@/hooks/app/useSidebar";
 
 export function DesktopNavbar() {
-  const { searchbar, leftButtonGroup } = useDesktopNavbar();
+  const { searchbar, rightButtonGroup: leftButtonGroup } = useDesktopNavbar();
   const { toggleSidebar } = useSidebar();
 
   return (

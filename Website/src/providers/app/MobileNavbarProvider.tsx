@@ -1,5 +1,6 @@
-import { useCallback, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { MobileNavbarContext, type MobileNavbarContextTypes } from "@/hooks/app/useMobileNavbar";
+import { useBreakpoint } from "@/hooks/shared/useBreakpoint";
 
 type MobileNavbarProviderTypes = {
   children: ReactNode;
@@ -7,6 +8,13 @@ type MobileNavbarProviderTypes = {
 
 export function MobileNavbarProvider({ children }: MobileNavbarProviderTypes) {
   const [isMobileSearchOverlayOpen, setIsMobileSearchOverlayOpen] = useState<boolean>(false);
+  const { isDesktop } = useBreakpoint();
+
+  useEffect(() => {
+    if (isDesktop) {
+      setIsMobileSearchOverlayOpen(false);
+    }
+  }, [isDesktop]);
 
   const openMobileSearchOverlay = useCallback(() => {
     setIsMobileSearchOverlayOpen(true);

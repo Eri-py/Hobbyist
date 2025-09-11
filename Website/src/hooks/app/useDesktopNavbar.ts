@@ -3,8 +3,8 @@ import { createContext, useContext, type ReactNode } from "react";
 export type DesktopNavbarContextTypes = {
   searchbar: ReactNode;
   setSearchbar: (searchbar: ReactNode) => void;
-  leftButtonGroup: ReactNode;
-  setLeftButtonGroup: (leftButtonGroup: ReactNode) => void;
+  rightButtonGroup: ReactNode;
+  setRightButtonGroup: (rightButtonGroup: ReactNode) => void;
 };
 
 export const DesktopNavbarContext = createContext<DesktopNavbarContextTypes | null>(null);

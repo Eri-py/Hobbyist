@@ -70,7 +70,7 @@ function Register() {
   const [otpExpiresAt, setOtpExpiresAt] = useState<string | null>(null);
   const { serverError, continueDisabled, handleServerError, clearServerError } = useServerError();
   const theme = useTheme();
-  const isSmOrLarger = useBreakpoint();
+  const isDekstop = useBreakpoint();
   const navigate = useNavigate();
 
   const methods = useForm<registrationFormSchema>({
@@ -147,14 +147,14 @@ function Register() {
       paddingInline={1}
       gap={2}
       sx={{
-        width: { xs: "100%", sm: "480px" },
+        width: { xs: "100%", md: "480px" },
         height: "fit-content",
         backgroundColor: theme.palette.background.default,
-        boxShadow: { sm: "0 0 2px rgba(225, 225, 225, .5)" },
-        borderRadius: { sm: "1rem" },
+        boxShadow: { md: "0 0 2px rgba(225, 225, 225, .5)" },
+        borderRadius: { md: "1rem" },
       }}
     >
-      {!isSmOrLarger && <LogoWithName size="large" align="center" />}
+      {!isDekstop && <LogoWithName size="large" align="center" />}
 
       <HorizontalLinearStepper
         steps={registrationStepLabels}

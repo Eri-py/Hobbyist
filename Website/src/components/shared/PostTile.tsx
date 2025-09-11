@@ -4,7 +4,7 @@ export function PostTile() {
   return (
     <Stack
       border="1px solid green" // This is for debugging.
-      width={{ xs: 100, sm: 650 }}
+      width={{ xs: 100, md: 650 }}
       padding={1.5}
       gap={1}
       sx={{ aspectRatio: 9 / 8 }}

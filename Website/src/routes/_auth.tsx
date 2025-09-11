@@ -12,13 +12,13 @@ export const Route = createFileRoute("/_auth")({
 });
 
 function AuthLayout() {
-  const { isSmOrLarger } = useBreakpoint();
+  const { isDesktop } = useBreakpoint();
   const desktopTheme = mainTheme(false);
   const navigate = useNavigate();
 
   const content = (
     <FormContainer>
-      {isSmOrLarger && (
+      {isDesktop && (
         <Button
           variant="text"
           disableRipple
@@ -39,5 +39,5 @@ function AuthLayout() {
     </FormContainer>
   );
 
-  return isSmOrLarger ? <ThemeProvider theme={desktopTheme}>{content}</ThemeProvider> : content;
+  return isDesktop ? <ThemeProvider theme={desktopTheme}>{content}</ThemeProvider> : content;
 }

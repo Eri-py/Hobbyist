@@ -7,17 +7,17 @@ type DesktopNavbarProviderTypes = {
 };
 
 export function DesktopNavbarProvider({ children }: DesktopNavbarProviderTypes) {
-  const [desktopSearchBar, setDesktopSearchBar] = useState<ReactNode>(<div></div>);
-  const [desktopLeftButtonGroup, setDesktopLeftButtonGroup] = useState<ReactNode>(<div></div>);
+  const [searchBar, setSearchBar] = useState<ReactNode>(<div></div>);
+  const [rightButtonGroup, setRightButtonGroup] = useState<ReactNode>(<div></div>);
 
   const value: DesktopNavbarContextTypes = useMemo(
     () => ({
-      searchbar: desktopSearchBar,
-      setSearchbar: setDesktopSearchBar,
-      leftButtonGroup: desktopLeftButtonGroup,
-      setLeftButtonGroup: setDesktopLeftButtonGroup,
+      searchbar: searchBar,
+      setSearchbar: setSearchBar,
+      rightButtonGroup: rightButtonGroup,
+      setRightButtonGroup: setRightButtonGroup,
     }),
-    [desktopSearchBar, desktopLeftButtonGroup]
+    [searchBar, rightButtonGroup]
   );
 
   return <DesktopNavbarContext.Provider value={value}>{children}</DesktopNavbarContext.Provider>;

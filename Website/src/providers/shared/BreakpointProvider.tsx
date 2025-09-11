@@ -10,9 +10,9 @@ type BreakpointProviderTypes = {
 };
 export function BreakpointProvider({ children }: BreakpointProviderTypes) {
   const theme = useTheme();
-  const isSmOrLarger = useMediaQuery(theme.breakpoints.up("sm"));
+  const isDesktop = useMediaQuery(theme.breakpoints.up("md"));
 
-  const value = { isSmOrLarger };
+  const value = { isDesktop: isDesktop };
 
   return <BreakpointContext.Provider value={value}>{children}</BreakpointContext.Provider>;
 }
