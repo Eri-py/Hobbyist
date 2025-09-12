@@ -1,6 +1,6 @@
 import { createContext, useContext } from "react";
 
-type BreakpointContextTypes = { isSmOrLarger: boolean };
+type BreakpointContextTypes = { isDesktop: boolean };
 
 export const BreakpointContext = createContext<BreakpointContextTypes | null>(null);
 

@@ -4,16 +4,19 @@ import { useEffect } from "react";
 import { PostTile } from "@/components/shared/PostTile";
 import { Searchbar } from "@/components/app/Searchbar/Searchbar";
 import { useDesktopNavbar } from "@/hooks/app/useDesktopNavbar";
-import { LeftButtonGroup } from "@/components/home/LeftButtonGroup";
+import { RightButtonGroup } from "@/components/home/RightButtonGroup";
+import { useMobileSearchOverlay } from "@/hooks/app/useMobileSearchOverlay";
+import { MobileSearchOverlayContent } from "@/components/home/MobileSearchOverlayContent";
 
 export const Route = createFileRoute("/_app/")({
   component: HomePage,
 });
 
 function HomePage() {
-  const { setSearchbar, setLeftButtonGroup } = useDesktopNavbar();
+  const { setSearchbar, setRightButtonGroup } = useDesktopNavbar();
+  const { setSearchOverlay } = useMobileSearchOverlay();
 
-  // Set and clear searchbar on homepage mount and unmount
+  // Set and clear desktop searchbar
   useEffect(() => {
     setSearchbar(<Searchbar />);
     return () => {
@@ -21,12 +24,21 @@ function HomePage() {
     };
   }, [setSearchbar]);
 
+  // Set and clear desktop right button group
   useEffect(() => {
-    setLeftButtonGroup(<LeftButtonGroup />);
+    setRightButtonGroup(<RightButtonGroup />);
     return () => {
-      setLeftButtonGroup(<div></div>);
+      setRightButtonGroup(<div></div>);
     };
-  }, [setLeftButtonGroup]);
+  }, [setRightButtonGroup]);
+
+  // Set and clear mobile search overlay
+  useEffect(() => {
+    setSearchOverlay(<MobileSearchOverlayContent />);
+    return () => {
+      setSearchOverlay(<div></div>);
+    };
+  }, [setSearchOverlay]);
 
   return (
     <>

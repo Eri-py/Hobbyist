@@ -14,32 +14,32 @@ export const Route = createFileRoute("/_app")({
 });
 
 function AppLayout() {
-  const { isSmOrLarger } = useBreakpoint();
+  const { isDesktop } = useBreakpoint();
 
   return (
     <AppProvider>
       <Stack>
         {/* Header */}
-        {isSmOrLarger ? <DesktopNavbar /> : <MobileNavbar />}
+        {isDesktop ? <DesktopNavbar /> : <MobileNavbar />}
 
         {/* Main content area */}
         <Stack
           direction="column"
-          height={{ xs: "calc(100dvh - 3.25rem - 3rem)", sm: "calc(100dvh - 3.75rem)" }}
+          height={{ xs: "calc(100dvh - 3.25rem - 3rem)", md: "calc(100dvh - 3.75rem)" }}
         >
           <Stack
-            direction={isSmOrLarger ? "row" : "column"}
+            direction={isDesktop ? "row" : "column"}
             flex={1}
             overflow="hidden"
-            gap={isSmOrLarger ? 2 : 0}
+            gap={isDesktop ? 2 : 0}
           >
-            {isSmOrLarger && <Sidebar />}
+            {isDesktop && <Sidebar />}
             <Stack
               flex={1}
               alignItems="center"
               overflow="auto"
-              padding={isSmOrLarger ? 1 : 0}
-              gap={isSmOrLarger ? "1.75rem" : 0}
+              padding={isDesktop ? 1 : 0}
+              gap={isDesktop ? "1.75rem" : 0}
             >
               <Outlet />
             </Stack>
@@ -47,7 +47,7 @@ function AppLayout() {
         </Stack>
 
         {/* Mobile footer */}
-        {!isSmOrLarger && <BottomNavbar />}
+        {!isDesktop && <BottomNavbar />}
       </Stack>
     </AppProvider>
   );

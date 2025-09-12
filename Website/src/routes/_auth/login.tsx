@@ -45,7 +45,7 @@ function Login() {
   const { serverError, continueDisabled, handleServerError, clearServerError } = useServerError();
   const navigate = useNavigate();
   const theme = useTheme();
-  const isSmOrLarger = useBreakpoint();
+  const isDekstop = useBreakpoint();
 
   const methods = useForm<loginFormSchema>({
     mode: "onChange",
@@ -101,14 +101,14 @@ function Login() {
       paddingInline={1}
       gap={2}
       sx={{
-        maxWidth: { xs: "100%", sm: "480px" },
+        maxWidth: { xs: "100%", md: "480px" },
         height: "fit-content",
         backgroundColor: theme.palette.background.default,
-        boxShadow: { sm: "0 0 2px rgba(225, 225, 225, .5)" },
-        borderRadius: { sm: "1rem" },
+        boxShadow: { md: "0 0 2px rgba(225, 225, 225, .5)" },
+        borderRadius: { md: "1rem" },
       }}
     >
-      {!isSmOrLarger && <LogoWithName size="large" align="center" />}
+      {!isDekstop && <LogoWithName size="large" align="center" />}
 
       {serverError !== null && (
         <Alert severity="error" sx={{ color: theme.palette.text.primary, fontSize: "1rem" }}>

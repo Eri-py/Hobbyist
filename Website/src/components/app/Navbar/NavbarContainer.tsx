@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 
 export function NavbarContainer({ children }: { children: ReactNode }) {
   const theme = useTheme();
-  const { isSmOrLarger } = useBreakpoint();
+  const { isDesktop } = useBreakpoint();
 
   return (
     <Box
@@ -16,10 +16,8 @@ export function NavbarContainer({ children }: { children: ReactNode }) {
         left: 0,
         zIndex: 1100,
         backgroundColor: "background.default",
-        borderBottom: isSmOrLarger
-          ? `1px solid ${alpha(theme.palette.primary.main, 0.5)}`
-          : undefined,
-        height: isSmOrLarger ? "3.75rem" : "3.25rem",
+        borderBottom: isDesktop ? `1px solid ${alpha(theme.palette.primary.main, 0.5)}` : undefined,
+        height: isDesktop ? "3.75rem" : "3.25rem",
       }}
     >
       {children}

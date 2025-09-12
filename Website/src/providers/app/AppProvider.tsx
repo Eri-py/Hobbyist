@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { AuthProvider } from "./AuthProvider";
 import { DesktopNavbarProvider } from "./DesktopNavbarProvider";
-import { MobileNavbarProvider } from "./MobileNavbarProvider";
+import { MobileSearchOverlayProvider } from "./MobileSearchOverlayProvider";
 import { SidebarProvider } from "./SidebarProvider";
 
 export function AppProvider({ children }: { children: ReactNode }) {
@@ -9,7 +9,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     <AuthProvider>
       <DesktopNavbarProvider>
         <SidebarProvider>
-          <MobileNavbarProvider>{children}</MobileNavbarProvider>
+          <MobileSearchOverlayProvider>{children}</MobileSearchOverlayProvider>
         </SidebarProvider>
       </DesktopNavbarProvider>
     </AuthProvider>
