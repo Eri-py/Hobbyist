@@ -7,9 +7,6 @@
     "runtime": {
       "name": "node",
       "version": "^24.0.0"
-    },
-    "os": {
-      "name": "win32"
     }
   },
   "scripts": {

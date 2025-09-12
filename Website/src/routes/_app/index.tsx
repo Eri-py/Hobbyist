@@ -4,10 +4,9 @@ import { useEffect } from "react";
 import { PostTile } from "@/components/shared/PostTile";
 import { Searchbar } from "@/components/app/Searchbar/Searchbar";
 import { useDesktopNavbar } from "@/hooks/app/useDesktopNavbar";
-import { LeftButtonGroup } from "@/components/home/LeftButtonGroup";
-import { useMobileNavbar } from "@/hooks/app/useMobileNavbar";
-import { MobileSearchOverlay } from "@/components/shared/MobileSearchOverlay";
-import { MobileNavbar } from "@/components/app/Navbar/MobileNavbar";
+import { RightButtonGroup } from "@/components/home/RightButtonGroup";
+import { useMobileSearchOverlay } from "@/hooks/app/useMobileSearchOverlay";
+import { MobileSearchOverlayContent } from "@/components/home/MobileSearchOverlayContent";
 
 export const Route = createFileRoute("/_app/")({
   component: HomePage,
@@ -15,9 +14,9 @@ export const Route = createFileRoute("/_app/")({
 
 function HomePage() {
   const { setSearchbar, setRightButtonGroup } = useDesktopNavbar();
-  const { isMobileSearchOverlayOpen } = useMobileNavbar();
+  const { setSearchOverlay } = useMobileSearchOverlay();
 
-  // Set and clear searchbar on homepage mount and unmount
+  // Set and clear desktop searchbar
   useEffect(() => {
     setSearchbar(<Searchbar />);
     return () => {
@@ -25,19 +24,24 @@ function HomePage() {
     };
   }, [setSearchbar]);
 
+  // Set and clear desktop right button group
   useEffect(() => {
-    setRightButtonGroup(<LeftButtonGroup />);
+    setRightButtonGroup(<RightButtonGroup />);
     return () => {
       setRightButtonGroup(<div></div>);
     };
   }, [setRightButtonGroup]);
 
+  // Set and clear mobile search overlay
+  useEffect(() => {
+    setSearchOverlay(<MobileSearchOverlayContent />);
+    return () => {
+      setSearchOverlay(<div></div>);
+    };
+  }, [setSearchOverlay]);
+
   return (
     <>
-      <MobileSearchOverlay isOpen={isMobileSearchOverlayOpen}>
-        <MobileNavbar />
-      </MobileSearchOverlay>
-
       <PostTile />
       <PostTile />
       <PostTile />

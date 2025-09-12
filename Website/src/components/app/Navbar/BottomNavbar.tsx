@@ -1,21 +1,21 @@
 import IconButton from "@mui/material/IconButton";
 import AddIcon from "@mui/icons-material/Add";
 import HomeIcon from "@mui/icons-material/Home";
-import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
+import ChatIcon from "@mui/icons-material/Chat";
 import StorefrontIcon from "@mui/icons-material/Storefront";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import Stack from "@mui/material/Stack";
+import Badge, { badgeClasses } from "@mui/material/Badge";
+import { styled } from "@mui/material/styles";
+
 import { useNavigationButtons } from "@/hooks/shared/useNavigationButtons";
 
-// import Badge, { badgeClasses } from "@mui/material/Badge";
-// import { styled } from "@mui/material/styles";
-
-// const CustomBadge = styled(Badge)`
-//   & .${badgeClasses.badge} {
-//     top: -0.5rem;
-//     right: 0rem;
-//   }
-// `;
+const CustomBadge = styled(Badge)`
+  & .${badgeClasses.badge} {
+    top: -0.5rem;
+    right: 0rem;
+  }
+`;
 
 export function BottomNavbar() {
   const { handleCreateClick, handleProfileClick } = useNavigationButtons();
@@ -38,15 +38,16 @@ export function BottomNavbar() {
       </IconButton>
 
       <IconButton size="large">
-        <AutoAwesomeIcon style={{ fontSize: "1.75rem" }} />
+        <StorefrontIcon style={{ fontSize: "1.75rem" }} />
       </IconButton>
 
       <IconButton size="large" onClick={handleCreateClick}>
         <AddIcon style={{ fontSize: "1.75rem" }} />
       </IconButton>
 
-      <IconButton size="large">
-        <StorefrontIcon style={{ fontSize: "1.75rem" }} />
+      <IconButton>
+        <ChatIcon />
+        <CustomBadge badgeContent={2} color="primary" overlap="circular" />
       </IconButton>
 
       <IconButton size="large" onClick={handleProfileClick}>
