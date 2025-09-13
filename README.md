@@ -98,7 +98,7 @@ The project requires a development configuration file that is not included in th
 cp Setup/appsettings.Development.Example.json ApiServer/Hobbyist.Api/appsettings.Development.json
 ```
 
-Network Access Configuration
+### Network Access Configuration
 If you need to access the API from other devices on your network:
 
 Update the `ClientOrigin.Network` IP address in appsettings.Development.json to match your local network IP
