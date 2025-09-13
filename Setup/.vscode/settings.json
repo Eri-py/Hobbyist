@@ -1,5 +1,5 @@
 {
-  "dotnet.defaultSolution": "Server/src/App.sln",
+  "dotnet.defaultSolution": "ApiServer/Hobbyist.sln",
   "editor.formatOnSave": true,
   "typescript.preferences.autoImportSpecifierExcludeRegexes": ["^@mui/[^/]+$"],
   "[csharp]": {
@@ -7,6 +7,12 @@
   },
   "[typescript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "material-icon-theme.folders.associations": {
+    "ApiServer": "api",
+    "MLServer": "server",
+    "Setup": "config",
+    "features": "content"
   },
   "files.exclude": {
     "**/.git": true,
@@ -16,11 +22,10 @@
     "**/Thumbs.db": true,
     "**/node_modules": true,
     "**/tsconfig.json": true,
-    "**/jsconfig.json": true,
     "**/tsconfig.*.json": true,
     "**/eslint.*": true,
     "**/package-lock.json": true,
-    "**/package.json": true,
+    "**/package.json": false,
     "**/vite.config.ts": true,
     "**/vite-env.d.ts": true,
     "**/.tanstack": true,
