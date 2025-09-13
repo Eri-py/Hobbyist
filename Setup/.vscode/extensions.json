@@ -3,10 +3,8 @@
     "ms-dotnettools.csdevkit",
     "csharpier.csharpier-vscode",
     "ms-mssql.mssql",
-    "dsznajder.es7-react-js-snippets",
     "dbaeumer.vscode-eslint",
     "burkeholland.simple-react-snippets",
-    "bradlc.vscode-tailwindcss",
     "esbenp.prettier-vscode"
   ]
 }
