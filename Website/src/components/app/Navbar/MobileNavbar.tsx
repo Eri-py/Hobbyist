@@ -2,14 +2,15 @@ import Toolbar from "@mui/material/Toolbar";
 import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
 import SearchIcon from "@mui/icons-material/Search";
-import Button from "@mui/material/Button";
+import EventIcon from "@mui/icons-material/Event";
 
-import { LogoWithName } from "@/components/shared/Logo";
 import { NavbarContainer } from "./NavbarContainer";
 import { useMobileSearchOverlay } from "@/hooks/app/useMobileSearchOverlay";
+import { useNavigationButtons } from "@/hooks/shared/useNavigationButtons";
 
 export function MobileNavbar() {
   const { openOverlay } = useMobileSearchOverlay();
+  const { handleEventsClick } = useNavigationButtons();
 
   return (
     <NavbarContainer>
@@ -17,16 +18,9 @@ export function MobileNavbar() {
         variant="dense"
         sx={{ justifyContent: "space-between", paddingInline: "0.25rem !important" }}
       >
-        <Button
-          variant="text"
-          sx={{
-            "&:hover": {
-              background: "none",
-            },
-          }}
-        >
-          <LogoWithName size="medium" />
-        </Button>
+        <IconButton size="large" onClick={handleEventsClick}>
+          <EventIcon style={{ fontSize: "1.75rem" }} />
+        </IconButton>
 
         <Stack direction="row" alignItems="center">
           <IconButton onClick={openOverlay}>

@@ -16,7 +16,7 @@ export function NavbarContainer({ children }: { children: ReactNode }) {
         left: 0,
         zIndex: 1100,
         backgroundColor: "background.default",
-        borderBottom: isDesktop ? `1px solid ${alpha(theme.palette.primary.main, 0.5)}` : undefined,
+        borderBottom: `1px solid ${alpha(theme.palette.primary.main, 0.25)}`,
         height: isDesktop ? "3.75rem" : "3.25rem",
       }}
     >
