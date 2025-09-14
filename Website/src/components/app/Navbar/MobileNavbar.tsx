@@ -16,10 +16,13 @@ export function MobileNavbar() {
     <NavbarContainer>
       <Toolbar
         variant="dense"
-        sx={{ justifyContent: "space-between", paddingInline: "0.25rem !important" }}
+        sx={{
+          justifyContent: "space-between",
+          paddingInline: "0.25rem !important",
+        }}
       >
-        <IconButton size="large" onClick={handleEventsClick}>
-          <EventIcon style={{ fontSize: "1.75rem" }} />
+        <IconButton size="medium" onClick={handleEventsClick}>
+          <EventIcon style={{ fontSize: "1.5rem" }} />
         </IconButton>
 
         <Stack direction="row" alignItems="center">

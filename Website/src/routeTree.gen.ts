@@ -16,10 +16,11 @@ import { Route as AuthRegisterRouteImport } from './routes/_auth/register'
 import { Route as AuthLoginRouteImport } from './routes/_auth/login'
 import { Route as AppTradeRouteImport } from './routes/_app/trade'
 import { Route as AppSearchRouteImport } from './routes/_app/search'
-import { Route as AppProfileRouteImport } from './routes/_app/profile'
 import { Route as AppMessagesRouteImport } from './routes/_app/messages'
 import { Route as AppEventsRouteImport } from './routes/_app/events'
 import { Route as AppCreateRouteImport } from './routes/_app/create'
+import { Route as AppProfileIndexRouteImport } from './routes/_app/profile/index'
+import { Route as AppProfileUsernameRouteImport } from './routes/_app/profile/$username'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/_auth',
@@ -54,11 +55,6 @@ const AppSearchRoute = AppSearchRouteImport.update({
   path: '/search',
   getParentRoute: () => AppRoute,
 } as any)
-const AppProfileRoute = AppProfileRouteImport.update({
-  id: '/profile',
-  path: '/profile',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppMessagesRoute = AppMessagesRouteImport.update({
   id: '/messages',
   path: '/messages',
@@ -74,28 +70,40 @@ const AppCreateRoute = AppCreateRouteImport.update({
   path: '/create',
   getParentRoute: () => AppRoute,
 } as any)
+const AppProfileIndexRoute = AppProfileIndexRouteImport.update({
+  id: '/profile/',
+  path: '/profile/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppProfileUsernameRoute = AppProfileUsernameRouteImport.update({
+  id: '/profile/$username',
+  path: '/profile/$username',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/create': typeof AppCreateRoute
   '/events': typeof AppEventsRoute
   '/messages': typeof AppMessagesRoute
-  '/profile': typeof AppProfileRoute
   '/search': typeof AppSearchRoute
   '/trade': typeof AppTradeRoute
   '/login': typeof AuthLoginRoute
   '/register': typeof AuthRegisterRoute
   '/': typeof AppIndexRoute
+  '/profile/$username': typeof AppProfileUsernameRoute
+  '/profile': typeof AppProfileIndexRoute
 }
 export interface FileRoutesByTo {
   '/create': typeof AppCreateRoute
   '/events': typeof AppEventsRoute
   '/messages': typeof AppMessagesRoute
-  '/profile': typeof AppProfileRoute
   '/search': typeof AppSearchRoute
   '/trade': typeof AppTradeRoute
   '/login': typeof AuthLoginRoute
   '/register': typeof AuthRegisterRoute
   '/': typeof AppIndexRoute
+  '/profile/$username': typeof AppProfileUsernameRoute
+  '/profile': typeof AppProfileIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -104,12 +112,13 @@ export interface FileRoutesById {
   '/_app/create': typeof AppCreateRoute
   '/_app/events': typeof AppEventsRoute
   '/_app/messages': typeof AppMessagesRoute
-  '/_app/profile': typeof AppProfileRoute
   '/_app/search': typeof AppSearchRoute
   '/_app/trade': typeof AppTradeRoute
   '/_auth/login': typeof AuthLoginRoute
   '/_auth/register': typeof AuthRegisterRoute
   '/_app/': typeof AppIndexRoute
+  '/_app/profile/$username': typeof AppProfileUsernameRoute
+  '/_app/profile/': typeof AppProfileIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -117,23 +126,25 @@ export interface FileRouteTypes {
     | '/create'
     | '/events'
     | '/messages'
-    | '/profile'
     | '/search'
     | '/trade'
     | '/login'
     | '/register'
     | '/'
+    | '/profile/$username'
+    | '/profile'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/create'
     | '/events'
     | '/messages'
-    | '/profile'
     | '/search'
     | '/trade'
     | '/login'
     | '/register'
     | '/'
+    | '/profile/$username'
+    | '/profile'
   id:
     | '__root__'
     | '/_app'
@@ -141,12 +152,13 @@ export interface FileRouteTypes {
     | '/_app/create'
     | '/_app/events'
     | '/_app/messages'
-    | '/_app/profile'
     | '/_app/search'
     | '/_app/trade'
     | '/_auth/login'
     | '/_auth/register'
     | '/_app/'
+    | '/_app/profile/$username'
+    | '/_app/profile/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -205,13 +217,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSearchRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/profile': {
-      id: '/_app/profile'
-      path: '/profile'
-      fullPath: '/profile'
-      preLoaderRoute: typeof AppProfileRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/messages': {
       id: '/_app/messages'
       path: '/messages'
@@ -233,6 +238,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCreateRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/profile/': {
+      id: '/_app/profile/'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof AppProfileIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/profile/$username': {
+      id: '/_app/profile/$username'
+      path: '/profile/$username'
+      fullPath: '/profile/$username'
+      preLoaderRoute: typeof AppProfileUsernameRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
@@ -240,20 +259,22 @@ interface AppRouteChildren {
   AppCreateRoute: typeof AppCreateRoute
   AppEventsRoute: typeof AppEventsRoute
   AppMessagesRoute: typeof AppMessagesRoute
-  AppProfileRoute: typeof AppProfileRoute
   AppSearchRoute: typeof AppSearchRoute
   AppTradeRoute: typeof AppTradeRoute
   AppIndexRoute: typeof AppIndexRoute
+  AppProfileUsernameRoute: typeof AppProfileUsernameRoute
+  AppProfileIndexRoute: typeof AppProfileIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppCreateRoute: AppCreateRoute,
   AppEventsRoute: AppEventsRoute,
   AppMessagesRoute: AppMessagesRoute,
-  AppProfileRoute: AppProfileRoute,
   AppSearchRoute: AppSearchRoute,
   AppTradeRoute: AppTradeRoute,
   AppIndexRoute: AppIndexRoute,
+  AppProfileUsernameRoute: AppProfileUsernameRoute,
+  AppProfileIndexRoute: AppProfileIndexRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)

@@ -1,7 +1,9 @@
 import { useNavigate } from "@tanstack/react-router";
+import { useAuth } from "../app/useAuth";
 
 export function useNavigationButtons() {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   // Create button.
   const handleCreateClick = () => {
@@ -15,7 +17,9 @@ export function useNavigationButtons() {
 
   //profile button. Would probably move to its own separate hook to handle notifications.
   const handleProfileClick = () => {
-    navigate({ to: "/profile" });
+    if (user) {
+      navigate({ to: "/profile/$username", params: { username: user!.username } });
+    }
   };
 
   const handleHomeClick = () => {

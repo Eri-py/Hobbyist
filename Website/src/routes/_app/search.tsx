@@ -9,6 +9,7 @@ export const Route = createFileRoute("/_app/search")({
   component: Search,
   validateSearch: validSearchSchema,
 });
+
 function Search() {
   const { q } = Route.useSearch();
   return (

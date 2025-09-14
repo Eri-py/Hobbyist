@@ -1,25 +1,20 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect } from "react";
 
-import Stack from "@mui/material/Stack";
-
-import { PostTile } from "@/components/shared/PostTile";
 import { Searchbar } from "@/components/app/Searchbar/Searchbar";
-import { useDesktopNavbar } from "@/hooks/app/useDesktopNavbar";
-import { RightButtonGroup } from "@/components/home/RightButtonGroup";
-import { useMobileSearchOverlay } from "@/hooks/app/useMobileSearchOverlay";
 import { MobileSearchOverlayContent } from "@/components/home/MobileSearchOverlayContent";
-import { useBreakpoint } from "@/hooks/shared/useBreakpoint";
+import { RightButtonGroup } from "@/components/home/RightButtonGroup";
+import { useAuth } from "@/hooks/app/useAuth";
+import { useDesktopNavbar } from "@/hooks/app/useDesktopNavbar";
+import { useMobileSearchOverlay } from "@/hooks/app/useMobileSearchOverlay";
 
-export const Route = createFileRoute("/_app/")({
-  component: HomePage,
+export const Route = createFileRoute("/_app/profile/$username")({
+  component: ProfilePage,
 });
 
-function HomePage() {
+function ProfilePage() {
   const { setSearchbar, setRightButtonGroup } = useDesktopNavbar();
   const { setSearchOverlay } = useMobileSearchOverlay();
-  const { isDesktop } = useBreakpoint();
-
   // Set and clear desktop searchbar
   useEffect(() => {
     setSearchbar(<Searchbar />);
@@ -44,18 +39,15 @@ function HomePage() {
     };
   }, [setSearchOverlay]);
 
+  const { username } = Route.useParams();
+  const { user } = useAuth();
+  const isUserProfile = user!.username == username;
+
   return (
-    <Stack
-      flex={1}
-      alignItems="center"
-      overflow="auto"
-      padding={isDesktop ? 1 : 0}
-      gap={isDesktop ? "1.75rem" : 2}
-    >
-      <PostTile />
-      <PostTile />
-      <PostTile />
-      <PostTile />
-    </Stack>
+    <div>
+      {isUserProfile
+        ? `${username} is viewing thier own profile`
+        : `${username}'s profile is being looked at`}
+    </div>
   );
 }
