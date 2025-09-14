@@ -6,7 +6,7 @@ import StorefrontIcon from "@mui/icons-material/Storefront";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import Stack from "@mui/material/Stack";
 import Badge, { badgeClasses } from "@mui/material/Badge";
-import { styled } from "@mui/material/styles";
+import { alpha, styled, useTheme } from "@mui/material/styles";
 
 import { useNavigationButtons } from "@/hooks/shared/useNavigationButtons";
 
@@ -18,7 +18,14 @@ const CustomBadge = styled(Badge)`
 `;
 
 export function BottomNavbar() {
-  const { handleCreateClick, handleProfileClick } = useNavigationButtons();
+  const {
+    handleHomeClick,
+    handleTradeClick,
+    handleMessagesClick,
+    handleCreateClick,
+    handleProfileClick,
+  } = useNavigationButtons();
+  const theme = useTheme();
 
   return (
     <Stack
@@ -29,15 +36,16 @@ export function BottomNavbar() {
       position="sticky"
       sx={{
         backgroundColor: "background.default",
+        borderTop: `1px solid ${alpha(theme.palette.primary.main, 0.25)}`,
         bottom: 0,
         left: 0,
       }}
     >
-      <IconButton size="large">
+      <IconButton size="large" onClick={handleHomeClick}>
         <HomeIcon style={{ fontSize: "1.75rem" }} />
       </IconButton>
 
-      <IconButton size="large">
+      <IconButton size="large" onClick={handleTradeClick}>
         <StorefrontIcon style={{ fontSize: "1.75rem" }} />
       </IconButton>
 
@@ -45,7 +53,7 @@ export function BottomNavbar() {
         <AddIcon style={{ fontSize: "1.75rem" }} />
       </IconButton>
 
-      <IconButton>
+      <IconButton onClick={handleMessagesClick}>
         <ChatIcon />
         <CustomBadge badgeContent={2} color="primary" overlap="circular" />
       </IconButton>

@@ -1,7 +1,10 @@
-import { Logo } from "@/components/shared/Logo";
 import Box from "@mui/material/Box";
 
+import { Logo } from "@/components/shared/Logo";
+import { useBreakpoint } from "@/hooks/shared/useBreakpoint";
+
 export function Loader() {
+  const { isDesktop } = useBreakpoint();
   return (
     <Box
       sx={{
@@ -15,7 +18,7 @@ export function Loader() {
         position: "relative",
       }}
     >
-      <Logo width={"128px"} color="white" />
+      <Logo width="128px" color={isDesktop ? "white" : undefined} />
     </Box>
   );
 }

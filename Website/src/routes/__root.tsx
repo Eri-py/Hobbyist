@@ -1,7 +1,7 @@
 import { createRootRoute, Outlet } from "@tanstack/react-router";
 import CssBaseline from "@mui/material/CssBaseline";
 
-import { CustomThemeProvider } from "@/providers/shared/ThemeToggleProvider";
+import { CustomThemeProvider } from "@/providers/shared/CustomThemeProvider";
 import { BreakpointProvider } from "@/providers/shared/BreakpointProvider";
 
 export const Route = createRootRoute({

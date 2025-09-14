@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactElement, type SetStateAction } from "react";
-import { styled } from "@mui/material/styles";
+import { alpha, styled, useTheme } from "@mui/material/styles";
 
 import List from "@mui/material/List";
 import ListItemButton from "@mui/material/ListItemButton";
@@ -60,6 +60,7 @@ export function Sidebar() {
   const { mode, toggleTheme } = useThemeToggle();
   const { handleHomeClick, handleEventsClick, handleTradeClick } = useNavigationButtons();
   const { isSidebarOpen } = useSidebar();
+  const theme = useTheme();
 
   // Get the current active tab based on the primary route
   const location = useLocation();
@@ -140,7 +141,7 @@ export function Sidebar() {
       width={isSidebarOpen ? "18.75rem" : "5.5rem"}
       justifyContent="space-between"
       sx={{
-        borderRight: "1px solid rgba(21, 101, 192, .5)",
+        borderRight: `1px solid ${alpha(theme.palette.primary.main, 0.25)}`,
         paddingInline: "0.5rem",
       }}
     >
