@@ -9,24 +9,36 @@ import StoreOutlinedIcon from "@mui/icons-material/StoreOutlined";
 import StoreIcon from "@mui/icons-material/Store";
 import PersonOutlineOutlinedIcon from "@mui/icons-material/PersonOutlineOutlined";
 import PersonIcon from "@mui/icons-material/Person";
+import { styled } from "@mui/material/styles";
+import Badge, { badgeClasses } from "@mui/material/Badge";
+import IconButton from "@mui/material/IconButton";
 
 import { useNavigationButtons } from "@/hooks/shared/useNavigationButtons";
 import { useProfile } from "@/hooks/profile/useProfile";
+import { useActiveTab } from "@/hooks/shared/useActiveTab";
 
-type BottomNavbarContentType = {
+const NotificationBadge = styled(Badge)`
+  & .${badgeClasses.badge} {
+    top: -0.5rem;
+    right: 0rem;
+  }
+`;
+
+type NavigationItem = {
   label: string;
   icon: ReactElement;
   activeIcon: ReactElement;
   notifications?: number;
   handleClick: () => void;
-}[];
+};
 
-export function useBottomNavbarContent() {
+export function NavigationButtons() {
   const { handleHomeClick, handleTradeClick, handleMessagesClick, handleCreateClick } =
     useNavigationButtons();
   const { handleProfileClick } = useProfile();
+  const { getActiveTab } = useActiveTab();
 
-  const bottomNavbarContent: BottomNavbarContentType = [
+  const navigationItems: NavigationItem[] = [
     {
       label: "Home",
       icon: <HomeOutlinedIcon style={{ fontSize: "1.75rem" }} />,
@@ -61,7 +73,18 @@ export function useBottomNavbarContent() {
     },
   ];
 
-  return {
-    bottomNavbarContent,
-  };
+  const navigationButtons = navigationItems.map((item) => {
+    const isActive = getActiveTab(item.label);
+
+    return (
+      <IconButton size="large" onClick={item.handleClick} key={item.label}>
+        {isActive ? item.activeIcon : item.icon}
+        {item.notifications && (
+          <NotificationBadge badgeContent={item.notifications} color="primary" overlap="circular" />
+        )}
+      </IconButton>
+    );
+  });
+
+  return navigationButtons;
 }
