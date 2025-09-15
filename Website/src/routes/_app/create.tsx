@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_app/create")({
-  component: Create,
+  component: CreatePage,
 });
 
-function Create() {
+function CreatePage() {
   return <div>User is trying to create a post</div>;
 }

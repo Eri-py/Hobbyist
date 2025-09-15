@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactElement, type SetStateAction } from "react";
+import { useState, type ReactElement, type SetStateAction } from "react";
 import { alpha, styled, useTheme } from "@mui/material/styles";
 
 import List from "@mui/material/List";
@@ -16,10 +16,10 @@ import EventIcon from "@mui/icons-material/Event";
 import FormControlLabel from "@mui/material/FormControlLabel";
 
 import { useThemeToggle } from "@/hooks/shared/useThemeToggle";
-import { useLocation } from "@tanstack/react-router";
 import { ThemeSwitch } from "./ThemeSwitch";
 import { useSidebar } from "@/hooks/app/useSidebar";
 import { useNavigationButtons } from "@/hooks/shared/useNavigationButtons";
+import { useActiveTab } from "@/hooks/shared/useActiveTab";
 
 // Currently supported sidbar tabs
 const navigationItems: { label: string; icon: ReactElement }[] = [
@@ -61,14 +61,7 @@ export function Sidebar() {
   const { handleHomeClick, handleEventsClick, handleTradeClick } = useNavigationButtons();
   const { isSidebarOpen } = useSidebar();
   const theme = useTheme();
-
-  // Get the current active tab based on the primary route
-  const location = useLocation();
-  const [activeTab, setActiveTab] = useState("");
-  useEffect(() => {
-    const primaryRoute = location.pathname.split("/")[1] || "Home";
-    setActiveTab(primaryRoute);
-  }, [location.pathname]);
+  const { getActiveTab } = useActiveTab();
 
   // Handle navigation button clicks.
   const handleNavigationButtonClick = (label: SetStateAction<string>) => {
@@ -86,7 +79,7 @@ export function Sidebar() {
   };
 
   const navigationElements = navigationItems.map((item, idx) => {
-    const isActive = item.label.localeCompare(activeTab, undefined, { sensitivity: "base" }) === 0;
+    const isActive = getActiveTab(item.label);
     // Collapsed sidebar view for navigation buttons
     if (!isSidebarOpen) {
       return (
