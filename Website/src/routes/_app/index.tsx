@@ -10,6 +10,7 @@ import { RightButtonGroup } from "@/components/home/RightButtonGroup";
 import { useMobileSearchOverlay } from "@/hooks/app/useMobileSearchOverlay";
 import { MobileSearchOverlayContent } from "@/components/home/MobileSearchOverlayContent";
 import { useBreakpoint } from "@/hooks/shared/useBreakpoint";
+import { useNavigation } from "@/hooks/app/useNavigation";
 
 export const Route = createFileRoute("/_app/")({
   component: HomePage,
@@ -19,6 +20,12 @@ function HomePage() {
   const { setSearchbar, setRightButtonGroup } = useDesktopNavbar();
   const { setSearchOverlay } = useMobileSearchOverlay();
   const { isDesktop } = useBreakpoint();
+  const { setActiveTab } = useNavigation();
+
+  // Set active navigation tab
+  useEffect(() => {
+    setActiveTab("Home");
+  }, [setActiveTab]);
 
   // Set and clear desktop searchbar
   useEffect(() => {

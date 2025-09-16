@@ -7,6 +7,7 @@ import { RightButtonGroup } from "@/components/home/RightButtonGroup";
 import { useAuth } from "@/hooks/app/useAuth";
 import { useDesktopNavbar } from "@/hooks/app/useDesktopNavbar";
 import { useMobileSearchOverlay } from "@/hooks/app/useMobileSearchOverlay";
+import { useNavigation } from "@/hooks/app/useNavigation";
 
 export const Route = createFileRoute("/_app/profile/$username")({
   component: ProfilePage,
@@ -15,6 +16,16 @@ export const Route = createFileRoute("/_app/profile/$username")({
 function ProfilePage() {
   const { setSearchbar, setRightButtonGroup } = useDesktopNavbar();
   const { setSearchOverlay } = useMobileSearchOverlay();
+  const { setActiveTab } = useNavigation();
+  const { username } = Route.useParams();
+  const { user } = useAuth();
+  const isUserProfile = user!.username == username;
+
+  // Set active navigation tab
+  useEffect(() => {
+    setActiveTab("Profile");
+  }, [setActiveTab]);
+
   // Set and clear desktop searchbar
   useEffect(() => {
     setSearchbar(<Searchbar />);
@@ -39,14 +50,10 @@ function ProfilePage() {
     };
   }, [setSearchOverlay]);
 
-  const { username } = Route.useParams();
-  const { user } = useAuth();
-  const isUserProfile = user!.username == username;
-
   return (
     <div>
       {isUserProfile
-        ? `${username} is viewing thier own profile`
+        ? `${username} is viewing their own profile`
         : `${username}'s profile is being looked at`}
     </div>
   );

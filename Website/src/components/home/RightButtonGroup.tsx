@@ -11,6 +11,7 @@ import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 
 import { useNavigationButtons } from "@/hooks/shared/useNavigationButtons";
 import { useAuth } from "@/hooks/app/useAuth";
+import { useProfile } from "@/hooks/profile/useProfile";
 
 const CustomBadge = styled(Badge)`
   & .${badgeClasses.badge} {
@@ -29,7 +30,8 @@ const AuthButton = styled(Button)({
 export function RightButtonGroup() {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
-  const { handleCreateClick, handleMessagesClick, handleProfileClick } = useNavigationButtons();
+  const { handleProfileClick } = useProfile();
+  const { handleCreateClick, handleMessagesClick } = useNavigationButtons();
 
   if (isAuthenticated) {
     return (

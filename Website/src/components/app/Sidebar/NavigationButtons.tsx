@@ -10,7 +10,7 @@ import { styled } from "@mui/material/styles";
 
 import { useSidebar } from "@/hooks/app/useSidebar";
 import { useNavigationButtons } from "@/hooks/shared/useNavigationButtons";
-import { useActiveTab } from "@/hooks/shared/useActiveTab";
+import { useNavigation } from "@/hooks/app/useNavigation";
 
 const CollapsedIcon = styled(ListItemIcon)({
   minWidth: "fit-content",
@@ -31,7 +31,7 @@ type NavigationItem = {
 
 export function NavigationButtons() {
   const { handleHomeClick, handleTradeClick, handleEventsClick } = useNavigationButtons();
-  const { getActiveTab } = useActiveTab();
+  const { getActiveTab } = useNavigation();
   const { isSidebarOpen } = useSidebar();
 
   const navigationItems: NavigationItem[] = [
