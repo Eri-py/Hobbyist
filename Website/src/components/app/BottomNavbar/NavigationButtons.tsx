@@ -5,8 +5,8 @@ import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 import HomeIcon from "@mui/icons-material/Home";
 import ChatOutlinedIcon from "@mui/icons-material/ChatOutlined";
 import ChatIcon from "@mui/icons-material/Chat";
-import StoreOutlinedIcon from "@mui/icons-material/StoreOutlined";
-import StoreIcon from "@mui/icons-material/Store";
+import ExploreOutlinedIcon from "@mui/icons-material/ExploreOutlined";
+import ExploreIcon from "@mui/icons-material/Explore";
 import PersonOutlineOutlinedIcon from "@mui/icons-material/PersonOutlineOutlined";
 import PersonIcon from "@mui/icons-material/Person";
 import { styled } from "@mui/material/styles";
@@ -15,7 +15,8 @@ import IconButton from "@mui/material/IconButton";
 
 import { useNavigationButtons } from "@/hooks/shared/useNavigationButtons";
 import { useProfile } from "@/hooks/profile/useProfile";
-import { useActiveTab } from "@/hooks/shared/useActiveTab";
+import { useNavigation } from "@/hooks/app/useNavigation";
+import { useAuth } from "@/hooks/app/useAuth";
 
 const NotificationBadge = styled(Badge)`
   & .${badgeClasses.badge} {
@@ -33,10 +34,11 @@ type NavigationItem = {
 };
 
 export function NavigationButtons() {
-  const { handleHomeClick, handleTradeClick, handleMessagesClick, handleCreateClick } =
+  const { handleHomeClick, handleMessagesClick, handleCreateClick, handleExploreClick } =
     useNavigationButtons();
   const { handleProfileClick } = useProfile();
-  const { getActiveTab } = useActiveTab();
+  const { getActiveTab } = useNavigation();
+  const { user } = useAuth();
 
   const navigationItems: NavigationItem[] = [
     {
@@ -46,11 +48,10 @@ export function NavigationButtons() {
       handleClick: handleHomeClick,
     },
     {
-      label: "Trade",
-      icon: <StoreOutlinedIcon style={{ fontSize: "1.75rem" }} />,
-      activeIcon: <StoreIcon style={{ fontSize: "1.75rem" }} />,
-      notifications: 10,
-      handleClick: handleTradeClick,
+      label: "Explore",
+      icon: <ExploreOutlinedIcon style={{ fontSize: "1.75rem" }} />,
+      activeIcon: <ExploreIcon style={{ fontSize: "1.75rem" }} />,
+      handleClick: handleExploreClick,
     },
     {
       label: "Create",
@@ -66,7 +67,7 @@ export function NavigationButtons() {
       handleClick: handleMessagesClick,
     },
     {
-      label: "Profile",
+      label: `Profile/${user?.username}`,
       icon: <PersonOutlineOutlinedIcon style={{ fontSize: "1.75rem" }} />,
       activeIcon: <PersonIcon style={{ fontSize: "1.75rem" }} />,
       handleClick: handleProfileClick,

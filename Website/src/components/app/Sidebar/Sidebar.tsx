@@ -26,7 +26,7 @@ export function Sidebar() {
     >
       <List>
         <NavigationButtons />
-        <Divider />
+        {isSidebarOpen && <Divider />}
         <HobbyNavigationButtons />
       </List>
 

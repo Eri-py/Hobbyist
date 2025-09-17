@@ -1,53 +1,32 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect } from "react";
 
-import { Searchbar } from "@/components/app/Searchbar/Searchbar";
-import { MobileSearchOverlayContent } from "@/components/home/MobileSearchOverlayContent";
-import { RightButtonGroup } from "@/components/home/RightButtonGroup";
 import { useAuth } from "@/hooks/app/useAuth";
-import { useDesktopNavbar } from "@/hooks/app/useDesktopNavbar";
-import { useMobileSearchOverlay } from "@/hooks/app/useMobileSearchOverlay";
+import { useRouteSetup } from "@/hooks/app/useRouteSetup";
+import { useMemo } from "react";
 
 export const Route = createFileRoute("/_app/profile/$username")({
   component: ProfilePage,
 });
 
 function ProfilePage() {
-  const { setSearchbar, setRightButtonGroup } = useDesktopNavbar();
-  const { setSearchOverlay } = useMobileSearchOverlay();
-  // Set and clear desktop searchbar
-  useEffect(() => {
-    setSearchbar(<Searchbar />);
-    return () => {
-      setSearchbar(<div></div>);
-    };
-  }, [setSearchbar]);
-
-  // Set and clear desktop right button group
-  useEffect(() => {
-    setRightButtonGroup(<RightButtonGroup />);
-    return () => {
-      setRightButtonGroup(<div></div>);
-    };
-  }, [setRightButtonGroup]);
-
-  // Set and clear mobile search overlay
-  useEffect(() => {
-    setSearchOverlay(<MobileSearchOverlayContent />);
-    return () => {
-      setSearchOverlay(<div></div>);
-    };
-  }, [setSearchOverlay]);
-
   const { username } = Route.useParams();
+  const routeConfig = useMemo(
+    () => ({
+      activeNavigationTab: `Profile/${username}`,
+      desktopSearchBar: <div></div>,
+      desktopRightButtonGroup: <div></div>,
+      mobileSearchOverlay: <div></div>,
+    }),
+    [username]
+  );
+  useRouteSetup(routeConfig);
+
   const { user } = useAuth();
-  const isUserProfile = user!.username == username;
+  const isOwnProfile = user?.username == username;
 
   return (
     <div>
-      {isUserProfile
-        ? `${username} is viewing thier own profile`
-        : `${username}'s profile is being looked at`}
+      {isOwnProfile ? "User is viewing their profile" : `User is viewing ${username}'s profile`}
     </div>
   );
 }

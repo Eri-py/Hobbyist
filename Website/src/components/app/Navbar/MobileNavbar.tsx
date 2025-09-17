@@ -1,16 +1,18 @@
 import Toolbar from "@mui/material/Toolbar";
 import IconButton from "@mui/material/IconButton";
-import Stack from "@mui/material/Stack";
 import SearchIcon from "@mui/icons-material/Search";
-import EventIcon from "@mui/icons-material/Event";
+import StoreOutlinedIcon from "@mui/icons-material/StoreOutlined";
+import StoreIcon from "@mui/icons-material/Store";
 
 import { NavbarContainer } from "./NavbarContainer";
 import { useMobileSearchOverlay } from "@/hooks/app/useMobileSearchOverlay";
+import { useNavigation } from "@/hooks/app/useNavigation";
 import { useNavigationButtons } from "@/hooks/shared/useNavigationButtons";
 
 export function MobileNavbar() {
   const { openOverlay } = useMobileSearchOverlay();
-  const { handleEventsClick } = useNavigationButtons();
+  const { activeTab } = useNavigation();
+  const { handleTradeClick } = useNavigationButtons();
 
   return (
     <NavbarContainer>
@@ -21,15 +23,17 @@ export function MobileNavbar() {
           paddingInline: "0.25rem !important",
         }}
       >
-        <IconButton size="medium" onClick={handleEventsClick}>
-          <EventIcon style={{ fontSize: "1.5rem" }} />
+        <IconButton onClick={handleTradeClick}>
+          {activeTab === "Trade" ? (
+            <StoreIcon style={{ fontSize: "1.75rem" }} />
+          ) : (
+            <StoreOutlinedIcon style={{ fontSize: "1.75rem" }} />
+          )}
         </IconButton>
 
-        <Stack direction="row" alignItems="center">
-          <IconButton onClick={openOverlay}>
-            <SearchIcon />
-          </IconButton>
-        </Stack>
+        <IconButton onClick={openOverlay}>
+          <SearchIcon />
+        </IconButton>
       </Toolbar>
     </NavbarContainer>
   );

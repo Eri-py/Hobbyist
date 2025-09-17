@@ -1,16 +1,15 @@
+import { useRouteSetup } from "@/hooks/app/useRouteSetup";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo } from "react";
 
-import { useRouteSetup } from "@/hooks/app/useRouteSetup";
-
-export const Route = createFileRoute("/_app/create")({
-  component: CreatePage,
+export const Route = createFileRoute("/_app/explore/events")({
+  component: ExploreEventsPage,
 });
 
-function CreatePage() {
+function ExploreEventsPage() {
   const routeConfig = useMemo(
     () => ({
-      activeNavigationTab: "Create",
+      activeNavigationTab: "Explore",
       desktopSearchBar: <div></div>,
       desktopRightButtonGroup: <div></div>,
       mobileSearchOverlay: <div></div>,
@@ -19,5 +18,5 @@ function CreatePage() {
   );
   useRouteSetup(routeConfig);
 
-  return <div>User is trying to create a post</div>;
+  return <div>Hello "/_app/explore/events"!</div>;
 }
