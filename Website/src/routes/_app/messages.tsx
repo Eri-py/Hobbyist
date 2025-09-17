@@ -1,19 +1,22 @@
+import { useRouteSetup } from "@/hooks/app/useRouteSetup";
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect } from "react";
-
-import { useNavigation } from "@/hooks/app/useNavigation";
+import { useMemo } from "react";
 
 export const Route = createFileRoute("/_app/messages")({
-  component: RouteComponent,
+  component: MessagesPage,
 });
 
-function RouteComponent() {
-  const { setActiveTab } = useNavigation();
-
-  // Set active navigation tab
-  useEffect(() => {
-    setActiveTab("Messages");
-  }, [setActiveTab]);
+function MessagesPage() {
+  const routeConfig = useMemo(
+    () => ({
+      activeNavigationTab: "Messages",
+      desktopSearchBar: <div></div>,
+      desktopRightButtonGroup: <div></div>,
+      mobileSearchOverlay: <div></div>,
+    }),
+    []
+  );
+  useRouteSetup(routeConfig);
 
   return <div>User opened their messages</div>;
 }

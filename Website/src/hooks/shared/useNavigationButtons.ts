@@ -26,7 +26,7 @@ export function useNavigationButtons() {
   };
 
   const handleExploreClick = () => {
-    navigate({ to: "/explore/communities" });
+    navigate({ to: "/explore/hobbies" });
   };
 
   return {

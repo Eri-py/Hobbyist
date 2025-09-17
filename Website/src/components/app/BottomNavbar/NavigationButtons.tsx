@@ -16,6 +16,7 @@ import IconButton from "@mui/material/IconButton";
 import { useNavigationButtons } from "@/hooks/shared/useNavigationButtons";
 import { useProfile } from "@/hooks/profile/useProfile";
 import { useNavigation } from "@/hooks/app/useNavigation";
+import { useAuth } from "@/hooks/app/useAuth";
 
 const NotificationBadge = styled(Badge)`
   & .${badgeClasses.badge} {
@@ -37,6 +38,7 @@ export function NavigationButtons() {
     useNavigationButtons();
   const { handleProfileClick } = useProfile();
   const { getActiveTab } = useNavigation();
+  const { user } = useAuth();
 
   const navigationItems: NavigationItem[] = [
     {
@@ -65,7 +67,7 @@ export function NavigationButtons() {
       handleClick: handleMessagesClick,
     },
     {
-      label: "Profile",
+      label: `Profile/${user?.username}`,
       icon: <PersonOutlineOutlinedIcon style={{ fontSize: "1.75rem" }} />,
       activeIcon: <PersonIcon style={{ fontSize: "1.75rem" }} />,
       handleClick: handleProfileClick,

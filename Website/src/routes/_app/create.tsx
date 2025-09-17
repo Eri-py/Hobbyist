@@ -1,19 +1,23 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useMemo } from "react";
 
-import { useNavigation } from "@/hooks/app/useNavigation";
+import { useRouteSetup } from "@/hooks/app/useRouteSetup";
 
 export const Route = createFileRoute("/_app/create")({
   component: CreatePage,
 });
 
 function CreatePage() {
-  const { setActiveTab } = useNavigation();
-
-  // Set active navigation tab
-  useEffect(() => {
-    setActiveTab("Create");
-  }, [setActiveTab]);
+  const routeConfig = useMemo(
+    () => ({
+      activeNavigationTab: "Create",
+      desktopSearchBar: <div></div>,
+      desktopRightButtonGroup: <div></div>,
+      mobileSearchOverlay: <div></div>,
+    }),
+    []
+  );
+  useRouteSetup(routeConfig);
 
   return <div>User is trying to create a post</div>;
 }

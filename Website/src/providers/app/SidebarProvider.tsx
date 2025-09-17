@@ -7,7 +7,7 @@ type SidebarProviderTypes = {
 };
 
 export function SidebarProvider({ children }: SidebarProviderTypes) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
 
   const toggleSidebar = useCallback(() => {
     setIsSidebarOpen(!isSidebarOpen);

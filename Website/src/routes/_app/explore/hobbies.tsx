@@ -1,27 +1,32 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 
-import { useNavigation } from "@/hooks/app/useNavigation";
 import { useBreakpoint } from "@/hooks/shared/useBreakpoint";
+import { useRouteSetup } from "@/hooks/app/useRouteSetup";
 
-export const Route = createFileRoute("/_app/explore/communities")({
+export const Route = createFileRoute("/_app/explore/hobbies")({
   component: CommunitiesPage,
 });
 
 function CommunitiesPage() {
-  const { setActiveTab } = useNavigation();
+  const routeConfig = useMemo(
+    () => ({
+      activeNavigationTab: "Explore",
+      desktopSearchBar: <div></div>,
+      desktopRightButtonGroup: <div></div>,
+      mobileSearchOverlay: <div></div>,
+    }),
+    []
+  );
+  useRouteSetup(routeConfig);
+
   const { isDesktop } = useBreakpoint();
   const navigate = useNavigate();
-
   useEffect(() => {
     if (isDesktop) {
       navigate({ to: "/" });
     }
   });
-
-  useEffect(() => {
-    setActiveTab("Explore");
-  }, [setActiveTab]);
 
   return <div>User clicked explore and is on the communities tab</div>;
 }

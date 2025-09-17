@@ -1,26 +1,30 @@
+import { useRouteSetup } from "@/hooks/app/useRouteSetup";
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useMemo } from "react";
 import { z } from "zod/v4";
-
-import { useNavigation } from "@/hooks/app/useNavigation";
 
 const validSearchSchema = z.object({
   q: z.string(),
 });
 
 export const Route = createFileRoute("/_app/search")({
-  component: Search,
+  component: SearchPage,
   validateSearch: validSearchSchema,
 });
 
-function Search() {
+function SearchPage() {
   const { q } = Route.useSearch();
-  const { setActiveTab } = useNavigation();
 
-  // Set active navigation tab - you might want to keep the previous tab active instead
-  useEffect(() => {
-    setActiveTab("Search");
-  }, [setActiveTab]);
+  const routeConfig = useMemo(
+    () => ({
+      activeNavigationTab: "Search",
+      desktopSearchBar: <div></div>,
+      desktopRightButtonGroup: <div></div>,
+      mobileSearchOverlay: <div></div>,
+    }),
+    []
+  );
+  useRouteSetup(routeConfig);
 
   return (
     <div>
