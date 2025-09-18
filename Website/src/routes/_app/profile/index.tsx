@@ -1,6 +1,7 @@
 import { useAuth } from "@/hooks/app/useAuth";
 import { useRouteSetup } from "@/hooks/app/useRouteSetup";
 import { createFileRoute } from "@tanstack/react-router";
+import { useMemo } from "react";
 
 export const Route = createFileRoute("/_app/profile/")({
   component: RouteComponent,
@@ -9,12 +10,16 @@ export const Route = createFileRoute("/_app/profile/")({
 function RouteComponent() {
   const { isAuthenticated } = useAuth();
 
-  useRouteSetup({
-    activeNavigationTab: "",
-    desktopSearchBar: <div></div>,
-    desktopRightButtonGroup: <div></div>,
-    mobileSearchOverlay: <div></div>,
-  });
+  const routeConfig = useMemo(
+    () => ({
+      activeNavigationTab: "",
+      desktopSearchBar: <div></div>,
+      desktopRightButtonGroup: <div></div>,
+      mobileSearchOverlay: <div></div>,
+    }),
+    []
+  );
+  useRouteSetup(routeConfig);
 
   return isAuthenticated ? <div>Page not found</div> : <div>Please login</div>;
 }
