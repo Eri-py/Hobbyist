@@ -6,6 +6,7 @@ import { useBreakpoint } from "@/hooks/shared/useBreakpoint";
 import { useRouteSetup } from "@/hooks/app/useRouteSetup";
 import { PostTile } from "@/components/shared/PostTile";
 import { useMemo } from "react";
+import { RightButtonGroup } from "@/components/home/RightButtonGroup";
 
 export const Route = createFileRoute("/_app/")({
   component: HomePage,
@@ -17,7 +18,7 @@ function HomePage() {
     () => ({
       activeNavigationTab: "Home",
       desktopSearchBar: <div></div>,
-      desktopRightButtonGroup: <div></div>,
+      desktopRightButtonGroup: <RightButtonGroup />,
       mobileSearchOverlay: <div></div>,
     }),
     []
