@@ -8,10 +8,9 @@ import { CustomFormHeader, CustomTextField, SegmentedDatePicker } from "../Custo
 
 type PersonalDetailsProps = {
   isPending: boolean;
-  isContinueDisabled: boolean;
 };
 
-export function PersonalDetails({ isPending, isContinueDisabled }: PersonalDetailsProps) {
+export function PersonalDetails({ isPending }: PersonalDetailsProps) {
   const { control } = useFormContext();
 
   return (
@@ -50,13 +49,7 @@ export function PersonalDetails({ isPending, isContinueDisabled }: PersonalDetai
         )}
       />
 
-      <Button
-        type="submit"
-        variant="contained"
-        size="large"
-        loading={isPending}
-        disabled={isContinueDisabled}
-      >
+      <Button type="submit" variant="contained" size="large" loading={isPending}>
         Submit
       </Button>
     </Stack>

@@ -1,4 +1,5 @@
 using System.Text;
+using Hobbyist.Api.Services.AuthServices.LoginServices;
 using Hobbyist.Api.Services.AuthServices.OtpServices;
 using Hobbyist.Api.Services.AuthServices.SignUpServices;
 using Hobbyist.Api.Services.AuthServices.TokenServices;
@@ -41,6 +42,7 @@ public static class AuthServiceRegistration
 
         services.AddScoped<ITokenService, JwtService>();
         services.AddScoped<IOtpService, OtpService>();
+        services.AddScoped<ILoginService, LoginService>();
         services.AddScoped<ISignUpService, SignUpService>();
     }
 }

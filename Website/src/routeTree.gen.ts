@@ -12,7 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
-import { Route as AuthRegisterRouteImport } from './routes/_auth/register'
+import { Route as AuthSignUpRouteImport } from './routes/_auth/sign-up'
 import { Route as AuthLoginRouteImport } from './routes/_auth/login'
 import { Route as AppTradeRouteImport } from './routes/_app/trade'
 import { Route as AppSearchRouteImport } from './routes/_app/search'
@@ -37,9 +37,9 @@ const AppIndexRoute = AppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppRoute,
 } as any)
-const AuthRegisterRoute = AuthRegisterRouteImport.update({
-  id: '/register',
-  path: '/register',
+const AuthSignUpRoute = AuthSignUpRouteImport.update({
+  id: '/sign-up',
+  path: '/sign-up',
   getParentRoute: () => AuthRoute,
 } as any)
 const AuthLoginRoute = AuthLoginRouteImport.update({
@@ -100,7 +100,7 @@ export interface FileRoutesByFullPath {
   '/search': typeof AppSearchRoute
   '/trade': typeof AppTradeRoute
   '/login': typeof AuthLoginRoute
-  '/register': typeof AuthRegisterRoute
+  '/sign-up': typeof AuthSignUpRoute
   '/': typeof AppIndexRoute
   '/explore/events': typeof AppExploreEventsRoute
   '/explore/hobbies': typeof AppExploreHobbiesRoute
@@ -114,7 +114,7 @@ export interface FileRoutesByTo {
   '/search': typeof AppSearchRoute
   '/trade': typeof AppTradeRoute
   '/login': typeof AuthLoginRoute
-  '/register': typeof AuthRegisterRoute
+  '/sign-up': typeof AuthSignUpRoute
   '/': typeof AppIndexRoute
   '/explore/events': typeof AppExploreEventsRoute
   '/explore/hobbies': typeof AppExploreHobbiesRoute
@@ -131,7 +131,7 @@ export interface FileRoutesById {
   '/_app/search': typeof AppSearchRoute
   '/_app/trade': typeof AppTradeRoute
   '/_auth/login': typeof AuthLoginRoute
-  '/_auth/register': typeof AuthRegisterRoute
+  '/_auth/sign-up': typeof AuthSignUpRoute
   '/_app/': typeof AppIndexRoute
   '/_app/explore/events': typeof AppExploreEventsRoute
   '/_app/explore/hobbies': typeof AppExploreHobbiesRoute
@@ -147,7 +147,7 @@ export interface FileRouteTypes {
     | '/search'
     | '/trade'
     | '/login'
-    | '/register'
+    | '/sign-up'
     | '/'
     | '/explore/events'
     | '/explore/hobbies'
@@ -161,7 +161,7 @@ export interface FileRouteTypes {
     | '/search'
     | '/trade'
     | '/login'
-    | '/register'
+    | '/sign-up'
     | '/'
     | '/explore/events'
     | '/explore/hobbies'
@@ -177,7 +177,7 @@ export interface FileRouteTypes {
     | '/_app/search'
     | '/_app/trade'
     | '/_auth/login'
-    | '/_auth/register'
+    | '/_auth/sign-up'
     | '/_app/'
     | '/_app/explore/events'
     | '/_app/explore/hobbies'
@@ -213,11 +213,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_auth/register': {
-      id: '/_auth/register'
-      path: '/register'
-      fullPath: '/register'
-      preLoaderRoute: typeof AuthRegisterRouteImport
+    '/_auth/sign-up': {
+      id: '/_auth/sign-up'
+      path: '/sign-up'
+      fullPath: '/sign-up'
+      preLoaderRoute: typeof AuthSignUpRouteImport
       parentRoute: typeof AuthRoute
     }
     '/_auth/login': {
@@ -323,12 +323,12 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 interface AuthRouteChildren {
   AuthLoginRoute: typeof AuthLoginRoute
-  AuthRegisterRoute: typeof AuthRegisterRoute
+  AuthSignUpRoute: typeof AuthSignUpRoute
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
   AuthLoginRoute: AuthLoginRoute,
-  AuthRegisterRoute: AuthRegisterRoute,
+  AuthSignUpRoute: AuthSignUpRoute,
 }
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)

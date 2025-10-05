@@ -17,9 +17,9 @@ import {
   completeLogin,
 } from "@/api/AuthApi";
 import { LogoWithName } from "@/components/shared/Logo";
-import { useServerError, type ServerError } from "@/hooks/shared/useServerError";
+import { useServerError, type ServerError } from "@/hooks/auth/useServerError";
 import { UsernameAndPassword } from "@/components/auth/login/UsernameAndPassword";
-import { OtpPage } from "@/components/auth/OtpPage";
+import { OtpPage } from "@/components/auth/OtpStep";
 import { useBreakpoint } from "@/hooks/shared/useBreakpoint";
 import { useTheme } from "@mui/material/styles";
 

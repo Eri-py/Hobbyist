@@ -9,8 +9,7 @@ export type ServerError = AxiosError<ServerErrorResponse>;
 
 // Custom hook for handling server errors
 export function useServerError() {
-  const [serverError, setServerError] = useState<string | null>(null);
-  const [continueDisabled, setContinueDisabled] = useState(false);
+  const [serverErrorMessage, setServerErrorMessage] = useState<string | null>(null);
 
   const getErrorMessage = (error: ServerError) => {
     if (error.response && error.response.data) {
@@ -27,25 +26,19 @@ export function useServerError() {
 
   const handleServerError = (error: ServerError) => {
     const errorMessage = getErrorMessage(error);
-    setServerError(errorMessage);
-    setContinueDisabled(true);
+    setServerErrorMessage(errorMessage);
 
     setTimeout(() => {
-      setServerError(null);
+      setServerErrorMessage(null);
     }, 10000);
-
-    setTimeout(() => {
-      setContinueDisabled(false);
-    }, 3000);
   };
 
   const clearServerError = () => {
-    setServerError(null);
+    setServerErrorMessage(null);
   };
 
   return {
-    serverError,
-    continueDisabled,
+    serverErrorMessage,
     handleServerError,
     clearServerError,
   };

@@ -7,23 +7,18 @@ import { OAuthButtonGroup } from "../OAuthButtonGroup";
 import { CustomFormHeader, CustomTextField } from "../CustomInputs";
 import { AuthFooter } from "../AuthFooter";
 
-type usernameAndEmailProps = {
+type UsernameAndEmailStepProps = {
   handleNext: () => void;
   isPending: boolean;
-  isContinueDisabled: boolean;
 };
 
-export function UsernameAndEmail({
-  handleNext,
-  isPending,
-  isContinueDisabled,
-}: usernameAndEmailProps) {
+export function UsernameAndEmailStep({ handleNext, isPending }: UsernameAndEmailStepProps) {
   return (
     <Stack gap="0.75rem" paddingInline="1rem">
       <CustomFormHeader
         header="Sign up"
         subtext="join thousands of users already on our platform."
-        align="center"
+        align="flex-start"
       />
 
       <CustomTextField
@@ -32,6 +27,7 @@ export function UsernameAndEmail({
         fieldValue="username"
         startIcon={<AccountCircleOutlinedIcon />}
         autoComplete="off"
+        autoFocus
       />
 
       <CustomTextField
@@ -48,7 +44,6 @@ export function UsernameAndEmail({
         type="button"
         onClick={handleNext}
         loading={isPending}
-        disabled={isContinueDisabled}
       >
         Continue
       </Button>

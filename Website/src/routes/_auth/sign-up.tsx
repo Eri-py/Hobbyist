@@ -1,29 +1,18 @@
 import { useForm, FormProvider } from "react-hook-form";
 import { string, z } from "zod/v4";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import type { AxiosResponse } from "axios";
+import { createFileRoute } from "@tanstack/react-router";
 
 import Stack from "@mui/material/Stack";
 import Alert from "@mui/material/Alert";
+import { useTheme } from "@mui/material/styles";
 
-import {
-  type startRegistrationRequest,
-  startRegistration,
-  type verifyOtpRequest,
-  verifyOtp,
-  type completeRegistrationRequest,
-  completeRegistration,
-} from "@/api/AuthApi";
 import { HorizontalLinearStepper } from "@/components/shared/HorizontalLinearStepper";
 import { LogoWithName } from "@/components/shared/Logo";
-import { useServerError, type ServerError } from "@/hooks/shared/useServerError";
-import { OtpPage } from "@/components/auth/OtpPage";
-import { Password } from "@/components/auth/register/Password";
-import { PersonalDetails } from "@/components/auth/register/PersonalDetails";
-import { UsernameAndEmail } from "@/components/auth/register/UsernameAndEmail";
+import { OtpStep } from "@/components/auth/OtpStep";
+import { PasswordStep } from "@/components/auth/sign-up/PasswordStep";
+import { PersonalDetails } from "@/components/auth/sign-up/PersonalDetails";
+import { UsernameAndEmailStep } from "@/components/auth/sign-up/UsernameAndEmailStep";
 import {
   usernameSchema,
   emailSchema,
@@ -31,11 +20,11 @@ import {
   nameSchema,
   dateOfBirthSchema,
 } from "@/components/auth/Schemas";
-import { useTheme } from "@mui/material/styles";
 import { useBreakpoint } from "@/hooks/shared/useBreakpoint";
+import { useSignUp } from "@/hooks/auth/useSignUp";
 
-export const Route = createFileRoute("/_auth/register")({
-  component: Register,
+export const Route = createFileRoute("/_auth/sign-up")({
+  component: SignUp,
 });
 
 const RegistrationFormSchema = z.object({
@@ -65,38 +54,29 @@ const registrationStepLabels: string[] = [
   "Personal Details",
 ];
 
-function Register() {
-  const [step, setStep] = useState<number>(0);
-  const [otpExpiresAt, setOtpExpiresAt] = useState<string | null>(null);
-  const { serverError, continueDisabled, handleServerError, clearServerError } = useServerError();
+function SignUp() {
   const theme = useTheme();
   const isDekstop = useBreakpoint();
-  const navigate = useNavigate();
+
+  const {
+    step,
+    setStep,
+    otpExpiresAt,
+    serverErrorMessage,
+    clearServerError,
+    startSignUp,
+    isStarting,
+    verifyOtp,
+    isVerifying,
+    resendOtpAsync,
+    isResendingOtp,
+    completeSignUp,
+    isCompleting,
+  } = useSignUp();
 
   const methods = useForm<registrationFormSchema>({
     mode: "onChange",
     resolver: zodResolver(RegistrationFormSchema),
-  });
-
-  const startRegistrationMutation = useMutation({
-    mutationFn: (data: startRegistrationRequest) => startRegistration(data),
-    onSuccess: (response: AxiosResponse<string>) => {
-      setOtpExpiresAt(response.data);
-      setStep(1);
-    },
-    onError: (error: ServerError) => handleServerError(error),
-  });
-
-  const verifyOtpMutation = useMutation({
-    mutationFn: (data: verifyOtpRequest) => verifyOtp(data),
-    onSuccess: () => setStep(2),
-    onError: (error: ServerError) => handleServerError(error),
-  });
-
-  const completeRegistrationMutation = useMutation({
-    mutationFn: (data: completeRegistrationRequest) => completeRegistration(data),
-    onSuccess: () => navigate({ to: "/" }),
-    onError: (error: ServerError) => handleServerError(error),
   });
 
   const handleNext = async () => {
@@ -109,13 +89,13 @@ function Register() {
         case 0: {
           const username = methods.getValues("username");
           const email = methods.getValues("email");
-          startRegistrationMutation.mutate({ username, email });
+          startSignUp({ username, email });
           break;
         }
         case 1: {
           const email = methods.getValues("email");
           const otp = methods.getValues("otp");
-          verifyOtpMutation.mutate({ email, otp });
+          verifyOtp({ email, otp });
           break;
         }
         case 2: {
@@ -132,13 +112,16 @@ function Register() {
     }
   };
 
-  const handleOtpExpiresAtUpdate = (newExpiresAt: string) => {
-    setOtpExpiresAt(newExpiresAt);
-  };
-
   const onSubmit = (formData: registrationFormSchema) => {
     clearServerError();
-    completeRegistrationMutation.mutate(formData);
+    completeSignUp({
+      username: formData.username,
+      email: formData.email,
+      password: formData.password,
+      firstname: formData.firstname,
+      lastname: formData.lastname,
+      dateOfBirth: formData.dateOfBirth,
+    });
   };
 
   return (
@@ -162,40 +145,30 @@ function Register() {
         setActiveStep={(value) => setStep(value)}
       />
 
-      {serverError !== null && (
+      {serverErrorMessage && (
         <Alert severity="error" sx={{ color: theme.palette.text.primary, fontSize: "1rem" }}>
-          {serverError}
+          {serverErrorMessage}
         </Alert>
       )}
 
       <FormProvider {...methods}>
         <form onSubmit={methods.handleSubmit(onSubmit)}>
-          {step === 0 && (
-            <UsernameAndEmail
-              handleNext={handleNext}
-              isPending={startRegistrationMutation.isPending}
-              isContinueDisabled={continueDisabled}
-            />
-          )}
+          {step === 0 && <UsernameAndEmailStep handleNext={handleNext} isPending={isStarting} />}
           {step === 1 && otpExpiresAt && (
-            <OtpPage
+            <OtpStep
+              mode="signup"
               email={methods.getValues("email")}
-              otpExpiresAt={otpExpiresAt}
+              username={methods.getValues("username")}
+              intitialOtpExpiresAt={otpExpiresAt}
               handleNext={handleNext}
               handleBack={() => setStep(0)}
-              isPending={verifyOtpMutation.isPending}
-              isContinueDisabled={continueDisabled}
-              onOtpExpiresAtUpdate={handleOtpExpiresAtUpdate}
-              mode="register"
+              isPending={isVerifying}
+              resendOtpAsync={resendOtpAsync}
+              isResending={isResendingOtp}
             />
           )}
-          {step === 2 && <Password handleNext={handleNext} />}
-          {step === 3 && (
-            <PersonalDetails
-              isPending={completeRegistrationMutation.isPending}
-              isContinueDisabled={continueDisabled}
-            />
-          )}
+          {step === 2 && <PasswordStep handleNext={handleNext} />}
+          {step === 3 && <PersonalDetails isPending={isCompleting} />}
         </form>
       </FormProvider>
     </Stack>
