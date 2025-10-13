@@ -38,7 +38,7 @@
     "@eslint/js": "^9.37.0",
     "@tanstack/router-plugin": "^1.132.56",
     "@types/js-cookie": "^3.0.6",
-    "@types/node": "^24.7.0",
+    "@types/node": "^24.7.2",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
     "@vitejs/plugin-react": "^5.0.4",
