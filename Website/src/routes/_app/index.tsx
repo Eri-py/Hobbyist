@@ -6,6 +6,7 @@ import { useBreakpoint } from "@/hooks/shared/useBreakpoint";
 import { useRouteSetup } from "@/hooks/app/useRouteSetup";
 import { PostTile } from "@/components/shared/PostTile";
 import { useMemo } from "react";
+import TextField from "@mui/material/TextField";
 
 export const Route = createFileRoute("/_app/")({
   component: HomePage,
@@ -16,7 +17,7 @@ function HomePage() {
   const routeConfig = useMemo(
     () => ({
       activeNavigationTab: "Home",
-      desktopSearchBar: <div></div>,
+      desktopSearchBar: <TextField variant="outlined" />,
       desktopRightButtonGroup: <div></div>,
       mobileSearchOverlay: <div></div>,
     }),
