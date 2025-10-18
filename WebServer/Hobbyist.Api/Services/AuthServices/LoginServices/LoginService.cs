@@ -3,7 +3,6 @@ using Hobbyist.Api.Data.Entities;
 using Hobbyist.Api.Dtos;
 using Hobbyist.Api.Services.AuthServices.OtpServices;
 using Hobbyist.Api.Services.AuthServices.TokenServices;
-using Hobbyist.Api.Services.EmailServices;
 using Hobbyist.Common;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -13,14 +12,12 @@ namespace Hobbyist.Api.Services.AuthServices.LoginServices;
 public class LoginService(
     HobbyistDbContext context,
     IOtpService otpService,
-    IEmailService emailService,
-    ITokenService jwtService
+    ITokenService tokenService
 ) : ILoginService
 {
+    private const string purpose = "login";
     private readonly string _userNotFoundMessage =
         "Your login credentials don't match an account in our system.";
-    private readonly string _incompleteRegistrationMessage =
-        "Account registration is not complete. Please complete your registration first.";
 
     public async Task<Result<StartLoginResponse>> StartLoginAsync(StartLoginRequest request)
     {
@@ -30,11 +27,7 @@ public class LoginService(
             u.Username == identifier || u.Email == identifier
         );
         if (user is null)
-            return Result.NotFound(_userNotFoundMessage);
-
-        // Check if user has completed registration
-        if (!user.CreatedAt.HasValue)
-            return Result.BadRequest(_incompleteRegistrationMessage);
+            return Result<StartLoginResponse>.NotFound(_userNotFoundMessage);
 
         // Verify password
         var verifyPasswordResult = new PasswordHasher<UserEntity>().VerifyHashedPassword(
@@ -44,82 +37,91 @@ public class LoginService(
         );
 
         if (verifyPasswordResult == PasswordVerificationResult.Failed)
-            return Result.NotFound(_userNotFoundMessage);
+            return Result<StartLoginResponse>.NotFound(_userNotFoundMessage);
 
-        var otpDetails = otpService.CreateOtp(AuthConfig.OtpValidForMinutes);
-        using var transaction = await context.Database.BeginTransactionAsync();
-        try
+        // Send OTP
+        var otpResult = await otpService.SendOtpAsync(user.Email!, purpose);
+        if (!otpResult.IsSuccess)
         {
-            await context.SaveChangesAsync();
-
-            var emailResult = await emailService.SendOtpEmailAsync(
-                to: user.Email!,
-                username: user.Username!,
-                otp: otpDetails.Value,
-                otpValidFor: $"{AuthConfig.OtpValidForMinutes} minutes"
-            );
-
-            if (!emailResult.IsSuccess)
-            {
-                await transaction.RollbackAsync();
-                return emailResult;
-            }
-            await transaction.CommitAsync();
-
-            var response = new StartLoginResponse
-            {
-                OtpExpiresAt = otpDetails.ExpiresAt.ToString("o"),
-                Email = user.Email,
-            };
-            return Result<StartLoginResponse>.Success(response);
+            return Result<StartLoginResponse>.FromError(otpResult);
         }
-        catch (Exception)
+
+        var response = new StartLoginResponse
         {
-            await transaction.RollbackAsync();
-            throw;
-        }
+            OtpExpiresAt = otpResult.Content!.OtpExpiresAt.ToString("o"),
+            Email = user.Email,
+        };
+        return Result<StartLoginResponse>.Success(response);
     }
 
     public async Task<Result<AuthResult>> CompleteLoginAsync(CompleteLoginRequest request)
     {
         var identifier = request.Identifier.ToLower();
+        var otp = request.Otp;
+
         var user = await context.Users.FirstOrDefaultAsync(u =>
             u.Email == identifier || u.Username == identifier
         );
 
         if (user is null)
-            return Result.BadRequest("Invalid or expired verification code");
+            return Result<AuthResult>.BadRequest("Invalid or expired verification code");
 
-        // Check if user has completed registration
-        if (!user.CreatedAt.HasValue)
-            return Result.BadRequest(_incompleteRegistrationMessage);
-
-        var refreshTokenDetails = jwtService.CreateRefreshToken(
-            AuthConfig.RefreshTokenValidForDays
-        );
-        // Add refresh token to database
-        var refreshTokenEntry = new RefreshTokenEntity
+        // Verify OTP
+        var verifyResult = otpService.VerifyOtp(user.Email!, otp, purpose);
+        if (!verifyResult.IsSuccess)
         {
-            TokenHash = jwtService.HashToken(refreshTokenDetails.Value),
-            TokenExpiresAt = refreshTokenDetails.ExpiresAt,
-            UserId = user.Id,
-        };
-        user.RefreshTokens.Add(refreshTokenEntry);
+            return Result<AuthResult>.FromError(verifyResult);
+        }
 
-        await context.SaveChangesAsync();
-
-        var accessTokenDetails = jwtService.CreateAccessToken(
-            user,
-            AuthConfig.AccessTokenValidForMinutes
-        );
-        return Result<AuthResult>.Success(
-            new AuthResult
+        using var transaction = await context.Database.BeginTransactionAsync();
+        try
+        {
+            var refreshTokenDetails = tokenService.CreateRefreshToken(
+                AuthConfig.RefreshTokenValidForDays
+            );
+            // Add refresh token to database
+            var refreshTokenEntry = new RefreshTokenEntity
             {
-                AccessToken = accessTokenDetails.Value,
-                RefreshToken = refreshTokenDetails.Value,
-                AccessTokenExpiresAt = accessTokenDetails.ExpiresAt,
-                RefreshTokenExpiresAt = refreshTokenDetails.ExpiresAt,
-            }
-        );
+                TokenHash = tokenService.HashToken(refreshTokenDetails.Value),
+                TokenExpiresAt = refreshTokenDetails.ExpiresAt,
+                UserId = user.Id,
+            };
+            user.RefreshTokens.Add(refreshTokenEntry);
+
+            await context.SaveChangesAsync();
+            await transaction.CommitAsync();
+
+            var accessTokenDetails = tokenService.CreateAccessToken(
+                user,
+                AuthConfig.AccessTokenValidForMinutes
+            );
+            return Result<AuthResult>.Success(
+                new AuthResult
+                {
+                    AccessToken = accessTokenDetails.Value,
+                    RefreshToken = refreshTokenDetails.Value,
+                    AccessTokenExpiresAt = accessTokenDetails.ExpiresAt,
+                    RefreshTokenExpiresAt = refreshTokenDetails.ExpiresAt,
+                }
+            );
+        }
+        catch (Exception)
+        {
+            await transaction.RollbackAsync();
+            return Result<AuthResult>.InternalServerError("An unexpected error has occured");
+        }
+    }
+
+    public async Task<Result<OtpResponse>> ResendOtpAsync(ResendOtpRequest request)
+    {
+        var email = request.Email.ToLower();
+
+        var user = await context.Users.FirstOrDefaultAsync(u => u.Email == email);
+
+        if (user is null)
+            return Result<OtpResponse>.NotFound("User not found");
+
+        var otpResult = await otpService.SendOtpAsync(user.Email!, purpose);
+        return otpResult;
     }
 }

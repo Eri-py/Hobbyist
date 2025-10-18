@@ -11,7 +11,7 @@ import { HorizontalLinearStepper } from "@/components/shared/HorizontalLinearSte
 import { LogoWithName } from "@/components/shared/Logo";
 import { OtpStep } from "@/components/auth/OtpStep";
 import { PasswordStep } from "@/components/auth/sign-up/PasswordStep";
-import { PersonalDetails } from "@/components/auth/sign-up/PersonalDetails";
+import { PersonalDetails } from "@/components/auth/sign-up/PersonalDetailsStep";
 import { UsernameAndEmailStep } from "@/components/auth/sign-up/UsernameAndEmailStep";
 import {
   usernameSchema,
@@ -57,7 +57,6 @@ const registrationStepLabels: string[] = [
 function SignUp() {
   const theme = useTheme();
   const isDekstop = useBreakpoint();
-
   const {
     step,
     setStep,
@@ -68,8 +67,6 @@ function SignUp() {
     isStarting,
     verifyOtp,
     isVerifying,
-    resendOtpAsync,
-    isResendingOtp,
     completeSignUp,
     isCompleting,
   } = useSignUp();
@@ -112,6 +109,17 @@ function SignUp() {
     }
   };
 
+  const onEnter = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      e.preventDefault(); // Prevent form submission
+
+      // Only trigger next step if we're not on the final step
+      if (step < 2) {
+        handleNext();
+      }
+    }
+  };
+
   const onSubmit = (formData: registrationFormSchema) => {
     clearServerError();
     completeSignUp({
@@ -133,7 +141,6 @@ function SignUp() {
         width: { xs: "100%", md: "480px" },
         height: "fit-content",
         backgroundColor: theme.palette.background.default,
-        boxShadow: { md: "0 0 2px rgba(225, 225, 225, .5)" },
         borderRadius: { md: "1rem" },
       }}
     >
@@ -152,19 +159,16 @@ function SignUp() {
       )}
 
       <FormProvider {...methods}>
-        <form onSubmit={methods.handleSubmit(onSubmit)}>
+        <form onSubmit={methods.handleSubmit(onSubmit)} onKeyDown={onEnter}>
           {step === 0 && <UsernameAndEmailStep handleNext={handleNext} isPending={isStarting} />}
           {step === 1 && otpExpiresAt && (
             <OtpStep
               mode="signup"
               email={methods.getValues("email")}
-              username={methods.getValues("username")}
               intitialOtpExpiresAt={otpExpiresAt}
               handleNext={handleNext}
               handleBack={() => setStep(0)}
               isPending={isVerifying}
-              resendOtpAsync={resendOtpAsync}
-              isResending={isResendingOtp}
             />
           )}
           {step === 2 && <PasswordStep handleNext={handleNext} />}

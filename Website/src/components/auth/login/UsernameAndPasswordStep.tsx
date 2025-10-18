@@ -10,17 +10,12 @@ import { OAuthButtonGroup } from "../OAuthButtonGroup";
 type UsernameAndPasswordProps = {
   handleNext: () => void;
   isPending: boolean;
-  isContinueDisabled: boolean;
 };
 
-export function UsernameAndPassword({
-  handleNext,
-  isPending,
-  isContinueDisabled,
-}: UsernameAndPasswordProps) {
+export function UsernameAndPassword({ handleNext, isPending }: UsernameAndPasswordProps) {
   return (
-    <Stack gap="0.75rem" paddingInline="1rem">
-      <CustomFormHeader header="Log in" subtext="Glad to have you back!" align="center" />
+    <Stack gap="1rem" paddingInline="1rem">
+      <CustomFormHeader header="Log in" subtext="Glad to have you back!" align="flex-start" />
 
       <CustomTextField
         type="text"
@@ -28,6 +23,7 @@ export function UsernameAndPassword({
         fieldValue="identifier"
         startIcon={<AccountCircleOutlinedIcon />}
         autoComplete="email"
+        autoFocus
       />
 
       <CustomTextField
@@ -44,12 +40,11 @@ export function UsernameAndPassword({
         type="button"
         onClick={handleNext}
         loading={isPending}
-        disabled={isContinueDisabled}
       >
         Continue
       </Button>
 
-      <OAuthButtonGroup />
+      <OAuthButtonGroup mode="login" />
 
       <AuthFooter mode="login" />
     </Stack>

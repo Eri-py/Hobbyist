@@ -21,8 +21,6 @@ const CustomBadge = styled(Badge)`
 `;
 
 const AuthButton = styled(Button)({
-  borderRadius: "2rem",
-  padding: "0.5rem 1rem",
   fontSize: "1rem",
   fontWeight: 400,
 });
@@ -66,11 +64,12 @@ export function RightButtonGroup() {
     );
   }
   return (
-    <Stack direction="row" alignItems="center" gap={1}>
+    <Stack direction="row" alignItems="center" gap={1.5}>
       <AuthButton onClick={() => navigate({ to: "/login" })} variant="text">
         Login
       </AuthButton>
-      <AuthButton onClick={() => navigate({ to: "/register" })} variant="contained">
+
+      <AuthButton onClick={() => navigate({ to: "/sign-up" })} variant="outlined">
         Sign up
       </AuthButton>
     </Stack>

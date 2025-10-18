@@ -9,8 +9,8 @@ public class UserEntity
     public required string PasswordHash { get; set; }
     public required string Firstname { get; set; }
     public required string Lastname { get; set; }
-    public DateOnly DateOfBirth { get; set; }
-    public DateTime? CreatedAt { get; set; }
+    public required DateOnly DateOfBirth { get; set; }
+    public required DateTime CreatedAt { get; set; }
 
     // Navigation properties
     public ICollection<RefreshTokenEntity> RefreshTokens { get; set; } = [];

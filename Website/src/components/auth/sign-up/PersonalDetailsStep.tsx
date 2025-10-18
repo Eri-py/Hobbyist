@@ -27,6 +27,7 @@ export function PersonalDetails({ isPending }: PersonalDetailsProps) {
         fieldValue="firstname"
         startIcon={<PersonOutlineIcon />}
         autoComplete="given-name"
+        autoFocus
       />
 
       <CustomTextField

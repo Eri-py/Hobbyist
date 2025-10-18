@@ -83,19 +83,54 @@ public record Result<T>(string? Message, ResultTypes ResultType, T? Content = de
     /// <summary>Creates a successful result with data</summary>
     public static Result<T> Success(T content) => new(null, ResultTypes.Success, content);
 
+    /// <summary>Creates a result indicating invalid request parameters</summary>
+    public static Result<T> BadRequest(string message) => new(message, ResultTypes.BadRequest);
+
+    /// <summary>Creates a result indicating authentication is required</summary>
+    public static Result<T> Unauthorized(string message) => new(message, ResultTypes.Unauthorized);
+
+    /// <summary>Creates a result indicating a resource wasn't found</summary>
+    public static Result<T> NotFound(string message) => new(message, ResultTypes.NotFound);
+
+    /// <summary>Creates a result indicating a resource conflict</summary>
+    public static Result<T> Conflict(string message) => new(message, ResultTypes.Conflict);
+
+    /// <summary>Creates a result indicating an unexpected server error</summary>
+    public static Result<T> InternalServerError(string message) =>
+        new(message, ResultTypes.InternalServerError);
+
     /// <summary>
-    /// Allows implicit conversion from non-generic results for error cases.
+    /// Creates an error result from a non-generic error Result.
     /// </summary>
+    /// <param name="errorResult">The error result to convert from</param>
     /// <exception cref="InvalidOperationException">
-    /// Thrown if attempting to convert from <see cref="ResultTypes.NoContent"/>
+    /// Thrown if attempting to convert from a successful result
     /// </exception>
-    public static implicit operator Result<T>(Result result)
+    public static Result<T> FromError(Result errorResult)
     {
-        if (result.ResultType == ResultTypes.NoContent)
+        if (errorResult.IsSuccess)
             throw new InvalidOperationException(
-                "Cannot convert NoContent to Result<T>; use non-generic Result instead."
+                "Cannot create error result from successful result"
             );
 
-        return new Result<T>(result.Message, result.ResultType);
+        return new Result<T>(errorResult.Message, errorResult.ResultType);
+    }
+
+    /// <summary>
+    /// Creates an error result from a generic error Result of a different type.
+    /// </summary>
+    /// <typeparam name="TOther">The type of the source result</typeparam>
+    /// <param name="errorResult">The error result to convert from</param>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown if attempting to convert from a successful result
+    /// </exception>
+    public static Result<T> FromError<TOther>(Result<TOther> errorResult)
+    {
+        if (errorResult.IsSuccess)
+            throw new InvalidOperationException(
+                "Cannot create error result from successful result"
+            );
+
+        return new Result<T>(errorResult.Message, errorResult.ResultType);
     }
 }

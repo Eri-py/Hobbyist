@@ -18,8 +18,17 @@ public record class StartSignUpRequest
     public required string Email { get; set; }
 }
 
-public record CompleteSignUpRequest
+/// <summary>
+/// Defines the shape of data expected from the web client when starting registration.
+/// </summary>
+public record class CompleteSignUpRequest
 {
+    /// <summary>
+    /// The username for the new account.
+    /// </summary>
+    [Required]
+    public required string Username { get; set; }
+
     /// <summary>
     /// The email address for the new account.
     /// </summary>
@@ -32,4 +41,22 @@ public record CompleteSignUpRequest
     /// </summary>
     [Required]
     public required string Password { get; set; }
+
+    /// <summary>
+    /// The user's first name.
+    /// </summary>
+    [Required]
+    public required string Firstname { get; set; }
+
+    /// <summary>
+    /// The user's last name.
+    /// </summary>
+    [Required]
+    public required string Lastname { get; set; }
+
+    /// <summary>
+    /// The user's date of birth in ISO 8601 format (YYYY-MM-DD).
+    /// </summary>
+    [Required]
+    public required string DateOfBirth { get; set; }
 }

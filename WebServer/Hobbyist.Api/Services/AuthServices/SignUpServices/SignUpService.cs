@@ -12,7 +12,7 @@ namespace Hobbyist.Api.Services.AuthServices.SignUpServices;
 public class SignUpService(
     HobbyistDbContext context,
     IOtpService otpService,
-    ITokenService jwtService
+    ITokenService tokenService
 ) : ISignUpService
 {
     private const string purpose = "signup";
@@ -22,15 +22,13 @@ public class SignUpService(
         var username = request.Username.ToLower();
         var email = request.Email.ToLower();
 
-        var user = await context.Users.FirstOrDefaultAsync(u =>
-            u.Username == username || u.Email == email
-        );
-        if (user is not null)
+        // Check if user already exists
+        if (await IsExistingUser(email, username))
         {
-            return Result.Conflict("Email taken");
+            return Result<OtpResponse>.Conflict("Email taken");
         }
 
-        var otpResult = await otpService.SendOtpAsync(email, username, purpose);
+        var otpResult = await otpService.SendOtpAsync(email, purpose);
         return otpResult;
     }
 
@@ -42,59 +40,93 @@ public class SignUpService(
         return otpService.VerifyOtp(email, otp, purpose);
     }
 
-    public async Task<Result<OtpResponse>> ResendOtpAsync(ResendOtpRequestSignUp request)
+    public async Task<Result<OtpResponse>> ResendOtpAsync(ResendOtpRequest request)
     {
         var email = request.Email.ToLower();
-        var username = request.Username.ToLower();
 
-        var otpResult = await otpService.SendOtpAsync(email, username, purpose);
+        var otpResult = await otpService.SendOtpAsync(email, purpose);
         return otpResult;
     }
 
-    public async Task<Result<AuthResult>> CompleteSignUpAsync(CompleteRegistrationRequest request)
+    public async Task<Result<AuthResult>> CompleteSignUpAsync(CompleteSignUpRequest request)
     {
         var email = request.Email.ToLower();
         var username = request.Username.ToLower();
-        var user = await context.Users.FirstOrDefaultAsync(u =>
-            u.Email == email && u.Username == username
-        );
-        if (user is null)
-            return Result.NotFound("User not found");
 
-        // Update user
-        user.PasswordHash = new PasswordHasher<UserEntity>().HashPassword(user, request.Password);
-        user.Firstname = request.Firstname;
-        user.Lastname = request.Lastname;
-        user.DateOfBirth = DateOnly.Parse(request.DateOfBirth);
-        user.CreatedAt = DateTime.UtcNow;
-
-        var refreshTokenDetails = jwtService.CreateRefreshToken(
-            AuthConfig.RefreshTokenValidForDays
-        );
-
-        // Add token to database
-        var refreshTokenEntry = new RefreshTokenEntity
+        // Check if OTP was verified
+        if (!otpService.IsVerified(email, purpose))
         {
-            TokenHash = jwtService.HashToken(refreshTokenDetails.Value),
-            TokenExpiresAt = refreshTokenDetails.ExpiresAt,
-            UserId = user.Id,
-        };
-        user.RefreshTokens.Add(refreshTokenEntry);
+            return Result<AuthResult>.BadRequest("Email verification required");
+        }
 
-        await context.SaveChangesAsync();
+        // Check if user already exists
+        if (await IsExistingUser(email, username))
+        {
+            otpService.ClearVerification(email, purpose);
+            return Result<AuthResult>.Conflict("Email taken");
+        }
 
-        var accessTokenDetails = jwtService.CreateAccessToken(
-            user,
-            AuthConfig.AccessTokenValidForMinutes
-        );
-        return Result<AuthResult>.Success(
-            new AuthResult
+        var hasher = new PasswordHasher<UserEntity>();
+        var passwordHash = hasher.HashPassword(null!, request.Password);
+
+        using var transaction = await context.Database.BeginTransactionAsync();
+        try
+        {
+            // Create user and add to database
+            var user = new UserEntity
             {
-                AccessToken = accessTokenDetails.Value,
-                RefreshToken = refreshTokenDetails.Value,
-                AccessTokenExpiresAt = accessTokenDetails.ExpiresAt,
-                RefreshTokenExpiresAt = refreshTokenDetails.ExpiresAt,
-            }
-        );
+                Username = username,
+                Email = email,
+                PasswordHash = passwordHash,
+                Firstname = request.Firstname,
+                Lastname = request.Lastname,
+                DateOfBirth = DateOnly.Parse(request.DateOfBirth),
+                CreatedAt = DateTime.UtcNow,
+            };
+            context.Users.Add(user);
+
+            // create refresh token and add to database
+            var refreshTokenDetails = tokenService.CreateRefreshToken(
+                AuthConfig.RefreshTokenValidForDays
+            );
+            var refreshTokenEntry = new RefreshTokenEntity
+            {
+                TokenHash = tokenService.HashToken(refreshTokenDetails.Value),
+                TokenExpiresAt = refreshTokenDetails.ExpiresAt,
+                UserId = user.Id,
+            };
+            user.RefreshTokens.Add(refreshTokenEntry);
+
+            // Save changes to database
+            await context.SaveChangesAsync();
+            await transaction.CommitAsync();
+
+            // Remove verification flag after successful signup
+            otpService.ClearVerification(email, purpose);
+
+            // Create access token and return all token informations
+            var accessTokenDetails = tokenService.CreateAccessToken(
+                user,
+                AuthConfig.AccessTokenValidForMinutes
+            );
+
+            return Result<AuthResult>.Success(
+                new AuthResult
+                {
+                    AccessToken = accessTokenDetails.Value,
+                    RefreshToken = refreshTokenDetails.Value,
+                    AccessTokenExpiresAt = accessTokenDetails.ExpiresAt,
+                    RefreshTokenExpiresAt = refreshTokenDetails.ExpiresAt,
+                }
+            );
+        }
+        catch (Exception)
+        {
+            await transaction.RollbackAsync();
+            return Result<AuthResult>.InternalServerError("An unexpected error has occured");
+        }
     }
+
+    private async Task<bool> IsExistingUser(string username, string email) =>
+        await context.Users.AnyAsync(u => u.Username == username || u.Email == email);
 }

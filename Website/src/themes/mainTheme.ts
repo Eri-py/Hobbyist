@@ -28,8 +28,8 @@ export const mainTheme = (isDarkMode: boolean) =>
       ...(isDarkMode
         ? {
             background: {
-              default: "#121212",
-              paper: "#1a1a1a",
+              default: "#22242a",
+              paper: "#27292e",
             },
           }
         : {

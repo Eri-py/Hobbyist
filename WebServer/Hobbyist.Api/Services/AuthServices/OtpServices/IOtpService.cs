@@ -13,6 +13,8 @@ public record OtpDetails
 public interface IOtpService
 {
     public OtpDetails CreateOtp(int otpValidForMinutes);
-    public Task<Result<OtpResponse>> SendOtpAsync(string email, string username, string purpose);
+    public Task<Result<OtpResponse>> SendOtpAsync(string email, string purpose);
     public Result VerifyOtp(string email, string otp, string purpose);
+    public bool IsVerified(string email, string purpose);
+    public void ClearVerification(string email, string purpose);
 }

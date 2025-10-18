@@ -19,19 +19,9 @@ public record class VerifyOtpRequest
     public required string Otp { get; set; }
 }
 
-public record class ResendOtpRequestSignUp
-{
-    public required string Username { get; set; }
-    public required string Email { get; set; }
-}
-
 public record class ResendOtpRequest
 {
-    /// <summary>
-    /// The username or email address to resend the OTP to.
-    /// </summary>
-    [Required]
-    public required string Identifier { get; set; }
+    public required string Email { get; set; }
 }
 
 public record OtpResponse

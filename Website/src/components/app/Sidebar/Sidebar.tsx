@@ -2,13 +2,11 @@ import { alpha, useTheme } from "@mui/material/styles";
 import Stack from "@mui/material/Stack";
 import List from "@mui/material/List";
 import FormControlLabel from "@mui/material/FormControlLabel";
-import Divider from "@mui/material/Divider";
 
 import { useThemeToggle } from "@/hooks/shared/useThemeToggle";
 import { useSidebar } from "@/hooks/app/useSidebar";
 import { ThemeSwitch } from "./ThemeSwitch";
 import { NavigationButtons } from "./NavigationButtons";
-import { HobbyNavigationButtons } from "./HobbyNavigationButtons";
 
 export function Sidebar() {
   const { mode, toggleTheme } = useThemeToggle();
@@ -26,8 +24,6 @@ export function Sidebar() {
     >
       <List>
         <NavigationButtons />
-        {isSidebarOpen && <Divider />}
-        <HobbyNavigationButtons />
       </List>
 
       <Stack component="footer" paddingBottom="1rem">

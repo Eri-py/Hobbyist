@@ -47,12 +47,7 @@ public class MailtrapEmailService(IConfiguration configuration) : IEmailService
         }
     }
 
-    public async Task<Result> SendOtpEmailAsync(
-        string to,
-        string username,
-        string otp,
-        string otpValidFor
-    )
+    public async Task<Result> SendOtpEmailAsync(string to, string otp, string otpValidFor)
     {
         var templatePath = Path.Combine(
             Directory.GetCurrentDirectory(),
@@ -63,10 +58,7 @@ public class MailtrapEmailService(IConfiguration configuration) : IEmailService
         );
         var htmlTemplate = await File.ReadAllTextAsync(templatePath);
 
-        var htmlBody = htmlTemplate
-            .Replace("{{Username}}", username)
-            .Replace("{{Otp}}", otp)
-            .Replace("{{OtpValidFor}}", otpValidFor);
+        var htmlBody = htmlTemplate.Replace("{{Otp}}", otp).Replace("{{OtpValidFor}}", otpValidFor);
 
         var emailResult = await SendEmailAsync(to, "Verify Your Email Address", htmlBody);
         return emailResult;

@@ -14,7 +14,7 @@ type UsernameAndEmailStepProps = {
 
 export function UsernameAndEmailStep({ handleNext, isPending }: UsernameAndEmailStepProps) {
   return (
-    <Stack gap="0.75rem" paddingInline="1rem">
+    <Stack gap="1rem" paddingInline="1rem">
       <CustomFormHeader
         header="Sign up"
         subtext="join thousands of users already on our platform."
@@ -48,9 +48,9 @@ export function UsernameAndEmailStep({ handleNext, isPending }: UsernameAndEmail
         Continue
       </Button>
 
-      <OAuthButtonGroup />
+      <OAuthButtonGroup mode="sign-up" />
 
-      <AuthFooter mode="register" />
+      <AuthFooter mode="sign-up" />
     </Stack>
   );
 }

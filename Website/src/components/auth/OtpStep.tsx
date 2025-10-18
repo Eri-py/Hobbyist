@@ -1,7 +1,6 @@
-import { useState } from "react";
+// OtpStep.tsx
 import { Controller, get, useFormContext } from "react-hook-form";
 import Countdown, { zeroPad } from "react-countdown";
-import type { AxiosResponse } from "axios";
 
 import { useTheme } from "@mui/material/styles";
 import { MuiOtpInput } from "mui-one-time-password-input";
@@ -12,48 +11,34 @@ import Typography from "@mui/material/Typography";
 import Link from "@mui/material/Link";
 
 import { CustomFormHeader } from "./CustomInputs";
-import type { ResendOtpRequest, ResendOtpResponse } from "@/hooks/auth/useSignUp";
+import { useOtp } from "@/hooks/auth/useOtp";
 
 type OtpStepProps = {
   mode: "login" | "signup";
   email: string;
-  username: string;
+  username?: string;
   intitialOtpExpiresAt: Date;
   handleNext?: () => void;
   handleBack: () => void;
   isPending: boolean;
-  resendOtpAsync: (data: ResendOtpRequest) => Promise<AxiosResponse<ResendOtpResponse>>;
-  isResending: boolean;
 };
 
 export function OtpStep({
   mode,
   email,
-  username,
+  username = "",
   intitialOtpExpiresAt,
   handleNext,
   handleBack,
   isPending,
-  resendOtpAsync,
-  isResending,
 }: OtpStepProps) {
   const theme = useTheme();
   const { control } = useFormContext();
-  const [endTime, setEndTime] = useState(intitialOtpExpiresAt.getTime());
-  const [isResendDisabled, setIsResendDisabled] = useState<boolean>(true);
+  const { endTime, isResendDisabled, handleResend, isResending, serverErrorMessage } =
+    useOtp(intitialOtpExpiresAt);
 
-  const handleResend = async () => {
-    const response = await resendOtpAsync({ email, username });
-    const newEndTime = new Date(response.data.otpExpiresAt).getTime();
-    setEndTime(newEndTime);
-    setIsResendDisabled(true);
-
-    setTimeout(
-      () => {
-        setIsResendDisabled(false);
-      },
-      (newEndTime - Date.now()) / 5
-    );
+  const onResend = () => {
+    handleResend({ username, email }, mode);
   };
 
   return (
@@ -69,6 +54,12 @@ export function OtpStep({
         align="flex-start"
       />
 
+      {serverErrorMessage && (
+        <Typography color="error" textAlign="center" fontSize="0.875rem">
+          {serverErrorMessage}
+        </Typography>
+      )}
+
       <Controller
         name="otp"
         control={control}
@@ -78,6 +69,7 @@ export function OtpStep({
               value={value || ""}
               length={6}
               onChange={onChange}
+              autoFocus
               TextFieldsProps={{
                 slotProps: {
                   htmlInput: { inputMode: "numeric", pattern: "[0-9]*" },
@@ -92,16 +84,7 @@ export function OtpStep({
       />
 
       <Countdown
-        key={endTime}
         date={endTime}
-        onStart={() => {
-          setTimeout(
-            () => {
-              setIsResendDisabled(false);
-            },
-            (endTime - Date.now()) / 5
-          );
-        }}
         renderer={({ minutes, seconds, completed }) => {
           if (!completed) {
             return (
@@ -133,11 +116,11 @@ export function OtpStep({
             component="button"
             type="button"
             underline="hover"
-            disabled={isResending}
-            onClick={handleResend}
+            disabled={isResendDisabled || isResending}
+            onClick={onResend}
             sx={{
               cursor: isResending ? "not-allowed" : "pointer",
-              color: theme.palette.primary.main,
+              color: isResending ? theme.palette.text.disabled : theme.palette.primary.main,
               fontWeight: 500,
             }}
           >

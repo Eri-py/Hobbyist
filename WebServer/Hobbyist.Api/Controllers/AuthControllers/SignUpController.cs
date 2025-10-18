@@ -1,9 +1,11 @@
 using Hobbyist.Api.Dtos;
 using Hobbyist.Api.Extensions;
+using Hobbyist.Api.Services.AuthServices;
 using Hobbyist.Api.Services.AuthServices.SignUpServices;
+using Hobbyist.Common;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Hobbyist.Api.Controllers
+namespace Hobbyist.Api.Controllers.AuthControllers
 {
     [Route("api/sign-up")]
     [ApiController]
@@ -26,12 +28,25 @@ namespace Hobbyist.Api.Controllers
         }
 
         [HttpPost("resend-otp")]
-        public async Task<ActionResult<OtpResponse>> ResendOtp(
-            [FromBody] ResendOtpRequestSignUp request
-        )
+        public async Task<ActionResult<OtpResponse>> ResendOtp([FromBody] ResendOtpRequest request)
         {
             var result = await signUpService.ResendOtpAsync(request);
             return result.ToActionResult();
+        }
+
+        [HttpPost("complete")]
+        public async Task<ActionResult<AuthResult>> CompleteSignUp(
+            [FromBody] CompleteSignUpRequest request
+        )
+        {
+            var result = await signUpService.CompleteSignUpAsync(request);
+            if (!result.IsSuccess)
+            {
+                return Result<AuthResult>.FromError(result).ToActionResult();
+            }
+
+            Helpers.SetAuthCookies(HttpContext, result.Content!);
+            return NoContent();
         }
     }
 }

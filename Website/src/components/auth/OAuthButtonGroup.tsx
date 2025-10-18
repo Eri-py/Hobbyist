@@ -7,7 +7,11 @@ import Typography from "@mui/material/Typography";
 import { GoogleIcon } from "@/components/shared/CustomIcons";
 import Button from "@mui/material/Button";
 
-export function OAuthButtonGroup() {
+type OAuthButtonGroupTypes = {
+  mode: "login" | "sign-up";
+};
+
+export function OAuthButtonGroup({ mode }: OAuthButtonGroupTypes) {
   const theme = useTheme();
 
   return (
@@ -29,7 +33,9 @@ export function OAuthButtonGroup() {
 
       <Button variant="outlined" size="large" type="button" sx={{ gap: 1 }}>
         <GoogleIcon width="1.5rem" />
-        <Typography color="textPrimary">Sign up with Google</Typography>
+        <Typography color="textPrimary">
+          {mode === "login" ? "Login with Google" : "Sign up with Google"}
+        </Typography>
       </Button>
 
       <Divider sx={{ borderColor: theme.palette.divider }} />

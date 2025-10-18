@@ -1,5 +1,4 @@
 import axios, { AxiosError } from "axios";
-import { getNewAccessToken } from "./AuthApi";
 
 const API_BASE_URL = "https://localhost:7000/api"; //Remember to change this back to localhost before commits
 
@@ -7,6 +6,10 @@ export const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true,
 });
+
+const getNewAccessToken = () => {
+  return axiosInstance.get("auth/refresh-token");
+};
 
 axiosInstance.interceptors.response.use(undefined, async (error: AxiosError) => {
   if (error.status === 401) {

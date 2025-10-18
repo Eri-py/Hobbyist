@@ -72,7 +72,7 @@ public class JwtService(IConfiguration configuration, HobbyistDbContext context)
                 .FirstOrDefaultAsync(t => t.TokenHash == HashToken(refreshToken));
 
             if (token is null)
-                return Result.NotFound("Invalid refresh token");
+                return Result<AuthResult>.NotFound("Invalid refresh token");
 
             var newRefreshToken = CreateRefreshToken(AuthConfig.RefreshTokenValidForDays);
             var accessToken = CreateAccessToken(token.User!, AuthConfig.AccessTokenValidForMinutes);

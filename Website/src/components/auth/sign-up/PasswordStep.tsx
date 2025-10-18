@@ -1,14 +1,21 @@
+import { useFormContext } from "react-hook-form";
+
 import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import LockIcon from "@mui/icons-material/Lock";
 
 import { CustomFormHeader, CustomTextField } from "../CustomInputs";
+import { PasswordRequirements } from "./PasswordRequirements";
+import { useDebounce } from "@/hooks/shared/useDebounce";
 
 type PasswordProps = {
   handleNext: () => void;
 };
 
 export function PasswordStep({ handleNext }: PasswordProps) {
+  const { watch } = useFormContext();
+  const password: string = useDebounce(watch("password") || "");
+
   return (
     <Stack gap="0.75rem" paddingInline="1rem">
       <CustomFormHeader
@@ -23,7 +30,10 @@ export function PasswordStep({ handleNext }: PasswordProps) {
         fieldValue="password"
         startIcon={<LockIcon />}
         autoComplete="new-password"
+        autoFocus
       />
+
+      <PasswordRequirements password={password} />
 
       <CustomTextField
         type="password"

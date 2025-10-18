@@ -15,26 +15,22 @@ public class OtpService(IMemoryCache cache, IEmailService emailService) : IOtpSe
         return new OtpDetails { Value = token, ExpiresAt = expiresAt };
     }
 
-    public async Task<Result<OtpResponse>> SendOtpAsync(
-        string email,
-        string username,
-        string purpose
-    )
+    public async Task<Result<OtpResponse>> SendOtpAsync(string email, string purpose)
     {
-        var cacheKey = $"otp_{purpose}_{email}";
+        // Generate cache key
+        var cacheKey = GetOtpCacheKey(email, purpose);
 
+        // Generate OTP and send verification email.
         var otpDetails = CreateOtp(AuthConfig.OtpValidForMinutes);
         var emailResult = await emailService.SendOtpEmailAsync(
             to: email,
-            username: username,
             otp: otpDetails.Value,
             otpValidFor: $"{AuthConfig.OtpValidForMinutes} minutes"
         );
 
         if (!emailResult.IsSuccess)
         {
-            // Return bad email result
-            return emailResult;
+            return Result<OtpResponse>.FromError(emailResult);
         }
 
         cache.Set(cacheKey, otpDetails.Value, TimeSpan.FromMinutes(AuthConfig.OtpValidForMinutes));
@@ -43,14 +39,35 @@ public class OtpService(IMemoryCache cache, IEmailService emailService) : IOtpSe
 
     public Result VerifyOtp(string email, string otp, string purpose)
     {
-        var cacheKey = $"otp_{purpose}_{email}";
+        var cacheKey = GetOtpCacheKey(email, purpose);
 
         if (!cache.TryGetValue(cacheKey, out var cachedOtp) || cachedOtp?.ToString() != otp)
         {
             return Result.BadRequest("Invalid or expired verification code");
         }
 
+        // Mark email as verified for this purpose
+        var verifiedKey = GetVerifiedCacheKey(email, purpose);
+        cache.Set(verifiedKey, true, TimeSpan.FromMinutes(15));
+
         cache.Remove(cacheKey);
         return Result.NoContent();
     }
+
+    public bool IsVerified(string email, string purpose)
+    {
+        var verifiedKey = GetVerifiedCacheKey(email, purpose);
+        return cache.TryGetValue(verifiedKey, out _);
+    }
+
+    public void ClearVerification(string email, string purpose)
+    {
+        var verifiedKey = GetVerifiedCacheKey(email, purpose);
+        cache.Remove(verifiedKey);
+    }
+
+    private static string GetOtpCacheKey(string email, string purpose) => $"otp_{purpose}_{email}";
+
+    private static string GetVerifiedCacheKey(string email, string purpose) =>
+        $"verified_{purpose}_{email}";
 }

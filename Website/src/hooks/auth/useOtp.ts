@@ -1,0 +1,79 @@
+// useOtp.ts
+import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { useServerError, type ServerError } from "@/hooks/auth/useServerError";
+import { axiosInstance } from "@/api/axiosInstance";
+
+// Types for API requests
+export type ResendOtpRequest = {
+  username: string;
+  email: string;
+};
+
+export type ResendOtpResponse = {
+  otpExpiresAt: string;
+};
+
+// API function
+const resendOtpApi = (data: ResendOtpRequest, endpoint: string) => {
+  return axiosInstance.post<ResendOtpResponse>(endpoint, data);
+};
+
+export function useOtp(initialOtpExpiresAt: Date) {
+  const { serverErrorMessage, handleServerError, clearServerError } = useServerError();
+  const [endTime, setEndTime] = useState<number>(initialOtpExpiresAt.getTime());
+  const [isResendDisabled, setIsResendDisabled] = useState<boolean>(true);
+
+  // Enable resend button after 1/5th of the initial OTP duration
+  useState(() => {
+    setTimeout(
+      () => {
+        setIsResendDisabled(false);
+      },
+      (initialOtpExpiresAt.getTime() - Date.now()) / 5
+    );
+  });
+
+  const resendOtpMutation = useMutation({
+    mutationFn: ({ data, mode }: { data: ResendOtpRequest; mode: "login" | "signup" }) => {
+      const endpoint = mode === "signup" ? "sign-up/resend-otp" : "login/resend-otp";
+      return resendOtpApi(data, endpoint);
+    },
+    onSuccess: (response) => {
+      const newOtpExpiresAt = new Date(response.data.otpExpiresAt);
+      const newEndTime = newOtpExpiresAt.getTime();
+
+      setEndTime(newEndTime);
+      setIsResendDisabled(true);
+
+      // Re-enable resend button after 1/5th of the new OTP duration
+      setTimeout(
+        () => {
+          setIsResendDisabled(false);
+        },
+        (newEndTime - Date.now()) / 5
+      );
+    },
+    onError: (error: ServerError) => handleServerError(error),
+  });
+
+  const handleResend = (data: ResendOtpRequest, mode: "login" | "signup") => {
+    resendOtpMutation.mutate({ data, mode });
+  };
+
+  return {
+    // State
+    endTime,
+    isResendDisabled,
+
+    // Server error handling
+    serverErrorMessage,
+    clearServerError,
+
+    // Actions
+    handleResend,
+
+    // Mutation states
+    isResending: resendOtpMutation.isPending,
+  };
+}

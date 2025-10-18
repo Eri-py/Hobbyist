@@ -16,11 +16,6 @@ type VerifyOtpRequest = {
   otp: string;
 };
 
-export type ResendOtpRequest = {
-  username: string;
-  email: string;
-};
-
 type CompleteSignUpRequest = {
   username: string;
   email: string;
@@ -34,10 +29,6 @@ type StartSignUpResponse = {
   otpExpiresAt: string;
 };
 
-export type ResendOtpResponse = {
-  otpExpiresAt: string;
-};
-
 // API functions
 const startSignUpApi = (data: StartSignUpRequest) => {
   return axiosInstance.post<StartSignUpResponse>("sign-up/start", data);
@@ -45,10 +36,6 @@ const startSignUpApi = (data: StartSignUpRequest) => {
 
 const verifyOtpApi = (data: VerifyOtpRequest) => {
   return axiosInstance.post("sign-up/verify-otp", data);
-};
-
-const resendOtpApi = (data: ResendOtpRequest) => {
-  return axiosInstance.post<ResendOtpResponse>("sign-up/resend-otp", data);
 };
 
 const completeSignUpApi = (data: CompleteSignUpRequest) => {
@@ -76,12 +63,6 @@ export function useSignUp() {
     onError: (error: ServerError) => handleServerError(error),
   });
 
-  const resendOtpMutation = useMutation({
-    mutationFn: (data: ResendOtpRequest) => resendOtpApi(data),
-    onSuccess: (response) => setOtpExpiresAt(new Date(response.data.otpExpiresAt)),
-    onError: (error: ServerError) => handleServerError(error),
-  });
-
   const completeSignUpMutation = useMutation({
     mutationFn: (data: CompleteSignUpRequest) => completeSignUpApi(data),
     onSuccess: () => navigate({ to: "/" }),
@@ -104,9 +85,6 @@ export function useSignUp() {
 
     verifyOtp: verifyOtpMutation.mutate,
     isVerifying: verifyOtpMutation.isPending,
-
-    resendOtpAsync: resendOtpMutation.mutateAsync,
-    isResendingOtp: resendOtpMutation.isPending,
 
     completeSignUp: completeSignUpMutation.mutate,
     isCompleting: completeSignUpMutation.isPending,
