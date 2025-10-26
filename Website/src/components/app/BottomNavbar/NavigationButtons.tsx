@@ -5,8 +5,8 @@ import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 import HomeIcon from "@mui/icons-material/Home";
 import ChatOutlinedIcon from "@mui/icons-material/ChatOutlined";
 import ChatIcon from "@mui/icons-material/Chat";
-import ExploreOutlinedIcon from "@mui/icons-material/ExploreOutlined";
-import ExploreIcon from "@mui/icons-material/Explore";
+import EventOutlinedIcon from "@mui/icons-material/EventOutlined";
+import EventIcon from "@mui/icons-material/Event";
 import PersonOutlineOutlinedIcon from "@mui/icons-material/PersonOutlineOutlined";
 import PersonIcon from "@mui/icons-material/Person";
 import { styled } from "@mui/material/styles";
@@ -34,7 +34,7 @@ type NavigationItem = {
 };
 
 export function NavigationButtons() {
-  const { handleHomeClick, handleMessagesClick, handleCreateClick, handleExploreClick } =
+  const { handleHomeClick, handleMessagesClick, handleCreateClick, handleEventsClick } =
     useNavigationButtons();
   const { handleProfileClick } = useProfile();
   const { getActiveTab } = useNavigation();
@@ -48,10 +48,10 @@ export function NavigationButtons() {
       handleClick: handleHomeClick,
     },
     {
-      label: "Explore",
-      icon: <ExploreOutlinedIcon style={{ fontSize: "1.75rem" }} />,
-      activeIcon: <ExploreIcon style={{ fontSize: "1.75rem" }} />,
-      handleClick: handleExploreClick,
+      label: "Events",
+      icon: <EventOutlinedIcon style={{ fontSize: "1.75rem" }} />,
+      activeIcon: <EventIcon style={{ fontSize: "1.75rem" }} />,
+      handleClick: handleEventsClick,
     },
     {
       label: "Create",

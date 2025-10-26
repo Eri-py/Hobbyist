@@ -1,7 +1,8 @@
-import { useAuth } from "@/hooks/app/useAuth";
-import { useRouteSetup } from "@/hooks/app/useRouteSetup";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo } from "react";
+
+import { useAuth } from "@/hooks/app/useAuth";
+import { useRouteSetup } from "@/hooks/app/useRouteSetup";
 
 export const Route = createFileRoute("/_app/profile/")({
   component: RouteComponent,

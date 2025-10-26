@@ -15,8 +15,8 @@ updates:
 
   # Enable version updates for dotnet
   - package-ecosystem: "nuget"
-    # Look for package files in the `ApiServer` directory
-    directory: "/ApiServer/"
+    # Look for package files in the `WebServer` directory
+    directory: "/WebServer/"
     # Check the for updates every day (weekdays)
     schedule:
       interval: "daily"

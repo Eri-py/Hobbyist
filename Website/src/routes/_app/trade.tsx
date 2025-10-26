@@ -10,7 +10,7 @@ export const Route = createFileRoute("/_app/trade")({
 function TradePage() {
   const routeConfig = useMemo(
     () => ({
-      activeNavigationTab: "Events",
+      activeNavigationTab: "Trade",
       desktopSearchBar: <div></div>,
       desktopRightButtonGroup: <div></div>,
       mobileSearchOverlay: <div></div>,

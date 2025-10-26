@@ -1,10 +1,8 @@
 import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
-import { ThemeProvider } from "@mui/material/styles";
 import Button from "@mui/material/Button";
 
 import { LogoWithName } from "@/components/shared/Logo";
 import { useBreakpoint } from "@/hooks/shared/useBreakpoint";
-import { mainTheme } from "@/themes/mainTheme";
 import { FormContainer } from "@/components/auth/FormContainer";
 
 export const Route = createFileRoute("/_auth")({
@@ -13,10 +11,9 @@ export const Route = createFileRoute("/_auth")({
 
 function AuthLayout() {
   const { isDesktop } = useBreakpoint();
-  const desktopTheme = mainTheme(false);
   const navigate = useNavigate();
 
-  const content = (
+  return (
     <FormContainer>
       {isDesktop && (
         <Button
@@ -38,6 +35,4 @@ function AuthLayout() {
       <Outlet />
     </FormContainer>
   );
-
-  return isDesktop ? <ThemeProvider theme={desktopTheme}>{content}</ThemeProvider> : content;
 }

@@ -5,7 +5,7 @@ import Typography from "@mui/material/Typography";
 import { useNavigate } from "@tanstack/react-router";
 
 type AuthFooterProps = {
-  mode: "login" | "register";
+  mode: "login" | "sign-up";
 };
 
 export function AuthFooter({ mode }: AuthFooterProps) {
@@ -16,9 +16,9 @@ export function AuthFooter({ mode }: AuthFooterProps) {
     login: {
       question: "Don't have an account?",
       linkText: "sign up here",
-      target: "/register",
+      target: "/sign-up",
     },
-    register: {
+    "sign-up": {
       question: "Already have an account?",
       linkText: "login here",
       target: "/login",

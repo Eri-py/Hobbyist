@@ -1,4 +1,4 @@
-import { apiClient } from "./Client";
+import { axiosInstance } from "./axiosInstance";
 
 export type getSearchSuggestionsResponse = { result: { name: string; category: string }[] };
 
@@ -9,21 +9,21 @@ export type addOrUpdateSearchTermRequest = { searchTerm: string };
 export type removeSearchTermsRequest = { searchTerms: string[] };
 
 export const getSearchSuggestions = (data: getSearchSuggestionsRequest) => {
-  return apiClient.post("home/search-suggestions", data);
+  return axiosInstance.post("home/search-suggestions", data);
 };
 
 export const getSearchHistory = () => {
-  return apiClient.get("home/get-search-history");
+  return axiosInstance.get("home/get-search-history");
 };
 
 export const addOrUpdateSearchTerm = (data: addOrUpdateSearchTermRequest) => {
-  return apiClient.post("home/add-search-term", data);
+  return axiosInstance.post("home/add-search-term", data);
 };
 
 export const removeSearchTerms = (data: removeSearchTermsRequest) => {
-  return apiClient.post("home/remove-search-terms", data);
+  return axiosInstance.post("home/remove-search-terms", data);
 };
 
 export const getUserHobbies = () => {
-  return apiClient.get("home/get-user-hobbies");
+  return axiosInstance.get("home/get-user-hobbies");
 };

@@ -1,18 +1,17 @@
-import { styled, useTheme } from "@mui/material/styles";
-import AppleIcon from "@mui/icons-material/Apple";
+import { useTheme } from "@mui/material/styles";
 import Stack from "@mui/material/Stack";
 import Box from "@mui/material/Box";
 import Divider from "@mui/material/Divider";
 import Typography from "@mui/material/Typography";
-import IconButton from "@mui/material/IconButton";
 
-import { FacebookIcon, GoogleIcon } from "@/components/shared/CustomIcons";
+import { GoogleIcon } from "@/components/shared/CustomIcons";
+import Button from "@mui/material/Button";
 
-const CustomIconButton = styled(IconButton)(({ theme }) => ({
-  border: `1px solid ${theme.palette.primary.main}`,
-}));
+type OAuthButtonGroupTypes = {
+  mode: "login" | "sign-up";
+};
 
-export function OAuthButtonGroup() {
+export function OAuthButtonGroup({ mode }: OAuthButtonGroupTypes) {
   const theme = useTheme();
 
   return (
@@ -32,22 +31,12 @@ export function OAuthButtonGroup() {
         <Divider sx={{ flexGrow: 1 }} />
       </Box>
 
-      <Stack direction="row" gap="1rem" alignSelf="center">
-        <CustomIconButton size="large" disableRipple>
-          <GoogleIcon width="2rem" />
-        </CustomIconButton>
-        <CustomIconButton size="large" disableRipple>
-          <AppleIcon
-            fontSize="large"
-            sx={{
-              color: theme.palette.mode === "dark" ? "#ffffff" : "#000000",
-            }}
-          />
-        </CustomIconButton>
-        <CustomIconButton size="large" disableRipple>
-          <FacebookIcon width="2rem" />
-        </CustomIconButton>
-      </Stack>
+      <Button variant="outlined" size="large" type="button" sx={{ gap: 1 }}>
+        <GoogleIcon width="1.5rem" />
+        <Typography color="textPrimary">
+          {mode === "login" ? "Login with Google" : "Sign up with Google"}
+        </Typography>
+      </Button>
 
       <Divider sx={{ borderColor: theme.palette.divider }} />
     </Stack>

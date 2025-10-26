@@ -3,33 +3,33 @@
 
 name: Node.js CI
 permissions:
-  contents: read
+    contents: read
 
 on:
-  push:
-    branches: ["main"]
-  pull_request:
-    branches: ["main"]
+    push:
+        branches: ["main"]
+    pull_request:
+        branches: ["main"]
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+    build:
+        runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        node-version: [24.x]
-        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+        strategy:
+            matrix:
+                node-version: [25.x]
+                # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
-    steps:
-      - uses: actions/checkout@v4
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache-dependency-path: Website/package-lock.json
-      - name: Restore dependencies
-        run: npm ci
-        working-directory: Website
-      - name: Build
-        run: npm run build
-        working-directory: Website
+        steps:
+            - uses: actions/checkout@v4
+            - name: Use Node.js ${{ matrix.node-version }}
+              uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ matrix.node-version }}
+                  cache-dependency-path: Website/package-lock.json
+            - name: Restore dependencies
+              run: npm ci
+              working-directory: Website
+            - name: Build
+              run: npm run build
+              working-directory: Website
