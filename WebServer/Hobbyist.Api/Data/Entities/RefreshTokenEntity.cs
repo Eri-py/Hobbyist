@@ -7,6 +7,7 @@ public class RefreshTokenEntity
     public Guid Id { get; set; }
     public required string TokenHash { get; set; }
     public required DateTime TokenExpiresAt { get; set; }
+    public required DateTime CreatedAt { get; set; }
 
     [ForeignKey("User")]
     public required Guid UserId { get; set; }

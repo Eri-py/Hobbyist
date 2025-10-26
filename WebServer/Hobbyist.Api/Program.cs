@@ -1,8 +1,7 @@
 using Hobbyist.Api.Data;
 using Hobbyist.Api.Services.AuthServices;
+using Hobbyist.Api.Services.CacheServices;
 using Hobbyist.Api.Services.EmailServices;
-using Hobbyist.Api.Services.SearchService;
-using Microsoft.Extensions.Caching.Memory;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,7 +11,6 @@ builder.Services.AddControllers();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
-builder.Services.AddMemoryCache();
 
 if (builder.Environment.IsDevelopment())
 {
@@ -37,7 +35,7 @@ if (builder.Environment.IsDevelopment())
 builder.Services.AddDatabases(builder.Configuration);
 builder.Services.AddAuthServices(builder.Configuration);
 builder.Services.AddEmailServices(builder.Environment);
-builder.Services.AddSearchServices();
+builder.Services.AddCacheServices();
 
 var app = builder.Build();
 

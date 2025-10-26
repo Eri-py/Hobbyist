@@ -4,7 +4,6 @@ using System.Security.Cryptography;
 using System.Text;
 using Hobbyist.Api.Data;
 using Hobbyist.Api.Data.Entities;
-using Hobbyist.Api.Services.EmailServices;
 using Hobbyist.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -98,20 +97,6 @@ public class JwtService(IConfiguration configuration, HobbyistDbContext context)
         {
             await transaction.RollbackAsync();
             throw;
-        }
-    }
-
-    private static class CryptoRandom
-    {
-        private static readonly ThreadLocal<RandomNumberGenerator> crng = new(
-            RandomNumberGenerator.Create
-        );
-        private static readonly ThreadLocal<byte[]> bytes = new(() => new byte[sizeof(int)]);
-
-        public static int NextInt()
-        {
-            crng.Value!.GetBytes(bytes.Value!);
-            return BitConverter.ToInt32(bytes.Value!, 0) & int.MaxValue;
         }
     }
 }

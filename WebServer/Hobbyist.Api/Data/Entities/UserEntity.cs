@@ -14,5 +14,4 @@ public class UserEntity
 
     // Navigation properties
     public ICollection<RefreshTokenEntity> RefreshTokens { get; set; } = [];
-    public ICollection<SearchEntity> Searches { get; set; } = [];
 }

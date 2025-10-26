@@ -85,6 +85,7 @@ public class LoginService(
                 TokenHash = tokenService.HashToken(refreshTokenDetails.Value),
                 TokenExpiresAt = refreshTokenDetails.ExpiresAt,
                 UserId = user.Id,
+                CreatedAt = DateTime.UtcNow,
             };
             user.RefreshTokens.Add(refreshTokenEntry);
 

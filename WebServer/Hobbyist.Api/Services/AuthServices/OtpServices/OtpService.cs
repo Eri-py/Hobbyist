@@ -1,12 +1,13 @@
 using System;
 using Hobbyist.Api.Dtos;
+using Hobbyist.Api.Services.CacheServices;
 using Hobbyist.Api.Services.EmailServices;
 using Hobbyist.Common;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace Hobbyist.Api.Services.AuthServices.OtpServices;
 
-public class OtpService(IMemoryCache cache, IEmailService emailService) : IOtpService
+public class OtpService(ICache cache, IEmailService emailService) : IOtpService
 {
     public OtpDetails CreateOtp(int otpValidForMinutes)
     {
@@ -41,7 +42,7 @@ public class OtpService(IMemoryCache cache, IEmailService emailService) : IOtpSe
     {
         var cacheKey = GetOtpCacheKey(email, purpose);
 
-        if (!cache.TryGetValue(cacheKey, out var cachedOtp) || cachedOtp?.ToString() != otp)
+        if (!cache.TryGetValue<string>(cacheKey, out var cachedOtp) || cachedOtp?.ToString() != otp)
         {
             return Result.BadRequest("Invalid or expired verification code");
         }
@@ -57,7 +58,7 @@ public class OtpService(IMemoryCache cache, IEmailService emailService) : IOtpSe
     public bool IsVerified(string email, string purpose)
     {
         var verifiedKey = GetVerifiedCacheKey(email, purpose);
-        return cache.TryGetValue(verifiedKey, out _);
+        return cache.TryGetValue<bool>(verifiedKey, out _);
     }
 
     public void ClearVerification(string email, string purpose)

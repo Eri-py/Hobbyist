@@ -23,7 +23,7 @@ public class SignUpService(
         var email = request.Email.ToLower();
 
         // Check if user already exists
-        if (await IsExistingUser(email, username))
+        if (await IsExistingUser(username, email))
         {
             return Result<OtpResponse>.Conflict("Email taken");
         }
@@ -60,7 +60,7 @@ public class SignUpService(
         }
 
         // Check if user already exists
-        if (await IsExistingUser(email, username))
+        if (await IsExistingUser(username, email))
         {
             otpService.ClearVerification(email, purpose);
             return Result<AuthResult>.Conflict("Email taken");
@@ -94,6 +94,7 @@ public class SignUpService(
                 TokenHash = tokenService.HashToken(refreshTokenDetails.Value),
                 TokenExpiresAt = refreshTokenDetails.ExpiresAt,
                 UserId = user.Id,
+                CreatedAt = DateTime.UtcNow,
             };
             user.RefreshTokens.Add(refreshTokenEntry);
 
