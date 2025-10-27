@@ -3,17 +3,27 @@ namespace Hobbyist.Api.Services.AuthServices;
 public record AuthConfig
 {
     /// <summary>
+    /// Purpose identifier for login OTP operations
+    /// </summary>
+    public const string LoginPurpose = "login";
+
+    /// <summary>
+    /// Purpose identifier for sign-up OTP operations
+    /// </summary>
+    public const string SignUpPurpose = "signup";
+
+    /// <summary>
     /// Time in minutes that OTP (One-Time Password) is valid for
     /// </summary>
-    public static int OtpValidForMinutes => 5;
+    public const int OtpValidForMinutes = 5;
 
     /// <summary>
     /// Time in minutes that Access Token is valid for
     /// </summary>
-    public static int AccessTokenValidForMinutes => 15;
+    public const int AccessTokenValidForMinutes = 15;
 
     /// <summary>
     /// Time in days that Refresh Token is valid for
     /// </summary>
-    public static int RefreshTokenValidForDays => 7;
+    public const int RefreshTokenValidForDays = 7;
 }

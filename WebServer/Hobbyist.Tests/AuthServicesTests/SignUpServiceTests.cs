@@ -45,25 +45,31 @@ public class SignUpServiceTests : DatabaseTestBase
             Email = "newuser@example.com",
         };
 
-        var expectedOtpResponse = new OtpResponse { OtpExpiresAt = DateTime.UtcNow.AddMinutes(10) };
+        var expectedOtpResponse = new OtpResponse
+        {
+            OtpExpiresAt = DateTime.UtcNow.AddMinutes(AuthConfig.OtpValidForMinutes),
+        };
 
         _otpServiceMock
-            .Setup(x => x.SendOtpAsync(request.Email.ToLower(), "signup"))
+            .Setup(x => x.SendOtpAsync(It.IsAny<string>(), It.IsAny<string>()))
             .ReturnsAsync(Result<OtpResponse>.Success(expectedOtpResponse));
 
         // Act
         var result = await _signUpService.StartSignUpAsync(request);
 
+        // Assert
         using (Assert.EnterMultipleScope())
         {
-            // Assert
             Assert.That(result.IsSuccess, Is.True);
             Assert.That(result.ResultType, Is.EqualTo(ResultTypes.Success));
             Assert.That(result.Content, Is.Not.Null);
         }
-        Assert.That(result.Content.OtpExpiresAt, Is.EqualTo(expectedOtpResponse.OtpExpiresAt));
+        Assert.That(result.Content, Is.EqualTo(expectedOtpResponse));
 
-        _otpServiceMock.Verify(x => x.SendOtpAsync(request.Email.ToLower(), "signup"), Times.Once);
+        _otpServiceMock.Verify(
+            x => x.SendOtpAsync(request.Email.ToLower(), AuthConfig.SignUpPurpose),
+            Times.Once
+        );
     }
 
     [Test]
@@ -94,12 +100,12 @@ public class SignUpServiceTests : DatabaseTestBase
         // Act
         var result = await _signUpService.StartSignUpAsync(request);
 
+        // Assert
         using (Assert.EnterMultipleScope())
         {
-            // Assert
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.ResultType, Is.EqualTo(ResultTypes.Conflict));
-            Assert.That(result.Message, Is.EqualTo("Email taken"));
+            Assert.That(result.Message, Is.EqualTo(ErrorMessages.EmailTaken));
         }
 
         _otpServiceMock.Verify(
@@ -137,9 +143,12 @@ public class SignUpServiceTests : DatabaseTestBase
         var result = await _signUpService.StartSignUpAsync(request);
 
         // Assert
-        Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.ResultType, Is.EqualTo(ResultTypes.Conflict));
-        Assert.That(result.Message, Is.EqualTo("Email taken"));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.ResultType, Is.EqualTo(ResultTypes.Conflict));
+            Assert.That(result.Message, Is.EqualTo(ErrorMessages.EmailTaken));
+        }
 
         _otpServiceMock.Verify(
             x => x.SendOtpAsync(It.IsAny<string>(), It.IsAny<string>()),
@@ -158,18 +167,24 @@ public class SignUpServiceTests : DatabaseTestBase
         };
 
         _otpServiceMock
-            .Setup(x => x.SendOtpAsync(request.Email.ToLower(), "signup"))
-            .ReturnsAsync(Result<OtpResponse>.BadRequest("Failed to send OTP"));
+            .Setup(x => x.SendOtpAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .ReturnsAsync(Result<OtpResponse>.InternalServerError(ErrorMessages.UnexpectedError));
 
         // Act
         var result = await _signUpService.StartSignUpAsync(request);
 
         // Assert
-        Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.ResultType, Is.EqualTo(ResultTypes.BadRequest));
-        Assert.That(result.Message, Is.EqualTo("Failed to send OTP"));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.ResultType, Is.EqualTo(ResultTypes.InternalServerError));
+            Assert.That(result.Message, Is.EqualTo(ErrorMessages.UnexpectedError));
+        }
 
-        _otpServiceMock.Verify(x => x.SendOtpAsync(request.Email.ToLower(), "signup"), Times.Once);
+        _otpServiceMock.Verify(
+            x => x.SendOtpAsync(request.Email.ToLower(), AuthConfig.SignUpPurpose),
+            Times.Once
+        );
     }
 
     [Test]
@@ -182,22 +197,23 @@ public class SignUpServiceTests : DatabaseTestBase
             Email = "MixedCase@Example.COM",
         };
 
-        var expectedOtpResponse = new OtpResponse { OtpExpiresAt = DateTime.UtcNow.AddMinutes(10) };
-
-        string? capturedEmail = null;
+        var expectedOtpResponse = new OtpResponse
+        {
+            OtpExpiresAt = DateTime.UtcNow.AddMinutes(AuthConfig.OtpValidForMinutes),
+        };
 
         _otpServiceMock
             .Setup(x => x.SendOtpAsync(It.IsAny<string>(), It.IsAny<string>()))
-            .Callback<string, string>((email, purpose) => capturedEmail = email)
             .ReturnsAsync(Result<OtpResponse>.Success(expectedOtpResponse));
 
         // Act
         var result = await _signUpService.StartSignUpAsync(request);
 
         // Assert
-        Assert.That(result.IsSuccess, Is.True);
-        Assert.That(capturedEmail, Is.EqualTo("mixedcase@example.com"));
-        _otpServiceMock.Verify(x => x.SendOtpAsync("mixedcase@example.com", "signup"), Times.Once);
+        _otpServiceMock.Verify(
+            x => x.SendOtpAsync(request.Email.ToLower(), AuthConfig.SignUpPurpose),
+            Times.Once
+        );
     }
 
     #endregion
@@ -211,8 +227,8 @@ public class SignUpServiceTests : DatabaseTestBase
         var request = new VerifyOtpRequest { Email = "test@example.com", Otp = "123456" };
 
         _otpServiceMock
-            .Setup(x => x.VerifyOtp(request.Email.ToLower(), request.Otp, "signup"))
-            .Returns(Result.NoContent()); // OtpService returns NoContent() on success
+            .Setup(x => x.VerifyOtp(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+            .Returns(Result.NoContent());
 
         // Act
         var result = _signUpService.VerifyOtp(request);
@@ -221,12 +237,12 @@ public class SignUpServiceTests : DatabaseTestBase
         using (Assert.EnterMultipleScope())
         {
             Assert.That(result.IsSuccess, Is.True);
-            Assert.That(result.ResultType, Is.EqualTo(ResultTypes.NoContent)); // Should be NoContent, not Success
+            Assert.That(result.ResultType, Is.EqualTo(ResultTypes.NoContent));
             Assert.That(result.Message, Is.Null);
         }
 
         _otpServiceMock.Verify(
-            x => x.VerifyOtp("test@example.com", "123456", "signup"),
+            x => x.VerifyOtp(request.Email, request.Otp, AuthConfig.SignUpPurpose),
             Times.Once
         );
     }
@@ -238,8 +254,8 @@ public class SignUpServiceTests : DatabaseTestBase
         var request = new VerifyOtpRequest { Email = "test@example.com", Otp = "wrongotp" };
 
         _otpServiceMock
-            .Setup(x => x.VerifyOtp(request.Email.ToLower(), request.Otp, "signup"))
-            .Returns(Result.BadRequest("Invalid or expired verification code"));
+            .Setup(x => x.VerifyOtp(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+            .Returns(Result.BadRequest(ErrorMessages.InvalidOrExpiredOtp));
 
         // Act
         var result = _signUpService.VerifyOtp(request);
@@ -249,11 +265,11 @@ public class SignUpServiceTests : DatabaseTestBase
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.ResultType, Is.EqualTo(ResultTypes.BadRequest));
-            Assert.That(result.Message, Is.EqualTo("Invalid or expired verification code"));
+            Assert.That(result.Message, Is.EqualTo(ErrorMessages.InvalidOrExpiredOtp));
         }
 
         _otpServiceMock.Verify(
-            x => x.VerifyOtp("test@example.com", "wrongotp", "signup"),
+            x => x.VerifyOtp(request.Email, request.Otp, AuthConfig.SignUpPurpose),
             Times.Once
         );
     }
@@ -265,8 +281,8 @@ public class SignUpServiceTests : DatabaseTestBase
         var request = new VerifyOtpRequest { Email = "test@example.com", Otp = "expiredotp" };
 
         _otpServiceMock
-            .Setup(x => x.VerifyOtp(request.Email.ToLower(), request.Otp, "signup"))
-            .Returns(Result.BadRequest("Invalid or expired verification code"));
+            .Setup(x => x.VerifyOtp(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+            .Returns(Result.BadRequest(ErrorMessages.InvalidOrExpiredOtp));
 
         // Act
         var result = _signUpService.VerifyOtp(request);
@@ -276,11 +292,11 @@ public class SignUpServiceTests : DatabaseTestBase
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.ResultType, Is.EqualTo(ResultTypes.BadRequest));
-            Assert.That(result.Message, Is.EqualTo("Invalid or expired verification code"));
+            Assert.That(result.Message, Is.EqualTo(ErrorMessages.InvalidOrExpiredOtp));
         }
 
         _otpServiceMock.Verify(
-            x => x.VerifyOtp("test@example.com", "expiredotp", "signup"),
+            x => x.VerifyOtp(request.Email, request.Otp, AuthConfig.SignUpPurpose),
             Times.Once
         );
     }
@@ -300,7 +316,7 @@ public class SignUpServiceTests : DatabaseTestBase
 
         // Assert
         _otpServiceMock.Verify(
-            x => x.VerifyOtp("mixedcase@example.com", "123456", "signup"),
+            x => x.VerifyOtp(request.Email.ToLower(), request.Otp, AuthConfig.SignUpPurpose),
             Times.Once
         );
     }
@@ -314,10 +330,13 @@ public class SignUpServiceTests : DatabaseTestBase
     {
         // Arrange
         var request = new ResendOtpRequest { Email = "test@example.com" };
-        var expectedOtpResponse = new OtpResponse { OtpExpiresAt = DateTime.UtcNow.AddMinutes(10) };
+        var expectedOtpResponse = new OtpResponse
+        {
+            OtpExpiresAt = DateTime.UtcNow.AddMinutes(AuthConfig.OtpValidForMinutes),
+        };
 
         _otpServiceMock
-            .Setup(x => x.SendOtpAsync(request.Email.ToLower(), "signup"))
+            .Setup(x => x.SendOtpAsync(It.IsAny<string>(), It.IsAny<string>()))
             .ReturnsAsync(Result<OtpResponse>.Success(expectedOtpResponse));
 
         // Act
@@ -330,44 +349,23 @@ public class SignUpServiceTests : DatabaseTestBase
             Assert.That(result.ResultType, Is.EqualTo(ResultTypes.Success));
             Assert.That(result.Content, Is.Not.Null);
         }
-        Assert.That(result.Content.OtpExpiresAt, Is.EqualTo(expectedOtpResponse.OtpExpiresAt));
+        Assert.That(result.Content, Is.EqualTo(expectedOtpResponse));
 
-        _otpServiceMock.Verify(x => x.SendOtpAsync("test@example.com", "signup"), Times.Once);
+        _otpServiceMock.Verify(
+            x => x.SendOtpAsync(request.Email, AuthConfig.SignUpPurpose),
+            Times.Once
+        );
     }
 
     [Test]
-    public async Task ResendOtpAsync_WhenEmailServiceFails_ReturnsFailure()
+    public async Task ResendOtpAsync_WhenOtpServiceFails_ReturnsFailureResult()
     {
         // Arrange
         var request = new ResendOtpRequest { Email = "test@example.com" };
 
         _otpServiceMock
-            .Setup(x => x.SendOtpAsync(request.Email.ToLower(), "signup"))
-            .ReturnsAsync(Result<OtpResponse>.BadRequest("Failed to send email"));
-
-        // Act
-        var result = await _signUpService.ResendOtpAsync(request);
-
-        // Assert
-        using (Assert.EnterMultipleScope())
-        {
-            Assert.That(result.IsSuccess, Is.False);
-            Assert.That(result.ResultType, Is.EqualTo(ResultTypes.BadRequest));
-            Assert.That(result.Message, Is.EqualTo("Failed to send email"));
-        }
-
-        _otpServiceMock.Verify(x => x.SendOtpAsync("test@example.com", "signup"), Times.Once);
-    }
-
-    [Test]
-    public async Task ResendOtpAsync_WhenOtpServiceReturnsOtherErrors_PropagatesError()
-    {
-        // Arrange
-        var request = new ResendOtpRequest { Email = "test@example.com" };
-
-        _otpServiceMock
-            .Setup(x => x.SendOtpAsync(request.Email.ToLower(), "signup"))
-            .ReturnsAsync(Result<OtpResponse>.InternalServerError("Email service unavailable"));
+            .Setup(x => x.SendOtpAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .ReturnsAsync(Result<OtpResponse>.InternalServerError(ErrorMessages.UnexpectedError));
 
         // Act
         var result = await _signUpService.ResendOtpAsync(request);
@@ -377,10 +375,13 @@ public class SignUpServiceTests : DatabaseTestBase
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.ResultType, Is.EqualTo(ResultTypes.InternalServerError));
-            Assert.That(result.Message, Is.EqualTo("Email service unavailable"));
+            Assert.That(result.Message, Is.EqualTo(ErrorMessages.UnexpectedError));
         }
 
-        _otpServiceMock.Verify(x => x.SendOtpAsync("test@example.com", "signup"), Times.Once);
+        _otpServiceMock.Verify(
+            x => x.SendOtpAsync(request.Email, AuthConfig.SignUpPurpose),
+            Times.Once
+        );
     }
 
     [Test]
@@ -388,24 +389,23 @@ public class SignUpServiceTests : DatabaseTestBase
     {
         // Arrange
         var request = new ResendOtpRequest { Email = "MixedCase@Example.COM" };
-        var expectedOtpResponse = new OtpResponse { OtpExpiresAt = DateTime.UtcNow.AddMinutes(10) };
+        var expectedOtpResponse = new OtpResponse
+        {
+            OtpExpiresAt = DateTime.UtcNow.AddMinutes(AuthConfig.OtpValidForMinutes),
+        };
 
-        string? capturedEmail = null;
         _otpServiceMock
             .Setup(x => x.SendOtpAsync(It.IsAny<string>(), It.IsAny<string>()))
-            .Callback<string, string>((email, purpose) => capturedEmail = email)
             .ReturnsAsync(Result<OtpResponse>.Success(expectedOtpResponse));
 
         // Act
         var result = await _signUpService.ResendOtpAsync(request);
 
-        using (Assert.EnterMultipleScope())
-        {
-            // Assert
-            Assert.That(result.IsSuccess, Is.True);
-            Assert.That(capturedEmail, Is.EqualTo("mixedcase@example.com"));
-        }
-        _otpServiceMock.Verify(x => x.SendOtpAsync("mixedcase@example.com", "signup"), Times.Once);
+        // Assert
+        _otpServiceMock.Verify(
+            x => x.SendOtpAsync(request.Email.ToLower(), AuthConfig.SignUpPurpose),
+            Times.Once
+        );
     }
 
     #endregion
@@ -426,30 +426,29 @@ public class SignUpServiceTests : DatabaseTestBase
             DateOfBirth = "1990-01-01",
         };
 
-        var accessTokenExpiresAt = DateTime.UtcNow.AddMinutes(30);
-        var refreshTokenExpiresAt = DateTime.UtcNow.AddDays(7);
+        var accessToken = "access_token";
+        var accessTokenExpiresAt = DateTime.UtcNow.AddMinutes(
+            AuthConfig.AccessTokenValidForMinutes
+        );
+        var refreshToken = "refresh_token";
+        var refreshTokenExpiresAt = DateTime.UtcNow.AddDays(AuthConfig.RefreshTokenValidForDays);
+        var hashedRefreshToken = "hashed_refresh_token";
 
         // Setup OTP verification
-        _otpServiceMock.Setup(x => x.IsVerified(request.Email.ToLower(), "signup")).Returns(true);
+        _otpServiceMock
+            .Setup(x => x.IsVerified(It.IsAny<string>(), It.IsAny<string>()))
+            .Returns(true);
 
-        // Setup token creation - using TokenDetails as returned by JwtService
+        // Setup token creation
         _tokenServiceMock
-            .Setup(x => x.CreateRefreshToken(AuthConfig.RefreshTokenValidForDays))
-            .Returns(
-                new TokenDetails { Value = "refresh_token_456", ExpiresAt = refreshTokenExpiresAt }
-            );
-
-        _tokenServiceMock
-            .Setup(x =>
-                x.CreateAccessToken(It.IsAny<UserEntity>(), AuthConfig.AccessTokenValidForMinutes)
-            )
-            .Returns(
-                new TokenDetails { Value = "access_token_123", ExpiresAt = accessTokenExpiresAt }
-            );
+            .Setup(x => x.CreateRefreshToken(It.IsAny<int>()))
+            .Returns(new TokenDetails { Value = refreshToken, ExpiresAt = refreshTokenExpiresAt });
 
         _tokenServiceMock
-            .Setup(x => x.HashToken("refresh_token_456"))
-            .Returns("hashed_refresh_token");
+            .Setup(x => x.CreateAccessToken(It.IsAny<UserEntity>(), It.IsAny<int>()))
+            .Returns(new TokenDetails { Value = accessToken, ExpiresAt = accessTokenExpiresAt });
+
+        _tokenServiceMock.Setup(x => x.HashToken(It.IsAny<string>())).Returns(hashedRefreshToken);
 
         // Act
         var result = await _signUpService.CompleteSignUpAsync(request);
@@ -461,37 +460,38 @@ public class SignUpServiceTests : DatabaseTestBase
             Assert.That(result.ResultType, Is.EqualTo(ResultTypes.Success));
             Assert.That(result.Content, Is.Not.Null);
         }
-
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(result.Content.AccessToken, Is.EqualTo("access_token_123"));
-            Assert.That(result.Content.RefreshToken, Is.EqualTo("refresh_token_456"));
+            Assert.That(result.Content.AccessToken, Is.EqualTo(accessToken));
+            Assert.That(result.Content.RefreshToken, Is.EqualTo(refreshToken));
             Assert.That(result.Content.AccessTokenExpiresAt, Is.EqualTo(accessTokenExpiresAt));
             Assert.That(result.Content.RefreshTokenExpiresAt, Is.EqualTo(refreshTokenExpiresAt));
         }
 
         // Verify user was created in database
-        var createdUser = await Context.Users.FirstOrDefaultAsync(u =>
-            u.Email == "newuser@example.com"
-        );
+        var createdUser = await Context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
+
         Assert.That(createdUser, Is.Not.Null);
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(createdUser.Username, Is.EqualTo("newuser"));
-            Assert.That(createdUser.Firstname, Is.EqualTo("John"));
-            Assert.That(createdUser.Lastname, Is.EqualTo("Doe"));
-            Assert.That(createdUser.DateOfBirth, Is.EqualTo(new DateOnly(1990, 1, 1)));
+            Assert.That(createdUser.Username, Is.EqualTo(request.Username));
+            Assert.That(createdUser.Firstname, Is.EqualTo(request.Firstname));
+            Assert.That(createdUser.Lastname, Is.EqualTo(request.Lastname));
+            Assert.That(createdUser.PasswordHash, Is.Not.EqualTo(request.Password));
+            Assert.That(createdUser.PasswordHash, Is.Not.Null.Or.Empty);
+            Assert.That(createdUser.DateOfBirth, Is.EqualTo(DateOnly.Parse(request.DateOfBirth)));
+            Assert.That(createdUser.CreatedAt, Is.EqualTo(DateTime.UtcNow).Within(5).Seconds);
         }
 
         // Verify refresh token was stored
         var refreshTokenExists = await Context.RefreshTokens.AnyAsync(rt =>
-            rt.TokenHash == "hashed_refresh_token"
+            rt.TokenHash == hashedRefreshToken
         );
         Assert.That(refreshTokenExists, Is.True);
 
         // Verify OTP verification was cleared
         _otpServiceMock.Verify(
-            x => x.ClearVerification("newuser@example.com", "signup"),
+            x => x.ClearVerification(request.Email, AuthConfig.SignUpPurpose),
             Times.Once
         );
     }
@@ -510,7 +510,9 @@ public class SignUpServiceTests : DatabaseTestBase
             DateOfBirth = "1990-01-01",
         };
 
-        _otpServiceMock.Setup(x => x.IsVerified(request.Email.ToLower(), "signup")).Returns(false);
+        _otpServiceMock
+            .Setup(x => x.IsVerified(It.IsAny<string>(), It.IsAny<string>()))
+            .Returns(false);
 
         // Act
         var result = await _signUpService.CompleteSignUpAsync(request);
@@ -520,11 +522,11 @@ public class SignUpServiceTests : DatabaseTestBase
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.ResultType, Is.EqualTo(ResultTypes.BadRequest));
-            Assert.That(result.Message, Is.EqualTo("Email verification required"));
+            Assert.That(result.Message, Is.EqualTo(ErrorMessages.EmailVerificationRequired));
         }
 
         // Verify no user was created
-        var userExists = await Context.Users.AnyAsync(u => u.Email == "newuser@example.com");
+        var userExists = await Context.Users.AnyAsync(u => u.Email == request.Email);
         Assert.That(userExists, Is.False);
 
         // Verify no tokens were created
@@ -564,7 +566,9 @@ public class SignUpServiceTests : DatabaseTestBase
             DateOfBirth = "1990-01-01",
         };
 
-        _otpServiceMock.Setup(x => x.IsVerified(request.Email.ToLower(), "signup")).Returns(true);
+        _otpServiceMock
+            .Setup(x => x.IsVerified(It.IsAny<string>(), It.IsAny<string>()))
+            .Returns(true);
 
         // Act
         var result = await _signUpService.CompleteSignUpAsync(request);
@@ -574,12 +578,12 @@ public class SignUpServiceTests : DatabaseTestBase
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.ResultType, Is.EqualTo(ResultTypes.Conflict));
-            Assert.That(result.Message, Is.EqualTo("Email taken"));
+            Assert.That(result.Message, Is.EqualTo(ErrorMessages.EmailTaken));
         }
 
         // Verify verification was cleared due to conflict
         _otpServiceMock.Verify(
-            x => x.ClearVerification("existing@example.com", "signup"),
+            x => x.ClearVerification(request.Email, AuthConfig.SignUpPurpose),
             Times.Once
         );
 
@@ -601,13 +605,20 @@ public class SignUpServiceTests : DatabaseTestBase
             Lastname = "Doe",
             DateOfBirth = "1990-01-01",
         };
+        var lowercaseEmail = request.Email.ToLower();
 
-        _otpServiceMock.Setup(x => x.IsVerified("mixedcase@example.com", "signup")).Returns(true);
+        _otpServiceMock
+            .Setup(x => x.IsVerified(It.IsAny<string>(), It.IsAny<string>()))
+            .Returns(true);
 
         _tokenServiceMock
             .Setup(x => x.CreateRefreshToken(It.IsAny<int>()))
             .Returns(
-                new TokenDetails { Value = "refresh_token", ExpiresAt = DateTime.UtcNow.AddDays(7) }
+                new TokenDetails
+                {
+                    Value = "refresh_token",
+                    ExpiresAt = DateTime.UtcNow.AddDays(AuthConfig.RefreshTokenValidForDays),
+                }
             );
 
         _tokenServiceMock
@@ -616,7 +627,7 @@ public class SignUpServiceTests : DatabaseTestBase
                 new TokenDetails
                 {
                     Value = "access_token",
-                    ExpiresAt = DateTime.UtcNow.AddMinutes(30),
+                    ExpiresAt = DateTime.UtcNow.AddMinutes(AuthConfig.AccessTokenValidForMinutes),
                 }
             );
 
@@ -629,12 +640,14 @@ public class SignUpServiceTests : DatabaseTestBase
         Assert.That(result.IsSuccess, Is.True);
 
         // Verify user was created with normalized email and username
-        var createdUser = await Context.Users.FirstOrDefaultAsync(u =>
-            u.Email == "mixedcase@example.com"
-        );
+        var createdUser = await Context.Users.FirstOrDefaultAsync(u => u.Email == lowercaseEmail);
+
         Assert.That(createdUser, Is.Not.Null);
-        Assert.That(createdUser.Username, Is.EqualTo("mixedcaseuser"));
-        Assert.That(createdUser.Email, Is.EqualTo("mixedcase@example.com"));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(createdUser.Username, Is.EqualTo(request.Username.ToLower()));
+            Assert.That(createdUser.Email, Is.EqualTo(lowercaseEmail));
+        }
     }
 
     #endregion
