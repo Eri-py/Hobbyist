@@ -76,7 +76,7 @@ public class JwtService(IConfiguration configuration, HobbyistDbContext context)
             var newRefreshToken = CreateRefreshToken(AuthConfig.RefreshTokenValidForDays);
             var accessToken = CreateAccessToken(token.User!, AuthConfig.AccessTokenValidForMinutes);
 
-            // Update with new values
+            // Update refresh token with new values
             token.TokenHash = HashToken(newRefreshToken.Value);
             token.TokenExpiresAt = newRefreshToken.ExpiresAt;
 
