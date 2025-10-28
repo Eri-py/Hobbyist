@@ -14,6 +14,7 @@ public class JwtService(IConfiguration configuration, HobbyistDbContext context)
 {
     public TokenDetails CreateAccessToken(UserEntity user, int tokenValidForMinutes)
     {
+        // Create claims for the JWT token
         var claims = new List<Claim>
         {
             new(ClaimTypes.NameIdentifier, user.Id.ToString()),
@@ -23,10 +24,12 @@ public class JwtService(IConfiguration configuration, HobbyistDbContext context)
             new(ClaimTypes.Surname, user.Lastname!),
         };
 
+        // Generate signing credentials and set expiration
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Secret"]!));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
         var expiresAt = DateTime.UtcNow.AddMinutes(tokenValidForMinutes);
 
+        // Create and write JWT token
         var tokenDescriptor = new JwtSecurityToken(
             issuer: configuration["Jwt:Issuer"],
             audience: configuration["Jwt:Audience"],
@@ -44,6 +47,7 @@ public class JwtService(IConfiguration configuration, HobbyistDbContext context)
 
     public TokenDetails CreateRefreshToken(int tokenValidForDays)
     {
+        // Generate cryptographically secure random refresh token
         const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
         var token = new StringBuilder(64);
         for (int i = 0; i < 64; i++)
@@ -66,17 +70,22 @@ public class JwtService(IConfiguration configuration, HobbyistDbContext context)
         using var transaction = await context.Database.BeginTransactionAsync();
         try
         {
+            // Find token by hash and include user data
             var token = await context
                 .RefreshTokens.Include(t => t.User)
                 .FirstOrDefaultAsync(t => t.TokenHash == HashToken(refreshToken));
 
-            if (token is null)
-                return Result<AuthResult>.NotFound("Invalid refresh token");
+            // Check if token is non-existent or expired
+            if (token is null || token.TokenExpiresAt < DateTime.UtcNow)
+            {
+                return Result<AuthResult>.InternalServerError(ErrorMessages.UnexpectedError);
+            }
 
+            // Generate new tokens
             var newRefreshToken = CreateRefreshToken(AuthConfig.RefreshTokenValidForDays);
             var accessToken = CreateAccessToken(token.User!, AuthConfig.AccessTokenValidForMinutes);
 
-            // Update with new values
+            // Update refresh token with new values (token rotation)
             token.TokenHash = HashToken(newRefreshToken.Value);
             token.TokenExpiresAt = newRefreshToken.ExpiresAt;
 
@@ -96,7 +105,7 @@ public class JwtService(IConfiguration configuration, HobbyistDbContext context)
         catch
         {
             await transaction.RollbackAsync();
-            throw;
+            return Result<AuthResult>.InternalServerError(ErrorMessages.UnexpectedError);
         }
     }
 }

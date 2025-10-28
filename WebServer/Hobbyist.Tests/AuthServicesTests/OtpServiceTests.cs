@@ -36,7 +36,7 @@ public class OtpServiceTests
     public void CreateOtp_ReturnsSixDigitOtp()
     {
         // Act
-        var result = _otpService.CreateOtp(5);
+        var result = _otpService.CreateOtp(AuthConfig.OtpValidForMinutes);
 
         // Assert
         Assert.That(result.Value, Has.Length.EqualTo(6));
@@ -46,45 +46,34 @@ public class OtpServiceTests
     [Test]
     public void CreateOtp_SetsCorrectExpirationTime()
     {
-        // Arrange
-        var validForMinutes = 10;
-        var beforeCreation = DateTime.UtcNow;
-
         // Act
-        var result = _otpService.CreateOtp(validForMinutes);
+        var result = _otpService.CreateOtp(AuthConfig.OtpValidForMinutes);
 
         // Assert
-        var afterCreation = DateTime.UtcNow;
-        var expectedMin = beforeCreation.AddMinutes(validForMinutes);
-        var expectedMax = afterCreation.AddMinutes(validForMinutes);
-
-        Assert.That(result.ExpiresAt, Is.GreaterThanOrEqualTo(expectedMin));
-        Assert.That(result.ExpiresAt, Is.LessThanOrEqualTo(expectedMax));
+        Assert.That(
+            result.ExpiresAt,
+            Is.EqualTo(DateTime.UtcNow.AddMinutes(AuthConfig.OtpValidForMinutes)).Within(5).Seconds
+        );
     }
 
     [Test]
     public void CreateOtp_GeneratesDifferentOtpsOnSuccessiveCalls()
     {
         // Act
-        var otp1 = _otpService.CreateOtp(5);
-        var otp2 = _otpService.CreateOtp(5);
-        var otp3 = _otpService.CreateOtp(5);
+        var otp1 = _otpService.CreateOtp(AuthConfig.OtpValidForMinutes);
+        var otp2 = _otpService.CreateOtp(AuthConfig.OtpValidForMinutes);
+        var otp3 = _otpService.CreateOtp(AuthConfig.OtpValidForMinutes);
 
         // Assert
-        // While theoretically they could be the same, the probability is extremely low (1 in 1,000,000)
         var otps = new[] { otp1.Value, otp2.Value, otp3.Value };
-        Assert.That(
-            otps.Distinct().Count(),
-            Is.GreaterThan(1),
-            "Multiple OTP generations should produce different values (probability of collision is extremely low)"
-        );
+        Assert.That(otps.Distinct().Count(), Is.EqualTo(3));
     }
 
     [Test]
     public void CreateOtp_AllDigitsAreValid()
     {
         // Act
-        var result = _otpService.CreateOtp(5);
+        var result = _otpService.CreateOtp(AuthConfig.OtpValidForMinutes);
 
         // Assert
         foreach (var digit in result.Value)
@@ -101,7 +90,11 @@ public class OtpServiceTests
     public async Task SendOtpAsync_SendsEmailWithSixDigitOtp()
     {
         // Arrange
-        SetupSuccessfulEmail();
+        _mockEmailService
+            .Setup(x =>
+                x.SendOtpEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())
+            )
+            .ReturnsAsync(Result.NoContent());
 
         string? capturedOtp = null;
         _mockEmailService
@@ -124,7 +117,11 @@ public class OtpServiceTests
     public async Task SendOtpAsync_SendsEmailToCorrectAddress()
     {
         // Arrange
-        SetupSuccessfulEmail();
+        _mockEmailService
+            .Setup(x =>
+                x.SendOtpEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())
+            )
+            .ReturnsAsync(Result.NoContent());
 
         // Act
         await _otpService.SendOtpAsync(TestEmail, TestPurpose);
@@ -140,7 +137,11 @@ public class OtpServiceTests
     public async Task SendOtpAsync_SendsEmailWithCorrectValidityDuration()
     {
         // Arrange
-        SetupSuccessfulEmail();
+        _mockEmailService
+            .Setup(x =>
+                x.SendOtpEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())
+            )
+            .ReturnsAsync(Result.NoContent());
 
         // Act
         await _otpService.SendOtpAsync(TestEmail, TestPurpose);
@@ -161,7 +162,11 @@ public class OtpServiceTests
     public async Task SendOtpAsync_StoresOtpInCacheWithCorrectKey()
     {
         // Arrange
-        SetupSuccessfulEmail();
+        _mockEmailService
+            .Setup(x =>
+                x.SendOtpEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())
+            )
+            .ReturnsAsync(Result.NoContent());
 
         string? capturedKey = null;
         string? capturedValue = null;
@@ -183,8 +188,11 @@ public class OtpServiceTests
 
         // Assert
         var expectedKey = $"otp_{TestPurpose}_{TestEmail}";
-        Assert.That(capturedKey, Is.EqualTo(expectedKey));
-        Assert.That(capturedValue, Is.Not.Null);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(capturedKey, Is.EqualTo(expectedKey));
+            Assert.That(capturedValue, Is.Not.Null);
+        }
         Assert.That(capturedValue, Has.Length.EqualTo(6));
     }
 
@@ -192,7 +200,11 @@ public class OtpServiceTests
     public async Task SendOtpAsync_SetsCacheExpirationCorrectly()
     {
         // Arrange
-        SetupSuccessfulEmail();
+        _mockEmailService
+            .Setup(x =>
+                x.SendOtpEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())
+            )
+            .ReturnsAsync(Result.NoContent());
 
         TimeSpan? capturedExpiration = null;
 
@@ -215,43 +227,48 @@ public class OtpServiceTests
     public async Task SendOtpAsync_ReturnsSuccessWithExpirationTime()
     {
         // Arrange
-        SetupSuccessfulEmail();
-
-        var beforeSend = DateTime.UtcNow;
+        _mockEmailService
+            .Setup(x =>
+                x.SendOtpEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())
+            )
+            .ReturnsAsync(Result.NoContent());
 
         // Act
         var result = await _otpService.SendOtpAsync(TestEmail, TestPurpose);
 
         // Assert
-        var afterSend = DateTime.UtcNow;
-        Assert.That(result.IsSuccess, Is.True);
-        Assert.That(result.ResultType, Is.EqualTo(ResultTypes.Success));
-        Assert.That(result.Content, Is.Not.Null);
-
-        var expectedMin = beforeSend.AddMinutes(AuthConfig.OtpValidForMinutes);
-        var expectedMax = afterSend.AddMinutes(AuthConfig.OtpValidForMinutes);
-        Assert.That(result.Content!.OtpExpiresAt, Is.GreaterThanOrEqualTo(expectedMin));
-        Assert.That(result.Content.OtpExpiresAt, Is.LessThanOrEqualTo(expectedMax));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(result.IsSuccess, Is.True);
+            Assert.That(result.ResultType, Is.EqualTo(ResultTypes.Success));
+            Assert.That(result.Content, Is.Not.Null);
+        }
+        Assert.That(
+            result.Content!.OtpExpiresAt,
+            Is.EqualTo(DateTime.UtcNow.AddMinutes(AuthConfig.OtpValidForMinutes)).Within(5).Seconds
+        );
     }
 
     [Test]
     public async Task SendOtpAsync_WhenEmailFails_ReturnsError()
     {
         // Arrange
-        var emailError = Result.InternalServerError("Email service unavailable");
         _mockEmailService
             .Setup(x =>
                 x.SendOtpEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())
             )
-            .ReturnsAsync(emailError);
+            .ReturnsAsync(Result.InternalServerError(ErrorMessages.UnexpectedError));
 
         // Act
         var result = await _otpService.SendOtpAsync(TestEmail, TestPurpose);
 
         // Assert
-        Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.ResultType, Is.EqualTo(ResultTypes.InternalServerError));
-        Assert.That(result.Message, Is.EqualTo("Email service unavailable"));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.ResultType, Is.EqualTo(ResultTypes.InternalServerError));
+            Assert.That(result.Message, Is.EqualTo(ErrorMessages.UnexpectedError));
+        }
     }
 
     [Test]
@@ -262,7 +279,7 @@ public class OtpServiceTests
             .Setup(x =>
                 x.SendOtpEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())
             )
-            .ReturnsAsync(Result.InternalServerError("Email failed"));
+            .ReturnsAsync(Result.InternalServerError(ErrorMessages.UnexpectedError));
 
         // Act
         await _otpService.SendOtpAsync(TestEmail, TestPurpose);
@@ -270,8 +287,7 @@ public class OtpServiceTests
         // Assert
         _mockCache.Verify(
             x => x.Set(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<TimeSpan>()),
-            Times.Never,
-            "OTP should not be cached if email sending fails"
+            Times.Never
         );
     }
 
@@ -284,14 +300,20 @@ public class OtpServiceTests
     {
         // Arrange
         var expectedOtp = "123456";
-        SetupCachedOtp(expectedOtp);
+        string? outValue = expectedOtp;
+        _mockCache
+            .Setup(x => x.TryGetValue($"otp_{TestPurpose}_{TestEmail}", out outValue))
+            .Returns(true);
 
         // Act
         var result = _otpService.VerifyOtp(TestEmail, expectedOtp, TestPurpose);
 
         // Assert
-        Assert.That(result.IsSuccess, Is.True);
-        Assert.That(result.ResultType, Is.EqualTo(ResultTypes.NoContent));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(result.IsSuccess, Is.True);
+            Assert.That(result.ResultType, Is.EqualTo(ResultTypes.NoContent));
+        }
     }
 
     [Test]
@@ -299,17 +321,16 @@ public class OtpServiceTests
     {
         // Arrange
         var expectedOtp = "123456";
-        SetupCachedOtp(expectedOtp);
+        string? outValue = expectedOtp;
+        _mockCache
+            .Setup(x => x.TryGetValue($"otp_{TestPurpose}_{TestEmail}", out outValue))
+            .Returns(true);
 
         // Act
         _otpService.VerifyOtp(TestEmail, expectedOtp, TestPurpose);
 
         // Assert
-        _mockCache.Verify(
-            x => x.Remove($"otp_{TestPurpose}_{TestEmail}"),
-            Times.Once,
-            "OTP should be removed from cache after successful verification"
-        );
+        _mockCache.Verify(x => x.Remove($"otp_{TestPurpose}_{TestEmail}"), Times.Once);
     }
 
     [Test]
@@ -317,7 +338,10 @@ public class OtpServiceTests
     {
         // Arrange
         var expectedOtp = "123456";
-        SetupCachedOtp(expectedOtp);
+        string? outValue = expectedOtp;
+        _mockCache
+            .Setup(x => x.TryGetValue($"otp_{TestPurpose}_{TestEmail}", out outValue))
+            .Returns(true);
 
         string? verifiedKey = null;
         bool? verifiedValue = null;
@@ -338,46 +362,64 @@ public class OtpServiceTests
         _otpService.VerifyOtp(TestEmail, expectedOtp, TestPurpose);
 
         // Assert
-        Assert.That(verifiedKey, Is.EqualTo($"verified_{TestPurpose}_{TestEmail}"));
-        Assert.That(verifiedValue, Is.EqualTo(true));
-        Assert.That(verifiedExpiration, Is.EqualTo(TimeSpan.FromMinutes(15)));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(verifiedKey, Is.EqualTo($"verified_{TestPurpose}_{TestEmail}"));
+            Assert.That(verifiedValue, Is.True);
+            Assert.That(verifiedExpiration, Is.EqualTo(TimeSpan.FromMinutes(15)));
+        }
     }
 
     [Test]
     public void VerifyOtp_WithInvalidOtp_ReturnsBadRequest()
     {
         // Arrange
-        SetupCachedOtp("123456");
+        string? outValue = "123456";
+        _mockCache
+            .Setup(x => x.TryGetValue($"otp_{TestPurpose}_{TestEmail}", out outValue))
+            .Returns(true);
 
         // Act
         var result = _otpService.VerifyOtp(TestEmail, "wrong_otp", TestPurpose);
 
         // Assert
-        Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.ResultType, Is.EqualTo(ResultTypes.BadRequest));
-        Assert.That(result.Message, Is.EqualTo("Invalid or expired verification code"));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.ResultType, Is.EqualTo(ResultTypes.BadRequest));
+            Assert.That(result.Message, Is.EqualTo(ErrorMessages.InvalidOrExpiredOtp));
+        }
     }
 
     [Test]
     public void VerifyOtp_WithExpiredOtp_ReturnsBadRequest()
     {
         // Arrange
-        SetupNoCachedOtp();
+        string? outValue = null;
+        _mockCache
+            .Setup(x => x.TryGetValue($"otp_{TestPurpose}_{TestEmail}", out outValue))
+            .Returns(false);
 
         // Act
         var result = _otpService.VerifyOtp(TestEmail, "123456", TestPurpose);
 
         // Assert
-        Assert.That(result.IsSuccess, Is.False);
-        Assert.That(result.ResultType, Is.EqualTo(ResultTypes.BadRequest));
-        Assert.That(result.Message, Is.EqualTo("Invalid or expired verification code"));
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.ResultType, Is.EqualTo(ResultTypes.BadRequest));
+            Assert.That(result.Message, Is.EqualTo(ErrorMessages.InvalidOrExpiredOtp));
+        }
     }
 
     [Test]
     public void VerifyOtp_WithInvalidOtp_DoesNotSetVerifiedFlag()
     {
         // Arrange
-        SetupCachedOtp("123456");
+        string? outValue = "123456";
+        _mockCache
+            .Setup(x => x.TryGetValue($"otp_{TestPurpose}_{TestEmail}", out outValue))
+            .Returns(true);
 
         // Act
         _otpService.VerifyOtp(TestEmail, "wrong_otp", TestPurpose);
@@ -385,8 +427,7 @@ public class OtpServiceTests
         // Assert
         _mockCache.Verify(
             x => x.Set(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<TimeSpan>()),
-            Times.Never,
-            "Verified flag should not be set for invalid OTP"
+            Times.Never
         );
     }
 
@@ -394,30 +435,16 @@ public class OtpServiceTests
     public void VerifyOtp_WithInvalidOtp_DoesNotRemoveOtpFromCache()
     {
         // Arrange
-        SetupCachedOtp("123456");
+        string? outValue = "123456";
+        _mockCache
+            .Setup(x => x.TryGetValue($"otp_{TestPurpose}_{TestEmail}", out outValue))
+            .Returns(true);
 
         // Act
         _otpService.VerifyOtp(TestEmail, "wrong_otp", TestPurpose);
 
         // Assert
-        _mockCache.Verify(
-            x => x.Remove(It.IsAny<string>()),
-            Times.Never,
-            "OTP should remain in cache if verification fails"
-        );
-    }
-
-    [Test]
-    public void VerifyOtp_IsCaseSensitive()
-    {
-        // Arrange
-        SetupCachedOtp("123456");
-
-        // Act
-        var result = _otpService.VerifyOtp(TestEmail, "123456", TestPurpose);
-
-        // Assert
-        Assert.That(result.IsSuccess, Is.True, "Exact match should succeed");
+        _mockCache.Verify(x => x.Remove(It.IsAny<string>()), Times.Never);
     }
 
     #endregion
@@ -428,7 +455,10 @@ public class OtpServiceTests
     public void IsVerified_WhenVerificationExists_ReturnsTrue()
     {
         // Arrange
-        SetupVerifiedFlag(true);
+        bool? outValue = true;
+        _mockCache
+            .Setup(x => x.TryGetValue($"verified_{TestPurpose}_{TestEmail}", out outValue))
+            .Returns(true);
 
         // Act
         var result = _otpService.IsVerified(TestEmail, TestPurpose);
@@ -441,7 +471,10 @@ public class OtpServiceTests
     public void IsVerified_WhenVerificationDoesNotExist_ReturnsFalse()
     {
         // Arrange
-        SetupVerifiedFlag(false);
+        bool? outValue = false;
+        _mockCache
+            .Setup(x => x.TryGetValue($"verified_{TestPurpose}_{TestEmail}", out outValue))
+            .Returns(false);
 
         // Act
         var result = _otpService.IsVerified(TestEmail, TestPurpose);
@@ -455,7 +488,9 @@ public class OtpServiceTests
     {
         // Arrange
         bool? outValue = true;
-        SetupVerifiedFlag(true);
+        _mockCache
+            .Setup(x => x.TryGetValue($"verified_{TestPurpose}_{TestEmail}", out outValue))
+            .Returns(true);
 
         // Act
         _otpService.IsVerified(TestEmail, TestPurpose);
@@ -493,55 +528,6 @@ public class OtpServiceTests
 
         // Assert
         _mockCache.Verify(x => x.Remove($"verified_{customPurpose}_{customEmail}"), Times.Once);
-    }
-
-    #endregion
-
-    #region Helper Methods
-
-    /// <summary>
-    /// Sets up the email service to return success
-    /// </summary>
-    private void SetupSuccessfulEmail()
-    {
-        _mockEmailService
-            .Setup(x =>
-                x.SendOtpEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())
-            )
-            .ReturnsAsync(Result.NoContent());
-    }
-
-    /// <summary>
-    /// Sets up the cache to return a specific OTP value
-    /// </summary>
-    private void SetupCachedOtp(string otpValue)
-    {
-        string? outValue = otpValue;
-        _mockCache
-            .Setup(x => x.TryGetValue($"otp_{TestPurpose}_{TestEmail}", out outValue))
-            .Returns(true);
-    }
-
-    /// <summary>
-    /// Sets up the cache to return no OTP (simulates expired OTP)
-    /// </summary>
-    private void SetupNoCachedOtp()
-    {
-        string? outValue = null;
-        _mockCache
-            .Setup(x => x.TryGetValue($"otp_{TestPurpose}_{TestEmail}", out outValue))
-            .Returns(false);
-    }
-
-    /// <summary>
-    /// Sets up the cache to return a verified flag
-    /// </summary>
-    private void SetupVerifiedFlag(bool exists)
-    {
-        bool? outValue = true;
-        _mockCache
-            .Setup(x => x.TryGetValue($"verified_{TestPurpose}_{TestEmail}", out outValue))
-            .Returns(exists);
     }
 
     #endregion

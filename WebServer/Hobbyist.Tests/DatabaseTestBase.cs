@@ -1,5 +1,6 @@
 using Hobbyist.Api.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 namespace Hobbyist.Tests;
 
@@ -13,6 +14,10 @@ public abstract class DatabaseTestBase
 {
     private string _databaseName;
     private string _connectionString;
+    private readonly IConfiguration _configs = new ConfigurationBuilder()
+        .AddJsonFile("appsettings.Development.json", optional: true)
+        .AddEnvironmentVariables()
+        .Build();
 
     /// <summary>
     /// Database context instance for test operations.
@@ -34,10 +39,14 @@ public abstract class DatabaseTestBase
         // Get connection string from environment or use local development default
         var baseConnectionString =
             Environment.GetEnvironmentVariable("TEST_DB_CONNECTION_STRING")
-            ?? "Host=localhost;Port=5432;Username=postgres;Password=Password123.";
+            ?? _configs.GetConnectionString("Development");
 
-        // Append unique database name to connection string
-        _connectionString = $"{baseConnectionString};Database={_databaseName}";
+        // Parse the connection string and replace the database name
+        var connectionStringBuilder = new Npgsql.NpgsqlConnectionStringBuilder(baseConnectionString)
+        {
+            Database = _databaseName,
+        };
+        _connectionString = connectionStringBuilder.ToString();
 
         // Configure DbContext with test database connection
         var options = new DbContextOptionsBuilder<HobbyistDbContext>()
