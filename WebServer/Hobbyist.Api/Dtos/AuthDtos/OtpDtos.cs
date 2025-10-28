@@ -1,9 +1,9 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Hobbyist.Api.Dtos;
+namespace Hobbyist.Api.Dtos.AuthDtos;
 
 /// <summary>
-/// Contains email and OTP code for email verification during sign-up.
+/// Request to verify email address using OTP code during sign-up.
 /// </summary>
 public record class VerifyOtpRequest
 {
@@ -17,7 +17,7 @@ public record class VerifyOtpRequest
 }
 
 /// <summary>
-/// Contains email address to resend OTP to.
+/// Request to resend OTP code to specified email address.
 /// </summary>
 public record class ResendOtpRequest
 {
@@ -27,7 +27,7 @@ public record class ResendOtpRequest
 }
 
 /// <summary>
-/// Contains OTP expiration information.
+/// Response containing OTP expiration timestamp.
 /// </summary>
 public record OtpResponse
 {

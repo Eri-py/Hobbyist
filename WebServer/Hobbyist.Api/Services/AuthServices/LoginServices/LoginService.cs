@@ -1,6 +1,6 @@
 using Hobbyist.Api.Data;
 using Hobbyist.Api.Data.Entities;
-using Hobbyist.Api.Dtos;
+using Hobbyist.Api.Dtos.AuthDtos;
 using Hobbyist.Api.Services.AuthServices.OtpServices;
 using Hobbyist.Api.Services.AuthServices.TokenServices;
 using Hobbyist.Common;
@@ -15,21 +15,20 @@ public class LoginService(
     ITokenService tokenService
 ) : ILoginService
 {
-    private const string purpose = "login";
-    private readonly string _userNotFoundMessage =
-        "Your login credentials don't match an account in our system.";
-
     public async Task<Result<StartLoginResponse>> StartLoginAsync(StartLoginRequest request)
     {
+        // Normalize identifier for case-insensitive lookup
         var identifier = request.Identifier.ToLower();
         var password = request.Password;
+
+        // Find user by username or email
         var user = await context.Users.FirstOrDefaultAsync(u =>
             u.Username == identifier || u.Email == identifier
         );
         if (user is null)
-            return Result<StartLoginResponse>.NotFound(_userNotFoundMessage);
+            return Result<StartLoginResponse>.NotFound(ErrorMessages.InvalidLoginCredentials);
 
-        // Verify password
+        // Verify password against stored hash
         var verifyPasswordResult = new PasswordHasher<UserEntity>().VerifyHashedPassword(
             user,
             user.PasswordHash!,
@@ -37,15 +36,16 @@ public class LoginService(
         );
 
         if (verifyPasswordResult == PasswordVerificationResult.Failed)
-            return Result<StartLoginResponse>.NotFound(_userNotFoundMessage);
+            return Result<StartLoginResponse>.NotFound(ErrorMessages.InvalidLoginCredentials);
 
-        // Send OTP
-        var otpResult = await otpService.SendOtpAsync(user.Email!, purpose);
+        // Send OTP for email verification
+        var otpResult = await otpService.SendOtpAsync(user.Email!, AuthConfig.LoginPurpose);
         if (!otpResult.IsSuccess)
         {
             return Result<StartLoginResponse>.FromError(otpResult);
         }
 
+        // Return success with OTP expiration and user email
         var response = new StartLoginResponse
         {
             OtpExpiresAt = otpResult.Content!.OtpExpiresAt.ToString("o"),
@@ -56,30 +56,33 @@ public class LoginService(
 
     public async Task<Result<AuthResult>> CompleteLoginAsync(CompleteLoginRequest request)
     {
+        // Normalize identifier and get OTP
         var identifier = request.Identifier.ToLower();
         var otp = request.Otp;
 
+        // Find user by username or email
         var user = await context.Users.FirstOrDefaultAsync(u =>
             u.Email == identifier || u.Username == identifier
         );
 
         if (user is null)
-            return Result<AuthResult>.BadRequest("Invalid or expired verification code");
+            return Result<AuthResult>.BadRequest(ErrorMessages.InvalidOrExpiredOtp);
 
-        // Verify OTP
-        var verifyResult = otpService.VerifyOtp(user.Email!, otp, purpose);
+        // Verify OTP against stored verification
+        var verifyResult = otpService.VerifyOtp(user.Email!, otp, AuthConfig.LoginPurpose);
         if (!verifyResult.IsSuccess)
         {
             return Result<AuthResult>.FromError(verifyResult);
         }
 
+        // Use transaction for atomic token creation
         using var transaction = await context.Database.BeginTransactionAsync();
         try
         {
+            // Create refresh token and store in database
             var refreshTokenDetails = tokenService.CreateRefreshToken(
                 AuthConfig.RefreshTokenValidForDays
             );
-            // Add refresh token to database
             var refreshTokenEntry = new RefreshTokenEntity
             {
                 TokenHash = tokenService.HashToken(refreshTokenDetails.Value),
@@ -89,9 +92,11 @@ public class LoginService(
             };
             user.RefreshTokens.Add(refreshTokenEntry);
 
+            // Save changes and commit transaction
             await context.SaveChangesAsync();
             await transaction.CommitAsync();
 
+            // Create access token and return authentication result
             var accessTokenDetails = tokenService.CreateAccessToken(
                 user,
                 AuthConfig.AccessTokenValidForMinutes
@@ -108,21 +113,23 @@ public class LoginService(
         }
         catch (Exception)
         {
+            // Rollback transaction on error
             await transaction.RollbackAsync();
-            return Result<AuthResult>.InternalServerError("An unexpected error has occured");
+            return Result<AuthResult>.InternalServerError(ErrorMessages.UnexpectedError);
         }
     }
 
     public async Task<Result<OtpResponse>> ResendOtpAsync(ResendOtpRequest request)
     {
+        // Normalize email and find user
         var email = request.Email.ToLower();
-
         var user = await context.Users.FirstOrDefaultAsync(u => u.Email == email);
 
         if (user is null)
-            return Result<OtpResponse>.NotFound("User not found");
+            return Result<OtpResponse>.NotFound(ErrorMessages.UserNotFound);
 
-        var otpResult = await otpService.SendOtpAsync(user.Email!, purpose);
+        // Resend OTP to user's email
+        var otpResult = await otpService.SendOtpAsync(user.Email!, AuthConfig.LoginPurpose);
         return otpResult;
     }
 }

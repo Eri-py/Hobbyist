@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Hobbyist.Api.Dtos;
+namespace Hobbyist.Api.Dtos.AuthDtos;
 
 /// <summary>
 /// Contains username and email to initiate the sign-up process.

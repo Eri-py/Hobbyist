@@ -1,4 +1,4 @@
-using Hobbyist.Api.Dtos;
+using Hobbyist.Api.Dtos.AuthDtos;
 using Hobbyist.Api.Services.CacheServices;
 using Hobbyist.Api.Services.EmailServices;
 using Hobbyist.Common;

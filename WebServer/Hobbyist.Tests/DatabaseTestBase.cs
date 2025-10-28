@@ -15,7 +15,7 @@ public abstract class DatabaseTestBase
     private string _databaseName;
     private string _connectionString;
     private readonly IConfiguration _configs = new ConfigurationBuilder()
-        .AddJsonFile("appsettings.Development.json")
+        .AddJsonFile("appsettings.Development.json", optional: true)
         .AddEnvironmentVariables()
         .Build();
 

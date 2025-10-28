@@ -1,8 +1,7 @@
-using Hobbyist.Api.Dtos;
+using Hobbyist.Api.Dtos.AuthDtos;
 using Hobbyist.Api.Extensions;
 using Hobbyist.Api.Services.AuthServices.TokenServices;
 using Hobbyist.Common;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Hobbyist.Api.Controllers.AuthControllers
