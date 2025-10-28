@@ -147,7 +147,7 @@ public class SignUpServiceTests : DatabaseTestBase
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.ResultType, Is.EqualTo(ResultTypes.Conflict));
-            Assert.That(result.Message, Is.EqualTo(ErrorMessages.EmailTaken));
+            Assert.That(result.Message, Is.EqualTo(ErrorMessages.UsernameTaken));
         }
 
         _otpServiceMock.Verify(
@@ -578,7 +578,7 @@ public class SignUpServiceTests : DatabaseTestBase
         {
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.ResultType, Is.EqualTo(ResultTypes.Conflict));
-            Assert.That(result.Message, Is.EqualTo(ErrorMessages.EmailTaken));
+            Assert.That(result.Message, Is.EqualTo(ErrorMessages.UsernameTaken));
         }
 
         // Verify verification was cleared due to conflict

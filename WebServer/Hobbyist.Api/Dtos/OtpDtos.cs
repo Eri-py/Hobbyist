@@ -2,34 +2,35 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Hobbyist.Api.Dtos;
 
+/// <summary>
+/// Contains email and OTP code for email verification during sign-up.
+/// </summary>
 public record class VerifyOtpRequest
 {
-    /// <summary>
-    /// The email address associated with the OTP verification.
-    /// </summary>
     [Required]
     [EmailAddress]
     public required string Email { get; set; }
 
-    /// <summary>
-    /// The 6-digit One-Time Passcode sent to the user's email.
-    /// </summary>
     [Required]
     [Length(6, 6, ErrorMessage = "Must be 6 digits")]
     public required string Otp { get; set; }
 }
 
+/// <summary>
+/// Contains email address to resend OTP to.
+/// </summary>
 public record class ResendOtpRequest
 {
+    [Required]
+    [EmailAddress]
     public required string Email { get; set; }
 }
 
+/// <summary>
+/// Contains OTP expiration information.
+/// </summary>
 public record OtpResponse
 {
-    /// <summary>
-    /// The email address for the new account. Must be valid and unique.
-    /// </summary>
     [Required]
-    [EmailAddress]
     public required DateTime OtpExpiresAt { get; set; }
 }

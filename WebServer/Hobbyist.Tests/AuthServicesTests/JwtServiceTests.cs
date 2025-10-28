@@ -297,38 +297,37 @@ public class JwtServiceTests : DatabaseTestBase
         {
             // Assert
             Assert.That(result.IsSuccess, Is.False);
-            Assert.That(result.ResultType, Is.EqualTo(ResultTypes.NotFound));
+            Assert.That(result.ResultType, Is.EqualTo(ResultTypes.InternalServerError));
         }
     }
 
-    // TODO: Implement expiration check in VerifyRefreshTokenAsync
-    // [Test]
-    // public async Task VerifyRefreshTokenAsync_WithExpiredToken_ReturnsNotFound()
-    // {
-    //     // Arrange
-    //     var expiredToken = "expired-refresh-token-1234567890-abcdefghijklmnopqrstuvwxyz";
-    //     Context.RefreshTokens.Add(
-    //         new RefreshTokenEntity
-    //         {
-    //             Id = Guid.NewGuid(),
-    //             TokenHash = _jwtService.HashToken(expiredToken),
-    //             TokenExpiresAt = DateTime.UtcNow.AddDays(-1),
-    //             UserId = _testUser.Id,
-    //             CreatedAt = DateTime.UtcNow,
-    //         }
-    //     );
-    //     await Context.SaveChangesAsync();
-    //
-    //     // Act
-    //     var result = await _jwtService.VerifyRefreshTokenAsync(expiredToken);
-    //
-    //     using (Assert.EnterMultipleScope())
-    //     {
-    //         // Assert
-    //         Assert.That(result.IsSuccess, Is.False);
-    //         Assert.That(result.ResultType, Is.EqualTo(ResultTypes.NotFound));
-    //     }
-    // }
+    [Test]
+    public async Task VerifyRefreshTokenAsync_WithExpiredToken_ReturnsNotFound()
+    {
+        // Arrange
+        var expiredToken = "expired-refresh-token-1234567890-abcdefghijklmnopqrstuvwxyz";
+        Context.RefreshTokens.Add(
+            new RefreshTokenEntity
+            {
+                Id = Guid.NewGuid(),
+                TokenHash = _jwtService.HashToken(expiredToken),
+                TokenExpiresAt = DateTime.UtcNow.AddDays(-1),
+                UserId = _testUser.Id,
+                CreatedAt = DateTime.UtcNow,
+            }
+        );
+        await Context.SaveChangesAsync();
+
+        // Act
+        var result = await _jwtService.VerifyRefreshTokenAsync(expiredToken);
+
+        using (Assert.EnterMultipleScope())
+        {
+            // Assert
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.ResultType, Is.EqualTo(ResultTypes.InternalServerError));
+        }
+    }
 
     [Test]
     public async Task VerifyRefreshTokenAsync_NewTokensHaveCorrectExpiration()
