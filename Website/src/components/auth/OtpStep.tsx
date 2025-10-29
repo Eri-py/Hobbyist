@@ -42,7 +42,7 @@ export function OtpStep({
   };
 
   return (
-    <Stack gap="0.75rem" padding="1rem">
+    <Stack gap={1.5} padding={2}>
       <CustomFormHeader
         header="Verify email"
         subtext={
@@ -55,7 +55,7 @@ export function OtpStep({
       />
 
       {serverErrorMessage && (
-        <Typography color="error" textAlign="center" fontSize="0.875rem">
+        <Typography color="error" textAlign="center" fontSize={14}>
           {serverErrorMessage}
         </Typography>
       )}
@@ -88,11 +88,7 @@ export function OtpStep({
         renderer={({ minutes, seconds, completed }) => {
           if (!completed) {
             return (
-              <Typography
-                fontSize="0.84375rem"
-                color={theme.palette.text.secondary}
-                textAlign="center"
-              >
+              <Typography fontSize={15} color={theme.palette.text.secondary} textAlign="center">
                 Code expires in{" "}
                 <b>
                   {zeroPad(minutes)}:{zeroPad(seconds)}
@@ -101,7 +97,7 @@ export function OtpStep({
             );
           } else {
             return (
-              <Typography fontSize="0.9375rem" color={theme.palette.error.main} textAlign="center">
+              <Typography fontSize={15} color={theme.palette.error.main} textAlign="center">
                 Code expired
               </Typography>
             );
@@ -110,7 +106,7 @@ export function OtpStep({
       />
 
       {!isResendDisabled && (
-        <Typography fontSize="0.9375rem" color={theme.palette.text.secondary} alignSelf="center">
+        <Typography fontSize={15} color={theme.palette.text.secondary} alignSelf="center">
           Didn't get the Code?{" "}
           <Link
             component="button"

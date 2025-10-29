@@ -15,15 +15,15 @@ export function OAuthButtonGroup({ mode }: OAuthButtonGroupTypes) {
   const theme = useTheme();
 
   return (
-    <Stack gap=".75rem">
+    <Stack gap={1.5}>
       <Box sx={{ display: "flex", alignItems: "center" }}>
         <Divider sx={{ flexGrow: 1 }} />
         <Typography
           variant="body2"
           sx={{
-            mx: ".5rem",
+            mx: 1,
             color: theme.palette.text.secondary,
-            fontSize: "0.875rem",
+            fontSize: 15,
           }}
         >
           or

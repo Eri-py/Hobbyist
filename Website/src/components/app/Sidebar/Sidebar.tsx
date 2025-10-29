@@ -15,18 +15,16 @@ export function Sidebar() {
 
   return (
     <Stack
-      width={isSidebarOpen ? "18.75rem" : "5.5rem"}
+      width={isSidebarOpen ? 300 : 90}
       justifyContent="space-between"
-      sx={{
-        borderRight: `1px solid ${alpha(theme.palette.primary.main, 0.25)}`,
-        paddingInline: "0.5rem",
-      }}
+      borderRight={`1px solid ${alpha(theme.palette.primary.main, 0.25)}`}
+      paddingInline={1}
     >
       <List>
         <NavigationButtons />
       </List>
 
-      <Stack component="footer" paddingBottom="1rem">
+      <Stack component="footer" paddingBottom={2}>
         <FormControlLabel
           control={<ThemeSwitch sx={{ m: 1 }} checked={mode === "dark"} onChange={toggleTheme} />}
           label={isSidebarOpen ? "Toggle theme" : ""}

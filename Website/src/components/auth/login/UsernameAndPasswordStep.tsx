@@ -14,7 +14,7 @@ type UsernameAndPasswordProps = {
 
 export function UsernameAndPassword({ handleNext, isPending }: UsernameAndPasswordProps) {
   return (
-    <Stack gap="1rem" paddingInline="1rem">
+    <Stack gap={2} paddingInline={2}>
       <CustomFormHeader header="Log in" subtext="Glad to have you back!" align="flex-start" />
 
       <CustomTextField

@@ -28,7 +28,7 @@ export const mainTheme = (isDarkMode: boolean) =>
       ...(isDarkMode
         ? {
             background: {
-              default: "#22242a",
+              default: "#0f1113",
               paper: "#27292e",
             },
           }
@@ -65,7 +65,7 @@ export const mainTheme = (isDarkMode: boolean) =>
           root: {
             margin: 0,
             textWrap: "nowrap",
-            fontSize: ".75rem",
+            fontSize: 12,
           },
         },
       },

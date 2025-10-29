@@ -43,33 +43,33 @@ export function NavigationButtons() {
   const navigationItems: NavigationItem[] = [
     {
       label: "Home",
-      icon: <HomeOutlinedIcon style={{ fontSize: "1.75rem" }} />,
-      activeIcon: <HomeIcon style={{ fontSize: "1.75rem" }} />,
+      icon: <HomeOutlinedIcon style={{ fontSize: 28 }} />,
+      activeIcon: <HomeIcon style={{ fontSize: 28 }} />,
       handleClick: handleHomeClick,
     },
     {
       label: "Events",
-      icon: <EventOutlinedIcon style={{ fontSize: "1.75rem" }} />,
-      activeIcon: <EventIcon style={{ fontSize: "1.75rem" }} />,
+      icon: <EventOutlinedIcon style={{ fontSize: 28 }} />,
+      activeIcon: <EventIcon style={{ fontSize: 28 }} />,
       handleClick: handleEventsClick,
     },
     {
       label: "Create",
-      icon: <AddIcon style={{ fontSize: "1.75rem" }} />,
-      activeIcon: <AddIcon style={{ fontSize: "1.75rem" }} />,
+      icon: <AddIcon style={{ fontSize: 28 }} />,
+      activeIcon: <AddIcon style={{ fontSize: 28 }} />,
       handleClick: handleCreateClick,
     },
     {
       label: "Messages",
-      icon: <ChatOutlinedIcon style={{ fontSize: "1.75rem" }} />,
-      activeIcon: <ChatIcon style={{ fontSize: "1.75rem" }} />,
+      icon: <ChatOutlinedIcon style={{ fontSize: 28 }} />,
+      activeIcon: <ChatIcon style={{ fontSize: 28 }} />,
       notifications: 2,
       handleClick: handleMessagesClick,
     },
     {
       label: `Profile/${user?.username}`,
-      icon: <PersonOutlineOutlinedIcon style={{ fontSize: "1.75rem" }} />,
-      activeIcon: <PersonIcon style={{ fontSize: "1.75rem" }} />,
+      icon: <PersonOutlineOutlinedIcon style={{ fontSize: 28 }} />,
+      activeIcon: <PersonIcon style={{ fontSize: 28 }} />,
       handleClick: handleProfileClick,
     },
   ];

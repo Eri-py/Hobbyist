@@ -14,7 +14,7 @@ type UsernameAndEmailStepProps = {
 
 export function UsernameAndEmailStep({ handleNext, isPending }: UsernameAndEmailStepProps) {
   return (
-    <Stack gap="1rem" paddingInline="1rem">
+    <Stack gap={2} paddingInline={2}>
       <CustomFormHeader
         header="Sign up"
         subtext="join thousands of users already on our platform."
