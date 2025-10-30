@@ -20,8 +20,6 @@ import { Route as AppMessagesRouteImport } from './routes/_app/messages'
 import { Route as AppEventsRouteImport } from './routes/_app/events'
 import { Route as AppCreateRouteImport } from './routes/_app/create'
 import { Route as AppProfileIndexRouteImport } from './routes/_app/profile/index'
-import { Route as AppExploreHobbiesRouteImport } from './routes/_app/explore/hobbies'
-import { Route as AppExploreEventsRouteImport } from './routes/_app/explore/events'
 import { Route as AppProfileUsernameIndexRouteImport } from './routes/_app/profile/$username/index'
 import { Route as AppProfileUsernameSettingsRouteImport } from './routes/_app/profile/$username/settings'
 
@@ -78,16 +76,6 @@ const AppProfileIndexRoute = AppProfileIndexRouteImport.update({
   path: '/profile/',
   getParentRoute: () => AppRoute,
 } as any)
-const AppExploreHobbiesRoute = AppExploreHobbiesRouteImport.update({
-  id: '/explore/hobbies',
-  path: '/explore/hobbies',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppExploreEventsRoute = AppExploreEventsRouteImport.update({
-  id: '/explore/events',
-  path: '/explore/events',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppProfileUsernameIndexRoute = AppProfileUsernameIndexRouteImport.update({
   id: '/profile/$username/',
   path: '/profile/$username/',
@@ -109,8 +97,6 @@ export interface FileRoutesByFullPath {
   '/login': typeof AuthLoginRoute
   '/sign-up': typeof AuthSignUpRoute
   '/': typeof AppIndexRoute
-  '/explore/events': typeof AppExploreEventsRoute
-  '/explore/hobbies': typeof AppExploreHobbiesRoute
   '/profile': typeof AppProfileIndexRoute
   '/profile/$username/settings': typeof AppProfileUsernameSettingsRoute
   '/profile/$username': typeof AppProfileUsernameIndexRoute
@@ -124,8 +110,6 @@ export interface FileRoutesByTo {
   '/login': typeof AuthLoginRoute
   '/sign-up': typeof AuthSignUpRoute
   '/': typeof AppIndexRoute
-  '/explore/events': typeof AppExploreEventsRoute
-  '/explore/hobbies': typeof AppExploreHobbiesRoute
   '/profile': typeof AppProfileIndexRoute
   '/profile/$username/settings': typeof AppProfileUsernameSettingsRoute
   '/profile/$username': typeof AppProfileUsernameIndexRoute
@@ -142,8 +126,6 @@ export interface FileRoutesById {
   '/_auth/login': typeof AuthLoginRoute
   '/_auth/sign-up': typeof AuthSignUpRoute
   '/_app/': typeof AppIndexRoute
-  '/_app/explore/events': typeof AppExploreEventsRoute
-  '/_app/explore/hobbies': typeof AppExploreHobbiesRoute
   '/_app/profile/': typeof AppProfileIndexRoute
   '/_app/profile/$username/settings': typeof AppProfileUsernameSettingsRoute
   '/_app/profile/$username/': typeof AppProfileUsernameIndexRoute
@@ -159,8 +141,6 @@ export interface FileRouteTypes {
     | '/login'
     | '/sign-up'
     | '/'
-    | '/explore/events'
-    | '/explore/hobbies'
     | '/profile'
     | '/profile/$username/settings'
     | '/profile/$username'
@@ -174,8 +154,6 @@ export interface FileRouteTypes {
     | '/login'
     | '/sign-up'
     | '/'
-    | '/explore/events'
-    | '/explore/hobbies'
     | '/profile'
     | '/profile/$username/settings'
     | '/profile/$username'
@@ -191,8 +169,6 @@ export interface FileRouteTypes {
     | '/_auth/login'
     | '/_auth/sign-up'
     | '/_app/'
-    | '/_app/explore/events'
-    | '/_app/explore/hobbies'
     | '/_app/profile/'
     | '/_app/profile/$username/settings'
     | '/_app/profile/$username/'
@@ -282,20 +258,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProfileIndexRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/explore/hobbies': {
-      id: '/_app/explore/hobbies'
-      path: '/explore/hobbies'
-      fullPath: '/explore/hobbies'
-      preLoaderRoute: typeof AppExploreHobbiesRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/explore/events': {
-      id: '/_app/explore/events'
-      path: '/explore/events'
-      fullPath: '/explore/events'
-      preLoaderRoute: typeof AppExploreEventsRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/profile/$username/': {
       id: '/_app/profile/$username/'
       path: '/profile/$username'
@@ -320,8 +282,6 @@ interface AppRouteChildren {
   AppSearchRoute: typeof AppSearchRoute
   AppTradeRoute: typeof AppTradeRoute
   AppIndexRoute: typeof AppIndexRoute
-  AppExploreEventsRoute: typeof AppExploreEventsRoute
-  AppExploreHobbiesRoute: typeof AppExploreHobbiesRoute
   AppProfileIndexRoute: typeof AppProfileIndexRoute
   AppProfileUsernameSettingsRoute: typeof AppProfileUsernameSettingsRoute
   AppProfileUsernameIndexRoute: typeof AppProfileUsernameIndexRoute
@@ -334,8 +294,6 @@ const AppRouteChildren: AppRouteChildren = {
   AppSearchRoute: AppSearchRoute,
   AppTradeRoute: AppTradeRoute,
   AppIndexRoute: AppIndexRoute,
-  AppExploreEventsRoute: AppExploreEventsRoute,
-  AppExploreHobbiesRoute: AppExploreHobbiesRoute,
   AppProfileIndexRoute: AppProfileIndexRoute,
   AppProfileUsernameSettingsRoute: AppProfileUsernameSettingsRoute,
   AppProfileUsernameIndexRoute: AppProfileUsernameIndexRoute,

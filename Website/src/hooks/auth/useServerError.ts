@@ -1,5 +1,5 @@
 import { AxiosError } from "axios";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 // Define accepted shapes for response.data
 type ServerErrorResponse = {
@@ -10,6 +10,17 @@ export type ServerError = AxiosError<ServerErrorResponse>;
 // Custom hook for handling server errors
 export function useServerError() {
   const [serverErrorMessage, setServerErrorMessage] = useState<string | null>(null);
+
+  // Auto-clear error after 10 seconds with proper cleanup
+  useEffect(() => {
+    if (!serverErrorMessage) return;
+
+    const timerId = setTimeout(() => {
+      setServerErrorMessage(null);
+    }, 10000);
+
+    return () => clearTimeout(timerId);
+  }, [serverErrorMessage]);
 
   const getErrorMessage = (error: ServerError) => {
     if (error.response && error.response.data) {
@@ -27,10 +38,6 @@ export function useServerError() {
   const handleServerError = (error: ServerError) => {
     const errorMessage = getErrorMessage(error);
     setServerErrorMessage(errorMessage);
-
-    setTimeout(() => {
-      setServerErrorMessage(null);
-    }, 10000);
   };
 
   const clearServerError = () => {

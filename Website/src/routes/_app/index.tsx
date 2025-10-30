@@ -3,10 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import Stack from "@mui/material/Stack";
 
 import { useBreakpoint } from "@/hooks/shared/useBreakpoint";
-import { useRouteSetup } from "@/hooks/app/useRouteSetup";
 import { PostTile } from "@/components/shared/PostTile";
-import { useMemo } from "react";
-import { RightButtonGroup } from "@/components/home/RightButtonGroup";
 
 export const Route = createFileRoute("/_app/")({
   component: HomePage,
@@ -14,16 +11,6 @@ export const Route = createFileRoute("/_app/")({
 
 function HomePage() {
   const { isDesktop } = useBreakpoint();
-  const routeConfig = useMemo(
-    () => ({
-      activeNavigationTab: "Home",
-      desktopSearchBar: <div></div>,
-      desktopRightButtonGroup: <RightButtonGroup />,
-      mobileSearchOverlay: <div></div>,
-    }),
-    []
-  );
-  useRouteSetup(routeConfig);
 
   return (
     <Stack

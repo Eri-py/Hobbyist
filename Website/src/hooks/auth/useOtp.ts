@@ -1,5 +1,4 @@
-// useOtp.ts
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useServerError, type ServerError } from "@/hooks/auth/useServerError";
 import { axiosInstance } from "@/api/axiosInstance";
@@ -24,15 +23,17 @@ export function useOtp(initialOtpExpiresAt: Date) {
   const [endTime, setEndTime] = useState<number>(initialOtpExpiresAt.getTime());
   const [isResendDisabled, setIsResendDisabled] = useState<boolean>(true);
 
-  // Enable resend button after 1/5th of the initial OTP duration
-  useState(() => {
-    setTimeout(
+  // Enable resend button after 1/5th of the initial OTP duration with cleanup
+  useEffect(() => {
+    const enableResendTimer = setTimeout(
       () => {
         setIsResendDisabled(false);
       },
       (initialOtpExpiresAt.getTime() - Date.now()) / 5
     );
-  });
+
+    return () => clearTimeout(enableResendTimer);
+  }, [initialOtpExpiresAt]);
 
   const resendOtpMutation = useMutation({
     mutationFn: ({ data, mode }: { data: ResendOtpRequest; mode: "login" | "signup" }) => {
@@ -46,13 +47,15 @@ export function useOtp(initialOtpExpiresAt: Date) {
       setEndTime(newEndTime);
       setIsResendDisabled(true);
 
-      // Re-enable resend button after 1/5th of the new OTP duration
-      setTimeout(
+      // Re-enable resend button after 1/5th of the new OTP duration with cleanup
+      const enableResendTimer = setTimeout(
         () => {
           setIsResendDisabled(false);
         },
         (newEndTime - Date.now()) / 5
       );
+
+      return () => clearTimeout(enableResendTimer);
     },
     onError: (error: ServerError) => handleServerError(error),
   });

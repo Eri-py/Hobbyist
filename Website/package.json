@@ -13,7 +13,8 @@
     "dev": "vite --port 3000 --host",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview --port 3001 --host"
+    "preview": "vite preview --port 3001 --host",
+    "generate-types": "cross-env NODE_TLS_REJECT_UNAUTHORIZED=0 openapi-typescript https://localhost:7000/openapi/v1.json -o src/api/types.ts"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -42,10 +43,12 @@
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
     "@vitejs/plugin-react": "^5.1.0",
+    "cross-env": "^10.1.0",
     "eslint": "^9.38.0",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
     "globals": "^16.4.0",
+    "openapi-typescript": "^7.10.1",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.46.2",
     "vite": "^7.1.12",

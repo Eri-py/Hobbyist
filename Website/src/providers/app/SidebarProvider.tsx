@@ -6,17 +6,23 @@ type SidebarProviderTypes = {
   children: ReactNode;
 };
 
+// SidebarProvider.tsx (updated with persistence)
 export function SidebarProvider({ children }: SidebarProviderTypes) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(() => {
+    const saved = localStorage.getItem("sidebarOpen");
+    return saved ? JSON.parse(saved) : true;
+  });
 
   const toggleSidebar = useCallback(() => {
-    setIsSidebarOpen(!isSidebarOpen);
+    const newState = !isSidebarOpen;
+    setIsSidebarOpen(newState);
+    localStorage.setItem("sidebarOpen", JSON.stringify(newState));
   }, [isSidebarOpen]);
 
   const value: SidebarContextTypes = useMemo(
     () => ({
-      isSidebarOpen: isSidebarOpen,
-      toggleSidebar: toggleSidebar,
+      isSidebarOpen,
+      toggleSidebar,
     }),
     [isSidebarOpen, toggleSidebar]
   );

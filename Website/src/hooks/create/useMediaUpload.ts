@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { useDropzone, type FileRejection } from "react-dropzone";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -7,6 +7,17 @@ const MAX_FILES = 10; // Maximum number of files
 export function useMediaUpload() {
   const [files, setFiles] = useState<File[]>([]);
   const [errors, setErrors] = useState<string[]>([]);
+
+  // Auto-clear errors after 10 seconds with cleanup
+  useEffect(() => {
+    if (errors.length === 0) return;
+
+    const timerId = setTimeout(() => {
+      setErrors([]);
+    }, 10000);
+
+    return () => clearTimeout(timerId);
+  }, [errors]);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
@@ -35,7 +46,6 @@ export function useMediaUpload() {
     });
 
     setErrors(errorMessages);
-    setTimeout(() => setErrors([]), 10000);
   }, []);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
