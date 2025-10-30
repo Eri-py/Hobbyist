@@ -12,15 +12,15 @@ import { useSidebar } from "@/hooks/app/useSidebar";
 
 const StyledExpandedPrimary = styled(ListItemText)({
   "& .MuiListItemText-primary": {
-    fontSize: "0.95rem",
+    fontSize: 15,
     fontWeight: 300,
   },
 });
 
 const NavigationButton = styled(ListItemButton)({
-  borderRadius: "0.5rem",
-  gap: "0.75rem",
-  height: "2.5rem",
+  borderRadius: 8,
+  gap: 1.5,
+  height: 40,
 });
 
 export function HobbyNavigationButtons() {
@@ -46,7 +46,7 @@ export function HobbyNavigationButtons() {
     isSidebarOpen && (
       <>
         <NavigationButton
-          sx={{ marginTop: "1rem" }}
+          sx={{ marginTop: 16 }}
           onClick={() => setHobbiesExpanded(!hobbiesExpanded)}
         >
           <ListItemText secondary="HOBBIES" />

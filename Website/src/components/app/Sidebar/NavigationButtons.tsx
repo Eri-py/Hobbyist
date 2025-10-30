@@ -18,7 +18,7 @@ const CollapsedIcon = styled(ListItemIcon)({
 
 const ExpandedText = styled(ListItemText)({
   "& .MuiListItemText-primary": {
-    fontSize: "0.95rem",
+    fontSize: 15,
     fontWeight: 300,
   },
 });
@@ -48,10 +48,10 @@ export function NavigationButtons() {
       <ListItemButton
         key={item.label}
         sx={{
-          borderRadius: isSidebarOpen ? "0.5rem" : "0.75rem",
-          gap: isSidebarOpen ? "0.75rem" : 0,
-          height: isSidebarOpen ? "2.5rem" : "auto",
-          marginBottom: isSidebarOpen && isLastItem ? "0.5rem" : "0",
+          borderRadius: isSidebarOpen ? 1 : 1.5,
+          gap: isSidebarOpen ? 1.5 : 0,
+          height: isSidebarOpen ? 40 : "auto",
+          marginBottom: isSidebarOpen && isLastItem ? 1 : "0",
         }}
         selected={isActive}
         onClick={item.handleClick}
@@ -67,10 +67,10 @@ export function NavigationButtons() {
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
-              maxHeight: "3.5rem",
+              maxHeight: 56,
               "& .MuiListItemText-secondary": {
                 textAlign: "center",
-                fontSize: "0.75rem",
+                fontSize: 12,
               },
             }}
             primary={item.icon}

@@ -10,7 +10,7 @@ export function BottomNavbar() {
     <Stack
       direction="row"
       component="footer"
-      height="3rem"
+      height={48}
       justifyContent="space-between"
       position="sticky"
       sx={{

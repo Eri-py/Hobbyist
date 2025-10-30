@@ -79,13 +79,12 @@ function Login() {
         maxWidth: { xs: "100%", md: "480px" },
         height: "fit-content",
         backgroundColor: theme.palette.background.default,
-        borderRadius: { md: "1rem" },
       }}
     >
       {!isDekstop && <LogoWithName size="large" align="center" />}
 
       {serverErrorMessage && (
-        <Alert severity="error" sx={{ color: theme.palette.text.primary, fontSize: "1rem" }}>
+        <Alert severity="error" sx={{ color: theme.palette.text.primary, fontSize: 16 }}>
           {serverErrorMessage}
         </Alert>
       )}

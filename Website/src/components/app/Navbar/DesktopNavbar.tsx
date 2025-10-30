@@ -21,7 +21,7 @@ export function DesktopNavbar() {
         sx={{
           justifyContent: "space-between",
           paddingInline: "1.35rem !important",
-          paddingBlock: "0.5rem",
+          paddingBlock: 1,
         }}
       >
         <Stack direction="row" alignItems="center">

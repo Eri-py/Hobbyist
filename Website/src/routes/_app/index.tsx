@@ -31,7 +31,7 @@ function HomePage() {
       alignItems="center"
       overflow="auto"
       padding={isDesktop ? 1 : 0}
-      gap={isDesktop ? "1.75rem" : 2}
+      gap={isDesktop ? 3.5 : 2}
     >
       <PostTile />
       <PostTile />

@@ -25,9 +25,9 @@ export function MobileNavbar() {
       >
         <IconButton onClick={handleTradeClick}>
           {activeTab === "Trade" ? (
-            <StoreIcon style={{ fontSize: "1.75rem" }} />
+            <StoreIcon style={{ fontSize: 28 }} />
           ) : (
-            <StoreOutlinedIcon style={{ fontSize: "1.75rem" }} />
+            <StoreOutlinedIcon style={{ fontSize: 28 }} />
           )}
         </IconButton>
 

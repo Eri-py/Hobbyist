@@ -24,8 +24,8 @@ function AuthLayout() {
               background: "none",
             },
             position: "absolute",
-            top: "2rem",
-            left: "3rem",
+            top: 32,
+            left: 48,
           }}
           onClick={() => navigate({ to: "/" })}
         >

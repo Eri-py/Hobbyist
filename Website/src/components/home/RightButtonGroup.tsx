@@ -21,7 +21,7 @@ const CustomBadge = styled(Badge)`
 `;
 
 const AuthButton = styled(Button)({
-  fontSize: "1rem",
+  fontSize: 16,
   fontWeight: 400,
 });
 
@@ -40,9 +40,10 @@ export function RightButtonGroup() {
           onClick={handleCreateClick}
           sx={{
             color: "text.primary",
-            borderRadius: "2rem",
-            padding: "0.5rem 1rem",
-            fontSize: "1rem",
+            borderRadius: 4,
+            paddingBlock: 1,
+            paddingInline: 2,
+            fontSize: 16,
             "&:hover": {
               backgroundColor: "rgba(255, 255, 255, 0.08)",
             },
@@ -57,7 +58,7 @@ export function RightButtonGroup() {
         </IconButton>
 
         <IconButton onClick={handleProfileClick}>
-          <AccountCircleIcon style={{ fontSize: "2rem" }} />
+          <AccountCircleIcon style={{ fontSize: 32 }} />
           <CustomBadge badgeContent={10} color="primary" overlap="circular" />
         </IconButton>
       </Stack>

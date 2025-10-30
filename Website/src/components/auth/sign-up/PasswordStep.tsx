@@ -17,7 +17,7 @@ export function PasswordStep({ handleNext }: PasswordProps) {
   const password: string = useDebounce(watch("password") || "");
 
   return (
-    <Stack gap="0.75rem" paddingInline="1rem">
+    <Stack gap={1.5} paddingInline={2}>
       <CustomFormHeader
         header="Create a strong password"
         subtext="We will never ask you for your password."

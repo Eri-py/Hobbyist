@@ -48,7 +48,7 @@ export function CustomTextField({
           setPasswordVisible(!isPasswordVisible);
         }}
         sx={{
-          padding: "0rem",
+          padding: 0,
           color: theme.palette.text.primary,
           "&:hover": {
             background: "none",
@@ -74,7 +74,7 @@ export function CustomTextField({
           startAdornment: startIcon ?? "",
           endAdornment: isPasswordField && passwordEndAdornment(),
           sx: {
-            gap: "0.5rem",
+            gap: 1,
             backgroundColor: theme.palette.background.paper,
           },
         },
@@ -131,7 +131,7 @@ export function SegmentedDatePicker({ value, onChange, error }: SegmentedDatePic
 
   return (
     <Stack>
-      <Stack direction="row" gap="0.75rem">
+      <Stack direction="row" gap={1.5}>
         <TextField
           type="text"
           variant="outlined"
@@ -143,7 +143,7 @@ export function SegmentedDatePicker({ value, onChange, error }: SegmentedDatePic
           slotProps={{
             input: {
               sx: {
-                gap: "0.5rem",
+                gap: 1,
                 backgroundColor: theme.palette.background.paper,
               },
             },
@@ -170,7 +170,7 @@ export function SegmentedDatePicker({ value, onChange, error }: SegmentedDatePic
           slotProps={{
             input: {
               sx: {
-                gap: "0.5rem",
+                gap: 1,
                 backgroundColor: theme.palette.background.paper,
               },
             },
@@ -192,15 +192,10 @@ type CustomFormHeaderProps = {
 export function CustomFormHeader({ header, subtext, align }: CustomFormHeaderProps) {
   return (
     <Stack alignItems={align}>
-      <Typography fontWeight={500} fontSize="1.5rem" color="textPrimary">
+      <Typography fontWeight={500} fontSize={24} color="textPrimary">
         {header}
       </Typography>
-      <Typography
-        fontWeight={200}
-        fontSize="0.95rem"
-        color="textSecondary"
-        sx={{ textWrap: "nowrap" }}
-      >
+      <Typography fontWeight={200} fontSize={15} color="textSecondary" sx={{ textWrap: "nowrap" }}>
         {subtext}
       </Typography>
     </Stack>

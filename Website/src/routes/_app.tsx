@@ -18,22 +18,15 @@ function AppLayout() {
 
   return (
     <AppProvider>
-      <Stack>
+      <Stack sx={{ height: "100dvh", overflow: "hidden" }}>
         {/* Header */}
         {isDesktop ? <DesktopNavbar /> : <MobileNavbar />}
 
         {/* Main content area */}
-        <Stack
-          direction="column"
-          height={{ xs: "calc(100dvh - 2.75rem - 3rem)", md: "calc(100dvh - 3.75rem)" }}
-        >
-          <Stack
-            direction={isDesktop ? "row" : "column"}
-            flex={1}
-            overflow="hidden"
-            gap={isDesktop ? 2 : 0}
-          >
-            {isDesktop && <Sidebar />}
+        <Stack direction={{ xs: "column", md: "row" }} flex={1} overflow="hidden">
+          {isDesktop && <Sidebar />}
+
+          <Stack component="main" flex={1} overflow="auto" padding={{ xs: 1, md: 2 }}>
             <Outlet />
           </Stack>
         </Stack>

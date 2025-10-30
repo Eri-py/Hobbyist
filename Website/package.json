@@ -26,11 +26,11 @@
     "@tanstack/react-router-devtools": "^1.133.36",
     "axios": "^1.13.1",
     "date-fns": "^4.1.0",
-    "js-cookie": "^3.0.5",
     "mui-one-time-password-input": "^5.0.0",
     "react": "^19.1.0",
     "react-countdown": "^2.3.6",
     "react-dom": "^19.2.0",
+    "react-dropzone": "^14.3.8",
     "react-hook-form": "^7.64.0",
     "zod": "^4.1.12"
   },
