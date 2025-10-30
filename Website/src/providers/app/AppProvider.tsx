@@ -1,20 +1,17 @@
 import type { ReactNode } from "react";
 import { AuthProvider } from "./AuthProvider";
-import { DesktopNavbarProvider } from "./DesktopNavbarProvider";
-import { MobileSearchOverlayProvider } from "./MobileSearchOverlayProvider";
+import { DesktopHeaderProvider } from "./DesktopHeaderProvider";
+import { MobileHeaderProvider } from "./MobileHeaderProvider";
 import { SidebarProvider } from "./SidebarProvider";
-import { NavigationProvider } from "./NavigationProvider";
 
 export function AppProvider({ children }: { children: ReactNode }) {
   return (
     <AuthProvider>
-      <DesktopNavbarProvider>
-        <SidebarProvider>
-          <NavigationProvider>
-            <MobileSearchOverlayProvider>{children}</MobileSearchOverlayProvider>
-          </NavigationProvider>
-        </SidebarProvider>
-      </DesktopNavbarProvider>
+      <DesktopHeaderProvider>
+        <MobileHeaderProvider>
+          <SidebarProvider>{children}</SidebarProvider>
+        </MobileHeaderProvider>
+      </DesktopHeaderProvider>
     </AuthProvider>
   );
 }

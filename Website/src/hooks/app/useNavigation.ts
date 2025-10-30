@@ -1,17 +1,27 @@
-import { createContext, useContext } from "react";
+import { useLocation } from "@tanstack/react-router";
 
-export type NavigationContextTypes = {
-  activeTab: string;
-  setActiveTab: (tab: string) => void;
-  getActiveTab: (label: string) => boolean;
+// Map routes to active tabs
+const ROUTE_TO_TAB_MAP: Record<string, string> = {
+  "/": "Home",
+  "/trade": "Trade",
+  "/events": "Events",
+  "/create": "Create",
+  "/messages": "Messages",
+  "/profile": "Profile",
+  "/search": "Search",
+  // Add more routes as needed
 };
 
-export const NavigationContext = createContext<NavigationContextTypes | null>(null);
-
 export function useNavigation() {
-  const context = useContext(NavigationContext);
-  if (!context) {
-    throw new Error("useNavigation must be used within a NavigationProvider.");
-  }
-  return context;
+  const location = useLocation();
+
+  // Auto-detect active tab from current route
+  const activeTab = ROUTE_TO_TAB_MAP[location.pathname] || "Home";
+
+  const getActiveTab = (label: string) => activeTab === label;
+
+  return {
+    activeTab,
+    getActiveTab,
+  };
 }

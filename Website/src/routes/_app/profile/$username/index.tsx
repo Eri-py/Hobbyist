@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useMemo, useState, type ReactElement, type SyntheticEvent } from "react";
+import { useState, type ReactElement, type SyntheticEvent } from "react";
 
 import Stack from "@mui/material/Stack";
 import SettingsIcon from "@mui/icons-material/Settings";
@@ -15,7 +15,6 @@ import IconButton from "@mui/material/IconButton";
 import Rating from "@mui/material/Rating";
 
 import { useAuth } from "@/hooks/app/useAuth";
-import { useRouteSetup } from "@/hooks/app/useRouteSetup";
 
 type NavigationItem = {
   label: string;
@@ -29,17 +28,6 @@ export const Route = createFileRoute("/_app/profile/$username/")({
 
 function ProfilePage() {
   const { username } = Route.useParams();
-  const routeConfig = useMemo(
-    () => ({
-      activeNavigationTab: `Profile/${username}`,
-      desktopSearchBar: <div></div>,
-      desktopRightButtonGroup: <div></div>,
-      mobileSearchOverlay: <div></div>,
-    }),
-    [username]
-  );
-  useRouteSetup(routeConfig);
-
   const [activeTab, setActiveTab] = useState(0);
   const { user } = useAuth();
   const isOwnProfile = user?.username == username;

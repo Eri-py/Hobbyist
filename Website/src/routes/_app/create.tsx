@@ -3,30 +3,23 @@ import { useMemo, useState } from "react";
 
 import Stack from "@mui/material/Stack";
 
-import { useRouteSetup } from "@/hooks/app/useRouteSetup";
 import { useMediaUpload } from "@/hooks/create/useMediaUpload";
 import { useBreakpoint } from "@/hooks/shared/useBreakpoint";
 import { DesktopCreateView } from "@/components/create/DesktopCreateView";
 import { MobileCreateView } from "@/components/create/MobileCreateView";
+import { useMobileHeaderConfig } from "@/hooks/app/useMobileHeader";
 
 export const Route = createFileRoute("/_app/create")({
   component: CreatePage,
 });
 
 function CreatePage() {
-  const routeConfig = useMemo(
-    () => ({
-      activeNavigationTab: "Create",
-      desktopSearchBar: <div></div>,
-      desktopRightButtonGroup: <div></div>,
-      mobileSearchOverlay: <div></div>,
-    }),
-    []
-  );
-  useRouteSetup(routeConfig);
   const { isDesktop } = useBreakpoint();
   const { files, getRootProps, getInputProps, isDragActive } = useMediaUpload();
   const [activeStep, setActiveStep] = useState(0);
+
+  const mobileHeaderConfigs = useMemo(() => ({ left: <div></div> }), []);
+  useMobileHeaderConfig(mobileHeaderConfigs);
 
   const handleNext = () => {
     setActiveStep((prevActiveStep) => prevActiveStep + 1);

@@ -1,18 +1,11 @@
 import Toolbar from "@mui/material/Toolbar";
-import IconButton from "@mui/material/IconButton";
-import SearchIcon from "@mui/icons-material/Search";
-import StoreOutlinedIcon from "@mui/icons-material/StoreOutlined";
-import StoreIcon from "@mui/icons-material/Store";
+import Stack from "@mui/material/Stack";
 
 import { NavbarContainer } from "./NavbarContainer";
-import { useMobileSearchOverlay } from "@/hooks/app/useMobileSearchOverlay";
-import { useNavigation } from "@/hooks/app/useNavigation";
-import { useNavigationButtons } from "@/hooks/shared/useNavigationButtons";
+import { useMobileHeader } from "@/hooks/app/useMobileHeader";
 
 export function MobileNavbar() {
-  const { openOverlay } = useMobileSearchOverlay();
-  const { activeTab } = useNavigation();
-  const { handleTradeClick } = useNavigationButtons();
+  const { leftSlot, centerSlot, rightSlot } = useMobileHeader();
 
   return (
     <NavbarContainer>
@@ -23,17 +16,20 @@ export function MobileNavbar() {
           paddingInline: "0.25rem !important",
         }}
       >
-        <IconButton onClick={handleTradeClick}>
-          {activeTab === "Trade" ? (
-            <StoreIcon style={{ fontSize: 28 }} />
-          ) : (
-            <StoreOutlinedIcon style={{ fontSize: 28 }} />
-          )}
-        </IconButton>
+        {/* Left Slot */}
+        <Stack direction="row" alignItems="center">
+          {leftSlot}
+        </Stack>
 
-        <IconButton onClick={openOverlay}>
-          <SearchIcon />
-        </IconButton>
+        {/* Center Slot */}
+        <Stack direction="row" alignItems="center">
+          {centerSlot}
+        </Stack>
+
+        {/* Right Slot */}
+        <Stack direction="row" alignItems="center">
+          {rightSlot}
+        </Stack>
       </Toolbar>
     </NavbarContainer>
   );

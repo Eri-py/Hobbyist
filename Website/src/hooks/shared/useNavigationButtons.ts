@@ -25,16 +25,11 @@ export function useNavigationButtons() {
     navigate({ to: "/events" });
   };
 
-  const handleExploreClick = () => {
-    navigate({ to: "/explore/hobbies" });
-  };
-
   return {
     handleCreateClick,
     handleMessagesClick,
     handleHomeClick,
     handleTradeClick,
     handleEventsClick,
-    handleExploreClick,
   };
 }

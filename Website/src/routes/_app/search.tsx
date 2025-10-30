@@ -1,6 +1,4 @@
-import { useRouteSetup } from "@/hooks/app/useRouteSetup";
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo } from "react";
 import { z } from "zod/v4";
 
 const validSearchSchema = z.object({
@@ -14,17 +12,6 @@ export const Route = createFileRoute("/_app/search")({
 
 function SearchPage() {
   const { q } = Route.useSearch();
-
-  const routeConfig = useMemo(
-    () => ({
-      activeNavigationTab: "Search",
-      desktopSearchBar: <div></div>,
-      desktopRightButtonGroup: <div></div>,
-      mobileSearchOverlay: <div></div>,
-    }),
-    []
-  );
-  useRouteSetup(routeConfig);
 
   return (
     <div>
