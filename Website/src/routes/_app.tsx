@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 
 import Stack from "@mui/material/Stack";
 
@@ -8,34 +8,8 @@ import { BottomNavbar } from "@/components/app/BottomNavbar/BottomNavbar";
 import { MobileNavbar } from "@/components/app/Navbar/MobileNavbar";
 import { Sidebar } from "@/components/app/Sidebar/Sidebar";
 import { AppProvider } from "@/providers/app/AppProvider";
-import { getUserDetails } from "@/api/AuthApi";
 
 export const Route = createFileRoute("/_app")({
-  beforeLoad: async ({ location }) => {
-    // Public routes that don't require authentication
-    const publicRoutes = ["/"];
-
-    try {
-      // Call the backend directly to check auth
-      const response = await getUserDetails();
-      const isAuthenticated = response.data.isAuthenticated;
-
-      if (!publicRoutes.includes(location.pathname) && !isAuthenticated) {
-        throw redirect({
-          to: "/login",
-          search: { redirect: location.pathname },
-        });
-      }
-    } catch {
-      if (!publicRoutes.includes(location.pathname)) {
-        throw redirect({
-          to: "/login",
-          search: { redirect: location.pathname },
-        });
-      }
-    }
-  },
-  pendingComponent: () => <div>Loading</div>,
   component: AppLayout,
 });
 

@@ -1,23 +1,11 @@
-import { createFileRoute, Outlet, redirect, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
 import Button from "@mui/material/Button";
 
 import { LogoWithName } from "@/components/shared/Logo";
 import { useBreakpoint } from "@/hooks/shared/useBreakpoint";
 import { FormContainer } from "@/components/auth/FormContainer";
-import { getUserDetails } from "@/api/AuthApi";
 
 export const Route = createFileRoute("/_auth")({
-  beforeLoad: async () => {
-    try {
-      const response = await getUserDetails();
-      if (response.data.isAuthenticated) {
-        throw redirect({ to: "/" });
-      }
-    } catch {
-      // If auth check fails, stay on auth page
-      return;
-    }
-  },
   component: AuthLayout,
 });
 
