@@ -32,7 +32,7 @@
     "react-countdown": "^2.3.6",
     "react-dom": "^19.2.0",
     "react-dropzone": "^14.3.8",
-    "react-hook-form": "^7.64.0",
+    "react-hook-form": "^7.66.0",
     "zod": "^4.1.12"
   },
   "devDependencies": {
