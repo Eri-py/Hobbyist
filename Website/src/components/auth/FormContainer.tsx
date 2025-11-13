@@ -7,7 +7,7 @@ export function FormContainer({ children }: { children: ReactNode }) {
       sx={{
         display: "flex",
         minHeight: "100dvh",
-        alignItems: { md: "center" },
+        alignItems: "center",
         justifyContent: "center",
         position: "relative",
       }}
