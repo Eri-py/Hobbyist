@@ -16,21 +16,21 @@ export function DesktopUploadArea({ getRootProps, isDragActive }: DesktopUploadA
       {...getRootProps()}
       component="button"
       type="button"
-      border={`2px dashed ${theme.palette.primary.main}`}
+      border={`2px dashed ${theme.palette.primary.dark}`}
       flex={1}
       alignItems="center"
       justifyContent="center"
       borderRadius={3}
-      bgcolor="background.paper"
+      bgcolor="transparent"
       sx={{
         "&:hover": {
           cursor: "pointer",
-          backgroundColor: theme.palette.action.hover,
+          border: `2px dashed ${theme.palette.primary.light}`,
         },
       }}
     >
       <CameraAltOutlinedIcon sx={{ fontSize: 96, color: "text.secondary" }} />
-      <Typography variant="h6" gutterBottom>
+      <Typography variant="h6" gutterBottom color="text.secondary">
         {isDragActive ? "Drop photos here" : "Add photos to your post"}
       </Typography>
       {!isDragActive && (
