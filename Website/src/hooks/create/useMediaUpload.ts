@@ -1,11 +1,17 @@
 import { useCallback, useState, useEffect } from "react";
 import { useDropzone, type FileRejection } from "react-dropzone";
+import { generateThumbnail } from "./generateThumbnail";
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-const MAX_FILES = 10; // Maximum number of files
+const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
+
+export type FileWithMetadata = {
+  id: string;
+  file: File;
+  preview: string;
+};
 
 export function useMediaUpload() {
-  const [files, setFiles] = useState<File[]>([]);
+  const [filesWithMetadata, setFilesWithMetadata] = useState<FileWithMetadata[]>([]);
   const [errors, setErrors] = useState<string[]>([]);
 
   // Auto-clear errors after 10 seconds with cleanup
@@ -19,9 +25,28 @@ export function useMediaUpload() {
     return () => clearTimeout(timerId);
   }, [errors]);
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
+  // Clean up all object URLs when component unmounts
+  useEffect(() => {
+    return () => {
+      filesWithMetadata.forEach((fileWithMetadata) => {
+        URL.revokeObjectURL(fileWithMetadata.preview);
+      });
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
-      setFiles((prev) => [...prev, ...acceptedFiles].slice(0, MAX_FILES));
+      // Generate thumbnails for all accepted files
+      const newFilesWithMetadata: FileWithMetadata[] = await Promise.all(
+        acceptedFiles.map(async (file) => ({
+          id: crypto.randomUUID(),
+          file,
+          preview: await generateThumbnail(file),
+        }))
+      );
+
+      setFilesWithMetadata((prev) => [...prev, ...newFilesWithMetadata]);
       setErrors([]); // Clear any previous errors when successfully adding files
     }
   }, []);
@@ -38,8 +63,6 @@ export function useMediaUpload() {
           return `${fileName}: Invalid file type. Please upload image or video files only.`;
         case "file-too-large":
           return `${fileName}: File is too large. Maximum size is 10MB.`;
-        case "too-many-files":
-          return `Maximum ${MAX_FILES} files allowed.`;
         default:
           return `${fileName}: Failed to upload. ${rejection.errors[0]?.message || "Unknown error"}`;
       }
@@ -63,46 +86,35 @@ export function useMediaUpload() {
       "video/quicktime": [".mov"],
       "video/x-msvideo": [".avi"],
     },
-    maxFiles: MAX_FILES,
     multiple: true,
     maxSize: MAX_FILE_SIZE,
   });
 
-  const removeFile = useCallback((index: number) => {
-    setFiles((prev) => prev.filter((_, i) => i !== index));
+  const removeFile = useCallback((fileId: string) => {
+    setFilesWithMetadata((prev) => {
+      const fileToRemove = prev.find((f) => f.id === fileId);
+
+      if (!fileToRemove) return prev;
+
+      if (fileToRemove) {
+        URL.revokeObjectURL(fileToRemove.preview);
+      }
+
+      return prev.filter((f) => f.id !== fileId);
+    });
   }, []);
 
   const removeError = useCallback((index: number) => {
     setErrors((prev) => prev.filter((_, i) => i !== index));
   }, []);
 
-  const reorderFiles = useCallback((fromIndex: number, toIndex: number) => {
-    setFiles((prev) => {
-      const newFiles = [...prev];
-      const [removed] = newFiles.splice(fromIndex, 1);
-      newFiles.splice(toIndex, 0, removed);
-      return newFiles;
-    });
-  }, []);
-
-  const setCoverFile = useCallback((index: number) => {
-    setFiles((prev) => {
-      if (index === 0) return prev; // Already cover
-      const newFiles = [...prev];
-      const [coverFile] = newFiles.splice(index, 1);
-      return [coverFile, ...newFiles];
-    });
-  }, []);
-
   return {
-    files,
+    files: filesWithMetadata,
     errors,
     getRootProps,
     getInputProps,
     isDragActive,
     removeFile,
     removeError,
-    reorderFiles,
-    setCoverFile,
   };
 }

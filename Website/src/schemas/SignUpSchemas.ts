@@ -1,7 +1,7 @@
-import { z } from "zod/v4";
+import { z, string } from "zod/v4";
 import { parseISO, isValid, differenceInYears } from "date-fns";
 
-export const usernameSchema = z
+const usernameSchema = z
   .string()
   .min(3, "Username must be at least 3 characters")
   .max(30, "Username must be less than 30 characters")
@@ -10,9 +10,9 @@ export const usernameSchema = z
     "Username can only contain letters, numbers, dots, dashes, and underscores"
   );
 
-export const emailSchema = z.email("Invalid email address").max(100, "Maximum 100 characters");
+const emailSchema = z.email("Invalid email address").max(100, "Maximum 100 characters");
 
-export const passwordSchema = z
+const passwordSchema = z
   .string("Password is required")
   .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
   .regex(/[a-z]/, "Password must contain at least one lowercase letter")
@@ -22,7 +22,7 @@ export const passwordSchema = z
   .min(8, "Password must be at least 8 characters long")
   .max(64, "Password must be no more than 64 characters long");
 
-export const nameSchema = (nameType: string) => {
+const nameSchema = (nameType: string) => {
   return z
     .string(`Invalid ${nameType}`)
     .trim()
@@ -42,7 +42,8 @@ const padDate = (date: string) => {
 
   return `${year}-${paddedMonth}-${paddedDay}`;
 };
-export const dateOfBirthSchema = z
+
+const dateOfBirthSchema = z
   .string("Date is required")
   .refine((val) => {
     return /^\d{4}-\d{2}-\d{2}$/.test(padDate(val));
@@ -62,3 +63,16 @@ export const dateOfBirthSchema = z
     return age >= 13;
   }, "User must be older than 13")
   .transform((val) => padDate(val));
+
+export const SignUpFormSchema = z.object({
+  username: usernameSchema,
+  email: emailSchema,
+  otp: z.string("Invalid otp").trim().length(6, "Invalid otp"),
+  password: passwordSchema,
+  confirmPassword: string("Invalid password").nonempty("Please enter password again"),
+  firstname: nameSchema("Firstname"),
+  lastname: nameSchema("Lastname"),
+  dateOfBirth: dateOfBirthSchema,
+});
+
+export type SignUpFormSchemaTypes = z.infer<typeof SignUpFormSchema>;

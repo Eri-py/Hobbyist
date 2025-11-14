@@ -1,10 +1,14 @@
-import { useMutation } from "@tanstack/react-query";
-import type { AxiosResponse } from "axios";
 import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import type { AxiosResponse } from "axios";
 
 import { useServerError, type ServerError } from "./useServerError";
-import { useNavigate } from "@tanstack/react-router";
+
 import { axiosInstance } from "@/api/axiosInstance";
+import { LoginFormSchema, type LoginFormSchemaTypes } from "@/schemas/LoginSchemas";
 
 // DTOs
 type startLoginRequest = {
@@ -40,6 +44,12 @@ export function useLogin() {
   const { serverErrorMessage, handleServerError, clearServerError } = useServerError();
   const navigate = useNavigate();
 
+  // Initialize form methods
+  const methods = useForm<LoginFormSchemaTypes>({
+    mode: "onChange",
+    resolver: zodResolver(LoginFormSchema),
+  });
+
   const startLoginMutation = useMutation({
     mutationFn: (data: startLoginRequest) => startLoginApi(data),
     onSuccess: (response: AxiosResponse<startLoginResponse>) => {
@@ -59,17 +69,56 @@ export function useLogin() {
     onError: (error: ServerError) => handleServerError(error),
   });
 
+  // Handle next step with validation
+  const handleNext = async () => {
+    const isValid = await methods.trigger(["identifier", "password"]);
+
+    if (isValid) {
+      clearServerError();
+      const identifier = methods.getValues("identifier");
+      const password = methods.getValues("password");
+      startLoginMutation.mutate({ identifier, password });
+    }
+  };
+
+  // Handle enter key press
+  const onEnter = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+
+      if (step < 1) {
+        handleNext();
+      }
+    }
+  };
+
+  // Handle form submission
+  const onSubmit = (formData: LoginFormSchemaTypes) => {
+    completeLoginMutation.mutate({
+      identifier: formData.identifier,
+      otp: formData.otp,
+    });
+  };
+
   return {
+    // Form methods
+    methods,
+
+    // State
     step,
     otpData,
 
+    // Server error handling
     serverErrorMessage,
     clearServerError,
 
-    startLogin: startLoginMutation.mutate,
-    isStarting: startLoginMutation.isPending,
+    // Actions
+    handleNext,
+    onEnter,
+    onSubmit,
 
-    completeLogin: completeLoginMutation.mutate,
+    // Mutation states
+    isStarting: startLoginMutation.isPending,
     isCompleting: completeLoginMutation.isPending,
   };
 }
