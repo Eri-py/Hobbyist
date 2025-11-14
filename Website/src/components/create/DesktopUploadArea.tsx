@@ -16,7 +16,7 @@ export function DesktopUploadArea({ getRootProps, isDragActive }: DesktopUploadA
       {...getRootProps()}
       component="button"
       type="button"
-      border={`2px dashed ${theme.palette.primary.dark}`}
+      border={`2px dashed ${theme.palette.primary.main}`}
       flex={1}
       alignItems="center"
       justifyContent="center"
@@ -25,7 +25,7 @@ export function DesktopUploadArea({ getRootProps, isDragActive }: DesktopUploadA
       sx={{
         "&:hover": {
           cursor: "pointer",
-          border: `2px dashed ${theme.palette.primary.light}`,
+          border: "2px dashed white",
         },
       }}
     >

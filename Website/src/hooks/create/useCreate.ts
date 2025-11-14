@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { useServerError, type ServerError } from "@/hooks/auth/useServerError";
 import { axiosInstance } from "@/api/axiosInstance";
 import { CreateFormSchema, type CreateFormSchemaTypes } from "@/schemas/CreateSchemas";
+import type { FileWithMetadata } from "@/hooks/create/useMediaUpload";
 
 // API function
 const createPostApi = async (formData: FormData) => {
@@ -20,7 +21,7 @@ const mobileSteps: Record<number, (keyof CreateFormSchemaTypes)[]> = {
   2: ["condition", "availableForTrade", "lookingFor"],
 };
 
-export function useCreatePost() {
+export function useCreate() {
   const { serverErrorMessage, handleServerError, clearServerError } = useServerError();
   const [activeStep, setActiveStep] = useState<number>(0);
 
@@ -28,13 +29,6 @@ export function useCreatePost() {
   const methods = useForm<CreateFormSchemaTypes>({
     mode: "onChange",
     resolver: zodResolver(CreateFormSchema),
-    defaultValues: {
-      title: "",
-      description: "",
-      condition: undefined,
-      availableForTrade: false,
-      lookingFor: "",
-    },
   });
 
   const createPostMutation = useMutation({
@@ -44,34 +38,38 @@ export function useCreatePost() {
   });
 
   // Handle mobile step navigation with validation
-  const handleNext = async (files: File[]) => {
-    const currentStepFields = mobileSteps[activeStep];
+  const handleNext = useCallback(
+    async (files: FileWithMetadata[]) => {
+      const currentStepFields = mobileSteps[activeStep];
 
-    // handling for image step
-    if (activeStep === 0) {
-      if (files.length === 0) {
-        // TODO: Add error
+      // handling for image step
+      if (activeStep === 0) {
+        if (files.length === 0) {
+          // TODO: Add error
+          console.log("TODO: Add error for continue without images");
+          return;
+        }
+        setActiveStep((prev) => Math.min(prev + 1, 2));
         return;
       }
+
+      const isValid = await methods.trigger(currentStepFields);
+      if (!isValid) {
+        return;
+      }
+
+      clearServerError();
       setActiveStep((prev) => Math.min(prev + 1, 2));
-      return;
-    }
+    },
+    [activeStep, clearServerError, methods]
+  );
 
-    const isValid = await methods.trigger(currentStepFields);
-    if (!isValid) {
-      return;
-    }
-
-    clearServerError();
-    setActiveStep((prev) => Math.min(prev + 1, 2));
-  };
-
-  const handleBack = () => {
+  const handleBack = useCallback(() => {
     setActiveStep((prev) => Math.max(prev - 1, 0));
-  };
+  }, []);
 
   // Handle form submission
-  const handleSubmit = (files: File[]) => {
+  const handleSubmit = (files: FileWithMetadata[]) => {
     clearServerError();
 
     const formData = new FormData();
@@ -87,12 +85,14 @@ export function useCreatePost() {
       formData.append("lookingFor", values.lookingFor);
     }
 
-    // Add images
-    files.forEach((image) => {
-      formData.append("images", image);
+    // Add images - extract the actual File object from FileWithMetadata
+    files.forEach((fileMetadata) => {
+      formData.append("images", fileMetadata.file);
     });
 
-    createPostMutation.mutate(formData);
+    console.log(formData);
+
+    // createPostMutation.mutate(formData);
   };
 
   return {

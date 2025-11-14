@@ -1,17 +1,20 @@
 import type { DropzoneRootProps } from "react-dropzone";
+import type { FileWithMetadata } from "@/hooks/create/useMediaUpload";
 
 import Stack from "@mui/material/Stack";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import AddIcon from "@mui/icons-material/Add";
+import { MediaPreview } from "./MediaPreview";
 
 type MobileImageDisplayProps = {
-  files: File[];
+  files: FileWithMetadata[];
   getRootProps: <T extends DropzoneRootProps>(props?: T) => T;
+  removeFile: (fileId: string) => void;
 };
 
-export function MobileImageDisplay({ files, getRootProps }: MobileImageDisplayProps) {
+export function MobileImageDisplay({ files, getRootProps, removeFile }: MobileImageDisplayProps) {
   return (
     <Stack gap={2} flex={1}>
       <Typography variant="h6" textAlign="center">
@@ -30,30 +33,7 @@ export function MobileImageDisplay({ files, getRootProps }: MobileImageDisplayPr
           position: "relative",
         }}
       >
-        <img
-          src={URL.createObjectURL(files[0])}
-          alt={files[0].name}
-          style={{
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-          }}
-        />
-        <Typography
-          variant="caption"
-          sx={{
-            position: "absolute",
-            top: 8,
-            left: 8,
-            backgroundColor: "primary.main",
-            color: "primary.contrastText",
-            padding: "4px 8px",
-            borderRadius: 1,
-            fontWeight: "bold",
-          }}
-        >
-          Cover Photo
-        </Typography>
+        <MediaPreview fileMetadata={files[0]} onRemove={removeFile} showRemoveButton={true} />
       </Paper>
 
       {/* Remaining photos in pairs */}
@@ -65,23 +45,20 @@ export function MobileImageDisplay({ files, getRootProps }: MobileImageDisplayPr
             gap: 1,
           }}
         >
-          {files.slice(1).map((file) => (
+          {files.slice(1).map((fileMetadata) => (
             <Paper
-              key={file.name}
+              key={fileMetadata.id}
               sx={{
                 aspectRatio: 1,
                 borderRadius: 2,
                 overflow: "hidden",
+                position: "relative",
               }}
             >
-              <img
-                src={URL.createObjectURL(file)}
-                alt={file.name}
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
-                }}
+              <MediaPreview
+                fileMetadata={fileMetadata}
+                onRemove={removeFile}
+                showRemoveButton={true}
               />
             </Paper>
           ))}

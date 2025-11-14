@@ -1,5 +1,5 @@
 import { AxiosError } from "axios";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 // Define accepted shapes for response.data
 type ServerErrorResponse = {
@@ -40,9 +40,9 @@ export function useServerError() {
     setServerErrorMessage(errorMessage);
   };
 
-  const clearServerError = () => {
+  const clearServerError = useCallback(() => {
     setServerErrorMessage(null);
-  };
+  }, []);
 
   return {
     serverErrorMessage,

@@ -7,6 +7,9 @@ import Paper from "@mui/material/Paper";
 import AddIcon from "@mui/icons-material/Add";
 import { styled } from "@mui/material/styles";
 
+import type { FileWithMetadata } from "@/hooks/create/useMediaUpload";
+import { MediaPreview } from "./MediaPreview";
+
 const ImageGrid = styled(Stack)(({ theme }) => ({
   overflowX: "auto",
   overflowY: "hidden",
@@ -31,13 +34,14 @@ const ImageGrid = styled(Stack)(({ theme }) => ({
 }));
 
 type DesktopImageDisplayProps = {
-  files: File[];
+  files: FileWithMetadata[];
   getRootProps: <T extends DropzoneRootProps>(props?: T) => T;
+  removeFile: (fileId: string) => void;
 };
 
-export function DesktopImageDisplay({ files, getRootProps }: DesktopImageDisplayProps) {
+export function DesktopImageDisplay({ files, getRootProps, removeFile }: DesktopImageDisplayProps) {
   return (
-    <Stack gap={1} overflow="hidden">
+    <Stack gap={1} width="100%" overflow="hidden">
       <Typography variant="h6">
         {files.length} image{files.length !== 1 ? "s" : ""} selected
       </Typography>
@@ -49,25 +53,22 @@ export function DesktopImageDisplay({ files, getRootProps }: DesktopImageDisplay
           e.currentTarget.scrollLeft += e.deltaY * 5;
         }}
       >
-        {files.map((file) => (
+        {files.map((fileMetadata) => (
           <Paper
-            key={file.name}
+            key={fileMetadata.id}
             sx={{
-              width: 200,
-              height: 200,
+              width: 151,
+              aspectRatio: 1 / 1,
               borderRadius: 2,
               overflow: "hidden",
               flexShrink: 0,
+              position: "relative",
             }}
           >
-            <img
-              src={URL.createObjectURL(file)}
-              alt={file.name}
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-              }}
+            <MediaPreview
+              fileMetadata={fileMetadata}
+              onRemove={removeFile}
+              showRemoveButton={true}
             />
           </Paper>
         ))}
@@ -75,6 +76,7 @@ export function DesktopImageDisplay({ files, getRootProps }: DesktopImageDisplay
 
       <Button
         {...getRootProps()}
+        fullWidth
         startIcon={<AddIcon />}
         variant="contained"
         sx={{ backgroundColor: "background.paper" }}
