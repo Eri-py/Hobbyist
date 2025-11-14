@@ -3,36 +3,26 @@ import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { AxiosResponse } from "axios";
 
 import { useServerError, type ServerError } from "./useServerError";
 
 import { axiosInstance } from "@/api/axiosInstance";
 import { LoginFormSchema, type LoginFormSchemaTypes } from "@/schemas/LoginSchemas";
+import type { components } from "@/api/types";
 
 // DTOs
-type startLoginRequest = {
-  identifier: string;
-  password: string;
-};
-
-type startLoginResponse = {
-  otpExpiresAt: string;
-  email: string;
-};
-
-type completeLoginRequest = {
-  identifier: string;
-  otp: string;
-};
+type StartLoginRequest = components["schemas"]["StartLoginRequest"];
+type StartLoginResponse = components["schemas"]["StartLoginResponse"];
+type CompleteLoginRequest = components["schemas"]["CompleteLoginRequest"];
+type AuthResult = components["schemas"]["AuthResult"];
 
 // API functions
-const startLoginApi = (data: startLoginRequest) => {
-  return axiosInstance.post("login/start", data);
+const startLoginApi = (data: StartLoginRequest) => {
+  return axiosInstance.post<StartLoginResponse>("login/start", data);
 };
 
-const completeLoginApi = (data: completeLoginRequest) => {
-  return axiosInstance.post("login/complete", data);
+const completeLoginApi = (data: CompleteLoginRequest) => {
+  return axiosInstance.post<AuthResult>("login/complete", data);
 };
 
 export function useLogin() {
@@ -51,8 +41,8 @@ export function useLogin() {
   });
 
   const startLoginMutation = useMutation({
-    mutationFn: (data: startLoginRequest) => startLoginApi(data),
-    onSuccess: (response: AxiosResponse<startLoginResponse>) => {
+    mutationFn: (data: StartLoginRequest) => startLoginApi(data),
+    onSuccess: (response) => {
       const data = response.data;
       setOtpData({
         email: data.email,
@@ -64,7 +54,7 @@ export function useLogin() {
   });
 
   const completeLoginMutation = useMutation({
-    mutationFn: (data: completeLoginRequest) => completeLoginApi(data),
+    mutationFn: (data: CompleteLoginRequest) => completeLoginApi(data),
     onSuccess: () => navigate({ to: "/" }),
     onError: (error: ServerError) => handleServerError(error),
   });

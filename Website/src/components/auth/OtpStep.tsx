@@ -16,7 +16,6 @@ import { useOtp } from "@/hooks/auth/useOtp";
 type OtpStepProps = {
   mode: "login" | "signup";
   email: string;
-  username?: string;
   intitialOtpExpiresAt: Date;
   handleNext?: () => void;
   handleBack: () => void;
@@ -26,7 +25,6 @@ type OtpStepProps = {
 export function OtpStep({
   mode,
   email,
-  username = "",
   intitialOtpExpiresAt,
   handleNext,
   handleBack,
@@ -38,7 +36,7 @@ export function OtpStep({
     useOtp(intitialOtpExpiresAt);
 
   const onResend = () => {
-    handleResend({ username, email }, mode);
+    handleResend({ email }, mode);
   };
 
   return (

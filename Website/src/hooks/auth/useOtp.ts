@@ -1,17 +1,13 @@
 import { useState, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
+
 import { useServerError, type ServerError } from "@/hooks/auth/useServerError";
 import { axiosInstance } from "@/api/axiosInstance";
+import type { components } from "@/api/types";
 
-// Types for API requests
-export type ResendOtpRequest = {
-  username: string;
-  email: string;
-};
-
-export type ResendOtpResponse = {
-  otpExpiresAt: string;
-};
+// Dtos
+type ResendOtpRequest = components["schemas"]["ResendOtpRequest"];
+type ResendOtpResponse = components["schemas"]["OtpResponse"];
 
 // API function
 const resendOtpApi = (data: ResendOtpRequest, endpoint: string) => {
@@ -23,7 +19,7 @@ export function useOtp(initialOtpExpiresAt: Date) {
   const [endTime, setEndTime] = useState<number>(initialOtpExpiresAt.getTime());
   const [isResendDisabled, setIsResendDisabled] = useState<boolean>(true);
 
-  // Enable resend button after 1/5th of the initial OTP duration with cleanup
+  // Enable resend button after 1/5th of the initial OTP duration
   useEffect(() => {
     const enableResendTimer = setTimeout(
       () => {

@@ -7,30 +7,14 @@ import { useNavigate } from "@tanstack/react-router";
 import { useServerError, type ServerError } from "@/hooks/auth/useServerError";
 import { axiosInstance } from "@/api/axiosInstance";
 import { SignUpFormSchema, type SignUpFormSchemaTypes } from "@/schemas/SignUpSchemas";
+import type { components } from "@/api/types";
 
-// Types for API requests
-type StartSignUpRequest = {
-  username: string;
-  email: string;
-};
-
-type VerifyOtpRequest = {
-  email: string;
-  otp: string;
-};
-
-type CompleteSignUpRequest = {
-  username: string;
-  email: string;
-  password: string;
-  firstname: string;
-  lastname: string;
-  dateOfBirth: string;
-};
-
-type StartSignUpResponse = {
-  otpExpiresAt: string;
-};
+// Dtos
+type StartSignUpRequest = components["schemas"]["StartSignUpRequest"];
+type VerifyOtpRequest = components["schemas"]["VerifyOtpRequest"];
+type CompleteSignUpRequest = components["schemas"]["CompleteSignUpRequest"];
+type StartSignUpResponse = components["schemas"]["OtpResponse"];
+type AuthResult = components["schemas"]["AuthResult"];
 
 // API functions
 const startSignUpApi = (data: StartSignUpRequest) => {
@@ -42,7 +26,7 @@ const verifyOtpApi = (data: VerifyOtpRequest) => {
 };
 
 const completeSignUpApi = (data: CompleteSignUpRequest) => {
-  return axiosInstance.post("sign-up/complete", data);
+  return axiosInstance.post<AuthResult>("sign-up/complete", data);
 };
 
 // Define which fields belong to each step
