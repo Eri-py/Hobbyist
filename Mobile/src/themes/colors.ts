@@ -1,0 +1,33 @@
+export const lightColors = {
+  primary: "#1565c0",
+  primaryDark: "#0d47a1",
+  primaryLight: "#42a5f5",
+  secondary: "#df2a2a",
+  secondaryDark: "#b11b1b",
+  secondaryLight: "#ef5f5f",
+  background: "#fafafa",
+  surface: "#ffffff",
+  text: "#000000",
+  textSecondary: "#666666",
+  error: "#B00020",
+  success: "#4CAF50",
+  warning: "#FF9800",
+  border: "#e0e0e0",
+};
+
+export const darkColors = {
+  primary: "#42a5f5",
+  primaryDark: "#1565c0",
+  primaryLight: "#64b5f6",
+  secondary: "#ef5f5f",
+  secondaryDark: "#df2a2a",
+  secondaryLight: "#f48fb1",
+  background: "#0f1113",
+  surface: "#121418",
+  text: "#ffffff",
+  textSecondary: "#b0b0b0",
+  error: "#CF6679",
+  success: "#81C784",
+  warning: "#FFB74D",
+  border: "#2c2c2c",
+};

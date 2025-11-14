@@ -1,16 +1,17 @@
 import { Stack } from "expo-router";
-import { PaperProvider } from "react-native-paper";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+
+import { ThemeProvider } from "@/providers/ThemeProvider";
 
 export default function RootLayout() {
   return (
-    <PaperProvider>
+    <ThemeProvider>
       <SafeAreaProvider>
         <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         </Stack>
       </SafeAreaProvider>
-    </PaperProvider>
+    </ThemeProvider>
   );
 }

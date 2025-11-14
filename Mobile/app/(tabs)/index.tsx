@@ -1,13 +1,14 @@
-import { Link } from "expo-router";
-import { Text } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Text } from "react-native-paper";
+
+import { ThemedView } from "@/components/shared/ThemedView";
+import { ThemedLink } from "@/components/shared/ThemedLink";
 
 export default function Index() {
   return (
-    <SafeAreaView>
+    <ThemedView>
       <Text>Home</Text>
-      <Link href="/(auth)/login">Navigate to login route</Link>
-      <Link href="/(auth)/sign-up">Navigate to sign-up route</Link>
-    </SafeAreaView>
+      <ThemedLink href="/(auth)/login">Navigate to login route</ThemedLink>
+      <ThemedLink href="/(auth)/sign-up">Navigate to sign-up route</ThemedLink>
+    </ThemedView>
   );
 }

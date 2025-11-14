@@ -1,12 +1,12 @@
-import { Text } from "react-native";
-import React from "react";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Text } from "react-native-paper";
+
+import { ThemedView } from "@/components/shared/ThemedView";
 
 const Profile = () => {
   return (
-    <SafeAreaView>
+    <ThemedView>
       <Text>Profile</Text>
-    </SafeAreaView>
+    </ThemedView>
   );
 };
 

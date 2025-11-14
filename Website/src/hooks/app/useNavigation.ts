@@ -1,4 +1,5 @@
 import { useLocation } from "@tanstack/react-router";
+import { useAuth } from "./useAuth";
 
 // Map routes to active tabs
 const ROUTE_TO_TAB_MAP: Record<string, string> = {
@@ -7,17 +8,24 @@ const ROUTE_TO_TAB_MAP: Record<string, string> = {
   "/events": "Events",
   "/create": "Create",
   "/messages": "Messages",
-  "/profile": "Profile",
   "/search": "Search",
-  // Add more routes as needed
 };
 
 export function useNavigation() {
   const location = useLocation();
+  const { user } = useAuth();
 
-  // Auto-detect active tab from current route
-  const activeTab = ROUTE_TO_TAB_MAP[location.pathname] || "Home";
+  const getActiveTabFromPath = (pathname: string): string => {
+    // Check if viewing own profile
+    if (user && pathname.startsWith(`/profile/${user.username}`)) {
+      return `Profile/${user.username}`;
+    }
 
+    // Then check static routes
+    return ROUTE_TO_TAB_MAP[pathname] || "Home";
+  };
+
+  const activeTab = getActiveTabFromPath(location.pathname);
   const getActiveTab = (label: string) => activeTab === label;
 
   return {

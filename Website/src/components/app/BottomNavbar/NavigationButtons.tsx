@@ -1,15 +1,12 @@
 import type { ReactElement } from "react";
+import React from "react";
 
 import AddIcon from "@mui/icons-material/Add";
-import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 import HomeIcon from "@mui/icons-material/Home";
-import ChatOutlinedIcon from "@mui/icons-material/ChatOutlined";
 import ChatIcon from "@mui/icons-material/Chat";
-import EventOutlinedIcon from "@mui/icons-material/EventOutlined";
 import EventIcon from "@mui/icons-material/Event";
-import PersonOutlineOutlinedIcon from "@mui/icons-material/PersonOutlineOutlined";
 import PersonIcon from "@mui/icons-material/Person";
-import { styled } from "@mui/material/styles";
+import { styled, useTheme } from "@mui/material/styles";
 import Badge, { badgeClasses } from "@mui/material/Badge";
 import IconButton from "@mui/material/IconButton";
 
@@ -27,13 +24,13 @@ const NotificationBadge = styled(Badge)`
 
 type NavigationItem = {
   label: string;
-  icon: ReactElement;
-  activeIcon: ReactElement;
-  notifications?: number;
+  icon: ReactElement<{ style?: React.CSSProperties }>;
   handleClick: () => void;
+  notifications?: number;
 };
 
 export function NavigationButtons() {
+  const theme = useTheme();
   const { handleHomeClick, handleMessagesClick, handleCreateClick, handleEventsClick } =
     useNavigationButtons();
   const { handleProfileClick } = useProfile();
@@ -43,45 +40,49 @@ export function NavigationButtons() {
   const navigationItems: NavigationItem[] = [
     {
       label: "Home",
-      icon: <HomeOutlinedIcon style={{ fontSize: 28 }} />,
-      activeIcon: <HomeIcon style={{ fontSize: 28 }} />,
+      icon: <HomeIcon style={{ fontSize: 28 }} />,
       handleClick: handleHomeClick,
     },
     {
       label: "Events",
-      icon: <EventOutlinedIcon style={{ fontSize: 28 }} />,
-      activeIcon: <EventIcon style={{ fontSize: 28 }} />,
+      icon: <EventIcon style={{ fontSize: 28 }} />,
       handleClick: handleEventsClick,
     },
     {
       label: "Create",
       icon: <AddIcon style={{ fontSize: 28 }} />,
-      activeIcon: <AddIcon style={{ fontSize: 28 }} />,
       handleClick: handleCreateClick,
     },
     {
       label: "Messages",
-      icon: <ChatOutlinedIcon style={{ fontSize: 28 }} />,
-      activeIcon: <ChatIcon style={{ fontSize: 28 }} />,
+      icon: <ChatIcon style={{ fontSize: 28 }} />,
       notifications: 2,
       handleClick: handleMessagesClick,
     },
     {
       label: `Profile/${user?.username}`,
-      icon: <PersonOutlineOutlinedIcon style={{ fontSize: 28 }} />,
-      activeIcon: <PersonIcon style={{ fontSize: 28 }} />,
+      icon: <PersonIcon style={{ fontSize: 28 }} />,
       handleClick: handleProfileClick,
     },
   ];
 
   const navigationButtons = navigationItems.map((item) => {
     const isActive = getActiveTab(item.label);
+    const iconColor = isActive ? theme.palette.primary.light : undefined;
+
+    const coloredIcon = React.cloneElement(item.icon, {
+      style: { ...item.icon.props.style, color: iconColor },
+    });
 
     return (
       <IconButton size="large" onClick={item.handleClick} key={item.label}>
-        {isActive ? item.activeIcon : item.icon}
+        {coloredIcon}
         {item.notifications && (
-          <NotificationBadge badgeContent={item.notifications} color="primary" overlap="circular" />
+          <NotificationBadge
+            badgeContent={item.notifications}
+            color="secondary"
+            overlap="circular"
+          />
         )}
       </IconButton>
     );
