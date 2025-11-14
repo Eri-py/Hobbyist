@@ -1,7 +1,8 @@
-import type { getUserResponse } from "@/api/AuthApi";
 import { createContext, useContext } from "react";
 
-export type AuthContextTypes = getUserResponse;
+import type { components } from "@/api/types";
+
+export type AuthContextTypes = components["schemas"]["GetUserResponse"];
 export const AuthContext = createContext<AuthContextTypes | null>(null);
 
 export function useAuth() {
