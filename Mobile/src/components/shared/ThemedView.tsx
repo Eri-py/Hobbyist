@@ -1,12 +1,12 @@
-import { SafeAreaView, SafeAreaViewProps } from "react-native-safe-area-context";
+import { View, type ViewProps } from "react-native";
 import { useTheme } from "react-native-paper";
 
-export function ThemedView({ style, children, ...props }: SafeAreaViewProps) {
+export function ThemedView({ style, children, ...props }: ViewProps) {
   const theme = useTheme();
 
   return (
-    <SafeAreaView style={[{ backgroundColor: theme.colors.background, flex: 1 }, style]} {...props}>
+    <View style={[{ backgroundColor: theme.colors.background, flex: 1 }, style]} {...props}>
       {children}
-    </SafeAreaView>
+    </View>
   );
 }

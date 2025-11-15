@@ -1,4 +1,3 @@
-import React from "react";
 import { Tabs } from "expo-router";
 import { useTheme } from "react-native-paper";
 
@@ -7,13 +6,16 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
+import { DefaultLeftButton } from "@/components/shared/DefaultLeftButton";
+import { DefaultRightButton } from "@/components/shared/DefaultRightButton";
+
 export default function TabsLayout() {
   const theme = useTheme();
 
   return (
     <Tabs
       screenOptions={{
-        headerShown: false,
+        headerShown: true,
         tabBarStyle: {
           backgroundColor: theme.colors.background,
           borderTopColor: `${theme.colors.primary}25`,
@@ -24,6 +26,20 @@ export default function TabsLayout() {
           alignItems: "center",
           justifyContent: "center",
         },
+        headerStyle: {
+          backgroundColor: theme.colors.background,
+          borderBottomWidth: 0.25,
+          borderBottomColor: `${theme.colors.primary}25`,
+        },
+        headerLeftContainerStyle: {
+          paddingHorizontal: 10,
+        },
+        headerRightContainerStyle: {
+          paddingHorizontal: 10,
+        },
+        headerTitle: "",
+        headerLeft: () => <DefaultLeftButton />,
+        headerRight: () => <DefaultRightButton />,
       }}
     >
       <Tabs.Screen
@@ -61,6 +77,18 @@ export default function TabsLayout() {
         options={{
           title: "Profile",
           tabBarIcon: ({ color }) => <Ionicons name="person" size={28} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="trade"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="search"
+        options={{
+          href: null,
         }}
       />
     </Tabs>

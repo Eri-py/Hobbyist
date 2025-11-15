@@ -10,9 +10,11 @@ export function BottomNavbar() {
     <Stack
       direction="row"
       component="footer"
-      height={48}
+      height={52}
       justifyContent="space-between"
       position="sticky"
+      paddingBlock={0.5}
+      paddingInline={2}
       sx={{
         backgroundColor: "background.default",
         borderTop: `1px solid ${alpha(theme.palette.primary.main, 0.25)}`,

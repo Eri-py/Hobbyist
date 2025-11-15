@@ -18,7 +18,7 @@ export function useNavigation() {
   const getActiveTabFromPath = (pathname: string): string => {
     // Check if viewing own profile
     if (user && pathname.startsWith(`/profile/${user.username}`)) {
-      return `Profile/${user.username}`;
+      return "Profile";
     }
 
     // Then check static routes

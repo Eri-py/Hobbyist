@@ -3,24 +3,38 @@ import React from "react";
 
 import AddIcon from "@mui/icons-material/Add";
 import HomeIcon from "@mui/icons-material/Home";
-import ChatIcon from "@mui/icons-material/Chat";
+import ChatIconOulined from "@mui/icons-material/ChatOutlined";
 import EventIcon from "@mui/icons-material/Event";
 import PersonIcon from "@mui/icons-material/Person";
 import { styled, useTheme } from "@mui/material/styles";
 import Badge, { badgeClasses } from "@mui/material/Badge";
 import IconButton from "@mui/material/IconButton";
+import Typography from "@mui/material/Typography";
+import Stack from "@mui/material/Stack";
 
 import { useNavigationButtons } from "@/hooks/shared/useNavigationButtons";
 import { useProfile } from "@/hooks/profile/useProfile";
 import { useNavigation } from "@/hooks/app/useNavigation";
-import { useAuth } from "@/hooks/app/useAuth";
 
 const NotificationBadge = styled(Badge)`
   & .${badgeClasses.badge} {
-    top: -0.5rem;
-    right: 0rem;
+    top: -1.5rem;
+    right: -0.75rem;
   }
 `;
+
+const NavButton = styled(IconButton)({
+  display: "flex",
+  flexDirection: "column",
+  padding: "4px 8px",
+  borderRadius: 8,
+});
+
+const LabelText = styled(Typography)(() => ({
+  fontSize: 10,
+  lineHeight: 1.2,
+  marginTop: -4,
+}));
 
 type NavigationItem = {
   label: string;
@@ -35,7 +49,6 @@ export function NavigationButtons() {
     useNavigationButtons();
   const { handleProfileClick } = useProfile();
   const { getActiveTab } = useNavigation();
-  const { user } = useAuth();
 
   const navigationItems: NavigationItem[] = [
     {
@@ -55,12 +68,12 @@ export function NavigationButtons() {
     },
     {
       label: "Messages",
-      icon: <ChatIcon style={{ fontSize: 28 }} />,
+      icon: <ChatIconOulined style={{ fontSize: 28 }} />,
       notifications: 2,
       handleClick: handleMessagesClick,
     },
     {
-      label: `Profile/${user?.username}`,
+      label: "Profile",
       icon: <PersonIcon style={{ fontSize: 28 }} />,
       handleClick: handleProfileClick,
     },
@@ -69,24 +82,28 @@ export function NavigationButtons() {
   const navigationButtons = navigationItems.map((item) => {
     const isActive = getActiveTab(item.label);
     const iconColor = isActive ? theme.palette.primary.light : undefined;
+    const textColor = isActive ? theme.palette.primary.light : theme.palette.text.secondary;
 
     const coloredIcon = React.cloneElement(item.icon, {
-      style: { ...item.icon.props.style, color: iconColor },
+      style: { ...item.icon.props.style, color: iconColor, width: 28 },
     });
 
     return (
-      <IconButton size="large" onClick={item.handleClick} key={item.label}>
-        {coloredIcon}
-        {item.notifications && (
-          <NotificationBadge
-            badgeContent={item.notifications}
-            color="secondary"
-            overlap="circular"
-          />
-        )}
-      </IconButton>
+      <Stack key={item.label} alignItems="center">
+        <NavButton size="small" onClick={item.handleClick}>
+          {coloredIcon}
+          {item.notifications && (
+            <NotificationBadge
+              badgeContent={item.notifications}
+              color="secondary"
+              overlap="circular"
+            />
+          )}
+        </NavButton>
+        <LabelText sx={{ color: textColor }}>{item.label}</LabelText>
+      </Stack>
     );
   });
 
-  return navigationButtons;
+  return <>{navigationButtons}</>;
 }
