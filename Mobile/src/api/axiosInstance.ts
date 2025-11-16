@@ -1,10 +1,11 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
 
-const API_BASE_URL = "https://localhost:7000/api"; //Remember to change this back to localhost before commits
+const API_BASE_URL = "http://100.85.42.14:7001/api";
 
 export const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true,
+  timeout: 5000,
 });
 
 let isRefreshing = false;
