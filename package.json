@@ -1,0 +1,35 @@
+{
+  "name": "hobbyist",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "pnpm": {
+    "overrides": {
+      "zod": "3.22.0"
+    }
+  },
+  "scripts": {
+    "dev": "pnpm --parallel --filter \"./Website\" --filter \"./Mobile\" dev",
+    "dev:web": "pnpm --filter website dev",
+    "dev:mobile": "pnpm --filter mobile dev",
+    "build": "pnpm --recursive --filter \"./Website\" --filter \"./Mobile\" build",
+    "build:web": "pnpm --filter website build",
+    "build:mobile": "pnpm --filter mobile build",
+    "lint": "pnpm --recursive lint",
+    "lint:fix": "pnpm --recursive lint:fix",
+    "typecheck": "pnpm --recursive typecheck",
+    "test": "pnpm --recursive test",
+    "generate-types": "pnpm --filter @hobbyist/api-client generate-types",
+    "clean": "node scripts/clean.js",
+    "reset": "pnpm clean && pnpm install"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "@types/react": "^19.2.4",
+    "@types/react-dom": "^19.2.3",
+    "eslint": "^9.39.1",
+    "rimraf": "^6.1.0",
+    "typescript": "~5.9.3"
+  },
+  "packageManager": "pnpm@10.22.0"
+}

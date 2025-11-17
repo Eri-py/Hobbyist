@@ -7,7 +7,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useServerError, type ServerError } from "@/hooks/auth/useServerError";
 import { axiosInstance } from "@/api/axiosInstance";
 import { SignUpFormSchema, type SignUpFormSchemaTypes } from "@/schemas/SignUpSchemas";
-import type { components } from "@/api/types";
+import type { components } from "@hobbyist/api-client";
 
 // Dtos
 type StartSignUpRequest = components["schemas"]["StartSignUpRequest"];

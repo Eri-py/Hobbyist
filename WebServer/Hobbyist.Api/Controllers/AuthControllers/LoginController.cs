@@ -39,7 +39,7 @@ namespace Hobbyist.Api.Controllers.AuthControllers
             }
 
             Helpers.SetAuthCookies(HttpContext, result.Content!);
-            return result.ToActionResult();
+            return NoContent();
         }
     }
 }

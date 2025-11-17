@@ -11,7 +11,7 @@ public class Helpers
         {
             HttpOnly = true,
             Secure = httpContext.Request.IsHttps,
-            SameSite = SameSiteMode.Lax,
+            SameSite = SameSiteMode.None,
             Path = "/api",
             Expires = tokens.AccessTokenExpiresAt,
         };
@@ -20,7 +20,7 @@ public class Helpers
         {
             HttpOnly = true,
             Secure = httpContext.Request.IsHttps,
-            SameSite = SameSiteMode.Strict,
+            SameSite = SameSiteMode.None,
             Path = "/api/auth/refresh-token",
             Expires = tokens.RefreshTokenExpiresAt,
         };

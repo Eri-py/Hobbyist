@@ -1,57 +1,48 @@
 {
   "name": "website",
-  "private": true,
   "version": "0.0.0",
+  "private": true,
   "type": "module",
-  "devEngines": {
-    "runtime": {
-      "name": "node",
-      "version": "^25.0.0"
-    }
-  },
   "scripts": {
     "dev": "vite --port 3000 --host",
     "build": "tsc -b && vite build",
-    "lint": "eslint .",
     "preview": "vite preview --port 3001 --host",
-    "generate-types": "cross-env NODE_TLS_REJECT_UNAUTHORIZED=0 openapi-typescript https://localhost:7000/openapi/v1.json -o src/api/types.ts"
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf node_modules dist .tanstack"
   },
   "dependencies": {
-    "@emotion/react": "^11.14.0",
-    "@emotion/styled": "^11.14.1",
-    "@hookform/resolvers": "^5.2.2",
-    "@mui/icons-material": "^7.3.5",
-    "@mui/material": "^7.1.2",
-    "@tanstack/react-query": "^5.90.9",
-    "@tanstack/react-router": "^1.135.0",
-    "@tanstack/react-router-devtools": "^1.136.3",
+    "@hobbyist/api-client": "workspace:*",
+    "@hookform/resolvers": "^3.9.1",
+    "@mui/icons-material": "^6.4.4",
+    "@mui/material": "^6.4.4",
+    "@tanstack/react-query": "^5.90.10",
+    "@tanstack/react-router": "^1.136.8",
     "axios": "^1.13.2",
     "date-fns": "^4.1.0",
-    "mui-one-time-password-input": "^5.0.0",
-    "react": "^19.1.0",
+    "mui-one-time-password-input": "^3.0.1",
+    "react": "19.1.0",
     "react-countdown": "^2.3.6",
-    "react-dom": "^19.2.0",
-    "react-dropzone": "^14.3.8",
-    "react-hook-form": "^7.66.0",
-    "zod": "^4.1.12"
+    "react-dom": "19.1.0",
+    "react-dropzone": "^14.3.5",
+    "react-hook-form": "^7.54.2",
+    "zod": "^4.0.0"
   },
   "devDependencies": {
-    "@eslint/js": "^9.38.0",
-    "@tanstack/router-plugin": "^1.136.3",
-    "@types/js-cookie": "^3.0.6",
-    "@types/node": "^24.10.1",
+    "@eslint/js": "^9.39.1",
+    "@tanstack/router-devtools": "^1.136.8",
+    "@tanstack/router-plugin": "^1.136.8",
     "@types/react": "^19.2.4",
     "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^5.1.1",
-    "cross-env": "^10.1.0",
+    "@vitejs/plugin-react": "^4.3.4",
     "eslint": "^9.39.1",
-    "eslint-plugin-react-hooks": "^7.0.1",
-    "eslint-plugin-react-refresh": "^0.4.24",
-    "globals": "^16.5.0",
-    "openapi-typescript": "^7.10.1",
+    "eslint-plugin-react-hooks": "^5.0.0",
+    "eslint-plugin-react-refresh": "^0.4.16",
+    "globals": "^15.14.0",
     "typescript": "~5.9.3",
-    "typescript-eslint": "^8.46.4",
-    "vite": "^7.2.2",
-    "vite-plugin-mkcert": "^1.17.9"
+    "typescript-eslint": "^8.18.2",
+    "vite": "^6.0.7",
+    "vite-plugin-mkcert": "1.17.9"
   }
 }
