@@ -1,4 +1,4 @@
-import { z } from "zod/v4";
+import { z } from "zod";
 
 export const CreateFormSchema = z.object({
   title: z
@@ -16,7 +16,7 @@ export const CreateFormSchema = z.object({
     .max(2000, "Description must be less than 2000 characters"),
 
   condition: z
-    .number("Please select a condition")
+    .number()
     .min(0, "Please select a valid condition")
     .max(3, "Please select a valid condition"),
 

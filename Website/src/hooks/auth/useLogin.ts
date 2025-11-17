@@ -8,7 +8,7 @@ import { useServerError, type ServerError } from "./useServerError";
 
 import { axiosInstance } from "@/api/axiosInstance";
 import { LoginFormSchema, type LoginFormSchemaTypes } from "@/schemas/LoginSchemas";
-import type { components } from "@/api/types";
+import type { components } from "@hobbyist/api-client";
 
 // DTOs
 type StartLoginRequest = components["schemas"]["StartLoginRequest"];

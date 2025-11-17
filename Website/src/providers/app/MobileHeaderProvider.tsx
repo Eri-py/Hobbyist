@@ -38,20 +38,16 @@ export function MobileHeaderProvider({ children }: MobileHeaderProviderTypes) {
   const [customCenterSlot, setCustomCenterSlot] = useState<ReactNode | null>(null);
   const [customRightSlot, setCustomRightSlot] = useState<ReactNode | null>(null);
 
-  const leftSlot = customLeftSlot ?? <DefaultLeftSlot />;
-  const centerSlot = customCenterSlot ?? <DefaultCenterSlot />;
-  const rightSlot = customRightSlot ?? <DefaultRightSlot />;
-
   const value: MobileHeaderContextTypes = useMemo(
     () => ({
-      leftSlot,
-      centerSlot,
-      rightSlot,
+      leftSlot: customLeftSlot ?? <DefaultLeftSlot />,
+      centerSlot: customCenterSlot ?? <DefaultCenterSlot />,
+      rightSlot: customRightSlot ?? <DefaultRightSlot />,
       setLeftSlot: setCustomLeftSlot,
       setCenterSlot: setCustomCenterSlot,
       setRightSlot: setCustomRightSlot,
     }),
-    [leftSlot, centerSlot, rightSlot]
+    [customLeftSlot, customCenterSlot, customRightSlot]
   );
 
   return <MobileHeaderContext.Provider value={value}>{children}</MobileHeaderContext.Provider>;

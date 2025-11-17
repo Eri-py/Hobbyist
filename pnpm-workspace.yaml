@@ -1,0 +1,8 @@
+packages:
+  - Mobile
+  - Website
+  - Shared/*
+
+ignoredBuiltDependencies:
+  - esbuild
+  - unrs-resolver

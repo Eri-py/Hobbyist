@@ -1,4 +1,4 @@
-import { z, string } from "zod/v4";
+import { z } from "zod";
 import { parseISO, isValid, differenceInYears } from "date-fns";
 
 const usernameSchema = z
@@ -10,10 +10,10 @@ const usernameSchema = z
     "Username can only contain letters, numbers, dots, dashes, and underscores"
   );
 
-const emailSchema = z.email("Invalid email address").max(100, "Maximum 100 characters");
+const emailSchema = z.string().email("Invalid email address").max(100, "Maximum 100 characters");
 
 const passwordSchema = z
-  .string("Password is required")
+  .string()
   .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
   .regex(/[a-z]/, "Password must contain at least one lowercase letter")
   .regex(/[0-9]/, "Password must contain at least one number")
@@ -24,7 +24,7 @@ const passwordSchema = z
 
 const nameSchema = (nameType: string) => {
   return z
-    .string(`Invalid ${nameType}`)
+    .string()
     .trim()
     .nonempty(`${nameType} is required`)
     .max(64)
@@ -44,7 +44,7 @@ const padDate = (date: string) => {
 };
 
 const dateOfBirthSchema = z
-  .string("Date is required")
+  .string()
   .refine((val) => {
     return /^\d{4}-\d{2}-\d{2}$/.test(padDate(val));
   }, "Invalid date")
@@ -67,9 +67,9 @@ const dateOfBirthSchema = z
 export const SignUpFormSchema = z.object({
   username: usernameSchema,
   email: emailSchema,
-  otp: z.string("Invalid otp").trim().length(6, "Invalid otp"),
+  otp: z.string().trim().length(6, "Invalid otp"),
   password: passwordSchema,
-  confirmPassword: string("Invalid password").nonempty("Please enter password again"),
+  confirmPassword: z.string().nonempty("Please enter password again"),
   firstname: nameSchema("Firstname"),
   lastname: nameSchema("Lastname"),
   dateOfBirth: dateOfBirthSchema,

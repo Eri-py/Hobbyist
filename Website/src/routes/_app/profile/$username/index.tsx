@@ -73,7 +73,8 @@ function ProfilePage() {
       gap={3}
       flex={1}
       maxWidth={1000}
-      sx={{ marginX: { xs: "undefined", md: "auto" } }}
+      width="100%"
+      sx={{ marginX: { md: "auto" } }}
     >
       {/* This is the profile picture and profile info */}
       <Stack direction="row" gap={3} alignSelf="flex-start">

@@ -47,8 +47,10 @@ if (app.Environment.IsDevelopment())
 }
 app.UseCors(builder.Configuration["ClientOrigin:Name"]!);
 
-app.UseHttpsRedirection();
-
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 app.UseAuthorization();
 
 app.MapControllers();
