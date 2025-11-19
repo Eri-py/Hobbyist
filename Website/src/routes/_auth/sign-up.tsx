@@ -1,5 +1,5 @@
 import { FormProvider } from "react-hook-form";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
 import Stack from "@mui/material/Stack";
 import Alert from "@mui/material/Alert";
@@ -12,7 +12,8 @@ import { PasswordStep } from "@/components/auth/sign-up/PasswordStep";
 import { PersonalDetails } from "@/components/auth/sign-up/PersonalDetailsStep";
 import { UsernameAndEmailStep } from "@/components/auth/sign-up/UsernameAndEmailStep";
 import { useBreakpoint } from "@/hooks/shared/useBreakpoint";
-import { useSignUp } from "@/hooks/auth/useSignUp";
+import { useSignUp } from "@hobbyist/hooks";
+import { axiosInstance } from "@/api/axiosInstance";
 
 export const Route = createFileRoute("/_auth/sign-up")({
   component: SignUp,
@@ -21,6 +22,7 @@ export const Route = createFileRoute("/_auth/sign-up")({
 function SignUp() {
   const theme = useTheme();
   const isDekstop = useBreakpoint();
+  const navigate = useNavigate();
   const {
     methods,
     step,
@@ -34,7 +36,9 @@ function SignUp() {
     isStarting,
     isVerifying,
     isCompleting,
-  } = useSignUp();
+  } = useSignUp((path) => {
+    navigate({ to: path });
+  }, axiosInstance);
 
   return (
     <Stack

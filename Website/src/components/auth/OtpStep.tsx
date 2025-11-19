@@ -1,4 +1,3 @@
-// OtpStep.tsx
 import { Controller, get, useFormContext } from "react-hook-form";
 import Countdown, { zeroPad } from "react-countdown";
 
@@ -11,7 +10,8 @@ import Typography from "@mui/material/Typography";
 import Link from "@mui/material/Link";
 
 import { CustomFormHeader } from "./CustomInputs";
-import { useOtp } from "@/hooks/auth/useOtp";
+import { useOtp } from "@hobbyist/hooks";
+import { axiosInstance } from "@/api/axiosInstance";
 
 type OtpStepProps = {
   mode: "login" | "signup";
@@ -32,8 +32,10 @@ export function OtpStep({
 }: OtpStepProps) {
   const theme = useTheme();
   const { control } = useFormContext();
-  const { endTime, isResendDisabled, handleResend, isResending, serverErrorMessage } =
-    useOtp(intitialOtpExpiresAt);
+  const { endTime, isResendDisabled, handleResend, isResending, serverErrorMessage } = useOtp(
+    intitialOtpExpiresAt,
+    axiosInstance
+  );
 
   const onResend = () => {
     handleResend({ email }, mode);

@@ -1,0 +1,10 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./Mobile" },
+    { "path": "./Website" },
+    { "path": "./Shared/api-client" },
+    { "path": "./Shared/form-schemas" },
+    { "path": "./Shared/hooks" }
+  ]
+}

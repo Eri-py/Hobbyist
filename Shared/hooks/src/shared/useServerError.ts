@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback } from "react";
 type ServerErrorResponse = {
   message?: string;
 };
+
 export type ServerError = AxiosError<ServerErrorResponse>;
 
 // Custom hook for handling server errors

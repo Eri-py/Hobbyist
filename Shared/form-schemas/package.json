@@ -1,0 +1,19 @@
+{
+  "name": "@hobbyist/form-schemas",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    ".": {
+      "types": "./index.ts",
+      "import": "./index.ts"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf node_modules"
+  },
+  "dependencies": {
+    "date-fns": "^4.1.0",
+    "zod": "^4.1.12"
+  }
+}
