@@ -15,7 +15,7 @@
   "dependencies": {
     "@hobbyist/api-client": "workspace:*",
     "@hookform/resolvers": "^3.9.1",
-    "@mui/icons-material": "^6.4.4",
+    "@mui/icons-material": "^7.3.5",
     "@mui/material": "^6.4.4",
     "@tanstack/react-query": "^5.90.10",
     "@tanstack/react-router": "^1.136.8",
