@@ -1,14 +1,12 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import type { AxiosInstance } from "axios";
 
-import { useServerError, type ServerError } from "./useServerError";
-
-import { axiosInstance } from "@/api/axiosInstance";
-import { LoginFormSchema, type LoginFormSchemaTypes } from "@/schemas/LoginSchemas";
 import type { components } from "@hobbyist/api-client";
+import { LoginFormSchema, type LoginFormSchemaTypes } from "@hobbyist/form-schemas";
+import { type ServerError, useServerError } from "../shared/useServerError";
 
 // DTOs
 type StartLoginRequest = components["schemas"]["StartLoginRequest"];
@@ -16,23 +14,22 @@ type StartLoginResponse = components["schemas"]["StartLoginResponse"];
 type CompleteLoginRequest = components["schemas"]["CompleteLoginRequest"];
 type AuthResult = components["schemas"]["AuthResult"];
 
-// API functions
-const startLoginApi = (data: StartLoginRequest) => {
-  return axiosInstance.post<StartLoginResponse>("login/start", data);
-};
-
-const completeLoginApi = (data: CompleteLoginRequest) => {
-  return axiosInstance.post<AuthResult>("login/complete", data);
-};
-
-export function useLogin() {
+export function useLogin(navigate: (path: string) => void, axiosInstance: AxiosInstance) {
   const [step, setStep] = useState<number>(0);
   const [otpData, setOtpData] = useState<{
     email: string;
     otpExpiresAt: string;
   } | null>(null);
   const { serverErrorMessage, handleServerError, clearServerError } = useServerError();
-  const navigate = useNavigate();
+
+  // API functions
+  const startLoginApi = (data: StartLoginRequest) => {
+    return axiosInstance.post<StartLoginResponse>("login/start", data);
+  };
+
+  const completeLoginApi = (data: CompleteLoginRequest) => {
+    return axiosInstance.post<AuthResult>("login/complete", data);
+  };
 
   // Initialize form methods
   const methods = useForm<LoginFormSchemaTypes>({
@@ -55,11 +52,10 @@ export function useLogin() {
 
   const completeLoginMutation = useMutation({
     mutationFn: (data: CompleteLoginRequest) => completeLoginApi(data),
-    onSuccess: () => navigate({ to: "/" }),
+    onSuccess: () => navigate("/"),
     onError: (error: ServerError) => handleServerError(error),
   });
 
-  // Handle next step with validation
   const handleNext = async () => {
     const isValid = await methods.trigger(["identifier", "password"]);
 
@@ -84,6 +80,7 @@ export function useLogin() {
 
   // Handle form submission
   const onSubmit = (formData: LoginFormSchemaTypes) => {
+    clearServerError();
     completeLoginMutation.mutate({
       identifier: formData.identifier,
       otp: formData.otp,
@@ -96,6 +93,7 @@ export function useLogin() {
 
     // State
     step,
+    setStep,
     otpData,
 
     // Server error handling

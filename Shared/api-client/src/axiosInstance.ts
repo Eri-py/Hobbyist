@@ -1,6 +1,6 @@
-import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
+import axios, { AxiosError, type AxiosInstance, type InternalAxiosRequestConfig } from "axios";
 
-export function createAxiosInstance(baseURL: string) {
+export function createAxiosInstance(baseURL: string): AxiosInstance {
   const axiosInstance = axios.create({
     baseURL,
     withCredentials: true,

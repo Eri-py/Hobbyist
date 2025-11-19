@@ -1,15 +1,16 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { FormProvider } from "react-hook-form";
 
+import { useTheme } from "@mui/material/styles";
 import Stack from "@mui/material/Stack";
 import Alert from "@mui/material/Alert";
 
 import { LogoWithName } from "@/components/shared/Logo";
 import { UsernameAndPassword } from "@/components/auth/login/UsernameAndPasswordStep";
 import { useBreakpoint } from "@/hooks/shared/useBreakpoint";
-import { useTheme } from "@mui/material/styles";
 import { OtpStep } from "@/components/auth/OtpStep";
-import { useLogin } from "@/hooks/auth/useLogin";
+import { useLogin } from "@hobbyist/hooks";
+import { axiosInstance } from "@/api/axiosInstance";
 
 export const Route = createFileRoute("/_auth/login")({
   component: Login,
@@ -18,6 +19,7 @@ export const Route = createFileRoute("/_auth/login")({
 function Login() {
   const theme = useTheme();
   const isDekstop = useBreakpoint();
+  const navigate = useNavigate();
   const {
     methods,
     step,
@@ -28,7 +30,9 @@ function Login() {
     onSubmit,
     isStarting,
     isCompleting,
-  } = useLogin();
+  } = useLogin((path) => {
+    navigate({ to: path });
+  }, axiosInstance);
 
   return (
     <Stack

@@ -1,2 +1,2 @@
-export { createAxiosInstance } from "./axiosInstance";
-export * from "./types";
+export * from "./src/axiosInstance";
+export * from "./src/types";

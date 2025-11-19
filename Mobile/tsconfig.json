@@ -9,7 +9,8 @@
       "@/api/*": ["./src/api/*"],
       "@/types/*": ["./src/types/*"],
       "@/providers/*": ["./src/providers/*"],
-      "@/themes/*": ["./src/themes/*"]
+      "@/themes/*": ["./src/themes/*"],
+      "@/screens/*": ["./src/screens/*"]
     }
   },
   "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"]

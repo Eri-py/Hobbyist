@@ -21,6 +21,7 @@ module.exports = defineConfig([
             ["@/types", "./src/types"],
             ["@/providers", "./src/providers"],
             ["@/themes", "./src/themes"],
+            ["@/screens", "./src/screens"],
           ],
           extensions: [".ts", ".tsx", ".js", ".jsx", ".json"],
         },

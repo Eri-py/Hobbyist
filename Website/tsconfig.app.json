@@ -29,8 +29,7 @@
       "@/components/*": ["components/*"],
       "@/hooks/*": ["hooks/*"],
       "@/providers/*": ["providers/*"],
-      "@/themes/*": ["themes/*"],
-      "@/schemas/*": ["schemas/*"]
+      "@/themes/*": ["themes/*"]
     }
   },
   "include": ["src"]

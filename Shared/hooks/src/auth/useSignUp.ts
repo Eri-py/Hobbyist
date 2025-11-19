@@ -2,32 +2,18 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
+import type { AxiosInstance } from "axios";
 
-import { useServerError, type ServerError } from "@/hooks/auth/useServerError";
-import { axiosInstance } from "@/api/axiosInstance";
-import { SignUpFormSchema, type SignUpFormSchemaTypes } from "@/schemas/SignUpSchemas";
+import { SignUpFormSchema, type SignUpFormSchemaTypes } from "@hobbyist/form-schemas";
 import type { components } from "@hobbyist/api-client";
+import { type ServerError, useServerError } from "../shared/useServerError";
 
-// Dtos
+// DTOs
 type StartSignUpRequest = components["schemas"]["StartSignUpRequest"];
 type VerifyOtpRequest = components["schemas"]["VerifyOtpRequest"];
 type CompleteSignUpRequest = components["schemas"]["CompleteSignUpRequest"];
 type StartSignUpResponse = components["schemas"]["OtpResponse"];
 type AuthResult = components["schemas"]["AuthResult"];
-
-// API functions
-const startSignUpApi = (data: StartSignUpRequest) => {
-  return axiosInstance.post<StartSignUpResponse>("sign-up/start", data);
-};
-
-const verifyOtpApi = (data: VerifyOtpRequest) => {
-  return axiosInstance.post("sign-up/verify-otp", data);
-};
-
-const completeSignUpApi = (data: CompleteSignUpRequest) => {
-  return axiosInstance.post<AuthResult>("sign-up/complete", data);
-};
 
 // Define which fields belong to each step
 const signUpSteps: Record<number, (keyof SignUpFormSchemaTypes)[]> = {
@@ -44,11 +30,23 @@ const signUpStepLabels: string[] = [
   "Personal Details",
 ];
 
-export function useSignUp() {
+export function useSignUp(navigate: (path: string) => void, axiosInstance: AxiosInstance) {
   const { serverErrorMessage, handleServerError, clearServerError } = useServerError();
   const [step, setStep] = useState<number>(0);
   const [otpExpiresAt, setOtpExpiresAt] = useState<Date | null>(null);
-  const navigate = useNavigate();
+
+  // API functions
+  const startSignUpApi = (data: StartSignUpRequest) => {
+    return axiosInstance.post<StartSignUpResponse>("sign-up/start", data);
+  };
+
+  const verifyOtpApi = (data: VerifyOtpRequest) => {
+    return axiosInstance.post("sign-up/verify-otp", data);
+  };
+
+  const completeSignUpApi = (data: CompleteSignUpRequest) => {
+    return axiosInstance.post<AuthResult>("sign-up/complete", data);
+  };
 
   // Initialize form methods
   const methods = useForm<SignUpFormSchemaTypes>({
@@ -73,7 +71,7 @@ export function useSignUp() {
 
   const completeSignUpMutation = useMutation({
     mutationFn: (data: CompleteSignUpRequest) => completeSignUpApi(data),
-    onSuccess: () => navigate({ to: "/" }),
+    onSuccess: () => navigate("/"),
     onError: (error: ServerError) => handleServerError(error),
   });
 
