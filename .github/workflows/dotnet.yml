@@ -37,7 +37,7 @@ jobs:
               run: dotnet restore
               working-directory: WebServer/
             - name: Build
-              run: dotnet build --no-restore
+              run: dotnet build --no-restore --warnaserror
               working-directory: WebServer/
             - name: Test
               run: dotnet test --no-build --verbosity normal

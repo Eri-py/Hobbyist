@@ -1,0 +1,76 @@
+import type { Post } from "./PostTile";
+
+export const mockPosts: Post[] = [
+  {
+    id: "1",
+    title: "Just copped these limited edition sneakers 🔥",
+    imageUrl: "",
+    likes: 243,
+    comments: 42,
+    shares: 12,
+    timestamp: "2 hours ago",
+    condition: "Mint",
+    tradable: true,
+    user: {
+      name: "Alex Johnson",
+      avatar: "",
+    },
+  },
+  {
+    id: "2",
+    title: "Vintage comic book collection - looking to trade",
+    imageUrl: "",
+    likes: 1567,
+    comments: 89,
+    shares: 45,
+    timestamp: "5 hours ago",
+    condition: "Excellent",
+    tradable: true,
+    user: {
+      name: "Sarah Chen",
+    },
+  },
+  {
+    id: "3",
+    title: "My growing Funko Pop collection - Not for sale",
+    imageUrl: "",
+    likes: 89,
+    comments: 23,
+    shares: 5,
+    timestamp: "1 day ago",
+    condition: "Mint",
+    tradable: false,
+    user: {
+      name: "Mike Rodriguez",
+    },
+  },
+  {
+    id: "4",
+    title: "Rare trading cards - DM for offers",
+    imageUrl: "",
+    likes: 432,
+    comments: 67,
+    shares: 18,
+    timestamp: "1 day ago",
+    condition: "Good",
+    tradable: true,
+    user: {
+      name: "Taylor Kim",
+      avatar: "",
+    },
+  },
+  {
+    id: "5",
+    title: "New luxury watch addition - Flex only",
+    imageUrl: "",
+    likes: 321,
+    comments: 34,
+    shares: 9,
+    timestamp: "2 days ago",
+    condition: "Excellent",
+    tradable: false,
+    user: {
+      name: "Jordan Smith",
+    },
+  },
+];

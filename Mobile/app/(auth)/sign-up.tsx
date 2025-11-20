@@ -1,12 +1,7 @@
-import { Text } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SignUpScreen } from "@/screens/auth/SignUpScreen";
 
 const SignUp = () => {
-  return (
-    <SafeAreaView>
-      <Text>SignUp</Text>
-    </SafeAreaView>
-  );
+  return <SignUpScreen />;
 };
 
 export default SignUp;

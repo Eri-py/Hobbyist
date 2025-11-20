@@ -1,17 +1,28 @@
 import { Stack } from "expo-router";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 
 import { ThemeProvider } from "@/providers/ThemeProvider";
 
 export default function RootLayout() {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: 1,
+      },
+    },
+  });
+
   return (
-    <ThemeProvider>
-      <SafeAreaProvider>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-        </Stack>
-      </SafeAreaProvider>
-    </ThemeProvider>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <SafeAreaProvider>
+          <Stack>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+          </Stack>
+        </SafeAreaProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 }

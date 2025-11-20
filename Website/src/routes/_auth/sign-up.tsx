@@ -36,9 +36,7 @@ function SignUp() {
     isStarting,
     isVerifying,
     isCompleting,
-  } = useSignUp((path) => {
-    navigate({ to: path });
-  }, axiosInstance);
+  } = useSignUp((path) => navigate({ to: path }), axiosInstance);
 
   return (
     <Stack

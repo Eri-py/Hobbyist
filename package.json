@@ -31,5 +31,8 @@
     "rimraf": "^6.1.2",
     "typescript": "~5.9.3"
   },
-  "packageManager": "pnpm@10.22.0"
+  "resolutions": {
+    "react": "19.1.0"
+  },
+  "packageManager": "pnpm@10.23.0"
 }
