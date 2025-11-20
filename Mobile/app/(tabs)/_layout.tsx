@@ -106,7 +106,7 @@ export default function TabsLayout() {
         headerShown: true,
         tabBarStyle: {
           backgroundColor: theme.colors.background,
-          borderTopColor: `${theme.colors.primary}25`,
+          borderTopColor: "transparent",
         },
         tabBarActiveTintColor: theme.colors.primary,
         tabBarInactiveTintColor: theme.colors.onSurfaceVariant,
@@ -118,7 +118,8 @@ export default function TabsLayout() {
         headerStyle: {
           backgroundColor: theme.colors.background,
           borderBottomWidth: 0.25,
-          borderBottomColor: `${theme.colors.primary}25`,
+          borderBottomColor: "transparent",
+          shadowColor: "transparent",
         },
         headerLeftContainerStyle: {
           paddingHorizontal: 10,

@@ -1,12 +1,7 @@
-import { Text } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { LoginScreen } from "@/screens/auth/LoginScreen";
 
 const Login = () => {
-  return (
-    <SafeAreaView>
-      <Text>Login</Text>
-    </SafeAreaView>
-  );
+  return <LoginScreen />;
 };
 
 export default Login;

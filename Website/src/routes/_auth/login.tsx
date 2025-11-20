@@ -23,6 +23,7 @@ function Login() {
   const {
     methods,
     step,
+    setStep,
     otpData,
     serverErrorMessage,
     handleNext,
@@ -30,9 +31,7 @@ function Login() {
     onSubmit,
     isStarting,
     isCompleting,
-  } = useLogin((path) => {
-    navigate({ to: path });
-  }, axiosInstance);
+  } = useLogin((path) => navigate({ to: path }), axiosInstance);
 
   return (
     <Stack
@@ -62,7 +61,7 @@ function Login() {
               email={otpData.email}
               intitialOtpExpiresAt={new Date(otpData.otpExpiresAt)}
               handleNext={handleNext}
-              handleBack={() => {}}
+              handleBack={() => setStep(0)}
               isPending={isCompleting}
             />
           )}

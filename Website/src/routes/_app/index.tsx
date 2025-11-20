@@ -1,9 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-
 import Stack from "@mui/material/Stack";
-
 import { useBreakpoint } from "@/hooks/shared/useBreakpoint";
-import { PostTile } from "@/components/shared/PostTile";
+import { PostTile, type Post } from "@/components/home/PostTile";
+import { mockPosts } from "@/components/home/mockData";
 
 export const Route = createFileRoute("/_app/")({
   component: HomePage,
@@ -15,15 +14,14 @@ function HomePage() {
   return (
     <Stack
       flex={1}
+      gap={isDesktop ? 3 : 0}
       alignItems="center"
       overflow="auto"
       padding={isDesktop ? 1 : 0}
-      gap={isDesktop ? 3.5 : 2}
     >
-      <PostTile />
-      <PostTile />
-      <PostTile />
-      <PostTile />
+      {mockPosts.map((post: Post) => (
+        <PostTile key={post.id} post={post} />
+      ))}
     </Stack>
   );
 }
