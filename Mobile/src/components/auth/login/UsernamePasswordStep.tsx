@@ -19,11 +19,11 @@ export function UsernameAndPasswordStep({ handleNext, isPending }: UsernameAndPa
       <FormInput
         name="identifier"
         label="Username or Email"
-        icon="account-circle"
+        startIcon="account-circle"
         autoComplete="email"
       />
 
-      <FormInput name="password" label="Password" icon="lock" secureTextEntry autoComplete="off" />
+      <FormInput name="password" label="Password" startIcon="lock" autoComplete="off" />
 
       <Button mode="contained" onPress={handleNext} loading={isPending}>
         Continue

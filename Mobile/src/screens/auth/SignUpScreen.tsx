@@ -10,19 +10,10 @@ import { UsernameAndEmailStep } from "@/components/auth/sign-up/UsernameEmailSte
 export function SignUpScreen() {
   const router = useRouter();
   const inset = useSafeAreaInsets();
-  const {
-    methods,
-    step,
-    setStep,
-    otpExpiresAt,
-    signUpStepLabels,
-    serverErrorMessage,
-    handleNext,
-    onSubmit,
-    isStarting,
-    isVerifying,
-    isCompleting,
-  } = useSignUp((path: string) => router.push(path as Href), axiosInstance);
+  const { methods, step, handleNext, isStarting } = useSignUp(
+    (path: string) => router.push(path as Href),
+    axiosInstance
+  );
 
   return (
     <ThemedView
@@ -32,7 +23,9 @@ export function SignUpScreen() {
         paddingInline: 16,
       }}
     >
-      <FormProvider {...methods}>{step === 0 && <UsernameAndEmailStep />}</FormProvider>
+      <FormProvider {...methods}>
+        {step === 0 && <UsernameAndEmailStep handleNext={handleNext} isPending={isStarting} />}
+      </FormProvider>
     </ThemedView>
   );
 }

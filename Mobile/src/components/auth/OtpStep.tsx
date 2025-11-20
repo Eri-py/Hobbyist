@@ -29,7 +29,7 @@ export function OtpStep({
 }: OtpStepProps) {
   const theme = useTheme();
   const { control } = useFormContext();
-  const { endTime, isResendDisabled, handleResend, isResending, serverErrorMessage } = useOtp(
+  const { isResendDisabled, handleResend, isResending, serverErrorMessage } = useOtp(
     intitialOtpExpiresAt,
     axiosInstance
   );

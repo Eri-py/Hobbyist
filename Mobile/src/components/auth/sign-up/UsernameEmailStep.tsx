@@ -6,16 +6,21 @@ import { FormInput } from "../FormInputs";
 import { OAuthButtons } from "../OAuthButtons";
 import { AuthFooter } from "../AuthFooter";
 
-export function UsernameAndEmailStep() {
+type UsernameAndEmailStepProps = {
+  handleNext: () => void;
+  isPending: boolean;
+};
+
+export function UsernameAndEmailStep({ handleNext, isPending }: UsernameAndEmailStepProps) {
   return (
     <View style={{ gap: 16 }}>
       <FormHeader header="Sign up" subtext="Welcome to Hobbyist!" align="flex-start" />
 
-      <FormInput name="username" label="Username" icon="account-circle" />
+      <FormInput name="username" label="Username" startIcon="account-circle" />
 
-      <FormInput name="email" label="Email" icon="email" />
+      <FormInput name="email" label="Email" startIcon="email" />
 
-      <Button mode="contained" style={{ borderRadius: 8 }}>
+      <Button mode="contained" style={{ borderRadius: 8 }} onPress={handleNext} loading={isPending}>
         Continue
       </Button>
 
