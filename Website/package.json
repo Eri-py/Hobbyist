@@ -16,7 +16,7 @@
     "@hobbyist/api-client": "workspace:*",
     "@hobbyist/hooks": "workspace:*",
     "@hobbyist/form-schemas": "workspace:*",
-    "@hookform/resolvers": "^3.9.1",
+    "@hookform/resolvers": "^5.2.2",
     "@mui/icons-material": "^7.3.5",
     "@mui/material": "^7.3.5",
     "@tanstack/react-query": "^5.90.10",
