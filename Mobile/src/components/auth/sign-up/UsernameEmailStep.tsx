@@ -1,7 +1,6 @@
-import { View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { Button } from "react-native-paper";
 
-import { FormHeader } from "../FormHeader";
 import { FormInput } from "../FormInputs";
 import { OAuthButtons } from "../OAuthButtons";
 import { AuthFooter } from "../AuthFooter";
@@ -13,14 +12,17 @@ type UsernameAndEmailStepProps = {
 
 export function UsernameAndEmailStep({ handleNext, isPending }: UsernameAndEmailStepProps) {
   return (
-    <View style={{ gap: 16 }}>
-      <FormHeader header="Sign up" subtext="Welcome to Hobbyist!" align="flex-start" />
-
+    <View style={styles.container}>
       <FormInput name="username" label="Username" startIcon="account-circle" />
 
       <FormInput name="email" label="Email" startIcon="email" />
 
-      <Button mode="contained" style={{ borderRadius: 8 }} onPress={handleNext} loading={isPending}>
+      <Button
+        mode="contained"
+        style={styles.continueButton}
+        onPress={handleNext}
+        loading={isPending}
+      >
         Continue
       </Button>
 
@@ -30,3 +32,12 @@ export function UsernameAndEmailStep({ handleNext, isPending }: UsernameAndEmail
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    gap: 16,
+  },
+  continueButton: {
+    borderEndEndRadius: 8,
+  },
+});

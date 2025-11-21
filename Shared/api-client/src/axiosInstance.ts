@@ -4,7 +4,6 @@ export function createAxiosInstance(baseURL: string): AxiosInstance {
   const axiosInstance = axios.create({
     baseURL,
     withCredentials: true,
-    timeout: 5000,
   });
 
   let isRefreshing = false;

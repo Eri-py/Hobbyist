@@ -1,28 +1,45 @@
 import { ReactNode } from "react";
-import { FlexAlignType, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { Text } from "react-native-paper";
 
 type FormHeaderProps = {
   header: string;
   subtext: string | ReactNode;
-  align: FlexAlignType;
+  currentStep: string;
+  totalSteps: string;
 };
 
-export function FormHeader({ header, subtext, align }: FormHeaderProps) {
+export function FormHeader({ header, subtext, currentStep, totalSteps }: FormHeaderProps) {
   return (
-    <View
-      style={{
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        gap: 2,
-      }}
-    >
+    <View style={styles.container}>
       <View>
-        <Text style={{ fontWeight: 500, fontSize: 24 }}>{header}</Text>
-        <Text style={{ fontWeight: 200, fontSize: 15 }}>{subtext}</Text>
+        <Text style={styles.headerText}>{header}</Text>
+        <Text style={styles.subText}>{subtext}</Text>
       </View>
-      <Text style={{ fontWeight: 200, fontSize: 15 }}>Step 1 / 4</Text>
+      <Text style={styles.stepText}>
+        Step {currentStep} / {totalSteps}
+      </Text>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 2,
+  },
+  headerText: {
+    fontWeight: 500,
+    fontSize: 24,
+  },
+  subText: {
+    fontWeight: 200,
+    fontSize: 15,
+  },
+  stepText: {
+    fontWeight: 200,
+    fontSize: 15,
+  },
+});

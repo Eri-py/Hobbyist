@@ -1,5 +1,5 @@
 import { Text } from "react-native-paper";
-import { View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { type Href } from "expo-router";
 
 import { ThemedLink } from "../shared/ThemedLink";
@@ -25,27 +25,31 @@ export function AuthFooter({ mode }: AuthFooterProps) {
   const currentContent = footerContent[mode];
 
   return (
-    <View style={{ gap: 4 }}>
-      <Text
-        style={{
-          fontSize: 16,
-          alignSelf: "center",
-        }}
-      >
+    <View style={styles.container}>
+      <Text style={styles.questionText}>
         {currentContent.question}{" "}
         <ThemedLink href={currentContent.target as Href}>{currentContent.linkText}</ThemedLink>
       </Text>
-      <Text
-        style={{
-          fontSize: 12,
-          textAlign: "center",
-          fontWeight: 200,
-        }}
-      >
+      <Text style={styles.footerText}>
         This site is protected by reCAPTCHA and the Google{" "}
-        <ThemedLink href="">Privacy Policy</ThemedLink> and{" "}
-        <ThemedLink href="">Terms of Service</ThemedLink> apply
+        <ThemedLink onPress={() => {}}>Privacy Policy</ThemedLink> and{" "}
+        <ThemedLink onPress={() => {}}>Terms of Service</ThemedLink> apply
       </Text>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    gap: 4,
+  },
+  questionText: {
+    fontSize: 16,
+    alignSelf: "center",
+  },
+  footerText: {
+    fontSize: 12,
+    textAlign: "center",
+    fontWeight: 200,
+  },
+});

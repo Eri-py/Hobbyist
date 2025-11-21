@@ -2,7 +2,6 @@ import { View, StyleSheet } from "react-native";
 import { Button } from "react-native-paper";
 
 import { FormInput } from "../FormInputs";
-import { FormHeader } from "../FormHeader";
 import { OAuthButtons } from "../OAuthButtons";
 import { AuthFooter } from "../AuthFooter";
 
@@ -14,8 +13,6 @@ type UsernameAndPasswordStepProps = {
 export function UsernameAndPasswordStep({ handleNext, isPending }: UsernameAndPasswordStepProps) {
   return (
     <View style={styles.container}>
-      <FormHeader header="Log in" subtext="Glad to have you back!" align="flex-start" />
-
       <FormInput
         name="identifier"
         label="Username or Email"
@@ -25,7 +22,7 @@ export function UsernameAndPasswordStep({ handleNext, isPending }: UsernameAndPa
 
       <FormInput name="password" label="Password" startIcon="lock" autoComplete="off" />
 
-      <Button mode="contained" onPress={handleNext} loading={isPending}>
+      <Button mode="contained" onPress={handleNext} loading={isPending} style={{ borderRadius: 8 }}>
         Continue
       </Button>
 

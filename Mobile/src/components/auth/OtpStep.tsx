@@ -4,7 +4,6 @@ import { Text, Button, useTheme, HelperText } from "react-native-paper";
 import { Controller, useFormContext, get } from "react-hook-form";
 import OTPTextInput from "react-native-otp-textinput";
 
-import { FormHeader } from "./FormHeader";
 import { useOtp } from "@hobbyist/hooks";
 import { axiosInstance } from "@/api/axiosInstance";
 
@@ -40,18 +39,6 @@ export function OtpStep({
 
   return (
     <View style={{ gap: 12 }}>
-      <FormHeader
-        header="Verify email"
-        subtext={
-          <Text style={{ fontWeight: 200, fontSize: 13 }}>
-            Enter the <Text style={{ fontWeight: "bold" }}>6 digit code</Text> sent to the email
-            below{"\n"}
-            <Text style={{ fontWeight: "bold" }}>{email?.toLowerCase()}.</Text>
-          </Text>
-        }
-        align="flex-start"
-      />
-
       {serverErrorMessage && (
         <Text style={{ color: theme.colors.error, textAlign: "center", fontSize: 14 }}>
           {serverErrorMessage}

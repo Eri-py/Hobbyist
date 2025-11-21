@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -13,6 +13,28 @@ type StartLoginRequest = components["schemas"]["StartLoginRequest"];
 type StartLoginResponse = components["schemas"]["StartLoginResponse"];
 type CompleteLoginRequest = components["schemas"]["CompleteLoginRequest"];
 type AuthResult = components["schemas"]["AuthResult"];
+
+type HeaderConfig = Record<
+  number,
+  {
+    header: string;
+    subtext: string | ReactNode;
+  }
+>;
+
+// Header configurations for each step
+export const loginHeaderConfig: HeaderConfig = {
+  0: {
+    header: "Log in",
+    subtext: "Glad to have you back!",
+  },
+  1: {
+    header: "Verify email",
+    subtext: "Enter the 6 digit code sent to your email",
+  },
+};
+
+export const LOGIN_TOTAL_STEPS = 2;
 
 export function useLogin(navigate: (path: string) => void, axiosInstance: AxiosInstance) {
   const [step, setStep] = useState<number>(0);
@@ -95,6 +117,10 @@ export function useLogin(navigate: (path: string) => void, axiosInstance: AxiosI
     step,
     setStep,
     otpData,
+
+    // Header config
+    loginHeaderConfig,
+    LOGIN_TOTAL_STEPS,
 
     // Server error handling
     serverErrorMessage,
