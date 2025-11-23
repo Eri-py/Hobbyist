@@ -11,7 +11,7 @@ type OAuthButtonGroupTypes = {
   mode: "login" | "sign-up";
 };
 
-export function OAuthButtonGroup({ mode }: OAuthButtonGroupTypes) {
+export function OAuthButtons({ mode }: OAuthButtonGroupTypes) {
   const theme = useTheme();
 
   return (

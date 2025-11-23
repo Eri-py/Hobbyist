@@ -36,7 +36,7 @@ export function AuthFooter({ mode }: AuthFooterProps) {
           fontSize: 15,
         }}
       >
-        {currentContent.question}
+        {currentContent.question}{" "}
         <Link
           component="button"
           type="button"

@@ -1,10 +1,10 @@
 import { Link, type Href } from "expo-router";
-import { Pressable, type PressableProps, type TextProps } from "react-native";
+import { type PressableProps, type StyleProp, type TextStyle } from "react-native";
 import { useTheme, Text } from "react-native-paper";
 
 type ThemedLinkProps = {
   children: React.ReactNode;
-  style?: TextProps["style"];
+  style?: StyleProp<TextStyle>;
 } & (
   | {
       href: Href;
@@ -30,12 +30,12 @@ export function ThemedLink({ style, children, href, onPress, ...props }: ThemedL
     );
   }
 
-  // If onPress is provided, use Pressable with Text
+  // If onPress is provided, use Text with onPress
   if (onPress) {
     return (
-      <Pressable onPress={onPress} {...props}>
-        <Text style={linkStyle}>{children}</Text>
-      </Pressable>
+      <Text style={linkStyle} onPress={onPress} {...props}>
+        {children}
+      </Text>
     );
   }
 
