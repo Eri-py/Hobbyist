@@ -20,7 +20,13 @@ export function UsernameAndPasswordStep({ handleNext, isPending }: UsernameAndPa
         autoComplete="email"
       />
 
-      <FormInput name="password" label="Password" startIcon="lock" autoComplete="off" />
+      <FormInput
+        name="password"
+        label="Password"
+        type="password"
+        startIcon="lock"
+        autoComplete="off"
+      />
 
       <Button mode="contained" onPress={handleNext} loading={isPending} style={{ borderRadius: 8 }}>
         Continue
