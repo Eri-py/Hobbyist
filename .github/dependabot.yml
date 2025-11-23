@@ -10,6 +10,7 @@ updates:
       - dependency-name: "react-native-gesture-handler"
       - dependency-name: "react-native-screens"
       - dependency-name: "react-native-worklets"
+      - dependency-name: "zod"
     # Dependabot doesn't fully support pnpm workspaces yet
     # It will update root package.json and workspace packages
 
