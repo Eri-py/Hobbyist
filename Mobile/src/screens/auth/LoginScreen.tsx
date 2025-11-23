@@ -1,8 +1,9 @@
+import React from "react";
 import { Href, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FormProvider } from "react-hook-form";
 import { HelperText } from "react-native-paper";
-import { View } from "react-native";
+import { View, StyleSheet } from "react-native";
 
 import { ThemedView } from "@/components/shared/ThemedView";
 import { useLogin } from "@hobbyist/hooks";
@@ -13,7 +14,7 @@ import { FormHeader } from "@/components/auth/FormHeader";
 
 export function LoginScreen() {
   const router = useRouter();
-  const inset = useSafeAreaInsets();
+  const insets = useSafeAreaInsets();
   const {
     methods,
     step,
@@ -30,15 +31,17 @@ export function LoginScreen() {
 
   return (
     <ThemedView
-      style={{
-        paddingTop: inset.top,
-        paddingBottom: inset.bottom,
-        paddingInline: 16,
-      }}
+      style={[
+        styles.container,
+        {
+          paddingTop: insets.top,
+          paddingBottom: insets.bottom,
+        },
+      ]}
     >
       {serverErrorMessage && <HelperText type="error">{serverErrorMessage}</HelperText>}
       <FormProvider {...methods}>
-        <View style={{ gap: 16 }}>
+        <View style={styles.formContainer}>
           <FormHeader
             header={loginHeaderConfig[step].header}
             subtext={loginHeaderConfig[step].subtext}
@@ -62,3 +65,12 @@ export function LoginScreen() {
     </ThemedView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    paddingHorizontal: 16,
+  },
+  formContainer: {
+    gap: 16,
+  },
+});

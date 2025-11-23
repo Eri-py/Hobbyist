@@ -1,5 +1,5 @@
 import React from "react";
-import { View } from "react-native";
+import { View, StyleSheet } from "react-native";
 import { Text, Button, useTheme, HelperText } from "react-native-paper";
 import { Controller, useFormContext, get } from "react-hook-form";
 import OTPTextInput from "react-native-otp-textinput";
@@ -38,11 +38,9 @@ export function OtpStep({
   };
 
   return (
-    <View style={{ gap: 12 }}>
+    <View style={styles.container}>
       {serverErrorMessage && (
-        <Text style={{ color: theme.colors.error, textAlign: "center", fontSize: 14 }}>
-          {serverErrorMessage}
-        </Text>
+        <Text style={[styles.errorText, { color: theme.colors.error }]}>{serverErrorMessage}</Text>
       )}
 
       <Controller
@@ -69,15 +67,16 @@ export function OtpStep({
       />
 
       {!isResendDisabled && (
-        <Text style={{ fontSize: 15, color: theme.colors.onSurfaceVariant, alignSelf: "center" }}>
+        <Text style={[styles.resendContainer, { color: theme.colors.onSurfaceVariant }]}>
           {"Didn't get the Code?"}{" "}
           <Text
             onPress={isResendDisabled || isResending ? undefined : onResend}
-            style={{
-              color: isResending ? theme.colors.onSurfaceDisabled : theme.colors.primary,
-              fontWeight: "500",
-              textDecorationLine: "underline",
-            }}
+            style={[
+              styles.resendLink,
+              {
+                color: isResending ? theme.colors.onSurfaceDisabled : theme.colors.primary,
+              },
+            ]}
           >
             Resend Code
           </Text>
@@ -88,7 +87,7 @@ export function OtpStep({
         mode="contained"
         onPress={mode === "signup" ? handleNext : handleSubmit}
         loading={isPending}
-        style={{ marginTop: 8 }}
+        style={styles.submitButton}
       >
         {mode === "login" ? "Submit" : "Continue"}
       </Button>
@@ -99,3 +98,24 @@ export function OtpStep({
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    gap: 12,
+  },
+  errorText: {
+    textAlign: "center",
+    fontSize: 14,
+  },
+  resendContainer: {
+    fontSize: 15,
+    alignSelf: "center",
+  },
+  resendLink: {
+    fontWeight: "500",
+    textDecorationLine: "underline",
+  },
+  submitButton: {
+    marginTop: 8,
+  },
+});
