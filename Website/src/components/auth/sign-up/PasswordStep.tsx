@@ -4,7 +4,7 @@ import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import LockIcon from "@mui/icons-material/Lock";
 
-import { CustomFormHeader, CustomTextField } from "../CustomInputs";
+import { FormTextField } from "../FormTextField";
 import { PasswordRequirements } from "./PasswordRequirements";
 import { useDebounce } from "@/hooks/shared/useDebounce";
 
@@ -17,14 +17,8 @@ export function PasswordStep({ handleNext }: PasswordProps) {
   const password: string = useDebounce(watch("password") || "");
 
   return (
-    <Stack gap={1.5} paddingInline={2}>
-      <CustomFormHeader
-        header="Create a strong password"
-        subtext="We will never ask you for your password."
-        align="flex-start"
-      />
-
-      <CustomTextField
+    <Stack gap={1.5}>
+      <FormTextField
         type="password"
         label="Password"
         fieldValue="password"
@@ -35,7 +29,7 @@ export function PasswordStep({ handleNext }: PasswordProps) {
 
       <PasswordRequirements password={password} />
 
-      <CustomTextField
+      <FormTextField
         type="password"
         label="Confirm Password"
         fieldValue="confirmPassword"

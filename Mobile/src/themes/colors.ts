@@ -16,9 +16,9 @@ export const lightColors = {
 };
 
 export const darkColors = {
-  primary: "#42a5f5",
-  primaryDark: "#1565c0",
-  primaryLight: "#64b5f6",
+  primary: "#1565c0",
+  primaryDark: "#0d47a1",
+  primaryLight: "#42a5f5",
   secondary: "#ef5f5f",
   secondaryDark: "#df2a2a",
   secondaryLight: "#f48fb1",

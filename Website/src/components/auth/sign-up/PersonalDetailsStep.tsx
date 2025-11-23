@@ -4,7 +4,8 @@ import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 
-import { CustomFormHeader, CustomTextField, SegmentedDatePicker } from "../CustomInputs";
+import { SegmentedDatePicker } from "../SegmentedDatePicker";
+import { FormTextField } from "../FormTextField";
 
 type PersonalDetailsProps = {
   isPending: boolean;
@@ -14,14 +15,8 @@ export function PersonalDetails({ isPending }: PersonalDetailsProps) {
   const { control } = useFormContext();
 
   return (
-    <Stack gap={1.5} paddingInline={2}>
-      <CustomFormHeader
-        header="Personal details"
-        subtext="Let's get to know a bit more about you :)"
-        align="flex-start"
-      />
-
-      <CustomTextField
+    <Stack gap={1.5}>
+      <FormTextField
         type="text"
         label="Firstname"
         fieldValue="firstname"
@@ -30,7 +25,7 @@ export function PersonalDetails({ isPending }: PersonalDetailsProps) {
         autoFocus
       />
 
-      <CustomTextField
+      <FormTextField
         type="text"
         label="Lastname"
         fieldValue="lastname"

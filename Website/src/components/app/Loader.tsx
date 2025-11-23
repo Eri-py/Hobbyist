@@ -1,10 +1,10 @@
 import Box from "@mui/material/Box";
 
 import { Logo } from "@/components/shared/Logo";
-import { useBreakpoint } from "@/hooks/shared/useBreakpoint";
+import { useDeviceType } from "@/hooks/shared/useDeviceType";
 
 export function Loader() {
-  const { isDesktop } = useBreakpoint();
+  const { isDesktop } = useDeviceType();
   return (
     <Box
       sx={{

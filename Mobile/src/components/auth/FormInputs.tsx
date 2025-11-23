@@ -1,5 +1,5 @@
 import { Controller, useFormContext } from "react-hook-form";
-import { TextInput } from "react-native-paper";
+import { TextInput, useTheme } from "react-native-paper";
 import { useState, type ReactNode } from "react";
 
 type AutoCompleteType =
@@ -29,6 +29,7 @@ export function FormInput({ name, label, type = "text", autoComplete, startIcon 
     control,
     formState: { errors },
   } = useFormContext();
+  const theme = useTheme();
 
   const isPasswordField = type === "password";
   const [isPasswordVisible, setPasswordVisible] = useState(false);
@@ -67,7 +68,7 @@ export function FormInput({ name, label, type = "text", autoComplete, startIcon 
           right={isPasswordField ? passwordRightIcon() : undefined}
           error={!!errors[name]}
           mode="outlined"
-          style={{ backgroundColor: "white" }}
+          style={{ backgroundColor: theme.colors.surface }}
         />
       )}
     />

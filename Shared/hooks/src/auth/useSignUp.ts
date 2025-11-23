@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
@@ -23,12 +23,35 @@ const signUpSteps: Record<number, (keyof SignUpFormSchemaTypes)[]> = {
   3: ["firstname", "lastname", "dateOfBirth"],
 };
 
-const signUpStepLabels: string[] = [
-  "Username and Email",
-  "Verification Code",
-  "Password",
-  "Personal Details",
-];
+type HeaderConfig = Record<
+  number,
+  {
+    header: string;
+    subtext: string | ReactNode;
+  }
+>;
+
+// Header configurations for each step
+export const signUpHeaderConfig: HeaderConfig = {
+  0: {
+    header: "Sign up",
+    subtext: "Welcome to Hobbyist!",
+  },
+  1: {
+    header: "Verify email",
+    subtext: "Enter the 6 digit code sent to your email",
+  },
+  2: {
+    header: "Create password",
+    subtext: "Choose a secure password for your account",
+  },
+  3: {
+    header: "Personal details",
+    subtext: "Tell us a bit about yourself",
+  },
+};
+
+export const SIGNUP_TOTAL_STEPS = 4;
 
 export function useSignUp(navigate: (path: string) => void, axiosInstance: AxiosInstance) {
   const { serverErrorMessage, handleServerError, clearServerError } = useServerError();
@@ -141,7 +164,10 @@ export function useSignUp(navigate: (path: string) => void, axiosInstance: Axios
     step,
     setStep,
     otpExpiresAt,
-    signUpStepLabels,
+
+    // Header config
+    signUpHeaderConfig,
+    SIGNUP_TOTAL_STEPS,
 
     // Server error handling
     serverErrorMessage,

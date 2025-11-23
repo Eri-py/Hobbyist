@@ -2,7 +2,7 @@ import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
 import Button from "@mui/material/Button";
 
 import { LogoWithName } from "@/components/shared/Logo";
-import { useBreakpoint } from "@/hooks/shared/useBreakpoint";
+import { useDeviceType } from "@/hooks/shared/useDeviceType";
 import { FormContainer } from "@/components/auth/FormContainer";
 
 export const Route = createFileRoute("/_auth")({
@@ -10,7 +10,7 @@ export const Route = createFileRoute("/_auth")({
 });
 
 function AuthLayout() {
-  const { isDesktop } = useBreakpoint();
+  const { isDesktop } = useDeviceType();
   const navigate = useNavigate();
 
   return (

@@ -9,7 +9,6 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import Link from "@mui/material/Link";
 
-import { CustomFormHeader } from "./CustomInputs";
 import { useOtp } from "@hobbyist/hooks";
 import { axiosInstance } from "@/api/axiosInstance";
 
@@ -42,18 +41,7 @@ export function OtpStep({
   };
 
   return (
-    <Stack gap={1.5} padding={2}>
-      <CustomFormHeader
-        header="Verify email"
-        subtext={
-          <span>
-            Enter the <b>6 digit code</b> sent to the email below <br />
-            <b>{email?.toLowerCase()}.</b>
-          </span>
-        }
-        align="flex-start"
-      />
-
+    <Stack gap={1.5}>
       {serverErrorMessage && (
         <Typography color="error" textAlign="center" fontSize={14}>
           {serverErrorMessage}

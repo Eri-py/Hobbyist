@@ -1,4 +1,4 @@
-import { View, type ViewProps } from "react-native";
+import { View, type ViewProps, StyleSheet } from "react-native";
 import { useTheme } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -13,9 +13,9 @@ export function ThemedView({ style, children, ...props }: ViewProps) {
     return (
       <View
         style={[
+          styles.container,
           {
             backgroundColor: theme.colors.background,
-            flex: 1,
             paddingTop: insets.top,
           },
           style,
@@ -28,8 +28,17 @@ export function ThemedView({ style, children, ...props }: ViewProps) {
   }
 
   return (
-    <View style={[{ backgroundColor: theme.colors.background, flex: 1 }, style]} {...props}>
+    <View
+      style={[styles.container, { backgroundColor: theme.colors.background }, style]}
+      {...props}
+    >
       {children}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+});

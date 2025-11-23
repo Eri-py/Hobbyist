@@ -1,11 +1,11 @@
-import { useBreakpoint } from "@/hooks/shared/useBreakpoint";
+import { useDeviceType } from "@/hooks/shared/useDeviceType";
 import Box from "@mui/material/Box";
 import { alpha, useTheme } from "@mui/material/styles";
 import type { ReactNode } from "react";
 
 export function NavbarContainer({ children }: { children: ReactNode }) {
   const theme = useTheme();
-  const { isDesktop } = useBreakpoint();
+  const { isDesktop } = useDeviceType();
 
   return (
     <Box

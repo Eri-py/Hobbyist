@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 
-import { BreakpointContext } from "@/hooks/shared/useBreakpoint";
+import { BreakpointContext } from "@/hooks/shared/useDeviceType";
 
 type BreakpointProviderTypes = {
   children: ReactNode;

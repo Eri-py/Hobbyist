@@ -1,10 +1,10 @@
 import { Divider, Snackbar, useTheme, Text } from "react-native-paper";
 import { useState, useEffect } from "react";
 import { useRouter } from "expo-router";
+import { ScrollView, View, StyleSheet } from "react-native";
 
 import { ThemedView } from "@/components/shared/ThemedView";
 import { PostTile, Post } from "@/components/home/PostTile";
-import { ScrollView, View } from "react-native";
 import { useDeviceType } from "@/hooks/shared/useDeviceType";
 import { mockPosts } from "@/components/home/mockData";
 
@@ -26,14 +26,15 @@ const HomeScreen = () => {
   };
 
   return (
-    <ThemedView style={{ flex: 1 }}>
+    <ThemedView style={styles.container}>
       <ScrollView
-        contentContainerStyle={{
-          gap: isPhone ? 0 : 24,
-          alignItems: isTablet ? "center" : undefined,
-          width: "100%",
-          paddingVertical: 16,
-        }}
+        contentContainerStyle={[
+          styles.scrollContent,
+          {
+            gap: isPhone ? 0 : 24,
+            alignItems: isTablet ? "center" : undefined,
+          },
+        ]}
       >
         {mockPosts.map((post: Post, index: number) => (
           <View key={post.id}>
@@ -46,14 +47,8 @@ const HomeScreen = () => {
         visible={snackbarVisible}
         duration={1000000000000000}
         onDismiss={onDismissSnackBar}
-        style={{
-          backgroundColor: theme.colors.surface,
-        }}
-        wrapperStyle={{
-          width: "100%",
-          maxWidth: 650,
-          alignSelf: "center",
-        }}
+        style={{ backgroundColor: theme.colors.surface }}
+        wrapperStyle={styles.snackbarWrapper}
         action={{
           label: "Login",
           onPress: handleLoginPress,
@@ -65,5 +60,20 @@ const HomeScreen = () => {
     </ThemedView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  scrollContent: {
+    width: "100%",
+    paddingVertical: 16,
+  },
+  snackbarWrapper: {
+    width: "100%",
+    maxWidth: 650,
+    alignSelf: "center",
+  },
+});
 
 export default HomeScreen;

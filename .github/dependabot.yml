@@ -4,7 +4,12 @@ updates:
   - package-ecosystem: npm
     directory: "/"
     schedule:
-      interval: "daily"
+      interval: "weekly"
+    ignore:
+      - dependency-name: "react-native"
+      - dependency-name: "react-native-gesture-handler"
+      - dependency-name: "react-native-screens"
+      - dependency-name: "react-native-worklets"
     # Dependabot doesn't fully support pnpm workspaces yet
     # It will update root package.json and workspace packages
 
@@ -12,4 +17,4 @@ updates:
   - package-ecosystem: "nuget"
     directory: "/WebServer/"
     schedule:
-      interval: "daily"
+      interval: "weekly"

@@ -3,8 +3,8 @@ import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
 import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 
-import { OAuthButtonGroup } from "../OAuthButtonGroup";
-import { CustomFormHeader, CustomTextField } from "../CustomInputs";
+import { OAuthButtons } from "../OAuthButtons";
+import { FormTextField } from "../FormTextField";
 import { AuthFooter } from "../AuthFooter";
 
 type UsernameAndEmailStepProps = {
@@ -14,14 +14,8 @@ type UsernameAndEmailStepProps = {
 
 export function UsernameAndEmailStep({ handleNext, isPending }: UsernameAndEmailStepProps) {
   return (
-    <Stack gap={2} paddingInline={2}>
-      <CustomFormHeader
-        header="Sign up"
-        subtext="join thousands of users already on our platform."
-        align="flex-start"
-      />
-
-      <CustomTextField
+    <Stack gap={2}>
+      <FormTextField
         type="text"
         label="Username"
         fieldValue="username"
@@ -30,7 +24,7 @@ export function UsernameAndEmailStep({ handleNext, isPending }: UsernameAndEmail
         autoFocus
       />
 
-      <CustomTextField
+      <FormTextField
         type="email"
         label="Email"
         fieldValue="email"
@@ -48,7 +42,7 @@ export function UsernameAndEmailStep({ handleNext, isPending }: UsernameAndEmail
         Continue
       </Button>
 
-      <OAuthButtonGroup mode="sign-up" />
+      <OAuthButtons mode="sign-up" />
 
       <AuthFooter mode="sign-up" />
     </Stack>
