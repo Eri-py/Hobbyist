@@ -2,7 +2,7 @@ import { Stack, Paper } from "@mui/material";
 import { PostHeader } from "./PostHeader";
 import { PostImage } from "./PostImage";
 import { PostFooter } from "./PostFooter";
-import { useBreakpoint } from "@/hooks/shared/useBreakpoint";
+import { useDeviceType } from "@/hooks/shared/useDeviceType";
 
 export type Post = {
   id: string;
@@ -21,7 +21,7 @@ export type Post = {
 };
 
 export function PostTile({ post }: { post: Post }) {
-  const { isDesktop } = useBreakpoint();
+  const { isDesktop } = useDeviceType();
 
   const content = (
     <>

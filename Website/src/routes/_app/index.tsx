@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import Stack from "@mui/material/Stack";
-import { useBreakpoint } from "@/hooks/shared/useBreakpoint";
+import { useDeviceType } from "@/hooks/shared/useDeviceType";
 import { PostTile, type Post } from "@/components/home/PostTile";
 import { mockPosts } from "@/components/home/mockData";
 
@@ -9,7 +9,7 @@ export const Route = createFileRoute("/_app/")({
 });
 
 function HomePage() {
-  const { isDesktop } = useBreakpoint();
+  const { isDesktop } = useDeviceType();
 
   return (
     <Stack

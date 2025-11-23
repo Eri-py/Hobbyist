@@ -20,7 +20,7 @@ import Alert from "@mui/material/Alert";
 import { useTheme } from "@mui/material/styles";
 
 import { useMediaUpload } from "@/hooks/create/useMediaUpload";
-import { useBreakpoint } from "@/hooks/shared/useBreakpoint";
+import { useDeviceType } from "@/hooks/shared/useDeviceType";
 import { useMobileHeaderConfig } from "@/hooks/app/useMobileHeader";
 import { CreateStepIndicator } from "@/components/create/CreateStepIndicator";
 import { MobileImageDisplay } from "@/components/create/MobileImageDisplay";
@@ -34,7 +34,7 @@ export const Route = createFileRoute("/_app/create")({
 });
 
 function CreatePage() {
-  const { isDesktop } = useBreakpoint();
+  const { isDesktop } = useDeviceType();
   const { files, getRootProps, getInputProps, isDragActive, removeFile } = useMediaUpload();
   const theme = useTheme();
 

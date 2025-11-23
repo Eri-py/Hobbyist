@@ -2,7 +2,7 @@ import { createFileRoute, Outlet } from "@tanstack/react-router";
 
 import Stack from "@mui/material/Stack";
 
-import { useBreakpoint } from "@/hooks/shared/useBreakpoint";
+import { useDeviceType } from "@/hooks/shared/useDeviceType";
 import { DesktopNavbar } from "@/components/app/Navbar/DesktopNavbar";
 import { BottomNavbar } from "@/components/app/BottomNavbar/BottomNavbar";
 import { MobileNavbar } from "@/components/app/Navbar/MobileNavbar";
@@ -14,7 +14,7 @@ export const Route = createFileRoute("/_app")({
 });
 
 function AppLayout() {
-  const { isDesktop } = useBreakpoint();
+  const { isDesktop } = useDeviceType();
 
   return (
     <AppProvider>
