@@ -46,6 +46,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   formContainer: {
+    maxWidth: 600,
+    alignSelf: "center",
     gap: 16,
   },
 });
