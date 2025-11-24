@@ -1,11 +1,12 @@
 import React from "react";
-import { View, StyleSheet } from "react-native";
-import { Text, Button, useTheme, HelperText } from "react-native-paper";
+import { View, StyleSheet, ViewStyle } from "react-native";
+import { Text, useTheme, HelperText } from "react-native-paper";
 import { Controller, useFormContext, get } from "react-hook-form";
 import OTPTextInput from "react-native-otp-textinput";
 
 import { useOtp } from "@hobbyist/hooks";
 import { axiosInstance } from "@/api/axiosInstance";
+import { ThemedButton } from "../shared/ThemedButton";
 
 type OtpStepProps = {
   mode: "login" | "signup";
@@ -56,6 +57,11 @@ export function OtpStep({
               autoFocus
               tintColor={theme.colors.primary}
               offTintColor={errors.otp ? theme.colors.error : theme.colors.outline}
+              textInputStyle={
+                {
+                  color: theme.colors.onSurface,
+                } as ViewStyle
+              }
             />
             {get(errors, "otp")?.message && (
               <HelperText type="error" visible={!!errors.otp}>
@@ -83,18 +89,17 @@ export function OtpStep({
         </Text>
       )}
 
-      <Button
+      <ThemedButton
         mode="contained"
         onPress={mode === "signup" ? handleNext : handleSubmit}
         loading={isPending}
-        style={styles.submitButton}
       >
         {mode === "login" ? "Submit" : "Continue"}
-      </Button>
+      </ThemedButton>
 
-      <Button mode="outlined" onPress={handleBack}>
+      <ThemedButton mode="outlined" onPress={handleBack}>
         Back
-      </Button>
+      </ThemedButton>
     </View>
   );
 }
@@ -114,8 +119,5 @@ const styles = StyleSheet.create({
   resendLink: {
     fontWeight: "500",
     textDecorationLine: "underline",
-  },
-  submitButton: {
-    marginTop: 8,
   },
 });

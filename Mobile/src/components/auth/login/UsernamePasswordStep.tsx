@@ -1,9 +1,9 @@
 import { View, StyleSheet } from "react-native";
-import { Button } from "react-native-paper";
 
 import { FormInput } from "../FormInputs";
 import { OAuthButtons } from "../OAuthButtons";
 import { AuthFooter } from "../AuthFooter";
+import { ThemedButton } from "@/components/shared/ThemedButton";
 
 type UsernameAndPasswordStepProps = {
   handleNext: () => void;
@@ -28,9 +28,9 @@ export function UsernameAndPasswordStep({ handleNext, isPending }: UsernameAndPa
         autoComplete="off"
       />
 
-      <Button mode="contained" onPress={handleNext} loading={isPending} style={{ borderRadius: 8 }}>
+      <ThemedButton mode="contained" onPress={handleNext} loading={isPending}>
         Continue
-      </Button>
+      </ThemedButton>
 
       <OAuthButtons mode="login" />
 

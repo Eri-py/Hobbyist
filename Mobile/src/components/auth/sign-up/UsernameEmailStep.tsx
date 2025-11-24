@@ -1,9 +1,9 @@
 import { StyleSheet, View } from "react-native";
-import { Button } from "react-native-paper";
 
 import { FormInput } from "../FormInputs";
 import { OAuthButtons } from "../OAuthButtons";
 import { AuthFooter } from "../AuthFooter";
+import { ThemedButton } from "@/components/shared/ThemedButton";
 
 type UsernameAndEmailStepProps = {
   handleNext: () => void;
@@ -17,14 +17,9 @@ export function UsernameAndEmailStep({ handleNext, isPending }: UsernameAndEmail
 
       <FormInput name="email" label="Email" startIcon="email" />
 
-      <Button
-        mode="contained"
-        style={styles.continueButton}
-        onPress={handleNext}
-        loading={isPending}
-      >
+      <ThemedButton mode="contained" onPress={handleNext} loading={isPending}>
         Continue
-      </Button>
+      </ThemedButton>
 
       <OAuthButtons mode="sign-up" />
 
@@ -36,8 +31,5 @@ export function UsernameAndEmailStep({ handleNext, isPending }: UsernameAndEmail
 const styles = StyleSheet.create({
   container: {
     gap: 16,
-  },
-  continueButton: {
-    borderEndEndRadius: 8,
   },
 });
