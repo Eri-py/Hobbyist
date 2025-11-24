@@ -1,6 +1,8 @@
 import { View, StyleSheet } from "react-native";
-import { Text, Button, Divider } from "react-native-paper";
+import { Text, Divider } from "react-native-paper";
 import { AntDesign } from "@expo/vector-icons";
+
+import { ThemedButton } from "../shared/ThemedButton";
 
 type OAuthButtonsTypes = {
   mode: "login" | "sign-up";
@@ -17,15 +19,14 @@ export function OAuthButtons({ mode }: OAuthButtonsTypes) {
         <Divider style={styles.divider} />
       </View>
 
-      <Button
+      <ThemedButton
         mode="outlined"
-        style={styles.button}
         contentStyle={styles.buttonContent}
         labelStyle={styles.buttonLabel}
         icon={() => <AntDesign name="google" size={24} color="white" />}
       >
         <Text>{mode === "login" ? "Login with Google" : "Sign up with Google"}</Text>
-      </Button>
+      </ThemedButton>
     </View>
   );
 }
@@ -45,14 +46,10 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     color: "#666",
   },
-  button: {
-    borderRadius: 8,
-  },
   buttonContent: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 4,
   },
   buttonLabel: {
     fontSize: 16,

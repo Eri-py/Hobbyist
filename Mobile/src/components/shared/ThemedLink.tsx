@@ -1,9 +1,10 @@
 import { Link, type Href } from "expo-router";
+import { type ReactNode } from "react";
 import { type PressableProps, type StyleProp, type TextStyle } from "react-native";
 import { useTheme, Text } from "react-native-paper";
 
 type ThemedLinkProps = {
-  children: React.ReactNode;
+  children: ReactNode;
   style?: StyleProp<TextStyle>;
 } & (
   | {
