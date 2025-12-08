@@ -5,7 +5,7 @@ import Stack from "@mui/material/Stack";
 import Alert from "@mui/material/Alert";
 import { useTheme } from "@mui/material/styles";
 
-import { OtpStep } from "@/components/auth/OtpStep";
+import { OtpStep } from "@/components/auth/OtpStep/OtpStep";
 import { PasswordStep } from "@/components/auth/sign-up/PasswordStep";
 import { PersonalDetails } from "@/components/auth/sign-up/PersonalDetailsStep";
 import { UsernameAndEmailStep } from "@/components/auth/sign-up/UsernameAndEmailStep";

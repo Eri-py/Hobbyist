@@ -6,7 +6,8 @@ import OTPTextInput from "react-native-otp-textinput";
 
 import { useOtp } from "@hobbyist/hooks";
 import { axiosInstance } from "@/api/axiosInstance";
-import { ThemedButton } from "../shared/ThemedButton";
+import { ThemedButton } from "@/components/shared/ThemedButton";
+import { OtpCountdown } from "./OtpCountdown";
 
 type OtpStepProps = {
   mode: "login" | "signup";
@@ -29,7 +30,7 @@ export function OtpStep({
 }: OtpStepProps) {
   const theme = useTheme();
   const { control } = useFormContext();
-  const { isResendDisabled, handleResend, isResending, serverErrorMessage } = useOtp(
+  const { endTime, isResendDisabled, handleResend, isResending, serverErrorMessage } = useOtp(
     intitialOtpExpiresAt,
     axiosInstance
   );
@@ -71,6 +72,8 @@ export function OtpStep({
           </View>
         )}
       />
+
+      <OtpCountdown expiresAt={new Date(endTime)} />
 
       {!isResendDisabled && (
         <Text style={[styles.resendContainer, { color: theme.colors.onSurfaceVariant }]}>

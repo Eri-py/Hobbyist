@@ -6,7 +6,7 @@ import Stack from "@mui/material/Stack";
 import Alert from "@mui/material/Alert";
 
 import { UsernameAndPassword } from "@/components/auth/login/UsernameAndPasswordStep";
-import { OtpStep } from "@/components/auth/OtpStep";
+import { OtpStep } from "@/components/auth/OtpStep/OtpStep";
 import { useLogin } from "@hobbyist/hooks";
 import { axiosInstance } from "@/api/axiosInstance";
 import { FormHeader } from "@/components/auth/FormHeader";

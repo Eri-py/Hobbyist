@@ -14,6 +14,9 @@ type AutoCompleteType =
   | "birthdate-full"
   | "birthdate-month"
   | "birthdate-year"
+  | "new-password"
+  | "given-name"
+  | "family-name"
   | "off";
 
 type FormInputProps = {

@@ -9,7 +9,7 @@ import { ThemedView } from "@/components/shared/ThemedView";
 import { useLogin } from "@hobbyist/hooks";
 import { axiosInstance } from "@/api/axiosInstance";
 import { UsernameAndPasswordStep } from "@/components/auth/login/UsernamePasswordStep";
-import { OtpStep } from "@/components/auth/OtpStep";
+import { OtpStep } from "@/components/auth/OtpStep/OtpStep";
 import { FormHeader } from "@/components/auth/FormHeader";
 
 export function LoginScreen() {
@@ -71,6 +71,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   formContainer: {
+    width: "100%",
     maxWidth: 600,
     alignSelf: "center",
     gap: 16,

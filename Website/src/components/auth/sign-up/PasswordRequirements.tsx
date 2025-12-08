@@ -1,3 +1,5 @@
+import { useMemo } from "react";
+
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import CheckIcon from "@mui/icons-material/Check";
@@ -33,22 +35,26 @@ const passwordRequirements = [
 
 export function PasswordRequirements({ password }: PasswordRequirementsTypes) {
   const theme = useTheme();
-  const requirements = passwordRequirements.map((req) => {
-    const met = req.test(password);
+  const requirements = useMemo(
+    () =>
+      passwordRequirements.map((req) => {
+        const met = req.test(password);
 
-    return (
-      <Stack direction="row" gap={0.25} alignItems="center" marginLeft={1}>
-        {met ? (
-          <CheckIcon fontSize="small" sx={{ color: theme.palette.success.main }} />
-        ) : (
-          <CloseIcon fontSize="small" sx={{ color: theme.palette.error.main }} />
-        )}
-        <Typography color="textSecondary" fontSize={15}>
-          {req.message}
-        </Typography>
-      </Stack>
-    );
-  });
+        return (
+          <Stack direction="row" gap={0.25} alignItems="center" marginLeft={1}>
+            {met ? (
+              <CheckIcon fontSize="small" sx={{ color: theme.palette.success.main }} />
+            ) : (
+              <CloseIcon fontSize="small" sx={{ color: theme.palette.error.main }} />
+            )}
+            <Typography color="textSecondary" fontSize={15}>
+              {req.message}
+            </Typography>
+          </Stack>
+        );
+      }),
+    [password, theme]
+  );
 
   return (
     <Stack gap={1}>
