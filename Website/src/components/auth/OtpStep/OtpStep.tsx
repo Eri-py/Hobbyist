@@ -1,5 +1,4 @@
 import { Controller, get, useFormContext } from "react-hook-form";
-import Countdown, { zeroPad } from "react-countdown";
 
 import { useTheme } from "@mui/material/styles";
 import { MuiOtpInput } from "mui-one-time-password-input";
@@ -11,6 +10,7 @@ import Link from "@mui/material/Link";
 
 import { useOtp } from "@hobbyist/hooks";
 import { axiosInstance } from "@/api/axiosInstance";
+import { OtpCountdown } from "./OtpCountdown";
 
 type OtpStepProps = {
   mode: "login" | "signup";
@@ -71,27 +71,7 @@ export function OtpStep({
         )}
       />
 
-      <Countdown
-        date={endTime}
-        renderer={({ minutes, seconds, completed }) => {
-          if (!completed) {
-            return (
-              <Typography fontSize={15} color={theme.palette.text.secondary} textAlign="center">
-                Code expires in{" "}
-                <b>
-                  {zeroPad(minutes)}:{zeroPad(seconds)}
-                </b>
-              </Typography>
-            );
-          } else {
-            return (
-              <Typography fontSize={15} color={theme.palette.error.main} textAlign="center">
-                Code expired
-              </Typography>
-            );
-          }
-        }}
-      />
+      <OtpCountdown expiresAt={new Date(endTime)} />
 
       {!isResendDisabled && (
         <Typography fontSize={15} color={theme.palette.text.secondary} alignSelf="center">

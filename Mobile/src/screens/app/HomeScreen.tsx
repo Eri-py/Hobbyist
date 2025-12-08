@@ -26,7 +26,7 @@ const HomeScreen = () => {
   };
 
   return (
-    <ThemedView style={styles.container}>
+    <ThemedView>
       <ScrollView
         contentContainerStyle={[
           styles.scrollContent,
@@ -62,9 +62,6 @@ const HomeScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
   scrollContent: {
     width: "100%",
     paddingVertical: 16,

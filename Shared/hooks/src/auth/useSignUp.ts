@@ -43,7 +43,7 @@ export const signUpHeaderConfig: HeaderConfig = {
   },
   2: {
     header: "Create password",
-    subtext: "Choose a secure password for your account",
+    subtext: "Choose a secure password",
   },
   3: {
     header: "Personal details",
