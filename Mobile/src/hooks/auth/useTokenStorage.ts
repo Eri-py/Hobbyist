@@ -7,34 +7,20 @@ type AuthResult = components["schemas"]["AuthResult"];
 
 export function useTokenStorage() {
   const setAccessToken = useCallback(async (token: string, expiresAt: string) => {
-    try {
-      await SecureStore.setItemAsync("access_token", token);
-      await SecureStore.setItemAsync("access_token_expires", expiresAt);
-    } catch (error) {
-      console.error("Failed to store access token in SecureStore", error);
-      throw error;
-    }
+    await SecureStore.setItemAsync("access_token", token);
+    await SecureStore.setItemAsync("access_token_expires", expiresAt);
   }, []);
 
   const setRefreshToken = useCallback(async (token: string, expiresAt: string) => {
-    try {
-      await SecureStore.setItemAsync("refresh_token", token);
-      await SecureStore.setItemAsync("refresh_token_expires", expiresAt);
-    } catch (error) {
-      console.error("Failed to store refresh token in SecureStore", error);
-      throw error;
-    }
+    await SecureStore.setItemAsync("refresh_token", token);
+    await SecureStore.setItemAsync("refresh_token_expires", expiresAt);
   }, []);
 
   const clearTokens = useCallback(async () => {
-    try {
-      await SecureStore.deleteItemAsync("access_token");
-      await SecureStore.deleteItemAsync("access_token_expires");
-      await SecureStore.deleteItemAsync("refresh_token");
-      await SecureStore.deleteItemAsync("refresh_token_expires");
-    } catch (cleanupError) {
-      console.error("Failed to clean up tokens after auth error", cleanupError);
-    }
+    await SecureStore.deleteItemAsync("access_token");
+    await SecureStore.deleteItemAsync("access_token_expires");
+    await SecureStore.deleteItemAsync("refresh_token");
+    await SecureStore.deleteItemAsync("refresh_token_expires");
   }, []);
 
   const onAuthSuccess = useCallback(
@@ -43,8 +29,8 @@ export function useTokenStorage() {
         await setAccessToken(authResult.accessToken, authResult.accessTokenExpiresAt);
         await setRefreshToken(authResult.refreshToken, authResult.refreshTokenExpiresAt);
       } catch (error) {
-        console.error("Failed to persist authentication tokens", error);
         clearTokens();
+        throw error;
       }
     },
     [clearTokens, setAccessToken, setRefreshToken],
@@ -66,5 +52,5 @@ export function useTokenStorage() {
     }
   }, []);
 
-  return { onAuthSuccess, clearTokens, getAccessToken, getRefreshToken };
+  return { onAuthSuccess, getAccessToken, getRefreshToken };
 }
