@@ -13,10 +13,12 @@ import { PersonalDetailsStep } from "@/components/auth/sign-up/PersonalDetailsSt
 import { FormHeader } from "@/components/auth/FormHeader";
 import { ErrorMessage } from "@/components/shared/ErrorMessage";
 import { useDeviceType } from "@/hooks/shared/useDeviceType";
+import { useTokenStorage } from "@/hooks/auth/useTokenStorage";
 
 export function SignUpScreen() {
   const router = useRouter();
   const { isTablet } = useDeviceType();
+  const { onAuthSuccess } = useTokenStorage();
   const {
     methods,
     step,
@@ -30,7 +32,7 @@ export function SignUpScreen() {
     isCompleting,
     signUpHeaderConfig,
     SIGNUP_TOTAL_STEPS,
-  } = useSignUp((path: string) => router.push(path as Href), axiosInstance);
+  } = useSignUp((path: string) => router.push(path as Href), axiosInstance, onAuthSuccess);
 
   return (
     <ThemedView

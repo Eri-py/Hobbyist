@@ -24,6 +24,11 @@ public static class ErrorMessages
     /// </summary>
     public const string InvalidOrExpiredOtp = "Invalid or expired verification code";
 
+    /// <summary>
+    /// Message shown when a refresh token is invalid or expired.
+    /// </summary>
+    public const string InvalidRefreshToken = "Invalid or expired refresh token";
+
     #endregion
 
     #region Conflict Errors

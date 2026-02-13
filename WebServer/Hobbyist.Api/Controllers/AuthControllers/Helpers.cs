@@ -10,8 +10,8 @@ public class Helpers
         var accessTokenOptions = new CookieOptions
         {
             HttpOnly = true,
-            Secure = httpContext.Request.IsHttps,
-            SameSite = SameSiteMode.None,
+            Secure = true,
+            SameSite = SameSiteMode.Strict,
             Path = "/api",
             Expires = tokens.AccessTokenExpiresAt,
         };
@@ -19,8 +19,8 @@ public class Helpers
         var refreshTokenOptions = new CookieOptions
         {
             HttpOnly = true,
-            Secure = httpContext.Request.IsHttps,
-            SameSite = SameSiteMode.None,
+            Secure = true,
+            SameSite = SameSiteMode.Strict,
             Path = "/api/auth/refresh-token",
             Expires = tokens.RefreshTokenExpiresAt,
         };

@@ -2,6 +2,7 @@ using Hobbyist.Api.Dtos.AuthDtos;
 using Hobbyist.Api.Extensions;
 using Hobbyist.Api.Services.AuthServices.TokenServices;
 using Hobbyist.Common;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Hobbyist.Api.Controllers.AuthControllers
@@ -11,11 +12,9 @@ namespace Hobbyist.Api.Controllers.AuthControllers
     public class AuthController(ITokenService tokenService) : ControllerBase
     {
         [HttpGet("get-user-details")]
+        [Authorize]
         public ActionResult<GetUserResponse> GetUserDetails()
         {
-            if (!User.Identity!.IsAuthenticated)
-                return Unauthorized();
-
             var user = ApiHelper.GetUserDetails(User);
             return Ok(new GetUserResponse { IsAuthenticated = true, User = user });
         }
