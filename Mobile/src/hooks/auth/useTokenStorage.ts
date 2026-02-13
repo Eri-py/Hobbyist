@@ -7,19 +7,41 @@ type AuthResult = components["schemas"]["AuthResult"];
 
 export function useTokenStorage() {
   const setAccessToken = useCallback(async (token: string, expiresAt: string) => {
-    await SecureStore.setItemAsync("access_token", token);
-    await SecureStore.setItemAsync("access_token_expires", expiresAt);
+    try {
+      await SecureStore.setItemAsync("access_token", token);
+      await SecureStore.setItemAsync("access_token_expires", expiresAt);
+    } catch (error) {
+      console.error("Failed to store access token in SecureStore", error);
+      throw error;
+    }
   }, []);
 
   const setRefreshToken = useCallback(async (token: string, expiresAt: string) => {
-    await SecureStore.setItemAsync("refresh_token", token);
-    await SecureStore.setItemAsync("refresh_token_expires", expiresAt);
+    try {
+      await SecureStore.setItemAsync("refresh_token", token);
+      await SecureStore.setItemAsync("refresh_token_expires", expiresAt);
+    } catch (error) {
+      console.error("Failed to store refresh token in SecureStore", error);
+      throw error;
+    }
   }, []);
 
   const onAuthSuccess = useCallback(
     async (authResult: AuthResult) => {
-      await setAccessToken(authResult.accessToken, authResult.accessTokenExpiresAt);
-      await setRefreshToken(authResult.refreshToken, authResult.refreshTokenExpiresAt);
+      try {
+        await setAccessToken(authResult.accessToken, authResult.accessTokenExpiresAt);
+        await setRefreshToken(authResult.refreshToken, authResult.refreshTokenExpiresAt);
+      } catch (error) {
+        console.error("Failed to persist authentication tokens", error);
+        try {
+          await SecureStore.deleteItemAsync("access_token");
+          await SecureStore.deleteItemAsync("access_token_expires");
+          await SecureStore.deleteItemAsync("refresh_token");
+          await SecureStore.deleteItemAsync("refresh_token_expires");
+        } catch (cleanupError) {
+          console.error("Failed to clean up tokens after auth error", cleanupError);
+        }
+      }
     },
     [setAccessToken, setRefreshToken],
   );
