@@ -1,7 +1,7 @@
 import * as SecureStore from "expo-secure-store";
 import { useCallback } from "react";
 
-import type { components } from "@hobbyist/api-client";
+import type { components } from "@hobbyist/types";
 
 type AuthResult = components["schemas"]["AuthResult"];
 

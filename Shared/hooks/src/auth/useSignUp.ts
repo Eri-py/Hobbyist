@@ -5,7 +5,7 @@ import { useMutation } from "@tanstack/react-query";
 import type { AxiosInstance } from "axios";
 
 import { SignUpFormSchema, type SignUpFormSchemaTypes } from "@hobbyist/form-schemas";
-import type { components } from "@hobbyist/api-client";
+import type { components } from "@hobbyist/types";
 import { type ServerError, useServerError } from "../shared/useServerError";
 
 // DTOs

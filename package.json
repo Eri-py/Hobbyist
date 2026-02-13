@@ -19,7 +19,7 @@
     "lint:fix": "pnpm --recursive lint:fix",
     "typecheck": "pnpm --recursive typecheck",
     "test": "pnpm --recursive test",
-    "generate-types": "pnpm --filter @hobbyist/api-client generate-types",
+    "generate-types": "pnpm --filter @hobbyist/types generate-types",
     "clean": "node scripts/clean.js",
     "reset": "pnpm clean && pnpm install"
   },

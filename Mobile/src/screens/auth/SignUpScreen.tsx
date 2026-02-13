@@ -4,7 +4,7 @@ import { View, StyleSheet } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 
 import { useSignUp } from "@hobbyist/hooks";
-import { axiosInstance } from "@/api/axiosInstance";
+import { useMobileAxiosInstance } from "@/api/axiosInstance";
 import { ThemedView } from "@/components/shared/ThemedView";
 import { UsernameAndEmailStep } from "@/components/auth/sign-up/UsernameEmailStep";
 import { OtpStep } from "@/components/auth/OtpStep/OtpStep";
@@ -19,6 +19,7 @@ export function SignUpScreen() {
   const router = useRouter();
   const { isTablet } = useDeviceType();
   const { onAuthSuccess } = useTokenStorage();
+  const axiosInstance = useMobileAxiosInstance();
   const {
     methods,
     step,

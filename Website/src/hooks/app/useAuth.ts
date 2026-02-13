@@ -1,6 +1,6 @@
 import { createContext, useContext } from "react";
 
-import type { components } from "@hobbyist/api-client";
+import type { components } from "@hobbyist/types";
 
 export type AuthContextTypes = components["schemas"]["GetUserResponse"];
 export const AuthContext = createContext<AuthContextTypes | null>(null);

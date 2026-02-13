@@ -14,7 +14,7 @@
     "clean": "rimraf node_modules"
   },
   "dependencies": {
-    "@hobbyist/api-client": "workspace:*",
+    "@hobbyist/types": "workspace:*",
     "@hobbyist/form-schemas": "workspace:*",
     "@hookform/resolvers": "^3.10.0",
     "@tanstack/react-query": "^5.90.12",

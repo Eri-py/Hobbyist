@@ -6,16 +6,19 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 
 import { ThemedView } from "@/components/shared/ThemedView";
 import { useLogin } from "@hobbyist/hooks";
-import { axiosInstance } from "@/api/axiosInstance";
+import { useMobileAxiosInstance } from "@/api/axiosInstance";
 import { UsernameAndPasswordStep } from "@/components/auth/login/UsernamePasswordStep";
 import { OtpStep } from "@/components/auth/OtpStep/OtpStep";
 import { FormHeader } from "@/components/auth/FormHeader";
 import { useDeviceType } from "@/hooks/shared/useDeviceType";
 import { ErrorMessage } from "@/components/shared/ErrorMessage";
+import { useTokenStorage } from "@/hooks/auth/useTokenStorage";
 
 export function LoginScreen() {
   const router = useRouter();
   const { isTablet } = useDeviceType();
+  const { onAuthSuccess } = useTokenStorage();
+  const axiosInstance = useMobileAxiosInstance();
   const {
     methods,
     step,
@@ -28,7 +31,7 @@ export function LoginScreen() {
     isCompleting,
     loginHeaderConfig,
     LOGIN_TOTAL_STEPS,
-  } = useLogin((path: string) => router.push(path as Href), axiosInstance);
+  } = useLogin((path: string) => router.push(path as Href), axiosInstance, onAuthSuccess);
 
   return (
     <ThemedView

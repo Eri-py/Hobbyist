@@ -8,7 +8,7 @@ const pathsToRemove = [
   "Website/node_modules",
   "Website/dist",
   "Website/.tanstack",
-  "Shared/api-client/node_modules",
+  "Shared/types/node_modules",
 ];
 
 pathsToRemove.forEach((path) => {
