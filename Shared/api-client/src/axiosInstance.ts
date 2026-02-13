@@ -3,7 +3,7 @@ import axios, { AxiosError, type AxiosInstance, type InternalAxiosRequestConfig 
 export function createAxiosInstance(baseURL: string, platform: "web" | "mobile"): AxiosInstance {
   const axiosInstance = axios.create({
     baseURL,
-    withCredentials: true,
+    withCredentials: platform === "web",
     headers: {
       Platform: platform,
     },

@@ -53,7 +53,11 @@ export const signUpHeaderConfig: HeaderConfig = {
 
 export const SIGNUP_TOTAL_STEPS = 4;
 
-export function useSignUp(navigate: (path: string) => void, axiosInstance: AxiosInstance) {
+export function useSignUp(
+  navigate: (path: string) => void,
+  axiosInstance: AxiosInstance,
+  onAuthSuccess?: (authResult: AuthResult) => Promise<void>,
+) {
   const { serverErrorMessage, handleServerError, clearServerError } = useServerError();
   const [step, setStep] = useState<number>(0);
   const [otpExpiresAt, setOtpExpiresAt] = useState<Date | null>(null);
@@ -94,7 +98,15 @@ export function useSignUp(navigate: (path: string) => void, axiosInstance: Axios
 
   const completeSignUpMutation = useMutation({
     mutationFn: (data: CompleteSignUpRequest) => completeSignUpApi(data),
-    onSuccess: () => navigate("/"),
+    onSuccess: async (response) => {
+      const authResult = response.data;
+
+      if (onAuthSuccess && authResult) {
+        // Mobile: Pass tokens to be stored securely
+        await onAuthSuccess(authResult);
+      }
+      navigate("/");
+    },
     onError: (error: ServerError) => handleServerError(error),
   });
 

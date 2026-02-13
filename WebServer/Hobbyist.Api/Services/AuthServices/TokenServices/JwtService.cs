@@ -78,7 +78,7 @@ public class JwtService(IConfiguration configuration, HobbyistDbContext context)
             // Check if token is non-existent or expired
             if (token is null || token.TokenExpiresAt < DateTime.UtcNow)
             {
-                return Result<AuthResult>.InternalServerError(ErrorMessages.UnexpectedError);
+                return Result<AuthResult>.Unauthorized(ErrorMessages.InvalidRefreshToken);
             }
 
             // Generate new tokens

@@ -297,7 +297,7 @@ public class JwtServiceTests : DatabaseTestBase
         {
             // Assert
             Assert.That(result.IsSuccess, Is.False);
-            Assert.That(result.ResultType, Is.EqualTo(ResultTypes.InternalServerError));
+            Assert.That(result.ResultType, Is.EqualTo(ResultTypes.Unauthorized));
         }
     }
 
@@ -325,7 +325,7 @@ public class JwtServiceTests : DatabaseTestBase
         {
             // Assert
             Assert.That(result.IsSuccess, Is.False);
-            Assert.That(result.ResultType, Is.EqualTo(ResultTypes.InternalServerError));
+            Assert.That(result.ResultType, Is.EqualTo(ResultTypes.Unauthorized));
         }
     }
 

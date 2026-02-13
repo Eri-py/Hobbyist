@@ -45,6 +45,12 @@ namespace Hobbyist.Api.Controllers.AuthControllers
                 return Result<AuthResult>.FromError(result).ToActionResult();
             }
 
+            var device = ApiHelper.GetPlatform(Request);
+            if (device.Equals("mobile"))
+            {
+                return Ok(result.Content);
+            }
+
             Helpers.SetAuthCookies(HttpContext, result.Content!);
             return NoContent();
         }

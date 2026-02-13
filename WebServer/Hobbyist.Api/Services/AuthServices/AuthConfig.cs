@@ -18,6 +18,16 @@ public record AuthConfig
     public const int OtpValidForMinutes = 5;
 
     /// <summary>
+    /// Max attempts allowed for a single OTP
+    /// </summary>
+    public const int OtpMaxAttempts = 5;
+
+    /// <summary>
+    /// Time in minutes that OTP verification stays valid
+    /// </summary>
+    public const int OtpVerifiedForMinutes = 15;
+
+    /// <summary>
     /// Time in minutes that Access Token is valid for
     /// </summary>
     public const int AccessTokenValidForMinutes = 15;
