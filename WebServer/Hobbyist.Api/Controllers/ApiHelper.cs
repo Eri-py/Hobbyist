@@ -24,4 +24,22 @@ public class ApiHelper
             Lastname = user.FindFirst(ClaimTypes.Surname)!.Value,
         };
     }
+
+    /// <summary>
+    /// Gets the platform that originated the request.
+    /// </summary>
+    /// <param name="request">The HTTP request containing platform information</param>
+    /// <returns>"mobile" or "web"</returns>
+    /// <exception cref="BadHttpRequestException">Thrown when Platform header is missing</exception>
+    public static string GetPlatform(HttpRequest request)
+    {
+        var platform = request.Headers["Platform"].FirstOrDefault();
+
+        if (string.IsNullOrEmpty(platform))
+        {
+            throw new BadHttpRequestException("Platform header is required");
+        }
+
+        return platform;
+    }
 }

@@ -1,9 +1,12 @@
 import axios, { AxiosError, type AxiosInstance, type InternalAxiosRequestConfig } from "axios";
 
-export function createAxiosInstance(baseURL: string): AxiosInstance {
+export function createAxiosInstance(baseURL: string, platform: "web" | "mobile"): AxiosInstance {
   const axiosInstance = axios.create({
     baseURL,
     withCredentials: true,
+    headers: {
+      Platform: platform,
+    },
   });
 
   let isRefreshing = false;
