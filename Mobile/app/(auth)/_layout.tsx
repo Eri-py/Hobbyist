@@ -15,7 +15,6 @@ const BackArrowButton = () => {
         aspectRatio: 1 / 1,
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: "transparent",
       }}
       onPress={() => router.replace("/")}
     >

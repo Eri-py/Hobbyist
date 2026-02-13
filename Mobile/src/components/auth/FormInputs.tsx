@@ -1,6 +1,7 @@
-import { Controller, useFormContext } from "react-hook-form";
-import { TextInput, useTheme } from "react-native-paper";
+import { Controller, useFormContext, get } from "react-hook-form";
+import { TextInput, useTheme, Text } from "react-native-paper";
 import { useState, type ReactNode } from "react";
+import { View } from "react-native";
 
 type AutoCompleteType =
   | "email"
@@ -28,10 +29,7 @@ type FormInputProps = {
 };
 
 export function FormInput({ name, label, type = "text", autoComplete, startIcon }: FormInputProps) {
-  const {
-    control,
-    formState: { errors },
-  } = useFormContext();
+  const { control } = useFormContext();
   const theme = useTheme();
 
   const isPasswordField = type === "password";
@@ -59,20 +57,27 @@ export function FormInput({ name, label, type = "text", autoComplete, startIcon 
     <Controller
       control={control}
       name={name}
-      render={({ field: { onChange, onBlur, value } }) => (
-        <TextInput
-          label={label}
-          value={value || ""}
-          onChangeText={onChange}
-          onBlur={onBlur}
-          secureTextEntry={isPasswordField ? !isPasswordVisible : false}
-          autoComplete={autoComplete}
-          left={renderLeftIcon()}
-          right={isPasswordField ? passwordRightIcon() : undefined}
-          error={!!errors[name]}
-          mode="outlined"
-          style={{ backgroundColor: theme.colors.surface }}
-        />
+      render={({ field: { onChange, onBlur, value }, formState: { errors } }) => (
+        <View>
+          <TextInput
+            label={label}
+            value={value || ""}
+            onChangeText={onChange}
+            onBlur={onBlur}
+            secureTextEntry={isPasswordField ? !isPasswordVisible : false}
+            autoComplete={autoComplete}
+            left={renderLeftIcon()}
+            right={isPasswordField ? passwordRightIcon() : undefined}
+            error={!!errors[name]}
+            mode="outlined"
+            style={{ backgroundColor: theme.colors.surface }}
+          />
+          {get(errors, name)?.message && (
+            <Text style={{ fontSize: 12, color: theme.colors.error, paddingLeft: 4 }}>
+              {get(errors, name)?.message}
+            </Text>
+          )}
+        </View>
       )}
     />
   );

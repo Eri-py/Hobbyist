@@ -1,6 +1,6 @@
 import React from "react";
 import { View, StyleSheet, ViewStyle } from "react-native";
-import { Text, useTheme, HelperText } from "react-native-paper";
+import { Text, useTheme } from "react-native-paper";
 import { Controller, useFormContext, get } from "react-hook-form";
 import OTPTextInput from "react-native-otp-textinput";
 
@@ -8,6 +8,7 @@ import { useOtp } from "@hobbyist/hooks";
 import { axiosInstance } from "@/api/axiosInstance";
 import { ThemedButton } from "@/components/shared/ThemedButton";
 import { OtpCountdown } from "./OtpCountdown";
+import { ErrorMessage } from "@/components/shared/ErrorMessage";
 
 type OtpStepProps = {
   mode: "login" | "signup";
@@ -32,7 +33,7 @@ export function OtpStep({
   const { control } = useFormContext();
   const { endTime, isResendDisabled, handleResend, isResending, serverErrorMessage } = useOtp(
     intitialOtpExpiresAt,
-    axiosInstance
+    axiosInstance,
   );
 
   const onResend = () => {
@@ -41,9 +42,7 @@ export function OtpStep({
 
   return (
     <View style={styles.container}>
-      {serverErrorMessage && (
-        <Text style={[styles.errorText, { color: theme.colors.error }]}>{serverErrorMessage}</Text>
-      )}
+      {serverErrorMessage && <ErrorMessage>{serverErrorMessage}</ErrorMessage>}
 
       <Controller
         name="otp"
@@ -53,9 +52,8 @@ export function OtpStep({
             <OTPTextInput
               inputCount={6}
               handleTextChange={onChange}
+              keyboardType="default"
               defaultValue={value || ""}
-              keyboardType="numeric"
-              autoFocus
               tintColor={theme.colors.primary}
               offTintColor={errors.otp ? theme.colors.error : theme.colors.outline}
               textInputStyle={
@@ -65,9 +63,9 @@ export function OtpStep({
               }
             />
             {get(errors, "otp")?.message && (
-              <HelperText type="error" visible={!!errors.otp}>
+              <Text style={{ fontSize: 12, color: theme.colors.error, paddingLeft: 4 }}>
                 {get(errors, "otp")?.message}
-              </HelperText>
+              </Text>
             )}
           </View>
         )}
@@ -123,4 +121,5 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     textDecorationLine: "underline",
   },
+  textInput: {},
 });
