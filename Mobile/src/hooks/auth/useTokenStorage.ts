@@ -26,6 +26,17 @@ export function useTokenStorage() {
     }
   }, []);
 
+  const clearTokens = useCallback(async () => {
+    try {
+      await SecureStore.deleteItemAsync("access_token");
+      await SecureStore.deleteItemAsync("access_token_expires");
+      await SecureStore.deleteItemAsync("refresh_token");
+      await SecureStore.deleteItemAsync("refresh_token_expires");
+    } catch (cleanupError) {
+      console.error("Failed to clean up tokens after auth error", cleanupError);
+    }
+  }, []);
+
   const onAuthSuccess = useCallback(
     async (authResult: AuthResult) => {
       try {
@@ -33,17 +44,10 @@ export function useTokenStorage() {
         await setRefreshToken(authResult.refreshToken, authResult.refreshTokenExpiresAt);
       } catch (error) {
         console.error("Failed to persist authentication tokens", error);
-        try {
-          await SecureStore.deleteItemAsync("access_token");
-          await SecureStore.deleteItemAsync("access_token_expires");
-          await SecureStore.deleteItemAsync("refresh_token");
-          await SecureStore.deleteItemAsync("refresh_token_expires");
-        } catch (cleanupError) {
-          console.error("Failed to clean up tokens after auth error", cleanupError);
-        }
+        clearTokens();
       }
     },
-    [setAccessToken, setRefreshToken],
+    [clearTokens, setAccessToken, setRefreshToken],
   );
 
   const getAccessToken = useCallback(async () => {
@@ -62,5 +66,5 @@ export function useTokenStorage() {
     }
   }, []);
 
-  return { onAuthSuccess, getAccessToken, getRefreshToken };
+  return { onAuthSuccess, clearTokens, getAccessToken, getRefreshToken };
 }
