@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { AuthContext, type AuthContextTypes } from "@/hooks/app/useAuth";
 import { Loader } from "@/components/app/Loader";
 import { axiosInstance } from "@/api/axiosInstance";
-import type { components } from "@hobbyist/api-client";
+import type { components } from "@hobbyist/types";
 
 type GetUserResponse = components["schemas"]["GetUserResponse"];
 

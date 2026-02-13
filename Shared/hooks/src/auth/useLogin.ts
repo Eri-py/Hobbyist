@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { AxiosInstance } from "axios";
 
-import type { components } from "@hobbyist/api-client";
+import type { components } from "@hobbyist/types";
 import { LoginFormSchema, type LoginFormSchemaTypes } from "@hobbyist/form-schemas";
 import { type ServerError, useServerError } from "../shared/useServerError";
 
@@ -36,7 +36,11 @@ export const loginHeaderConfig: HeaderConfig = {
 
 export const LOGIN_TOTAL_STEPS = 2;
 
-export function useLogin(navigate: (path: string) => void, axiosInstance: AxiosInstance) {
+export function useLogin(
+  navigate: (path: string) => void,
+  axiosInstance: AxiosInstance,
+  onAuthSuccess?: (authResult: AuthResult) => Promise<void>,
+) {
   const [step, setStep] = useState<number>(0);
   const [otpData, setOtpData] = useState<{
     email: string;
@@ -74,7 +78,14 @@ export function useLogin(navigate: (path: string) => void, axiosInstance: AxiosI
 
   const completeLoginMutation = useMutation({
     mutationFn: (data: CompleteLoginRequest) => completeLoginApi(data),
-    onSuccess: () => navigate("/"),
+    onSuccess: async (response) => {
+      const authResult = response.data;
+
+      if (onAuthSuccess && authResult) {
+        await onAuthSuccess(authResult);
+      }
+      navigate("/");
+    },
     onError: (error: ServerError) => handleServerError(error),
   });
 

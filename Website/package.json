@@ -13,7 +13,7 @@
     "clean": "rimraf node_modules dist .tanstack"
   },
   "dependencies": {
-    "@hobbyist/api-client": "workspace:*",
+    "@hobbyist/types": "workspace:*",
     "@hobbyist/form-schemas": "workspace:*",
     "@hobbyist/hooks": "workspace:*",
     "@hookform/resolvers": "^3.9.1",

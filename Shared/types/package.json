@@ -1,5 +1,5 @@
 {
-  "name": "@hobbyist/api-client",
+  "name": "@hobbyist/types",
   "version": "0.0.0",
   "private": true,
   "exports": {
@@ -9,12 +9,9 @@
     }
   },
   "scripts": {
-    "generate-types": "cross-env NODE_TLS_REJECT_UNAUTHORIZED=0 openapi-typescript https://localhost:7000/openapi/v1.json -o types.ts",
+    "generate-types": "cross-env NODE_TLS_REJECT_UNAUTHORIZED=0 openapi-typescript https://localhost:7000/openapi/v1.json -o src/types.ts",
     "typecheck": "tsc --noEmit",
     "clean": "rimraf node_modules"
-  },
-  "dependencies": {
-    "axios": "^1.13.2"
   },
   "devDependencies": {
     "cross-env": "^10.1.0",

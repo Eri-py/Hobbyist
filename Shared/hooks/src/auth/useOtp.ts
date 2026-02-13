@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import type { AxiosInstance } from "axios";
 
-import type { components } from "@hobbyist/api-client";
+import type { components } from "@hobbyist/types";
 import { type ServerError, useServerError } from "../shared/useServerError";
 
 // DTOs
@@ -21,9 +21,12 @@ export function useOtp(initialOtpExpiresAt: Date, axiosInstance: AxiosInstance) 
 
   // Enable resend button after 1/5th of the initial OTP duration
   useEffect(() => {
-    const enableResendTimer = setTimeout(() => {
-      setIsResendDisabled(false);
-    }, (initialOtpExpiresAt.getTime() - Date.now()) / 5);
+    const enableResendTimer = setTimeout(
+      () => {
+        setIsResendDisabled(false);
+      },
+      (initialOtpExpiresAt.getTime() - Date.now()) / 5,
+    );
 
     return () => clearTimeout(enableResendTimer);
   }, [initialOtpExpiresAt]);
@@ -41,9 +44,12 @@ export function useOtp(initialOtpExpiresAt: Date, axiosInstance: AxiosInstance) 
       setIsResendDisabled(true);
 
       // Re-enable resend button after 1/5th of the new OTP duration with cleanup
-      const enableResendTimer = setTimeout(() => {
-        setIsResendDisabled(false);
-      }, (newEndTime - Date.now()) / 5);
+      const enableResendTimer = setTimeout(
+        () => {
+          setIsResendDisabled(false);
+        },
+        (newEndTime - Date.now()) / 5,
+      );
 
       return () => clearTimeout(enableResendTimer);
     },
