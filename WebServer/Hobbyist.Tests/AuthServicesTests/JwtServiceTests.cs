@@ -288,7 +288,7 @@ public class JwtServiceTests : DatabaseTestBase
     }
 
     [Test]
-    public async Task VerifyRefreshTokenAsync_WithInvalidToken_ReturnsNotFound()
+    public async Task VerifyRefreshTokenAsync_WithInvalidToken_ReturnsUnauthorized()
     {
         // Act
         var result = await _jwtService.VerifyRefreshTokenAsync("invalid-token");
@@ -302,7 +302,7 @@ public class JwtServiceTests : DatabaseTestBase
     }
 
     [Test]
-    public async Task VerifyRefreshTokenAsync_WithExpiredToken_ReturnsNotFound()
+    public async Task VerifyRefreshTokenAsync_WithExpiredToken_ReturnsUnauthorized()
     {
         // Arrange
         var expiredToken = "expired-refresh-token-1234567890-abcdefghijklmnopqrstuvwxyz";
