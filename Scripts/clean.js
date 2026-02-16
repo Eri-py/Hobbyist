@@ -8,6 +8,8 @@ const pathsToRemove = [
   "Website/node_modules",
   "Website/dist",
   "Website/.tanstack",
+  "Shared/form-schemas/node_modules",
+  "Shared/hooks/node_modules",
   "Shared/types/node_modules",
 ];
 
@@ -17,7 +19,7 @@ pathsToRemove.forEach((path) => {
     console.log(`Removed ${path}`);
   } catch (error) {
     if (error.code !== "ENOENT") {
-      console.error(`✗ Failed to remove ${path}:`, error.message);
+      console.error(`Failed to remove ${path}:`, error.message);
     }
   }
 });

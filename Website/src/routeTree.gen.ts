@@ -89,6 +89,7 @@ const AppProfileUsernameSettingsRoute =
   } as any)
 
 export interface FileRoutesByFullPath {
+  '/': typeof AppIndexRoute
   '/create': typeof AppCreateRoute
   '/events': typeof AppEventsRoute
   '/messages': typeof AppMessagesRoute
@@ -96,12 +97,12 @@ export interface FileRoutesByFullPath {
   '/trade': typeof AppTradeRoute
   '/login': typeof AuthLoginRoute
   '/sign-up': typeof AuthSignUpRoute
-  '/': typeof AppIndexRoute
-  '/profile': typeof AppProfileIndexRoute
+  '/profile/': typeof AppProfileIndexRoute
   '/profile/$username/settings': typeof AppProfileUsernameSettingsRoute
-  '/profile/$username': typeof AppProfileUsernameIndexRoute
+  '/profile/$username/': typeof AppProfileUsernameIndexRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof AppIndexRoute
   '/create': typeof AppCreateRoute
   '/events': typeof AppEventsRoute
   '/messages': typeof AppMessagesRoute
@@ -109,7 +110,6 @@ export interface FileRoutesByTo {
   '/trade': typeof AppTradeRoute
   '/login': typeof AuthLoginRoute
   '/sign-up': typeof AuthSignUpRoute
-  '/': typeof AppIndexRoute
   '/profile': typeof AppProfileIndexRoute
   '/profile/$username/settings': typeof AppProfileUsernameSettingsRoute
   '/profile/$username': typeof AppProfileUsernameIndexRoute
@@ -133,6 +133,7 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/'
     | '/create'
     | '/events'
     | '/messages'
@@ -140,12 +141,12 @@ export interface FileRouteTypes {
     | '/trade'
     | '/login'
     | '/sign-up'
-    | '/'
-    | '/profile'
+    | '/profile/'
     | '/profile/$username/settings'
-    | '/profile/$username'
+    | '/profile/$username/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/'
     | '/create'
     | '/events'
     | '/messages'
@@ -153,7 +154,6 @@ export interface FileRouteTypes {
     | '/trade'
     | '/login'
     | '/sign-up'
-    | '/'
     | '/profile'
     | '/profile/$username/settings'
     | '/profile/$username'
@@ -184,14 +184,14 @@ declare module '@tanstack/react-router' {
     '/_auth': {
       id: '/_auth'
       path: ''
-      fullPath: ''
+      fullPath: '/'
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app': {
       id: '/_app'
       path: ''
-      fullPath: ''
+      fullPath: '/'
       preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
@@ -254,14 +254,14 @@ declare module '@tanstack/react-router' {
     '/_app/profile/': {
       id: '/_app/profile/'
       path: '/profile'
-      fullPath: '/profile'
+      fullPath: '/profile/'
       preLoaderRoute: typeof AppProfileIndexRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/profile/$username/': {
       id: '/_app/profile/$username/'
       path: '/profile/$username'
-      fullPath: '/profile/$username'
+      fullPath: '/profile/$username/'
       preLoaderRoute: typeof AppProfileUsernameIndexRouteImport
       parentRoute: typeof AppRoute
     }
