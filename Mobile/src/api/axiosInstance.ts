@@ -1,39 +1,93 @@
-import axios, { type AxiosInstance, type InternalAxiosRequestConfig } from "axios";
-import { useEffect, useMemo } from "react";
+import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
 
-import { useTokenStorage } from "@/hooks/auth/useTokenStorage";
+import * as TokenManager from "@/api/tokenManager";
 
 const API_BASE_URL = "http://100.85.42.14:7001/api";
 
-type CustomAxiosRequestConfig = InternalAxiosRequestConfig;
+type CustomAxiosRequestConfig = { _retry?: boolean } & InternalAxiosRequestConfig;
 
-export function useMobileAxiosInstance(): AxiosInstance {
-  const { getAccessToken } = useTokenStorage();
-  const axiosInstance = useMemo(() => {
-    return axios.create({
-      baseURL: API_BASE_URL,
-      headers: {
-        Platform: "mobile",
-      },
-    });
-  }, []);
+export const axiosInstance = axios.create({
+  baseURL: API_BASE_URL,
+  headers: { Platform: "mobile" },
+});
 
-  useEffect(() => {
-    const requestId = axiosInstance.interceptors.request.use(
-      async (config: CustomAxiosRequestConfig) => {
-        const accessToken = await getAccessToken();
-        if (accessToken) {
-          config.headers = config.headers ?? {};
-          config.headers.Authorization = `Bearer ${accessToken}`;
-        }
-        return config;
-      },
-    );
+let isRefreshing = false;
+const failedQueue: { resolve: (value?: unknown) => void; reject: (reason?: unknown) => void }[] =
+  [];
 
-    return () => {
-      axiosInstance.interceptors.request.eject(requestId);
-    };
-  }, [axiosInstance, getAccessToken]);
+const processQueue = (error: unknown = null) => {
+  failedQueue.forEach((promise) => {
+    if (error) {
+      promise.reject(error);
+    } else {
+      promise.resolve();
+    }
+  });
+  failedQueue.length = 0;
+};
 
-  return axiosInstance;
-}
+const refreshAccessToken = async () => {
+  const refreshToken = await TokenManager.getRefreshToken();
+
+  if (!refreshToken) {
+    return null;
+  }
+
+  const response = await axiosInstance.post("auth/refresh-token", {
+    refreshToken,
+  });
+
+  return response.data;
+};
+
+// Request interceptor - attach access token
+axiosInstance.interceptors.request.use(async (config) => {
+  if (config.url?.includes("auth/refresh-token")) {
+    return config;
+  }
+
+  const accessToken = await TokenManager.getAccessToken();
+  if (accessToken) {
+    config.headers.Authorization = `Bearer ${accessToken}`;
+  }
+
+  return config;
+});
+
+// Response interceptor - handle 401 and refresh token
+axiosInstance.interceptors.response.use(undefined, async (error: AxiosError) => {
+  const originalRequest = error.config as CustomAxiosRequestConfig;
+
+  if (error.response?.status !== 401) {
+    return Promise.reject(error);
+  }
+
+  if (originalRequest._retry) {
+    return Promise.reject(error);
+  }
+
+  originalRequest._retry = true;
+
+  if (isRefreshing) {
+    return new Promise((resolve, reject) => {
+      failedQueue.push({ resolve, reject });
+    })
+      .then(() => axiosInstance.request(originalRequest))
+      .catch((err) => Promise.reject(err));
+  }
+
+  isRefreshing = true;
+
+  try {
+    const newTokens = await refreshAccessToken();
+    await TokenManager.storeTokens(newTokens);
+    processQueue();
+    return axiosInstance.request(originalRequest);
+  } catch (refreshError) {
+    processQueue(refreshError);
+    await TokenManager.clearTokens();
+    return Promise.reject(refreshError);
+  } finally {
+    isRefreshing = false;
+  }
+});

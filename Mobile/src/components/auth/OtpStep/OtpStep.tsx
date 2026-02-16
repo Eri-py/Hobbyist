@@ -5,10 +5,10 @@ import { Controller, useFormContext, get } from "react-hook-form";
 import OTPTextInput from "react-native-otp-textinput";
 
 import { useOtp } from "@hobbyist/hooks";
-import { useMobileAxiosInstance } from "@/api/axiosInstance";
 import { ThemedButton } from "@/components/shared/ThemedButton";
 import { OtpCountdown } from "./OtpCountdown";
 import { ErrorMessage } from "@/components/shared/ErrorMessage";
+import { axiosInstance } from "@/api/axiosInstance";
 
 type OtpStepProps = {
   mode: "login" | "signup";
@@ -31,7 +31,6 @@ export function OtpStep({
 }: OtpStepProps) {
   const theme = useTheme();
   const { control } = useFormContext();
-  const axiosInstance = useMobileAxiosInstance();
   const { endTime, isResendDisabled, handleResend, isResending, serverErrorMessage } = useOtp(
     intitialOtpExpiresAt,
     axiosInstance,
