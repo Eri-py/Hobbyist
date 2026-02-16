@@ -1,19 +1,29 @@
 version: 2
 updates:
-  # pnpm monorepo - check root
-  - package-ecosystem: npm
+  # Root package.json
+  - package-ecosystem: "npm"
     directory: "/"
     schedule:
       interval: "weekly"
-      day: "monday"
+    ignore:
+      - dependency-name: "zod"
+
+  # Mobile app
+  - package-ecosystem: "npm"
+    directory: "/Mobile"
+    schedule:
+      interval: "weekly"
     ignore:
       - dependency-name: "react-native"
       - dependency-name: "react-native-gesture-handler"
       - dependency-name: "react-native-screens"
       - dependency-name: "react-native-worklets"
-      - dependency-name: "zod"
-    # Dependabot doesn't fully support pnpm workspaces yet
-    # It will update root package.json and workspace packages
+
+  # Website
+  - package-ecosystem: "npm"
+    directory: "/Website"
+    schedule:
+      interval: "weekly"
 
   # .NET backend
   - package-ecosystem: "nuget"
