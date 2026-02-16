@@ -1,5 +1,6 @@
 using Hobbyist.Api.Dtos.AuthDtos;
 using Hobbyist.Api.Extensions;
+using Hobbyist.Api.Services.AuthServices;
 using Hobbyist.Api.Services.AuthServices.TokenServices;
 using Hobbyist.Common;
 using Microsoft.AspNetCore.Authorization;
@@ -20,7 +21,7 @@ namespace Hobbyist.Api.Controllers.AuthControllers
         }
 
         [HttpGet("refresh-token")]
-        public async Task<ActionResult<string>> RefreshToken()
+        public async Task<ActionResult<AuthResult>> RefreshToken()
         {
             var refreshToken = Request.Cookies["__Secure-refreshToken"];
             if (refreshToken is null)
@@ -31,7 +32,7 @@ namespace Hobbyist.Api.Controllers.AuthControllers
             var result = await tokenService.VerifyRefreshTokenAsync(refreshToken);
             if (!result.IsSuccess)
             {
-                return Result<string>.FromError(result).ToActionResult();
+                return Result<AuthResult>.FromError(result).ToActionResult();
             }
 
             Helpers.SetAuthCookies(HttpContext, result.Content!);

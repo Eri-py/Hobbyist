@@ -1,10 +1,10 @@
+import { useCallback } from "react";
 import { FormProvider } from "react-hook-form";
 import { Href, useRouter } from "expo-router";
 import { View, StyleSheet } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 
 import { useSignUp } from "@hobbyist/hooks";
-import { useMobileAxiosInstance } from "@/api/axiosInstance";
 import { ThemedView } from "@/components/shared/ThemedView";
 import { UsernameAndEmailStep } from "@/components/auth/sign-up/UsernameEmailStep";
 import { OtpStep } from "@/components/auth/OtpStep/OtpStep";
@@ -13,13 +13,20 @@ import { PersonalDetailsStep } from "@/components/auth/sign-up/PersonalDetailsSt
 import { FormHeader } from "@/components/auth/FormHeader";
 import { ErrorMessage } from "@/components/shared/ErrorMessage";
 import { useDeviceType } from "@/hooks/shared/useDeviceType";
-import { useTokenStorage } from "@/hooks/auth/useTokenStorage";
+import { axiosInstance } from "@/api/axiosInstance";
+import * as TokenManager from "@/api/tokenManager";
+import type { components } from "@hobbyist/types";
+
+type AuthResult = components["schemas"]["AuthResult"];
 
 export function SignUpScreen() {
   const router = useRouter();
   const { isTablet } = useDeviceType();
-  const { onAuthSuccess } = useTokenStorage();
-  const axiosInstance = useMobileAxiosInstance();
+
+  const handleAuthSuccess = useCallback(async (authResult: AuthResult) => {
+    await TokenManager.storeTokens(authResult);
+  }, []);
+
   const {
     methods,
     step,
@@ -33,7 +40,7 @@ export function SignUpScreen() {
     isCompleting,
     signUpHeaderConfig,
     SIGNUP_TOTAL_STEPS,
-  } = useSignUp((path: string) => router.push(path as Href), axiosInstance, onAuthSuccess);
+  } = useSignUp((path: string) => router.push(path as Href), axiosInstance, handleAuthSuccess);
 
   return (
     <ThemedView
