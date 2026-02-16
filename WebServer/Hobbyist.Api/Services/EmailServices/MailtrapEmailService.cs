@@ -14,8 +14,8 @@ public class MailtrapEmailService(IConfiguration configuration) : IEmailService
             var message = new MimeMessage();
             message.From.Add(
                 new MailboxAddress(
-                    configuration["Mailtrap:FromName"],
-                    configuration["Mailtrap:FromAddress"]
+                    configuration["Mailtrap:FromName"]!,
+                    configuration["Mailtrap:FromAddress"]!
                 )
             );
             message.To.Add(MailboxAddress.Parse(to));
