@@ -28,7 +28,7 @@
     "react-dom": "19.1.0",
     "react-dropzone": "^14.3.5",
     "react-hook-form": "^7.68.0",
-    "zod": "^4.1.12"
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
