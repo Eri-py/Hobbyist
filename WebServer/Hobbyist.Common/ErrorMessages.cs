@@ -54,6 +54,20 @@ public static class ErrorMessages
 
     #endregion
 
+    #region Platform Validation Errors
+
+    /// <summary>
+    /// Message shown when a mobile-only endpoint is accessed from a non-mobile platform.
+    /// </summary>
+    public const string MobileOnlyEndpoint = "This endpoint is for mobile clients only";
+
+    /// <summary>
+    /// Message shown when a web-only endpoint is accessed from a non-web platform.
+    /// </summary>
+    public const string WebOnlyEndpoint = "This endpoint is for web clients only";
+
+    #endregion
+
     #region General Errors
 
     /// <summary>

@@ -33,7 +33,7 @@ const refreshAccessToken = async () => {
     return null;
   }
 
-  const response = await axiosInstance.post("auth/refresh-token", {
+  const response = await axiosInstance.post("auth/refresh-token-mobile", {
     refreshToken,
   });
 
@@ -42,7 +42,7 @@ const refreshAccessToken = async () => {
 
 // Request interceptor - attach access token
 axiosInstance.interceptors.request.use(async (config) => {
-  if (config.url?.includes("auth/refresh-token")) {
+  if (config.url?.includes("auth/refresh-token-mobile")) {
     return config;
   }
 

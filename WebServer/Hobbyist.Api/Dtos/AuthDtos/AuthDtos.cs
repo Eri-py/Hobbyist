@@ -12,3 +12,12 @@ public record class GetUserResponse
 
     public UserDto? User { get; set; }
 }
+
+/// <summary>
+/// Request containing refresh token for mobile token refresh.
+/// </summary>
+public record class RefreshTokenRequest
+{
+    [Required]
+    public required string RefreshToken { get; set; }
+}
