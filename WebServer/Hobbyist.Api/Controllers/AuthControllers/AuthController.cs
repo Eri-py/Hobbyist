@@ -21,12 +21,12 @@ namespace Hobbyist.Api.Controllers.AuthControllers
         }
 
         [HttpGet("refresh-token")]
-        public async Task<ActionResult<AuthResult>> RefreshToken()
+        public async Task<ActionResult<AuthResult>> RefreshTokenWeb()
         {
             var refreshToken = Request.Cookies["__Secure-refreshToken"];
             if (refreshToken is null)
             {
-                return BadRequest("Invalid token");
+                return BadRequest(ErrorMessages.InvalidRefreshToken);
             }
 
             var result = await tokenService.VerifyRefreshTokenAsync(refreshToken);
@@ -37,6 +37,26 @@ namespace Hobbyist.Api.Controllers.AuthControllers
 
             Helpers.SetAuthCookies(HttpContext, result.Content!);
             return NoContent();
+        }
+
+        [HttpPost("refresh-token-mobile")]
+        public async Task<ActionResult<AuthResult>> RefreshTokenMobile(
+            [FromBody] RefreshTokenRequest request
+        )
+        {
+            var platform = ApiHelper.GetPlatform(Request);
+            if (platform != "mobile")
+            {
+                return BadRequest(ErrorMessages.MobileOnlyEndpoint);
+            }
+
+            var result = await tokenService.VerifyRefreshTokenAsync(request.RefreshToken);
+            if (!result.IsSuccess)
+            {
+                return Result<AuthResult>.FromError(result).ToActionResult();
+            }
+
+            return Ok(result.Content);
         }
     }
 }
