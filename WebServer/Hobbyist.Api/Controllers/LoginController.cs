@@ -1,11 +1,10 @@
-using Hobbyist.Api.Dtos.AuthDtos;
+using Hobbyist.Api.Dtos;
 using Hobbyist.Api.Extensions;
-using Hobbyist.Api.Services.AuthServices;
-using Hobbyist.Api.Services.AuthServices.LoginServices;
+using Hobbyist.Api.Services.LoginServices;
 using Hobbyist.Common;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Hobbyist.Api.Controllers.AuthControllers
+namespace Hobbyist.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -38,7 +37,7 @@ namespace Hobbyist.Api.Controllers.AuthControllers
                 return Result<AuthResult>.FromError(result).ToActionResult();
             }
 
-            Helpers.SetAuthCookies(HttpContext, result.Content!);
+            HttpContext.SetAuthCookies(result.Content!);
             return NoContent();
         }
     }

@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Hobbyist.Api.Dtos.AuthDtos;
+namespace Hobbyist.Api.Dtos;
 
 /// <summary>
 /// Response containing current user authentication status and user data if authenticated.
@@ -20,4 +20,12 @@ public record class RefreshTokenRequest
 {
     [Required]
     public required string RefreshToken { get; set; }
+}
+
+public record class AuthResult
+{
+    public required string AccessToken { get; set; }
+    public required string RefreshToken { get; set; }
+    public required DateTime AccessTokenExpiresAt { get; set; }
+    public required DateTime RefreshTokenExpiresAt { get; set; }
 }

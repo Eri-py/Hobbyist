@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Hobbyist.Api.Dtos.AuthDtos;
+namespace Hobbyist.Api.Dtos;
 
 /// <summary>
 /// Credentials for initiating the login process.

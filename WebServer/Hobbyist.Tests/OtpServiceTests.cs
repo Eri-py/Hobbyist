@@ -1,11 +1,10 @@
-using Hobbyist.Api.Services.AuthServices;
-using Hobbyist.Api.Services.AuthServices.OtpServices;
 using Hobbyist.Api.Services.CacheServices;
 using Hobbyist.Api.Services.EmailServices;
+using Hobbyist.Api.Services.OtpServices;
 using Hobbyist.Common;
 using Moq;
 
-namespace Hobbyist.Tests.AuthServicesTests;
+namespace Hobbyist.Tests;
 
 /// <summary>
 /// Unit tests for OtpService.
@@ -36,7 +35,7 @@ public class OtpServiceTests
     public void CreateOtp_ReturnsSixDigitOtp()
     {
         // Act
-        var result = _otpService.CreateOtp(AuthConfig.OtpValidForMinutes);
+        var result = _otpService.CreateOtp(OtpConfig.OtpValidForMinutes);
 
         // Assert
         Assert.That(result.Value, Has.Length.EqualTo(6));
@@ -47,12 +46,12 @@ public class OtpServiceTests
     public void CreateOtp_SetsCorrectExpirationTime()
     {
         // Act
-        var result = _otpService.CreateOtp(AuthConfig.OtpValidForMinutes);
+        var result = _otpService.CreateOtp(OtpConfig.OtpValidForMinutes);
 
         // Assert
         Assert.That(
             result.ExpiresAt,
-            Is.EqualTo(DateTime.UtcNow.AddMinutes(AuthConfig.OtpValidForMinutes)).Within(5).Seconds
+            Is.EqualTo(DateTime.UtcNow.AddMinutes(OtpConfig.OtpValidForMinutes)).Within(5).Seconds
         );
     }
 
@@ -60,9 +59,9 @@ public class OtpServiceTests
     public void CreateOtp_GeneratesDifferentOtpsOnSuccessiveCalls()
     {
         // Act
-        var otp1 = _otpService.CreateOtp(AuthConfig.OtpValidForMinutes);
-        var otp2 = _otpService.CreateOtp(AuthConfig.OtpValidForMinutes);
-        var otp3 = _otpService.CreateOtp(AuthConfig.OtpValidForMinutes);
+        var otp1 = _otpService.CreateOtp(OtpConfig.OtpValidForMinutes);
+        var otp2 = _otpService.CreateOtp(OtpConfig.OtpValidForMinutes);
+        var otp3 = _otpService.CreateOtp(OtpConfig.OtpValidForMinutes);
 
         // Assert
         var otps = new[] { otp1.Value, otp2.Value, otp3.Value };
@@ -73,7 +72,7 @@ public class OtpServiceTests
     public void CreateOtp_AllDigitsAreValid()
     {
         // Act
-        var result = _otpService.CreateOtp(AuthConfig.OtpValidForMinutes);
+        var result = _otpService.CreateOtp(OtpConfig.OtpValidForMinutes);
 
         // Assert
         foreach (var digit in result.Value)
@@ -152,7 +151,7 @@ public class OtpServiceTests
                 x.SendOtpEmailAsync(
                     It.IsAny<string>(),
                     It.IsAny<string>(),
-                    $"{AuthConfig.OtpValidForMinutes} minutes"
+                    $"{OtpConfig.OtpValidForMinutes} minutes"
                 ),
             Times.Once
         );
@@ -219,7 +218,7 @@ public class OtpServiceTests
         Assert.That(capturedExpiration, Is.Not.Null);
         Assert.That(
             capturedExpiration!.Value.TotalMinutes,
-            Is.EqualTo(AuthConfig.OtpValidForMinutes).Within(0.1)
+            Is.EqualTo(OtpConfig.OtpValidForMinutes).Within(0.1)
         );
     }
 
@@ -245,7 +244,7 @@ public class OtpServiceTests
         }
         Assert.That(
             result.Content!.OtpExpiresAt,
-            Is.EqualTo(DateTime.UtcNow.AddMinutes(AuthConfig.OtpValidForMinutes)).Within(5).Seconds
+            Is.EqualTo(DateTime.UtcNow.AddMinutes(OtpConfig.OtpValidForMinutes)).Within(5).Seconds
         );
     }
 

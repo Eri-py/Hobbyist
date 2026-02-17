@@ -1,7 +1,7 @@
-using Hobbyist.Api.Dtos.AuthDtos;
+using Hobbyist.Api.Dtos;
 using Hobbyist.Common;
 
-namespace Hobbyist.Api.Services.AuthServices.OtpServices;
+namespace Hobbyist.Api.Services.OtpServices;
 
 /// <summary>
 /// Contains OTP value and expiration information.

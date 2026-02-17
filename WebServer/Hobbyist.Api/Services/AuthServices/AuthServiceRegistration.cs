@@ -1,8 +1,5 @@
 using System.Text;
-using Hobbyist.Api.Services.AuthServices.LoginServices;
-using Hobbyist.Api.Services.AuthServices.OtpServices;
-using Hobbyist.Api.Services.AuthServices.SignUpServices;
-using Hobbyist.Api.Services.AuthServices.TokenServices;
+using Hobbyist.Api.Services.TokenServices;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 
@@ -12,7 +9,6 @@ public static class AuthServiceRegistration
 {
     public static void AddAuthServices(this IServiceCollection services, IConfiguration configs)
     {
-        // JWT Service
         services
             .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
@@ -29,7 +25,6 @@ public static class AuthServiceRegistration
                         Encoding.UTF8.GetBytes(configs["Jwt:Secret"]!)
                     ),
                 };
-                //  Check Cookie for acccess token rather than header
                 options.Events = new JwtBearerEvents
                 {
                     OnMessageReceived = context =>
@@ -41,8 +36,6 @@ public static class AuthServiceRegistration
             });
 
         services.AddScoped<ITokenService, JwtService>();
-        services.AddScoped<IOtpService, OtpService>();
-        services.AddScoped<ILoginService, LoginService>();
-        services.AddScoped<ISignUpService, SignUpService>();
+        services.AddScoped<IAuthService, AuthService>();
     }
 }

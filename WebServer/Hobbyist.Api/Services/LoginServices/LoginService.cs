@@ -1,13 +1,13 @@
 using Hobbyist.Api.Data;
 using Hobbyist.Api.Data.Entities;
-using Hobbyist.Api.Dtos.AuthDtos;
-using Hobbyist.Api.Services.AuthServices.OtpServices;
-using Hobbyist.Api.Services.AuthServices.TokenServices;
+using Hobbyist.Api.Dtos;
+using Hobbyist.Api.Services.OtpServices;
+using Hobbyist.Api.Services.TokenServices;
 using Hobbyist.Common;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
-namespace Hobbyist.Api.Services.AuthServices.LoginServices;
+namespace Hobbyist.Api.Services.LoginServices;
 
 public class LoginService(
     HobbyistDbContext context,
@@ -39,7 +39,7 @@ public class LoginService(
             return Result<StartLoginResponse>.NotFound(ErrorMessages.InvalidLoginCredentials);
 
         // Send OTP for email verification
-        var otpResult = await otpService.SendOtpAsync(user.Email!, AuthConfig.LoginPurpose);
+        var otpResult = await otpService.SendOtpAsync(user.Email!, LoginConfig.LoginPurpose);
         if (!otpResult.IsSuccess)
         {
             return Result<StartLoginResponse>.FromError(otpResult);
@@ -69,7 +69,7 @@ public class LoginService(
             return Result<AuthResult>.BadRequest(ErrorMessages.InvalidOrExpiredOtp);
 
         // Verify OTP against stored verification
-        var verifyResult = otpService.VerifyOtp(user.Email!, otp, AuthConfig.LoginPurpose);
+        var verifyResult = otpService.VerifyOtp(user.Email!, otp, LoginConfig.LoginPurpose);
         if (!verifyResult.IsSuccess)
         {
             return Result<AuthResult>.FromError(verifyResult);
@@ -81,7 +81,7 @@ public class LoginService(
         {
             // Create refresh token and store in database
             var refreshTokenDetails = tokenService.CreateRefreshToken(
-                AuthConfig.RefreshTokenValidForDays
+                TokenConfig.RefreshTokenValidForDays
             );
             var refreshTokenEntry = new RefreshTokenEntity
             {
@@ -99,7 +99,7 @@ public class LoginService(
             // Create access token and return authentication result
             var accessTokenDetails = tokenService.CreateAccessToken(
                 user,
-                AuthConfig.AccessTokenValidForMinutes
+                TokenConfig.AccessTokenValidForMinutes
             );
             return Result<AuthResult>.Success(
                 new AuthResult
@@ -129,7 +129,7 @@ public class LoginService(
             return Result<OtpResponse>.NotFound(ErrorMessages.UserNotFound);
 
         // Resend OTP to user's email
-        var otpResult = await otpService.SendOtpAsync(user.Email!, AuthConfig.LoginPurpose);
+        var otpResult = await otpService.SendOtpAsync(user.Email!, LoginConfig.LoginPurpose);
         return otpResult;
     }
 }

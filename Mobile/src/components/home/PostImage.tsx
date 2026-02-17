@@ -7,12 +7,7 @@ type PostImageProps = {
 export function PostImage({ imageUrl }: PostImageProps) {
   return (
     <View style={styles.container}>
-      <Image
-        source={{ uri: imageUrl }}
-        style={styles.image}
-        resizeMode="cover"
-        onError={() => console.log("Error loading image")}
-      />
+      <Image source={{ uri: imageUrl }} style={styles.image} resizeMode="cover" />
     </View>
   );
 }

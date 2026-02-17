@@ -7,19 +7,23 @@ import { ThemedView } from "@/components/shared/ThemedView";
 import { PostTile, Post } from "@/components/home/PostTile";
 import { useDeviceType } from "@/hooks/shared/useDeviceType";
 import { mockPosts } from "@/components/home/mockData";
+import { useAuth } from "@hobbyist/hooks";
 
 const HomeScreen = () => {
   const { isTablet, isPhone } = useDeviceType();
   const [snackbarVisible, setSnackbarVisible] = useState(false);
   const theme = useTheme();
   const router = useRouter();
+  const { isAuthenticated } = useAuth();
 
   const onDismissSnackBar = () => setSnackbarVisible(false);
 
-  // Show snackbar only on first app startup
+  // Show snackbar only when not authenticated
   useEffect(() => {
-    setSnackbarVisible(true);
-  }, []);
+    if (!isAuthenticated) {
+      setSnackbarVisible(true);
+    }
+  }, [isAuthenticated]);
 
   const handleLoginPress = () => {
     router.replace("/login");
@@ -43,20 +47,23 @@ const HomeScreen = () => {
           </View>
         ))}
       </ScrollView>
-      <Snackbar
-        visible={snackbarVisible}
-        duration={1000000000000000}
-        onDismiss={onDismissSnackBar}
-        style={{ backgroundColor: theme.colors.surface }}
-        wrapperStyle={styles.snackbarWrapper}
-        action={{
-          label: "Login",
-          onPress: handleLoginPress,
-        }}
-        onIconPress={onDismissSnackBar}
-      >
-        <Text>Please login to interact with posts</Text>
-      </Snackbar>
+
+      {!isAuthenticated && (
+        <Snackbar
+          visible={snackbarVisible}
+          duration={Infinity}
+          onDismiss={onDismissSnackBar}
+          style={{ backgroundColor: theme.colors.surface }}
+          wrapperStyle={styles.snackbarWrapper}
+          action={{
+            label: "Login",
+            onPress: handleLoginPress,
+          }}
+          onIconPress={onDismissSnackBar}
+        >
+          <Text>Please login to interact with posts</Text>
+        </Snackbar>
+      )}
     </ThemedView>
   );
 };

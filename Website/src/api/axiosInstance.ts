@@ -25,7 +25,7 @@ const processQueue = (error: unknown = null) => {
 };
 
 const getNewAccessToken = () => {
-  return axiosInstance.get("auth/refresh-token");
+  return axiosInstance.post("auth/refresh-token");
 };
 
 type CustomAxiosRequestConfig = { _retry?: boolean } & InternalAxiosRequestConfig;
