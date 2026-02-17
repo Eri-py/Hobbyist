@@ -41,7 +41,7 @@
     "react": "19.2.4",
     "react-dom": "19.1.0",
     "react-hook-form": "^7.71.1",
-    "react-native": "0.81.5",
+    "react-native": "0.84.0",
     "react-native-gesture-handler": "~2.28.0",
     "react-native-keyboard-controller": "1.20.7",
     "react-native-otp-textinput": "^1.1.7",
