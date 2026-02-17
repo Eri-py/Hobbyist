@@ -13,9 +13,14 @@ type UsernameAndEmailStepProps = {
 export function UsernameAndEmailStep({ handleNext, isPending }: UsernameAndEmailStepProps) {
   return (
     <View style={styles.container}>
-      <FormInput name="username" label="Username" startIcon="account-circle" />
+      <FormInput
+        name="username"
+        label="Username"
+        startIcon="account-circle"
+        autoComplete="username"
+      />
 
-      <FormInput name="email" label="Email" startIcon="email" />
+      <FormInput name="email" label="Email" startIcon="email" autoComplete="email" />
 
       <ThemedButton mode="contained" onPress={handleNext} loading={isPending}>
         Continue

@@ -48,7 +48,10 @@ export function LoginScreen() {
       ]}
     >
       <FormProvider {...methods}>
-        <KeyboardAwareScrollView showsVerticalScrollIndicator={false}>
+        <KeyboardAwareScrollView 
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
           <View style={styles.formContainer}>
             {serverErrorMessage && <ErrorMessage>{serverErrorMessage}</ErrorMessage>}
 

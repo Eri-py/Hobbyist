@@ -3,7 +3,7 @@ import { Controller, useFormContext, get } from "react-hook-form";
 
 import { FormInput } from "../FormInputs";
 import { ThemedButton } from "@/components/shared/ThemedButton";
-import { SegmentedDatePicker } from "../SegmentedDatePicker";
+import { DatePicker } from "@/components/shared/DatePicker";
 
 type PersonalDetailsStepProps = {
   onSubmit: () => void;
@@ -26,7 +26,7 @@ export function PersonalDetailsStep({ onSubmit, isPending }: PersonalDetailsStep
         control={control}
         name="dateOfBirth"
         render={({ field: { onChange, value } }) => (
-          <SegmentedDatePicker
+          <DatePicker
             value={value}
             onChange={onChange}
             error={get(errors, "dateOfBirth")?.message as string}
