@@ -1,13 +1,12 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Hobbyist.Api.Data.Entities;
-using Hobbyist.Api.Services.AuthServices;
-using Hobbyist.Api.Services.AuthServices.TokenServices;
+using Hobbyist.Api.Services.TokenServices;
 using Hobbyist.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
-namespace Hobbyist.Tests.AuthServicesTests;
+namespace Hobbyist.Tests;
 
 [TestFixture]
 public class JwtServiceTests : DatabaseTestBase
@@ -72,7 +71,7 @@ public class JwtServiceTests : DatabaseTestBase
         // Act
         var result = _jwtService.CreateAccessToken(
             _testUser,
-            AuthConfig.AccessTokenValidForMinutes
+            TokenConfig.AccessTokenValidForMinutes
         );
 
         // Assert - Basic token properties
@@ -82,7 +81,7 @@ public class JwtServiceTests : DatabaseTestBase
             Assert.That(result.Value, Is.Not.Null.And.Not.Empty);
             Assert.That(
                 result.ExpiresAt,
-                Is.EqualTo(DateTime.UtcNow.AddMinutes(AuthConfig.AccessTokenValidForMinutes))
+                Is.EqualTo(DateTime.UtcNow.AddMinutes(TokenConfig.AccessTokenValidForMinutes))
                     .Within(5)
                     .Seconds
             );
@@ -123,11 +122,11 @@ public class JwtServiceTests : DatabaseTestBase
         // Act
         var token1 = _jwtService.CreateAccessToken(
             _testUser,
-            AuthConfig.AccessTokenValidForMinutes
+            TokenConfig.AccessTokenValidForMinutes
         );
         var token2 = _jwtService.CreateAccessToken(
             _testUser2,
-            AuthConfig.AccessTokenValidForMinutes
+            TokenConfig.AccessTokenValidForMinutes
         );
 
         // Assert
@@ -142,8 +141,8 @@ public class JwtServiceTests : DatabaseTestBase
     public void CreateRefreshToken_GeneratesUnique64CharacterTokens()
     {
         // Act
-        var token1 = _jwtService.CreateRefreshToken(AuthConfig.RefreshTokenValidForDays);
-        var token2 = _jwtService.CreateRefreshToken(AuthConfig.RefreshTokenValidForDays);
+        var token1 = _jwtService.CreateRefreshToken(TokenConfig.RefreshTokenValidForDays);
+        var token2 = _jwtService.CreateRefreshToken(TokenConfig.RefreshTokenValidForDays);
 
         using (Assert.EnterMultipleScope())
         {
@@ -158,12 +157,12 @@ public class JwtServiceTests : DatabaseTestBase
     public void CreateRefreshToken_SetsCorrectExpiration()
     {
         // Act
-        var result = _jwtService.CreateRefreshToken(AuthConfig.RefreshTokenValidForDays);
+        var result = _jwtService.CreateRefreshToken(TokenConfig.RefreshTokenValidForDays);
 
         // Assert
         Assert.That(
             result.ExpiresAt,
-            Is.EqualTo(DateTime.UtcNow.AddDays(AuthConfig.RefreshTokenValidForDays))
+            Is.EqualTo(DateTime.UtcNow.AddDays(TokenConfig.RefreshTokenValidForDays))
                 .Within(5)
                 .Seconds
         );
@@ -173,7 +172,7 @@ public class JwtServiceTests : DatabaseTestBase
     public void CreateRefreshToken_ContainsOnlyValidCharacters()
     {
         // Act
-        var result = _jwtService.CreateRefreshToken(AuthConfig.RefreshTokenValidForDays);
+        var result = _jwtService.CreateRefreshToken(TokenConfig.RefreshTokenValidForDays);
 
         // Assert
         Assert.That(result.Value, Does.Match(@"^[A-Za-z0-9]{64}$"));
@@ -226,7 +225,7 @@ public class JwtServiceTests : DatabaseTestBase
             {
                 Id = Guid.NewGuid(),
                 TokenHash = _jwtService.HashToken(refreshToken),
-                TokenExpiresAt = DateTime.UtcNow.AddDays(AuthConfig.RefreshTokenValidForDays),
+                TokenExpiresAt = DateTime.UtcNow.AddDays(TokenConfig.RefreshTokenValidForDays),
                 UserId = _testUser.Id,
                 CreatedAt = DateTime.UtcNow,
             }
@@ -262,7 +261,7 @@ public class JwtServiceTests : DatabaseTestBase
             {
                 Id = Guid.NewGuid(),
                 TokenHash = originalHash,
-                TokenExpiresAt = DateTime.UtcNow.AddDays(AuthConfig.RefreshTokenValidForDays),
+                TokenExpiresAt = DateTime.UtcNow.AddDays(TokenConfig.RefreshTokenValidForDays),
                 UserId = _testUser.Id,
                 CreatedAt = DateTime.UtcNow,
             }
@@ -339,7 +338,7 @@ public class JwtServiceTests : DatabaseTestBase
             {
                 Id = Guid.NewGuid(),
                 TokenHash = _jwtService.HashToken(refreshToken),
-                TokenExpiresAt = DateTime.UtcNow.AddDays(AuthConfig.RefreshTokenValidForDays),
+                TokenExpiresAt = DateTime.UtcNow.AddDays(TokenConfig.RefreshTokenValidForDays),
                 UserId = _testUser.Id,
                 CreatedAt = DateTime.UtcNow,
             }
@@ -355,13 +354,13 @@ public class JwtServiceTests : DatabaseTestBase
         {
             Assert.That(
                 result.Content.AccessTokenExpiresAt,
-                Is.EqualTo(DateTime.UtcNow.AddMinutes(AuthConfig.AccessTokenValidForMinutes))
+                Is.EqualTo(DateTime.UtcNow.AddMinutes(TokenConfig.AccessTokenValidForMinutes))
                     .Within(5)
                     .Seconds
             );
             Assert.That(
                 result.Content.RefreshTokenExpiresAt,
-                Is.EqualTo(DateTime.UtcNow.AddDays(AuthConfig.RefreshTokenValidForDays))
+                Is.EqualTo(DateTime.UtcNow.AddDays(TokenConfig.RefreshTokenValidForDays))
                     .Within(5)
                     .Seconds
             );

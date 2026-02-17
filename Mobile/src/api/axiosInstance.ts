@@ -33,8 +33,10 @@ const refreshAccessToken = async () => {
     return null;
   }
 
-  const response = await axiosInstance.post("auth/refresh-token-mobile", {
-    refreshToken,
+  const response = await axiosInstance.post("/auth/refresh-token", null, {
+    headers: {
+      refreshToken,
+    },
   });
 
   return response.data;
@@ -42,7 +44,7 @@ const refreshAccessToken = async () => {
 
 // Request interceptor - attach access token
 axiosInstance.interceptors.request.use(async (config) => {
-  if (config.url?.includes("auth/refresh-token-mobile")) {
+  if (config.url?.includes("auth/refresh-token")) {
     return config;
   }
 
@@ -80,6 +82,12 @@ axiosInstance.interceptors.response.use(undefined, async (error: AxiosError) => 
 
   try {
     const newTokens = await refreshAccessToken();
+    if (!newTokens) {
+      processQueue(new Error("Missing refresh token"));
+      await TokenManager.clearTokens();
+      return Promise.reject(new Error("Missing refresh token"));
+    }
+
     await TokenManager.storeTokens(newTokens);
     processQueue();
     return axiosInstance.request(originalRequest);

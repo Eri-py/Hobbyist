@@ -4,11 +4,12 @@ using System.Security.Cryptography;
 using System.Text;
 using Hobbyist.Api.Data;
 using Hobbyist.Api.Data.Entities;
+using Hobbyist.Api.Dtos;
 using Hobbyist.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
-namespace Hobbyist.Api.Services.AuthServices.TokenServices;
+namespace Hobbyist.Api.Services.TokenServices;
 
 public class JwtService(IConfiguration configuration, HobbyistDbContext context) : ITokenService
 {
@@ -82,8 +83,11 @@ public class JwtService(IConfiguration configuration, HobbyistDbContext context)
             }
 
             // Generate new tokens
-            var newRefreshToken = CreateRefreshToken(AuthConfig.RefreshTokenValidForDays);
-            var accessToken = CreateAccessToken(token.User!, AuthConfig.AccessTokenValidForMinutes);
+            var newRefreshToken = CreateRefreshToken(TokenConfig.RefreshTokenValidForDays);
+            var accessToken = CreateAccessToken(
+                token.User!,
+                TokenConfig.AccessTokenValidForMinutes
+            );
 
             // Update refresh token with new values (token rotation)
             token.TokenHash = HashToken(newRefreshToken.Value);

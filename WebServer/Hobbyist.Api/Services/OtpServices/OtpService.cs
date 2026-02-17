@@ -1,9 +1,9 @@
-using Hobbyist.Api.Dtos.AuthDtos;
+using Hobbyist.Api.Dtos;
 using Hobbyist.Api.Services.CacheServices;
 using Hobbyist.Api.Services.EmailServices;
 using Hobbyist.Common;
 
-namespace Hobbyist.Api.Services.AuthServices.OtpServices;
+namespace Hobbyist.Api.Services.OtpServices;
 
 public class OtpService(ICache cache, IEmailService emailService) : IOtpService
 {
@@ -22,13 +22,13 @@ public class OtpService(ICache cache, IEmailService emailService) : IOtpService
         var cacheKey = GetOtpCacheKey(email, purpose);
 
         // Create OTP with configured validity
-        var otpDetails = CreateOtp(AuthConfig.OtpValidForMinutes);
+        var otpDetails = CreateOtp(OtpConfig.OtpValidForMinutes);
 
         // Send OTP via email service
         var emailResult = await emailService.SendOtpEmailAsync(
             to: email,
             otp: otpDetails.Value,
-            otpValidFor: $"{AuthConfig.OtpValidForMinutes} minutes"
+            otpValidFor: $"{OtpConfig.OtpValidForMinutes} minutes"
         );
 
         // Return error if email sending fails
@@ -38,7 +38,7 @@ public class OtpService(ICache cache, IEmailService emailService) : IOtpService
         }
 
         // Store OTP in cache with expiration
-        cache.Set(cacheKey, otpDetails.Value, TimeSpan.FromMinutes(AuthConfig.OtpValidForMinutes));
+        cache.Set(cacheKey, otpDetails.Value, TimeSpan.FromMinutes(OtpConfig.OtpValidForMinutes));
 
         // Return success with expiration time
         return Result<OtpResponse>.Success(new OtpResponse { OtpExpiresAt = otpDetails.ExpiresAt });

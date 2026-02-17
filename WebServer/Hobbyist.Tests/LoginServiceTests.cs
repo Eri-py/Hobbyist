@@ -1,15 +1,14 @@
 using Hobbyist.Api.Data.Entities;
-using Hobbyist.Api.Dtos.AuthDtos;
-using Hobbyist.Api.Services.AuthServices;
-using Hobbyist.Api.Services.AuthServices.LoginServices;
-using Hobbyist.Api.Services.AuthServices.OtpServices;
-using Hobbyist.Api.Services.AuthServices.TokenServices;
+using Hobbyist.Api.Dtos;
+using Hobbyist.Api.Services.LoginServices;
+using Hobbyist.Api.Services.OtpServices;
+using Hobbyist.Api.Services.TokenServices;
 using Hobbyist.Common;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 
-namespace Hobbyist.Tests.AuthServicesTests;
+namespace Hobbyist.Tests;
 
 [TestFixture]
 public class LoginServiceTests : DatabaseTestBase
@@ -64,7 +63,7 @@ public class LoginServiceTests : DatabaseTestBase
 
         var expectedOtpResponse = new OtpResponse
         {
-            OtpExpiresAt = DateTime.UtcNow.AddMinutes(AuthConfig.OtpValidForMinutes),
+            OtpExpiresAt = DateTime.UtcNow.AddMinutes(OtpConfig.OtpValidForMinutes),
         };
 
         _otpServiceMock
@@ -92,7 +91,7 @@ public class LoginServiceTests : DatabaseTestBase
         }
 
         _otpServiceMock.Verify(
-            x => x.SendOtpAsync(_testUser.Email, AuthConfig.LoginPurpose),
+            x => x.SendOtpAsync(_testUser.Email, LoginConfig.LoginPurpose),
             Times.Once
         );
     }
@@ -109,7 +108,7 @@ public class LoginServiceTests : DatabaseTestBase
 
         var expectedOtpResponse = new OtpResponse
         {
-            OtpExpiresAt = DateTime.UtcNow.AddMinutes(AuthConfig.OtpValidForMinutes),
+            OtpExpiresAt = DateTime.UtcNow.AddMinutes(OtpConfig.OtpValidForMinutes),
         };
 
         _otpServiceMock
@@ -129,7 +128,7 @@ public class LoginServiceTests : DatabaseTestBase
         Assert.That(result.Content.Email, Is.EqualTo(_testUser.Email));
 
         _otpServiceMock.Verify(
-            x => x.SendOtpAsync(_testUser.Email, AuthConfig.LoginPurpose),
+            x => x.SendOtpAsync(_testUser.Email, LoginConfig.LoginPurpose),
             Times.Once
         );
     }
@@ -214,7 +213,7 @@ public class LoginServiceTests : DatabaseTestBase
         }
 
         _otpServiceMock.Verify(
-            x => x.SendOtpAsync(_testUser.Email, AuthConfig.LoginPurpose),
+            x => x.SendOtpAsync(_testUser.Email, LoginConfig.LoginPurpose),
             Times.Once
         );
     }
@@ -250,7 +249,7 @@ public class LoginServiceTests : DatabaseTestBase
 
         var expectedOtpResponse = new OtpResponse
         {
-            OtpExpiresAt = DateTime.UtcNow.AddMinutes(AuthConfig.OtpValidForMinutes),
+            OtpExpiresAt = DateTime.UtcNow.AddMinutes(OtpConfig.OtpValidForMinutes),
         };
 
         _otpServiceMock
@@ -263,7 +262,7 @@ public class LoginServiceTests : DatabaseTestBase
         // Assert
         Assert.That(result.IsSuccess, Is.True);
         _otpServiceMock.Verify(
-            x => x.SendOtpAsync(mixedCaseUser.Email, AuthConfig.LoginPurpose),
+            x => x.SendOtpAsync(mixedCaseUser.Email, LoginConfig.LoginPurpose),
             Times.Once
         );
     }
@@ -280,10 +279,10 @@ public class LoginServiceTests : DatabaseTestBase
 
         var accessToken = "access_token";
         var accessTokenExpiresAt = DateTime.UtcNow.AddMinutes(
-            AuthConfig.AccessTokenValidForMinutes
+            TokenConfig.AccessTokenValidForMinutes
         );
         var refreshToken = "refresh_token";
-        var refreshTokenExpiresAt = DateTime.UtcNow.AddDays(AuthConfig.RefreshTokenValidForDays);
+        var refreshTokenExpiresAt = DateTime.UtcNow.AddDays(TokenConfig.RefreshTokenValidForDays);
 
         _otpServiceMock
             .Setup(x => x.VerifyOtp(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
@@ -326,15 +325,15 @@ public class LoginServiceTests : DatabaseTestBase
         Assert.That(refreshTokenExists, Is.True);
 
         _otpServiceMock.Verify(
-            x => x.VerifyOtp(_testUser.Email, request.Otp, AuthConfig.LoginPurpose),
+            x => x.VerifyOtp(_testUser.Email, request.Otp, LoginConfig.LoginPurpose),
             Times.Once
         );
         _tokenServiceMock.Verify(
-            x => x.CreateRefreshToken(AuthConfig.RefreshTokenValidForDays),
+            x => x.CreateRefreshToken(TokenConfig.RefreshTokenValidForDays),
             Times.Once
         );
         _tokenServiceMock.Verify(
-            x => x.CreateAccessToken(_testUser, AuthConfig.AccessTokenValidForMinutes),
+            x => x.CreateAccessToken(_testUser, TokenConfig.AccessTokenValidForMinutes),
             Times.Once
         );
         _tokenServiceMock.Verify(x => x.HashToken(refreshToken), Times.Once);
@@ -348,10 +347,10 @@ public class LoginServiceTests : DatabaseTestBase
 
         var accessToken = "access_token";
         var accessTokenExpiresAt = DateTime.UtcNow.AddMinutes(
-            AuthConfig.AccessTokenValidForMinutes
+            TokenConfig.AccessTokenValidForMinutes
         );
         var refreshToken = "refresh_token";
-        var refreshTokenExpiresAt = DateTime.UtcNow.AddDays(AuthConfig.RefreshTokenValidForDays);
+        var refreshTokenExpiresAt = DateTime.UtcNow.AddDays(TokenConfig.RefreshTokenValidForDays);
 
         _otpServiceMock
             .Setup(x => x.VerifyOtp(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
@@ -380,7 +379,7 @@ public class LoginServiceTests : DatabaseTestBase
         }
 
         _otpServiceMock.Verify(
-            x => x.VerifyOtp(_testUser.Email!, request.Otp, AuthConfig.LoginPurpose),
+            x => x.VerifyOtp(_testUser.Email!, request.Otp, LoginConfig.LoginPurpose),
             Times.Once
         );
     }
@@ -480,7 +479,7 @@ public class LoginServiceTests : DatabaseTestBase
                 new TokenDetails
                 {
                     Value = "refresh_token",
-                    ExpiresAt = DateTime.UtcNow.AddDays(AuthConfig.RefreshTokenValidForDays),
+                    ExpiresAt = DateTime.UtcNow.AddDays(TokenConfig.RefreshTokenValidForDays),
                 }
             );
 
@@ -490,7 +489,7 @@ public class LoginServiceTests : DatabaseTestBase
                 new TokenDetails
                 {
                     Value = "access_token",
-                    ExpiresAt = DateTime.UtcNow.AddMinutes(AuthConfig.AccessTokenValidForMinutes),
+                    ExpiresAt = DateTime.UtcNow.AddMinutes(TokenConfig.AccessTokenValidForMinutes),
                 }
             );
 
@@ -502,7 +501,7 @@ public class LoginServiceTests : DatabaseTestBase
         // Assert
         Assert.That(result.IsSuccess, Is.True);
         _otpServiceMock.Verify(
-            x => x.VerifyOtp(mixedCaseUser.Email, request.Otp, AuthConfig.LoginPurpose),
+            x => x.VerifyOtp(mixedCaseUser.Email, request.Otp, LoginConfig.LoginPurpose),
             Times.Once
         );
     }

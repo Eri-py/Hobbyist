@@ -2,6 +2,9 @@ using Hobbyist.Api.Data;
 using Hobbyist.Api.Services.AuthServices;
 using Hobbyist.Api.Services.CacheServices;
 using Hobbyist.Api.Services.EmailServices;
+using Hobbyist.Api.Services.LoginServices;
+using Hobbyist.Api.Services.OtpServices;
+using Hobbyist.Api.Services.SignUpServices;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -34,6 +37,9 @@ if (builder.Environment.IsDevelopment())
 
 builder.Services.AddDatabases(builder.Configuration);
 builder.Services.AddAuthServices(builder.Configuration);
+builder.Services.AddScoped<IOtpService, OtpService>();
+builder.Services.AddScoped<ILoginService, LoginService>();
+builder.Services.AddScoped<ISignUpService, SignUpService>();
 builder.Services.AddEmailServices(builder.Environment);
 builder.Services.AddCacheServices();
 
@@ -51,6 +57,7 @@ if (!app.Environment.IsDevelopment())
 {
     app.UseHttpsRedirection();
 }
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

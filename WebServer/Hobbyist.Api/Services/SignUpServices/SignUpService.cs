@@ -1,13 +1,13 @@
 using Hobbyist.Api.Data;
 using Hobbyist.Api.Data.Entities;
-using Hobbyist.Api.Dtos.AuthDtos;
-using Hobbyist.Api.Services.AuthServices.OtpServices;
-using Hobbyist.Api.Services.AuthServices.TokenServices;
+using Hobbyist.Api.Dtos;
+using Hobbyist.Api.Services.OtpServices;
+using Hobbyist.Api.Services.TokenServices;
 using Hobbyist.Common;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
-namespace Hobbyist.Api.Services.AuthServices.SignUpServices;
+namespace Hobbyist.Api.Services.SignUpServices;
 
 public class SignUpService(
     HobbyistDbContext context,
@@ -29,7 +29,7 @@ public class SignUpService(
         }
 
         // Send OTP for email verification
-        return await otpService.SendOtpAsync(email, AuthConfig.SignUpPurpose);
+        return await otpService.SendOtpAsync(email, SignUpConfig.SignUpPurpose);
     }
 
     public Result VerifyOtp(VerifyOtpRequest request)
@@ -38,7 +38,7 @@ public class SignUpService(
         var email = request.Email.ToLower();
         var otp = request.Otp;
 
-        return otpService.VerifyOtp(email, otp, AuthConfig.SignUpPurpose);
+        return otpService.VerifyOtp(email, otp, SignUpConfig.SignUpPurpose);
     }
 
     public async Task<Result<OtpResponse>> ResendOtpAsync(ResendOtpRequest request)
@@ -46,7 +46,7 @@ public class SignUpService(
         // Normalize email and resend OTP
         var email = request.Email.ToLower();
 
-        return await otpService.SendOtpAsync(email, AuthConfig.SignUpPurpose);
+        return await otpService.SendOtpAsync(email, SignUpConfig.SignUpPurpose);
     }
 
     public async Task<Result<AuthResult>> CompleteSignUpAsync(CompleteSignUpRequest request)
@@ -56,7 +56,7 @@ public class SignUpService(
         var username = request.Username.ToLower();
 
         // Verify OTP was completed before proceeding
-        if (!otpService.IsVerified(email, AuthConfig.SignUpPurpose))
+        if (!otpService.IsVerified(email, SignUpConfig.SignUpPurpose))
         {
             return Result<AuthResult>.BadRequest(ErrorMessages.EmailVerificationRequired);
         }
@@ -65,7 +65,7 @@ public class SignUpService(
         var (exists, errorMessage) = await CheckExistingUserAsync(username, email);
         if (exists)
         {
-            otpService.ClearVerification(email, AuthConfig.SignUpPurpose);
+            otpService.ClearVerification(email, SignUpConfig.SignUpPurpose);
             return Result<AuthResult>.Conflict(errorMessage);
         }
 
@@ -92,7 +92,7 @@ public class SignUpService(
 
             // Generate refresh token
             var refreshTokenDetails = tokenService.CreateRefreshToken(
-                AuthConfig.RefreshTokenValidForDays
+                TokenConfig.RefreshTokenValidForDays
             );
             var refreshTokenEntry = new RefreshTokenEntity
             {
@@ -108,12 +108,12 @@ public class SignUpService(
             await transaction.CommitAsync();
 
             // Clear OTP verification now that user is created
-            otpService.ClearVerification(email, AuthConfig.SignUpPurpose);
+            otpService.ClearVerification(email, SignUpConfig.SignUpPurpose);
 
             // Generate access token for immediate use
             var accessTokenDetails = tokenService.CreateAccessToken(
                 user,
-                AuthConfig.AccessTokenValidForMinutes
+                TokenConfig.AccessTokenValidForMinutes
             );
 
             // Return authentication tokens to client

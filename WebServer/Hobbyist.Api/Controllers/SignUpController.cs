@@ -1,11 +1,10 @@
-using Hobbyist.Api.Dtos.AuthDtos;
+using Hobbyist.Api.Dtos;
 using Hobbyist.Api.Extensions;
-using Hobbyist.Api.Services.AuthServices;
-using Hobbyist.Api.Services.AuthServices.SignUpServices;
+using Hobbyist.Api.Services.SignUpServices;
 using Hobbyist.Common;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Hobbyist.Api.Controllers.AuthControllers
+namespace Hobbyist.Api.Controllers
 {
     [Route("api/sign-up")]
     [ApiController]
@@ -45,13 +44,13 @@ namespace Hobbyist.Api.Controllers.AuthControllers
                 return Result<AuthResult>.FromError(result).ToActionResult();
             }
 
-            var device = ApiHelper.GetPlatform(Request);
+            var device = Request.GetPlatform();
             if (device.Equals("mobile"))
             {
                 return Ok(result.Content);
             }
 
-            Helpers.SetAuthCookies(HttpContext, result.Content!);
+            HttpContext.SetAuthCookies(result.Content!);
             return NoContent();
         }
     }
