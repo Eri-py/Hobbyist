@@ -49,8 +49,8 @@ importers:
         specifier: ^5.2.2
         version: 5.2.2(react-hook-form@7.71.1(react@19.1.0))
       '@react-native-picker/picker':
-        specifier: 2.11.1
-        version: 2.11.1(react-native@0.81.5(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.1.0))(react@19.1.0)
+        specifier: 2.11.4
+        version: 2.11.4(react-native@0.81.5(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.1.0))(react@19.1.0)
       '@react-navigation/bottom-tabs':
         specifier: ^7.14.0
         version: 7.14.0(@react-navigation/native@7.1.28(react-native@0.81.5(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.1.0))(react@19.1.0))(react-native-safe-area-context@5.6.2(react-native@0.81.5(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.1.0))(react@19.1.0))(react-native-screens@4.16.0(react-native@0.81.5(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.1.0))(react@19.1.0))(react-native@0.81.5(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.1.0))(react@19.1.0)
@@ -1669,8 +1669,8 @@ packages:
       '@types/react':
         optional: true
 
-  '@react-native-picker/picker@2.11.1':
-    resolution: {integrity: sha512-ThklnkK4fV3yynnIIRBkxxjxR4IFbdMNJVF6tlLdOJ/zEFUEFUEdXY0KmH0iYzMwY8W4/InWsLiA7AkpAbnexA==}
+  '@react-native-picker/picker@2.11.4':
+    resolution: {integrity: sha512-Kf8h1AMnBo54b1fdiVylP2P/iFcZqzpMYcglC28EEFB1DEnOjsNr6Ucqc+3R9e91vHxEDnhZFbYDmAe79P2gjA==}
     peerDependencies:
       react: 19.1.0
       react-native: '*'
@@ -7251,7 +7251,7 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.2.14
 
-  '@react-native-picker/picker@2.11.1(react-native@0.81.5(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.1.0))(react@19.1.0)':
+  '@react-native-picker/picker@2.11.4(react-native@0.81.5(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.1.0))(react@19.1.0)':
     dependencies:
       react: 19.1.0
       react-native: 0.81.5(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.1.0)
