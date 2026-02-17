@@ -11,7 +11,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!isPending && value.isAuthenticated === false) {
       void TokenManager.clearTokens();
     }
-  });
+  }, [isPending, value.isAuthenticated]);
 
   if (isPending) {
     return <></>;

@@ -1,12 +1,13 @@
 import { type ReactNode, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { AxiosInstance } from "axios";
 
 import { SignUpFormSchema, type SignUpFormSchemaTypes } from "@hobbyist/form-schemas";
 import type { components } from "@hobbyist/types";
 import { type ServerError, useServerError } from "../shared/useServerError";
+import { USER_DETAILS_QUERY_KEY } from "../app/useAuth";
 
 // DTOs
 type StartSignUpRequest = components["schemas"]["StartSignUpRequest"];
@@ -61,6 +62,7 @@ export function useSignUp(
   const { serverErrorMessage, handleServerError, clearServerError } = useServerError();
   const [step, setStep] = useState<number>(0);
   const [otpExpiresAt, setOtpExpiresAt] = useState<Date | null>(null);
+  const queryClient = useQueryClient();
 
   // API functions
   const startSignUpApi = (data: StartSignUpRequest) => {
@@ -105,6 +107,7 @@ export function useSignUp(
         // Mobile: Pass tokens to be stored securely
         await onAuthSuccess(authResult);
       }
+      await queryClient.invalidateQueries({ queryKey: USER_DETAILS_QUERY_KEY });
       navigate("/");
     },
     onError: (error: ServerError) => handleServerError(error),
