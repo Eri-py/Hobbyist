@@ -10,7 +10,7 @@ import AddIcon from "@mui/icons-material/Add";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 
 import { useNavigationButtons } from "@/hooks/shared/useNavigationButtons";
-import { useAuth } from "@/hooks/app/useAuth";
+import { useAuth } from "@hobbyist/hooks";
 import { useProfile } from "@/hooks/profile/useProfile";
 
 const CustomBadge = styled(Badge)`

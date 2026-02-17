@@ -14,7 +14,7 @@ import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
 import Rating from "@mui/material/Rating";
 
-import { useAuth } from "@/hooks/app/useAuth";
+import { useAuth } from "@hobbyist/hooks";
 
 type NavigationItem = {
   label: string;

@@ -1,8 +1,9 @@
 import type { ReactNode } from "react";
-import { AuthProvider } from "./AuthProvider";
+
 import { DesktopHeaderProvider } from "./DesktopHeaderProvider";
 import { MobileHeaderProvider } from "./MobileHeaderProvider";
 import { SidebarProvider } from "./SidebarProvider";
+import { AuthProvider } from "./AuthProvider";
 
 export function AppProvider({ children }: { children: ReactNode }) {
   return (

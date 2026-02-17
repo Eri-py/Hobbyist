@@ -25,6 +25,24 @@ updates:
     schedule:
       interval: "weekly"
 
+  # form-schemas
+  - package-ecosystem: "npm"
+    directory: "/Shared/form-schemas"
+    schedule:
+      interval: "weekly"
+
+  # types
+  - package-ecosystem: "npm"
+    directory: "/Shared/types"
+    schedule:
+      interval: "weekly"
+
+  # hooks
+  - package-ecosystem: "npm"
+    directory: "/Shared/hooks"
+    schedule:
+      interval: "weekly"
+
   # .NET backend
   - package-ecosystem: "nuget"
     directory: "/WebServer/"
