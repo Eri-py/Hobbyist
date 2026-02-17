@@ -17,7 +17,7 @@
     "@expo/vector-icons": "^15.0.3",
     "@hobbyist/hooks": "workspace:*",
     "@hobbyist/types": "workspace:*",
-    "@hookform/resolvers": "^3.9.1",
+    "@hookform/resolvers": "^5.2.2",
     "@react-native-picker/picker": "2.11.1",
     "@react-navigation/bottom-tabs": "^7.14.0",
     "@react-navigation/drawer": "^7.8.1",
