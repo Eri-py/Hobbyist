@@ -1,5 +1,5 @@
 import { type ReactNode, useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { AxiosInstance } from "axios";
@@ -7,6 +7,7 @@ import type { AxiosInstance } from "axios";
 import type { components } from "@hobbyist/types";
 import { LoginFormSchema, type LoginFormSchemaTypes } from "@hobbyist/form-schemas";
 import { type ServerError, useServerError } from "../shared/useServerError";
+import { USER_DETAILS_QUERY_KEY } from "../app/useAuth";
 
 // DTOs
 type StartLoginRequest = components["schemas"]["StartLoginRequest"];
@@ -47,6 +48,7 @@ export function useLogin(
     otpExpiresAt: string;
   } | null>(null);
   const { serverErrorMessage, handleServerError, clearServerError } = useServerError();
+  const queryClient = useQueryClient();
 
   // API functions
   const startLoginApi = (data: StartLoginRequest) => {
@@ -84,6 +86,7 @@ export function useLogin(
       if (onAuthSuccess && authResult) {
         await onAuthSuccess(authResult);
       }
+      await queryClient.invalidateQueries({ queryKey: USER_DETAILS_QUERY_KEY });
       navigate("/");
     },
     onError: (error: ServerError) => handleServerError(error),
