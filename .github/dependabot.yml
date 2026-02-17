@@ -7,6 +7,13 @@ updates:
       interval: "weekly"
     ignore:
       - dependency-name: "zod"
+      - dependency-name: "@react-native-picker/picker"
+      - dependency-name: "react-native"
+      - dependency-name: "react-native-gesture-handler"
+      - dependency-name: "react-native-keyboard-controller"
+      - dependency-name: "react-native-reanimated"
+      - dependency-name: "react-native-screens"
+      - dependency-name: "react-native-worklets"
 
   # Mobile app
   - package-ecosystem: "npm"

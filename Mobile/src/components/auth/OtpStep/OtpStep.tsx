@@ -9,6 +9,7 @@ import { ThemedButton } from "@/components/shared/ThemedButton";
 import { OtpCountdown } from "./OtpCountdown";
 import { ErrorMessage } from "@/components/shared/ErrorMessage";
 import { axiosInstance } from "@/api/axiosInstance";
+import { useDeviceType } from "@/hooks/shared/useDeviceType";
 
 type OtpStepProps = {
   mode: "login" | "signup";
@@ -31,6 +32,7 @@ export function OtpStep({
 }: OtpStepProps) {
   const theme = useTheme();
   const { control } = useFormContext();
+  const { isTablet } = useDeviceType();
   const { endTime, isResendDisabled, handleResend, isResending, serverErrorMessage } = useOtp(
     intitialOtpExpiresAt,
     axiosInstance,
@@ -53,6 +55,7 @@ export function OtpStep({
               numberOfDigits={6}
               onTextChange={onChange}
               focusColor={theme.colors.primary}
+              type={isTablet ? "alphanumeric" : "numeric"}
               theme={{
                 containerStyle: styles.otpContainer,
                 pinCodeContainerStyle: {
