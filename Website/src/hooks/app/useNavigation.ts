@@ -1,5 +1,5 @@
 import { useLocation } from "@tanstack/react-router";
-import { useAuth } from "./useAuth";
+import { useAuth } from "@hobbyist/hooks";
 
 // Map routes to active tabs
 const ROUTE_TO_TAB_MAP: Record<string, string> = {

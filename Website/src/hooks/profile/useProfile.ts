@@ -1,5 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
-import { useAuth } from "../app/useAuth";
+import { useAuth } from "@hobbyist/hooks";
 
 export function useProfile() {
   const navigate = useNavigate();

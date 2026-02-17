@@ -1,4 +1,4 @@
-import { useAuth } from "@/hooks/app/useAuth";
+import { useAuth } from "@hobbyist/hooks";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_app/profile/$username/settings")({
