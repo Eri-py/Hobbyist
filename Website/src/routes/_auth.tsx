@@ -1,9 +1,11 @@
 import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
 import Button from "@mui/material/Button";
+import { useEffect } from "react";
 
 import { LogoWithName } from "@/components/shared/Logo";
 import { useDeviceType } from "@/hooks/shared/useDeviceType";
 import { FormContainer } from "@/components/auth/FormContainer";
+import { useAuth } from "@hobbyist/hooks";
 
 export const Route = createFileRoute("/_auth")({
   component: AuthLayout,
@@ -12,6 +14,19 @@ export const Route = createFileRoute("/_auth")({
 function AuthLayout() {
   const { isDesktop } = useDeviceType();
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+
+  // Redirect authenticated users away from auth routes
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate({ to: "/" });
+    }
+  }, [isAuthenticated, navigate]);
+
+  // Don't render the form if user is authenticated
+  if (isAuthenticated) {
+    return null;
+  }
 
   return (
     <FormContainer>
