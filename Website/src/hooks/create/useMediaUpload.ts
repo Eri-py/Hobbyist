@@ -43,7 +43,7 @@ export function useMediaUpload() {
           id: crypto.randomUUID(),
           file,
           preview: await generateThumbnail(file),
-        }))
+        })),
       );
 
       setFilesWithMetadata((prev) => [...prev, ...newFilesWithMetadata]);

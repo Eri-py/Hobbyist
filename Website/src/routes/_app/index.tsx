@@ -1,8 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import Stack from "@mui/material/Stack";
+
 import { useDeviceType } from "@/hooks/shared/useDeviceType";
+import { useAuth } from "@hobbyist/hooks";
 import { PostTile, type Post } from "@/components/home/PostTile";
 import { mockPosts } from "@/components/home/mockData";
+import { LoginSnackbar } from "@/components/home/LoginSnackbar";
 
 export const Route = createFileRoute("/_app/")({
   component: HomePage,
@@ -10,18 +13,23 @@ export const Route = createFileRoute("/_app/")({
 
 function HomePage() {
   const { isDesktop } = useDeviceType();
+  const { isAuthenticated } = useAuth();
 
   return (
-    <Stack
-      flex={1}
-      gap={isDesktop ? 3 : 0}
-      alignItems="center"
-      overflow="auto"
-      padding={isDesktop ? 1 : 0}
-    >
-      {mockPosts.map((post: Post) => (
-        <PostTile key={post.id} post={post} />
-      ))}
+    <Stack>
+      <Stack
+        flex={1}
+        gap={isDesktop ? 3 : 0}
+        alignItems="center"
+        overflow="auto"
+        padding={isDesktop ? 1 : 0}
+      >
+        {mockPosts.map((post: Post) => (
+          <PostTile key={post.id} post={post} />
+        ))}
+      </Stack>
+
+      {!isAuthenticated && <LoginSnackbar />}
     </Stack>
   );
 }
