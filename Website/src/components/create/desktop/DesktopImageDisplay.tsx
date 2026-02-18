@@ -8,7 +8,7 @@ import AddIcon from "@mui/icons-material/Add";
 import { styled } from "@mui/material/styles";
 
 import type { FileWithMetadata } from "@/hooks/create/useMediaUpload";
-import { MediaPreview } from "./MediaPreview";
+import { MediaPreview } from "../MediaPreview";
 
 const ImageGrid = styled(Stack)(({ theme }) => ({
   overflowX: "auto",

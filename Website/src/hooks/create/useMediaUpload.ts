@@ -2,7 +2,8 @@ import { useCallback, useState, useEffect } from "react";
 import { useDropzone, type FileRejection } from "react-dropzone";
 import { generateThumbnail } from "./generateThumbnail";
 
-const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
+const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB per file
+const MAX_TOTAL_SIZE = 100 * 1024 * 1024; // 100MB total
 
 export type FileWithMetadata = {
   id: string;
@@ -35,21 +36,45 @@ export function useMediaUpload() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const onDrop = useCallback(async (acceptedFiles: File[]) => {
-    if (acceptedFiles.length > 0) {
-      // Generate thumbnails for all accepted files
-      const newFilesWithMetadata: FileWithMetadata[] = await Promise.all(
-        acceptedFiles.map(async (file) => ({
-          id: crypto.randomUUID(),
-          file,
-          preview: await generateThumbnail(file),
-        })),
-      );
+  const onDrop = useCallback(
+    async (acceptedFiles: File[]) => {
+      if (acceptedFiles.length > 0) {
+        const sortedFiles = acceptedFiles.sort((a, b) => a.size - b.size);
 
-      setFilesWithMetadata((prev) => [...prev, ...newFilesWithMetadata]);
-      setErrors([]); // Clear any previous errors when successfully adding files
-    }
-  }, []);
+        // Get current size of all files stored
+        let currentTotal = 0;
+        filesWithMetadata.forEach((f) => (currentTotal += f.file.size));
+
+        // Keep track of added files and rejected files.
+        const toAdd: File[] = [];
+        const rejected: string[] = [];
+
+        for (const file of sortedFiles) {
+          if (currentTotal + file.size > MAX_TOTAL_SIZE) {
+            rejected.push(
+              `${file.name}: Not enough space (${(currentTotal / 1024 / 1024).toFixed(2)}MB of ${(MAX_TOTAL_SIZE / 1024 / 1024).toFixed(2)}MB used)`,
+            );
+          } else {
+            currentTotal += file.size;
+            toAdd.push(file);
+          }
+        }
+
+        // Generate thumbnails for all accepted files
+        const newFilesWithMetadata: FileWithMetadata[] = await Promise.all(
+          toAdd.map(async (file) => ({
+            id: crypto.randomUUID(),
+            file,
+            preview: await generateThumbnail(file),
+          })),
+        );
+
+        setFilesWithMetadata((prev) => [...prev, ...newFilesWithMetadata]);
+        setErrors([...rejected]);
+      }
+    },
+    [filesWithMetadata],
+  );
 
   const onDropRejected = useCallback((fileRejections: FileRejection[]) => {
     if (fileRejections.length === 0) return;
@@ -62,13 +87,13 @@ export function useMediaUpload() {
         case "file-invalid-type":
           return `${fileName}: Invalid file type. Please upload image or video files only.`;
         case "file-too-large":
-          return `${fileName}: File is too large. Maximum size is 10MB.`;
+          return `${fileName}: File is too large. Maximum size is ${(MAX_FILE_SIZE / 1024 / 1024).toFixed(2)}MB per file.`;
         default:
           return `${fileName}: Failed to upload. ${rejection.errors[0]?.message || "Unknown error"}`;
       }
     });
 
-    setErrors(errorMessages);
+    setErrors((prev) => [...prev, ...errorMessages]);
   }, []);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({

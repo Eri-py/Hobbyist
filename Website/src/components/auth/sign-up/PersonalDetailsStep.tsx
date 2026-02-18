@@ -4,7 +4,7 @@ import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 
-import { SegmentedDatePicker } from "../SegmentedDatePicker";
+import { SegmentedDatePicker } from "@/components/shared/SegmentedDatePicker";
 import { FormTextField } from "../FormTextField";
 
 type PersonalDetailsProps = {

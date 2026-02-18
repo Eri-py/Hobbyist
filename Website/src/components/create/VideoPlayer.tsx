@@ -115,7 +115,6 @@ export function VideoPlayer({ src, onRemove, showRemoveButton = false }: VideoPl
         onClick={togglePlayPause}
       />
 
-      {/* Remove button */}
       {showRemoveButton && onRemove && (
         <OverlayIconButton
           onClick={handleRemove}
@@ -131,7 +130,6 @@ export function VideoPlayer({ src, onRemove, showRemoveButton = false }: VideoPl
         </OverlayIconButton>
       )}
 
-      {/* Play/Pause Button */}
       {showControls && (
         <OverlayIconButton
           onClick={togglePlayPause}
@@ -151,7 +149,6 @@ export function VideoPlayer({ src, onRemove, showRemoveButton = false }: VideoPl
         </OverlayIconButton>
       )}
 
-      {/* Bottom Controls */}
       {showControls && (
         <Stack
           direction="row"
@@ -169,12 +166,10 @@ export function VideoPlayer({ src, onRemove, showRemoveButton = false }: VideoPl
             zIndex: 10,
           }}
         >
-          {/* Mute/Unmute Button */}
           <OverlayIconButton onClick={toggleMute} sx={{ padding: 1 }}>
             {isMuted ? <VolumeOffIcon fontSize="small" /> : <VolumeUpIcon fontSize="small" />}
           </OverlayIconButton>
 
-          {/* Time Display */}
           <Typography color="white" fontFamily="monospace" fontSize={14}>
             {formatTime(currentTime)} / {formatTime(duration)}
           </Typography>
