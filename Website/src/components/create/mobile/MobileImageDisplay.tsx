@@ -6,7 +6,7 @@ import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import AddIcon from "@mui/icons-material/Add";
-import { MediaPreview } from "./MediaPreview";
+import { MediaPreview } from "../MediaPreview";
 
 type MobileImageDisplayProps = {
   files: FileWithMetadata[];
@@ -21,7 +21,6 @@ export function MobileImageDisplay({ files, getRootProps, removeFile }: MobileIm
         {files.length} photo{files.length !== 1 ? "s" : ""} selected
       </Typography>
 
-      {/* Large Cover Photo */}
       <Paper
         sx={{
           width: "100%",
@@ -36,7 +35,6 @@ export function MobileImageDisplay({ files, getRootProps, removeFile }: MobileIm
         <MediaPreview fileMetadata={files[0]} onRemove={removeFile} showRemoveButton={true} />
       </Paper>
 
-      {/* Remaining photos in pairs */}
       {files.length > 1 && (
         <Stack
           sx={{
