@@ -2,11 +2,10 @@ import type { DropzoneRootProps } from "react-dropzone";
 import type { FileWithMetadata } from "@/hooks/create/useMediaUpload";
 
 import Stack from "@mui/material/Stack";
-import Paper from "@mui/material/Paper";
-import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
-import AddIcon from "@mui/icons-material/Add";
-import { MediaPreview } from "../MediaPreview";
+
+import { ImageCarousel } from "../ImageCarousel";
+import { useImageCarousel } from "@/hooks/create/useImageCarousel";
 
 type MobileImageDisplayProps = {
   files: FileWithMetadata[];
@@ -15,55 +14,23 @@ type MobileImageDisplayProps = {
 };
 
 export function MobileImageDisplay({ files, getRootProps, removeFile }: MobileImageDisplayProps) {
+  const { currentIndex, handlePrevious, handleNext, currentFile } = useImageCarousel(files);
+
   return (
     <Stack gap={2} flex={1}>
-      <Typography variant="h6" textAlign="center">
-        {files.length} photo{files.length !== 1 ? "s" : ""} selected
-      </Typography>
+      {/* Main image carousel */}
+      <ImageCarousel
+        currentFile={currentFile}
+        currentIndex={currentIndex}
+        totalFiles={files.length}
+        onPrevious={handlePrevious}
+        onNext={handleNext}
+        onRemove={removeFile}
+        showCounter
+      />
 
-      <Paper
-        sx={{
-          width: "100%",
-          aspectRatio: 4 / 3,
-          borderRadius: 2,
-          overflow: "hidden",
-          border: 2,
-          borderColor: "primary.main",
-          position: "relative",
-        }}
-      >
-        <MediaPreview fileMetadata={files[0]} onRemove={removeFile} showRemoveButton={true} />
-      </Paper>
-
-      {files.length > 1 && (
-        <Stack
-          sx={{
-            display: "grid",
-            gridTemplateColumns: "repeat(2, 1fr)",
-            gap: 1,
-          }}
-        >
-          {files.slice(1).map((fileMetadata) => (
-            <Paper
-              key={fileMetadata.id}
-              sx={{
-                aspectRatio: 1,
-                borderRadius: 2,
-                overflow: "hidden",
-                position: "relative",
-              }}
-            >
-              <MediaPreview
-                fileMetadata={fileMetadata}
-                onRemove={removeFile}
-                showRemoveButton={true}
-              />
-            </Paper>
-          ))}
-        </Stack>
-      )}
-
-      <Button {...getRootProps()} startIcon={<AddIcon />} variant="outlined" size="large">
+      {/* Add more button */}
+      <Button {...getRootProps()} variant="outlined" size="large" fullWidth>
         Add more photos
       </Button>
     </Stack>

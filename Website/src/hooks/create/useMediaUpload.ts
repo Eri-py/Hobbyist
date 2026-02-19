@@ -39,30 +39,37 @@ export function useMediaUpload() {
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
       if (acceptedFiles.length > 0) {
-        const sortedFiles = acceptedFiles.sort((a, b) => a.size - b.size);
+        // Keep track of the original order before sorting
+        const filesWithIndex = acceptedFiles.map((file, index) => ({ file, originalIndex: index }));
+
+        // Sort by size for processing
+        const sortedFiles = filesWithIndex.sort((a, b) => a.file.size - b.file.size);
 
         // Get current size of all files stored
         let currentTotal = 0;
         filesWithMetadata.forEach((f) => (currentTotal += f.file.size));
 
         // Keep track of added files and rejected files.
-        const toAdd: File[] = [];
+        const toAdd: { file: File; originalIndex: number }[] = [];
         const rejected: string[] = [];
 
-        for (const file of sortedFiles) {
+        for (const { file, originalIndex } of sortedFiles) {
           if (currentTotal + file.size > MAX_TOTAL_SIZE) {
             rejected.push(
               `${file.name}: Not enough space (${(currentTotal / 1024 / 1024).toFixed(2)}MB of ${(MAX_TOTAL_SIZE / 1024 / 1024).toFixed(2)}MB used)`,
             );
           } else {
             currentTotal += file.size;
-            toAdd.push(file);
+            toAdd.push({ file, originalIndex });
           }
         }
 
+        // Sort toAdd back to original upload order
+        toAdd.sort((a, b) => a.originalIndex - b.originalIndex);
+
         // Generate thumbnails for all accepted files
         const newFilesWithMetadata: FileWithMetadata[] = await Promise.all(
-          toAdd.map(async (file) => ({
+          toAdd.map(async ({ file }) => ({
             id: crypto.randomUUID(),
             file,
             preview: await generateThumbnail(file),
@@ -133,6 +140,10 @@ export function useMediaUpload() {
     setErrors((prev) => prev.filter((_, i) => i !== index));
   }, []);
 
+  const reorderFiles = useCallback((newOrder: FileWithMetadata[]) => {
+    setFilesWithMetadata(newOrder);
+  }, []);
+
   return {
     files: filesWithMetadata,
     errors,
@@ -141,5 +152,6 @@ export function useMediaUpload() {
     isDragActive,
     removeFile,
     removeError,
+    reorderFiles,
   };
 }

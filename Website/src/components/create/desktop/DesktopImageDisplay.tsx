@@ -1,87 +1,84 @@
+import { useState } from "react";
 import type { DropzoneRootProps } from "react-dropzone";
+import type { FileWithMetadata } from "@/hooks/create/useMediaUpload";
 
 import Stack from "@mui/material/Stack";
-import Typography from "@mui/material/Typography";
+import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
-import Paper from "@mui/material/Paper";
-import AddIcon from "@mui/icons-material/Add";
-import { styled } from "@mui/material/styles";
+import IconButton from "@mui/material/IconButton";
+import EditIcon from "@mui/icons-material/Edit";
+import CheckIcon from "@mui/icons-material/Check";
+import { useTheme } from "@mui/material/styles";
 
-import type { FileWithMetadata } from "@/hooks/create/useMediaUpload";
-import { MediaPreview } from "../MediaPreview";
-
-const ImageGrid = styled(Stack)(({ theme }) => ({
-  overflowX: "auto",
-  overflowY: "hidden",
-  paddingBottom: 1,
-  minHeight: 140,
-  cursor: "grab",
-  "&:active": {
-    cursor: "grabbing",
-  },
-  "&::-webkit-scrollbar": {
-    height: 8,
-  },
-  "&::-webkit-scrollbar-track": {
-    backgroundColor: theme.palette.action.hover,
-    borderRadius: 4,
-  },
-  "&::-webkit-scrollbar-thumb": {
-    backgroundColor: theme.palette.action.disabled,
-    borderRadius: 4,
-  },
-  scrollBehavior: "smooth",
-}));
+import { ImageCarousel } from "../ImageCarousel";
+import { SortableImageGrid } from "./SortableImageGrid";
+import { useImageCarousel } from "@/hooks/create/useImageCarousel";
 
 type DesktopImageDisplayProps = {
   files: FileWithMetadata[];
   getRootProps: <T extends DropzoneRootProps>(props?: T) => T;
   removeFile: (fileId: string) => void;
+  reorderFiles: (newOrder: FileWithMetadata[]) => void;
 };
 
-export function DesktopImageDisplay({ files, getRootProps, removeFile }: DesktopImageDisplayProps) {
-  return (
-    <Stack gap={1} width="100%" overflow="hidden">
-      <Typography variant="h6">
-        {files.length} image{files.length !== 1 ? "s" : ""} selected
-      </Typography>
+export function DesktopImageDisplay({
+  files,
+  getRootProps,
+  removeFile,
+  reorderFiles,
+}: DesktopImageDisplayProps) {
+  const theme = useTheme();
+  const [isEditMode, setIsEditMode] = useState(false);
+  const { currentIndex, handlePrevious, handleNext, currentFile } = useImageCarousel(files);
 
-      <ImageGrid
-        direction="row"
-        gap={2}
-        onWheel={(e) => {
-          e.currentTarget.scrollLeft += e.deltaY * 5;
-        }}
-      >
-        {files.map((fileMetadata) => (
-          <Paper
-            key={fileMetadata.id}
-            sx={{
-              width: 151,
-              aspectRatio: 1 / 1,
-              borderRadius: 2,
-              overflow: "hidden",
-              flexShrink: 0,
-              position: "relative",
-            }}
+  if (isEditMode) {
+    return (
+      <Stack gap={2} width="100%">
+        <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+          <IconButton
+            onClick={() => setIsEditMode(false)}
+            size="small"
+            sx={{ color: theme.palette.primary.main }}
           >
-            <MediaPreview
-              fileMetadata={fileMetadata}
-              onRemove={removeFile}
-              showRemoveButton={true}
-            />
-          </Paper>
-        ))}
-      </ImageGrid>
+            <CheckIcon />
+          </IconButton>
+        </Box>
 
-      <Button
-        {...getRootProps()}
-        fullWidth
-        startIcon={<AddIcon />}
-        variant="contained"
-        sx={{ backgroundColor: "background.paper" }}
-        size="large"
-      >
+        <SortableImageGrid files={files} removeFile={removeFile} onReorder={reorderFiles} />
+
+        <Button {...getRootProps()} fullWidth variant="outlined" size="large">
+          Add more
+        </Button>
+      </Stack>
+    );
+  }
+
+  return (
+    <Stack gap={2} width="100%">
+      {/* Edit button */}
+      <Box sx={{ display: "flex", justifyContent: "flex-start" }}>
+        <IconButton
+          onClick={() => setIsEditMode(true)}
+          size="small"
+          sx={{ color: theme.palette.primary.main }}
+        >
+          <EditIcon />
+        </IconButton>
+      </Box>
+
+      {/* Main image carousel */}
+      <ImageCarousel
+        currentFile={currentFile}
+        currentIndex={currentIndex}
+        totalFiles={files.length}
+        onPrevious={handlePrevious}
+        onNext={handleNext}
+        onRemove={removeFile}
+        showCounter
+      />
+
+      {/* Add more button */}
+      <Button {...getRootProps()} variant="outlined" size="large" fullWidth>
         Add more
       </Button>
     </Stack>

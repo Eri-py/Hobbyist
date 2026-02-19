@@ -96,14 +96,21 @@ export function VideoPlayer({ src, onRemove, showRemoveButton = false }: VideoPl
 
   return (
     <Box
-      sx={{ position: "relative", width: "100%", height: "100%" }}
+      sx={{
+        position: "relative",
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
       onMouseMove={showControlsTemporarily}
       onTouchStart={showControlsTemporarily}
     >
       <video
         ref={videoRef}
         src={src}
-        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+        style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }}
         muted={isMuted}
         autoPlay
         playsInline
@@ -126,7 +133,7 @@ export function VideoPlayer({ src, onRemove, showRemoveButton = false }: VideoPl
             zIndex: 15,
           }}
         >
-          <CloseIcon />
+          <CloseIcon sx={{ color: "white" }} />
         </OverlayIconButton>
       )}
 
@@ -145,7 +152,11 @@ export function VideoPlayer({ src, onRemove, showRemoveButton = false }: VideoPl
             opacity: showControls ? 1 : 0,
           }}
         >
-          {isPlaying ? <PauseIcon /> : <PlayArrowIcon />}
+          {isPlaying ? (
+            <PauseIcon sx={{ color: "white" }} />
+          ) : (
+            <PlayArrowIcon sx={{ color: "white" }} />
+          )}
         </OverlayIconButton>
       )}
 
@@ -167,7 +178,11 @@ export function VideoPlayer({ src, onRemove, showRemoveButton = false }: VideoPl
           }}
         >
           <OverlayIconButton onClick={toggleMute} sx={{ padding: 1 }}>
-            {isMuted ? <VolumeOffIcon fontSize="small" /> : <VolumeUpIcon fontSize="small" />}
+            {isMuted ? (
+              <VolumeOffIcon fontSize="small" sx={{ color: "white" }} />
+            ) : (
+              <VolumeUpIcon fontSize="small" sx={{ color: "white" }} />
+            )}
           </OverlayIconButton>
 
           <Typography color="white" fontFamily="monospace" fontSize={14}>

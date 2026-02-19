@@ -17,13 +17,14 @@ import { useTheme } from "@mui/material/styles";
 import type { FileWithMetadata } from "@/hooks/create/useMediaUpload";
 import type { CreateFormSchemaTypes } from "@hobbyist/form-schemas";
 import { DesktopImageDisplay } from "./DesktopImageDisplay";
-import { DesktopUploadArea } from "./DesktopUploadArea";
+import { UploadArea } from "../UploadArea";
 
 type DesktopCreateFormProps = {
   files: FileWithMetadata[];
   getRootProps: <T extends DropzoneRootProps>(props?: T) => T;
   isDragActive: boolean;
   removeFile: (fileId: string) => void;
+  reorderFiles: (newOrder: FileWithMetadata[]) => void;
   isSubmitting: boolean;
 };
 
@@ -32,6 +33,7 @@ export function DesktopCreateForm({
   getRootProps,
   isDragActive,
   removeFile,
+  reorderFiles,
   isSubmitting,
 }: DesktopCreateFormProps) {
   const theme = useTheme();
@@ -52,9 +54,14 @@ export function DesktopCreateForm({
         }}
       >
         {files.length > 0 ? (
-          <DesktopImageDisplay files={files} getRootProps={getRootProps} removeFile={removeFile} />
+          <DesktopImageDisplay
+            files={files}
+            getRootProps={getRootProps}
+            removeFile={removeFile}
+            reorderFiles={reorderFiles}
+          />
         ) : (
-          <DesktopUploadArea getRootProps={getRootProps} isDragActive={isDragActive} />
+          <UploadArea getRootProps={getRootProps} isDragActive={isDragActive} variant="desktop" />
         )}
       </Paper>
 

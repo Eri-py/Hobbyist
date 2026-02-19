@@ -60,6 +60,13 @@ export const mainTheme = (isDarkMode: boolean) =>
           },
         },
       },
+      MuiTab: {
+        styleOverrides: {
+          root: {
+            textTransform: "none",
+          },
+        },
+      },
       MuiFormHelperText: {
         styleOverrides: {
           root: {

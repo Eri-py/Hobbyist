@@ -1,4 +1,3 @@
-import { useTheme } from "@mui/material/styles";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
 import FormControl from "@mui/material/FormControl";
@@ -19,7 +18,6 @@ type SelectorProps = {
 };
 
 export function Selector({ label, menuItems, value, onChange, flex }: SelectorProps) {
-  const theme = useTheme();
   const menuElements = useMemo(
     () =>
       menuItems.map((item) => (
@@ -27,7 +25,7 @@ export function Selector({ label, menuItems, value, onChange, flex }: SelectorPr
           {item.label}
         </MenuItem>
       )),
-    [menuItems]
+    [menuItems],
   );
   return (
     <FormControl fullWidth sx={{ flex: flex }}>
@@ -37,9 +35,6 @@ export function Selector({ label, menuItems, value, onChange, flex }: SelectorPr
         value={value || ""}
         label={label}
         onChange={(e) => onChange(e.target.value)}
-        sx={{
-          backgroundColor: theme.palette.background.paper,
-        }}
       >
         {menuElements}
       </Select>
