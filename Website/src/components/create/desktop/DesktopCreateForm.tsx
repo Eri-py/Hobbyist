@@ -17,7 +17,7 @@ import { useTheme } from "@mui/material/styles";
 import type { FileWithMetadata } from "@/hooks/create/useMediaUpload";
 import type { CreateFormSchemaTypes } from "@hobbyist/form-schemas";
 import { DesktopImageDisplay } from "./DesktopImageDisplay";
-import { DesktopUploadArea } from "./DesktopUploadArea";
+import { UploadArea } from "../UploadArea";
 
 type DesktopCreateFormProps = {
   files: FileWithMetadata[];
@@ -61,7 +61,7 @@ export function DesktopCreateForm({
             reorderFiles={reorderFiles}
           />
         ) : (
-          <DesktopUploadArea getRootProps={getRootProps} isDragActive={isDragActive} />
+          <UploadArea getRootProps={getRootProps} isDragActive={isDragActive} variant="desktop" />
         )}
       </Paper>
 

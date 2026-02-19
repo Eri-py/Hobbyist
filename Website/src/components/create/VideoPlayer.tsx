@@ -145,7 +145,11 @@ export function VideoPlayer({ src, onRemove, showRemoveButton = false }: VideoPl
             opacity: showControls ? 1 : 0,
           }}
         >
-          {isPlaying ? <PauseIcon /> : <PlayArrowIcon />}
+          {isPlaying ? (
+            <PauseIcon sx={{ color: "white" }} />
+          ) : (
+            <PlayArrowIcon sx={{ color: "white" }} />
+          )}
         </OverlayIconButton>
       )}
 
@@ -167,7 +171,11 @@ export function VideoPlayer({ src, onRemove, showRemoveButton = false }: VideoPl
           }}
         >
           <OverlayIconButton onClick={toggleMute} sx={{ padding: 1 }}>
-            {isMuted ? <VolumeOffIcon fontSize="small" /> : <VolumeUpIcon fontSize="small" />}
+            {isMuted ? (
+              <VolumeOffIcon fontSize="small" sx={{ color: "white" }} />
+            ) : (
+              <VolumeUpIcon fontSize="small" sx={{ color: "white" }} />
+            )}
           </OverlayIconButton>
 
           <Typography color="white" fontFamily="monospace" fontSize={14}>

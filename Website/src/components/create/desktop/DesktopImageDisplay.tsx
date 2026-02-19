@@ -1,45 +1,18 @@
+import { useState } from "react";
 import type { DropzoneRootProps } from "react-dropzone";
-import {
-  DndContext,
-  closestCenter,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-} from "@dnd-kit/core";
-import { arrayMove, SortableContext, horizontalListSortingStrategy } from "@dnd-kit/sortable";
+import type { FileWithMetadata } from "@/hooks/create/useMediaUpload";
 
 import Stack from "@mui/material/Stack";
-import Typography from "@mui/material/Typography";
+import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
-import AddIcon from "@mui/icons-material/Add";
-import { styled } from "@mui/material/styles";
+import IconButton from "@mui/material/IconButton";
+import EditIcon from "@mui/icons-material/Edit";
+import CheckIcon from "@mui/icons-material/Check";
+import { useTheme } from "@mui/material/styles";
 
-import type { FileWithMetadata } from "@/hooks/create/useMediaUpload";
-import { SortableMediaItem } from "../SortableMediaItem";
-
-const ImageGrid = styled(Stack)(({ theme }) => ({
-  overflowX: "auto",
-  overflowY: "hidden",
-  paddingBottom: 1,
-  minHeight: 140,
-  cursor: "grab",
-  "&:active": {
-    cursor: "grabbing",
-  },
-  "&::-webkit-scrollbar": {
-    height: 8,
-  },
-  "&::-webkit-scrollbar-track": {
-    backgroundColor: theme.palette.action.hover,
-    borderRadius: 4,
-  },
-  "&::-webkit-scrollbar-thumb": {
-    backgroundColor: theme.palette.action.disabled,
-    borderRadius: 4,
-  },
-  scrollBehavior: "smooth",
-}));
+import { ImageCarousel } from "../ImageCarousel";
+import { SortableImageGrid } from "./SortableImageGrid";
+import { useImageCarousel } from "@/hooks/create/useImageCarousel";
 
 type DesktopImageDisplayProps = {
   files: FileWithMetadata[];
@@ -54,65 +27,58 @@ export function DesktopImageDisplay({
   removeFile,
   reorderFiles,
 }: DesktopImageDisplayProps) {
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    }),
-  );
+  const theme = useTheme();
+  const [isEditMode, setIsEditMode] = useState(false);
+  const { currentIndex, handlePrevious, handleNext, currentFile } = useImageCarousel(files);
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
+  if (isEditMode) {
+    return (
+      <Stack gap={2} width="100%">
+        <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+          <IconButton
+            onClick={() => setIsEditMode(false)}
+            size="small"
+            sx={{ color: theme.palette.primary.main }}
+          >
+            <CheckIcon />
+          </IconButton>
+        </Box>
 
-    if (over && active.id !== over.id) {
-      const oldIndex = files.findIndex((file) => file.id === active.id);
-      const newIndex = files.findIndex((file) => file.id === over.id);
+        <SortableImageGrid files={files} removeFile={removeFile} onReorder={reorderFiles} />
 
-      const newOrder = arrayMove(files, oldIndex, newIndex);
-      reorderFiles(newOrder);
-    }
-  };
+        <Button {...getRootProps()} fullWidth variant="outlined" size="large">
+          Add more
+        </Button>
+      </Stack>
+    );
+  }
 
   return (
-    <Stack gap={1} width="100%" overflow="hidden">
-      <Typography variant="h6">
-        {files.length} image{files.length !== 1 ? "s" : ""} selected
-      </Typography>
+    <Stack gap={2} width="100%">
+      {/* Edit button */}
+      <Box sx={{ display: "flex", justifyContent: "flex-start" }}>
+        <IconButton
+          onClick={() => setIsEditMode(true)}
+          size="small"
+          sx={{ color: theme.palette.primary.main }}
+        >
+          <EditIcon />
+        </IconButton>
+      </Box>
 
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <SortableContext items={files} strategy={horizontalListSortingStrategy}>
-          <ImageGrid
-            direction="row"
-            gap={2}
-            onWheel={(e) => {
-              e.currentTarget.scrollLeft += e.deltaY * 5;
-            }}
-          >
-            {files.map((fileMetadata) => (
-              <SortableMediaItem
-                key={fileMetadata.id}
-                fileMetadata={fileMetadata}
-                removeFile={removeFile}
-                sx={{
-                  width: 151,
-                  aspectRatio: 1 / 1,
-                  flexShrink: 0,
-                }}
-              />
-            ))}
-          </ImageGrid>
-        </SortableContext>
-      </DndContext>
+      {/* Main image carousel */}
+      <ImageCarousel
+        currentFile={currentFile}
+        currentIndex={currentIndex}
+        totalFiles={files.length}
+        onPrevious={handlePrevious}
+        onNext={handleNext}
+        onRemove={removeFile}
+        showCounter
+      />
 
-      <Button
-        {...getRootProps()}
-        fullWidth
-        startIcon={<AddIcon />}
-        variant="contained"
-        sx={{ backgroundColor: "background.paper" }}
-        size="large"
-      >
+      {/* Add more button */}
+      <Button {...getRootProps()} variant="outlined" size="large" fullWidth>
         Add more
       </Button>
     </Stack>

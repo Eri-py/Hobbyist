@@ -6,7 +6,7 @@ import Typography from "@mui/material/Typography";
 import type { SxProps, Theme } from "@mui/material/styles";
 
 import type { FileWithMetadata } from "@/hooks/create/useMediaUpload";
-import { MediaPreview } from "./MediaPreview";
+import { MediaPreview } from "../MediaPreview";
 
 type SortableMediaItemProps = {
   fileMetadata: FileWithMetadata;
