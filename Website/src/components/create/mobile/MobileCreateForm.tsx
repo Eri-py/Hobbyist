@@ -23,6 +23,7 @@ type MobileCreateFormProps = {
   files: FileWithMetadata[];
   getRootProps: <T extends DropzoneRootProps>(props?: T) => T;
   removeFile: (fileId: string) => void;
+  reorderFiles: (newOrder: FileWithMetadata[]) => void;
   activeStep: number;
   isSubmitting: boolean;
 };
@@ -31,6 +32,7 @@ export function MobileCreateForm({
   files,
   getRootProps,
   removeFile,
+  reorderFiles,
   activeStep,
   isSubmitting,
 }: MobileCreateFormProps) {
@@ -45,7 +47,12 @@ export function MobileCreateForm({
       {activeStep === 0 && (
         <>
           {files.length > 0 ? (
-            <MobileImageDisplay files={files} getRootProps={getRootProps} removeFile={removeFile} />
+            <MobileImageDisplay
+              files={files}
+              getRootProps={getRootProps}
+              removeFile={removeFile}
+              reorderFiles={reorderFiles}
+            />
           ) : (
             <MobileUploadArea getRootProps={getRootProps} />
           )}

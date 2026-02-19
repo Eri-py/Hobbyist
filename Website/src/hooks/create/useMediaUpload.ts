@@ -133,6 +133,10 @@ export function useMediaUpload() {
     setErrors((prev) => prev.filter((_, i) => i !== index));
   }, []);
 
+  const reorderFiles = useCallback((newOrder: FileWithMetadata[]) => {
+    setFilesWithMetadata(newOrder);
+  }, []);
+
   return {
     files: filesWithMetadata,
     errors,
@@ -141,5 +145,6 @@ export function useMediaUpload() {
     isDragActive,
     removeFile,
     removeError,
+    reorderFiles,
   };
 }

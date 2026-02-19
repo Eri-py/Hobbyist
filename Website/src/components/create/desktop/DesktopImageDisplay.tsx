@@ -1,14 +1,22 @@
 import type { DropzoneRootProps } from "react-dropzone";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import { arrayMove, SortableContext, horizontalListSortingStrategy } from "@dnd-kit/sortable";
 
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
-import Paper from "@mui/material/Paper";
 import AddIcon from "@mui/icons-material/Add";
 import { styled } from "@mui/material/styles";
 
 import type { FileWithMetadata } from "@/hooks/create/useMediaUpload";
-import { MediaPreview } from "../MediaPreview";
+import { SortableMediaItem } from "../SortableMediaItem";
 
 const ImageGrid = styled(Stack)(({ theme }) => ({
   overflowX: "auto",
@@ -37,42 +45,65 @@ type DesktopImageDisplayProps = {
   files: FileWithMetadata[];
   getRootProps: <T extends DropzoneRootProps>(props?: T) => T;
   removeFile: (fileId: string) => void;
+  reorderFiles: (newOrder: FileWithMetadata[]) => void;
 };
 
-export function DesktopImageDisplay({ files, getRootProps, removeFile }: DesktopImageDisplayProps) {
+export function DesktopImageDisplay({
+  files,
+  getRootProps,
+  removeFile,
+  reorderFiles,
+}: DesktopImageDisplayProps) {
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = files.findIndex((file) => file.id === active.id);
+      const newIndex = files.findIndex((file) => file.id === over.id);
+
+      const newOrder = arrayMove(files, oldIndex, newIndex);
+      reorderFiles(newOrder);
+    }
+  };
+
   return (
     <Stack gap={1} width="100%" overflow="hidden">
       <Typography variant="h6">
         {files.length} image{files.length !== 1 ? "s" : ""} selected
       </Typography>
 
-      <ImageGrid
-        direction="row"
-        gap={2}
-        onWheel={(e) => {
-          e.currentTarget.scrollLeft += e.deltaY * 5;
-        }}
-      >
-        {files.map((fileMetadata) => (
-          <Paper
-            key={fileMetadata.id}
-            sx={{
-              width: 151,
-              aspectRatio: 1 / 1,
-              borderRadius: 2,
-              overflow: "hidden",
-              flexShrink: 0,
-              position: "relative",
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <SortableContext items={files} strategy={horizontalListSortingStrategy}>
+          <ImageGrid
+            direction="row"
+            gap={2}
+            onWheel={(e) => {
+              e.currentTarget.scrollLeft += e.deltaY * 5;
             }}
           >
-            <MediaPreview
-              fileMetadata={fileMetadata}
-              onRemove={removeFile}
-              showRemoveButton={true}
-            />
-          </Paper>
-        ))}
-      </ImageGrid>
+            {files.map((fileMetadata) => (
+              <SortableMediaItem
+                key={fileMetadata.id}
+                fileMetadata={fileMetadata}
+                removeFile={removeFile}
+                sx={{
+                  width: 151,
+                  aspectRatio: 1 / 1,
+                  flexShrink: 0,
+                }}
+              />
+            ))}
+          </ImageGrid>
+        </SortableContext>
+      </DndContext>
 
       <Button
         {...getRootProps()}

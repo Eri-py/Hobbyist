@@ -24,6 +24,7 @@ type DesktopCreateFormProps = {
   getRootProps: <T extends DropzoneRootProps>(props?: T) => T;
   isDragActive: boolean;
   removeFile: (fileId: string) => void;
+  reorderFiles: (newOrder: FileWithMetadata[]) => void;
   isSubmitting: boolean;
 };
 
@@ -32,6 +33,7 @@ export function DesktopCreateForm({
   getRootProps,
   isDragActive,
   removeFile,
+  reorderFiles,
   isSubmitting,
 }: DesktopCreateFormProps) {
   const theme = useTheme();
@@ -52,7 +54,12 @@ export function DesktopCreateForm({
         }}
       >
         {files.length > 0 ? (
-          <DesktopImageDisplay files={files} getRootProps={getRootProps} removeFile={removeFile} />
+          <DesktopImageDisplay
+            files={files}
+            getRootProps={getRootProps}
+            removeFile={removeFile}
+            reorderFiles={reorderFiles}
+          />
         ) : (
           <DesktopUploadArea getRootProps={getRootProps} isDragActive={isDragActive} />
         )}

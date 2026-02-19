@@ -62,7 +62,7 @@ export function useCreate() {
       clearServerError();
       setActiveStep((prev) => Math.min(prev + 1, 2));
     },
-    [activeStep, clearServerError, methods]
+    [activeStep, clearServerError, methods],
   );
 
   const handleBack = useCallback(() => {

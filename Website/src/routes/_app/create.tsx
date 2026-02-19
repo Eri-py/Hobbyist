@@ -23,7 +23,8 @@ export const Route = createFileRoute("/_app/create")({
 
 function CreatePage() {
   const { isDesktop } = useDeviceType();
-  const { files, getRootProps, getInputProps, isDragActive, removeFile } = useMediaUpload();
+  const { files, getRootProps, getInputProps, isDragActive, removeFile, reorderFiles } =
+    useMediaUpload();
   const theme = useTheme();
 
   const {
@@ -74,6 +75,7 @@ function CreatePage() {
               getRootProps={getRootProps}
               isDragActive={isDragActive}
               removeFile={removeFile}
+              reorderFiles={reorderFiles}
               isSubmitting={isSubmitting}
             />
           ) : (
@@ -81,6 +83,7 @@ function CreatePage() {
               files={files}
               getRootProps={getRootProps}
               removeFile={removeFile}
+              reorderFiles={reorderFiles}
               activeStep={activeStep}
               isSubmitting={isSubmitting}
             />
