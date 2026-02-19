@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type SyntheticEvent } from "react";
 import type { DropzoneRootProps } from "react-dropzone";
 import { useFormContext } from "react-hook-form";
 
@@ -35,7 +35,7 @@ export function MobileCreateForm({ files, getRootProps, removeFile }: MobileCrea
     formState: { errors },
   } = useFormContext<CreateFormSchemaTypes>();
 
-  const handleTabChange = (_: React.SyntheticEvent, newValue: TabType) => {
+  const handleTabChange = (_: SyntheticEvent, newValue: TabType) => {
     setActiveTab(newValue);
   };
 
