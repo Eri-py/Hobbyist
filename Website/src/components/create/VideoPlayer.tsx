@@ -96,14 +96,21 @@ export function VideoPlayer({ src, onRemove, showRemoveButton = false }: VideoPl
 
   return (
     <Box
-      sx={{ position: "relative", width: "100%", height: "100%" }}
+      sx={{
+        position: "relative",
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
       onMouseMove={showControlsTemporarily}
       onTouchStart={showControlsTemporarily}
     >
       <video
         ref={videoRef}
         src={src}
-        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+        style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }}
         muted={isMuted}
         autoPlay
         playsInline
@@ -126,7 +133,7 @@ export function VideoPlayer({ src, onRemove, showRemoveButton = false }: VideoPl
             zIndex: 15,
           }}
         >
-          <CloseIcon />
+          <CloseIcon sx={{ color: "white" }} />
         </OverlayIconButton>
       )}
 

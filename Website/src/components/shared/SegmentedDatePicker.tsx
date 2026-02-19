@@ -2,7 +2,6 @@ import { useTheme } from "@mui/material/styles";
 import TextField from "@mui/material/TextField";
 import Stack from "@mui/material/Stack";
 import FormHelperText from "@mui/material/FormHelperText";
-import Typography from "@mui/material/Typography";
 
 import { Selector } from "@/components/shared/Selector";
 
@@ -99,25 +98,6 @@ export function SegmentedDatePicker({ value, onChange, error }: SegmentedDatePic
         />
       </Stack>
       {error && <FormHelperText error>{error}</FormHelperText>}
-    </Stack>
-  );
-}
-
-type CustomFormHeaderProps = {
-  header: string;
-  subtext: string | ReactNode;
-  align: string;
-};
-
-export function CustomFormHeader({ header, subtext, align }: CustomFormHeaderProps) {
-  return (
-    <Stack alignItems={align}>
-      <Typography fontWeight={500} fontSize={24} color="textPrimary">
-        {header}
-      </Typography>
-      <Typography fontWeight={200} fontSize={15} color="textSecondary" sx={{ textWrap: "nowrap" }}>
-        {subtext}
-      </Typography>
     </Stack>
   );
 }

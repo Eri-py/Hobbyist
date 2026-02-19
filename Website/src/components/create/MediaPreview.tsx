@@ -25,11 +25,20 @@ export function MediaPreview({
 
   if (isImage) {
     return (
-      <Box sx={{ position: "relative", width: "100%", height: "100%" }}>
+      <Box
+        sx={{
+          position: "relative",
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
         <img
           src={fileMetadata.preview}
           alt={fileMetadata.file.name}
-          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+          style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }}
           loading="lazy"
         />
         {showRemoveButton && onRemove && (
@@ -42,7 +51,7 @@ export function MediaPreview({
             }}
             size="small"
           >
-            <CloseIcon fontSize="small" />
+            <CloseIcon fontSize="small" sx={{ color: "white" }} />
           </OverlayIconButton>
         )}
       </Box>
