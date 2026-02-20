@@ -9,6 +9,7 @@ import { useMediaUpload } from "@/hooks/create/useMediaUpload";
 import { useDeviceType } from "@/hooks/shared/useDeviceType";
 import { DesktopCreateForm } from "@/components/create/desktop/DesktopCreateForm";
 import { MobileCreateForm } from "@/components/create/mobile/MobileCreateForm";
+import { ErrorStack } from "@/components/shared/ErrorStack";
 import { useCreate } from "@/hooks/create/useCreate";
 
 export const Route = createFileRoute("/_app/create")({
@@ -17,8 +18,16 @@ export const Route = createFileRoute("/_app/create")({
 
 function CreatePage() {
   const { isDesktop } = useDeviceType();
-  const { files, getRootProps, getInputProps, isDragActive, removeFile, reorderFiles } =
-    useMediaUpload();
+  const {
+    files,
+    getRootProps,
+    getInputProps,
+    isDragActive,
+    removeFile,
+    reorderFiles,
+    errors,
+    removeError,
+  } = useMediaUpload();
   const theme = useTheme();
 
   const { methods, serverErrorMessage, handleSubmit, isSubmitting } = useCreate();
@@ -48,6 +57,13 @@ function CreatePage() {
           ) : (
             <MobileCreateForm files={files} getRootProps={getRootProps} removeFile={removeFile} />
           )}
+
+          {/* Error notifications */}
+          <ErrorStack
+            errors={errors}
+            onRemoveError={removeError}
+            position={isDesktop ? "top-right" : "bottom-center"}
+          />
 
           {/* Stores all uploaded content */}
           <input {...getInputProps()} />

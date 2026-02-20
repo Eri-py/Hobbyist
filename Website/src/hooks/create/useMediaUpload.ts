@@ -11,17 +11,27 @@ export type FileWithMetadata = {
   preview: string;
 };
 
+export type MediaUploadError = {
+  id: string;
+  message: string;
+};
+
+const createMediaUploadError = (message: string): MediaUploadError => ({
+  id: crypto.randomUUID(),
+  message,
+});
+
 export function useMediaUpload() {
   const [filesWithMetadata, setFilesWithMetadata] = useState<FileWithMetadata[]>([]);
-  const [errors, setErrors] = useState<string[]>([]);
+  const [errors, setErrors] = useState<MediaUploadError[]>([]);
 
-  // Auto-clear errors after 10 seconds with cleanup
+  // Auto-clear errors after 20 seconds
   useEffect(() => {
     if (errors.length === 0) return;
 
     const timerId = setTimeout(() => {
       setErrors([]);
-    }, 10000);
+    }, 20000);
 
     return () => clearTimeout(timerId);
   }, [errors]);
@@ -77,7 +87,9 @@ export function useMediaUpload() {
         );
 
         setFilesWithMetadata((prev) => [...prev, ...newFilesWithMetadata]);
-        setErrors([...rejected]);
+        if (rejected.length > 0) {
+          setErrors((prev) => [...prev, ...rejected.map(createMediaUploadError)]);
+        }
       }
     },
     [filesWithMetadata],
@@ -100,7 +112,7 @@ export function useMediaUpload() {
       }
     });
 
-    setErrors((prev) => [...prev, ...errorMessages]);
+    setErrors((prev) => [...prev, ...errorMessages.map(createMediaUploadError)]);
   }, []);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -136,8 +148,8 @@ export function useMediaUpload() {
     });
   }, []);
 
-  const removeError = useCallback((index: number) => {
-    setErrors((prev) => prev.filter((_, i) => i !== index));
+  const removeError = useCallback((errorId: string) => {
+    setErrors((prev) => prev.filter((error) => error.id !== errorId));
   }, []);
 
   const reorderFiles = useCallback((newOrder: FileWithMetadata[]) => {
