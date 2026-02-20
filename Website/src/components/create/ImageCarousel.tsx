@@ -1,3 +1,4 @@
+import type { MouseEvent } from "react";
 import type { FileWithMetadata } from "@/hooks/create/useMediaUpload";
 
 import Box from "@mui/material/Box";
@@ -17,6 +18,7 @@ type ImageCarouselProps = {
   onNext: () => void;
   onRemove: (fileId: string) => void;
   showCounter?: boolean;
+  showRemoveButton?: boolean;
 };
 
 export function ImageCarousel({
@@ -27,8 +29,14 @@ export function ImageCarousel({
   onNext,
   onRemove,
   showCounter = true,
+  showRemoveButton = true,
 }: ImageCarouselProps) {
   const theme = useTheme();
+
+  const handleRemove = (event: MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    onRemove(currentFile.id);
+  };
 
   return (
     <Box
@@ -84,6 +92,8 @@ export function ImageCarousel({
             display: "flex",
             gap: 1,
             alignItems: "center",
+            zIndex: 20,
+            pointerEvents: "auto",
           }}
         >
           <Box
@@ -99,9 +109,11 @@ export function ImageCarousel({
           >
             {currentIndex + 1} / {totalFiles}
           </Box>
-          <OverlayIconButton onClick={() => onRemove(currentFile.id)} size="small">
-            <DeleteIcon sx={{ color: "white" }} />
-          </OverlayIconButton>
+          {showRemoveButton && (
+            <OverlayIconButton onClick={handleRemove} size="small">
+              <DeleteIcon sx={{ color: "white" }} />
+            </OverlayIconButton>
+          )}
         </Box>
       )}
     </Box>

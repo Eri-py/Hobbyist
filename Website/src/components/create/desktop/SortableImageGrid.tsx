@@ -17,9 +17,10 @@ import { SortableMediaItem } from "./SortableMediaItem";
 const ImageGrid = styled(Stack)(({ theme }) => ({
   overflowX: "auto",
   overflowY: "hidden",
-  paddingBottom: 1,
-  minHeight: 140,
+  paddingBottom: 12,
+  minHeight: 300,
   cursor: "grab",
+  overscrollBehavior: "contain",
   "&:active": {
     cursor: "grabbing",
   },
@@ -80,7 +81,7 @@ export function SortableImageGrid({ files, removeFile, onReorder }: SortableImag
               fileMetadata={fileMetadata}
               removeFile={removeFile}
               sx={{
-                width: 151,
+                maxWidth: 300,
                 aspectRatio: 1 / 1,
                 flexShrink: 0,
               }}
