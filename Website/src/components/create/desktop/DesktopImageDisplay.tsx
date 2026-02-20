@@ -75,6 +75,7 @@ export function DesktopImageDisplay({
         onNext={handleNext}
         onRemove={removeFile}
         showCounter
+        showRemoveButton={false}
       />
 
       {/* Add more button */}
