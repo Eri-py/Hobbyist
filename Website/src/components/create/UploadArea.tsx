@@ -1,74 +1,49 @@
 import type { DropzoneRootProps } from "react-dropzone";
 
-import Stack from "@mui/material/Stack";
+import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import CameraAltOutlinedIcon from "@mui/icons-material/CameraAltOutlined";
-import { useTheme } from "@mui/material/styles";
-import Button from "@mui/material/Button";
+import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined";
+import { useDeviceType } from "@/hooks/shared/useDeviceType";
 
 type UploadAreaProps = {
   getRootProps: <T extends DropzoneRootProps>(props?: T) => T;
   isDragActive?: boolean;
-  variant?: "desktop" | "mobile";
 };
 
-export function UploadArea({
-  getRootProps,
-  isDragActive = false,
-  variant = "desktop",
-}: UploadAreaProps) {
-  const theme = useTheme();
-
-  if (variant === "mobile") {
-    return (
-      <Stack flex={1} justifyContent="center" alignItems="center" gap={3} padding={2}>
-        <Stack gap={2} alignItems="center">
-          <CameraAltOutlinedIcon sx={{ fontSize: 96, color: "text.secondary" }} />
-
-          <Stack>
-            <Typography variant="h6" textAlign="center">
-              Add photos to your post
-            </Typography>
-            <Typography variant="body2" textAlign="center" color="text.secondary">
-              Select at least one photo to showcase your item
-            </Typography>
-          </Stack>
-
-          <Button variant="contained" size="large" {...getRootProps()} sx={{ width: "100%" }}>
-            Choose from Gallery
-          </Button>
-        </Stack>
-      </Stack>
-    );
-  }
-
+export function UploadArea({ getRootProps, isDragActive = false }: UploadAreaProps) {
+  const { isDesktop } = useDeviceType();
   return (
-    <Stack
+    <Box
       {...getRootProps()}
       component="button"
       type="button"
-      border={`2px dashed ${theme.palette.primary.main}`}
-      flex={1}
-      alignItems="center"
-      justifyContent="center"
-      borderRadius={3}
-      bgcolor="transparent"
       sx={{
+        flex: 1,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        border: "2px dashed",
+        borderColor: "divider",
+        borderRadius: 2,
+        backgroundColor: "transparent",
+        padding: 6,
+        minHeight: isDesktop ? 400 : 300,
+        cursor: "pointer",
+        transition: "all 0.2s ease",
         "&:hover": {
-          cursor: "pointer",
-          border: "2px dashed white",
+          borderColor: "primary.main",
         },
       }}
     >
-      <CameraAltOutlinedIcon sx={{ fontSize: 96, color: "text.secondary" }} />
-      <Typography variant="h6" gutterBottom color="text.secondary">
-        {isDragActive ? "Drop photos here" : "Add photos to your post"}
+      <CloudUploadOutlinedIcon sx={{ fontSize: 48, color: "text.secondary", mb: 2 }} />
+      <Typography
+        variant="body1"
+        color="text.secondary"
+        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+      >
+        {isDragActive ? "Drop media here" : "Drag and Drop or upload media"}
       </Typography>
-      {!isDragActive && (
-        <Typography variant="body2" color="text.secondary">
-          Select at least one photo to showcase your item
-        </Typography>
-      )}
-    </Stack>
+    </Box>
   );
 }

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { FileWithMetadata } from "@/hooks/create/useMediaUpload";
 
-export function useImageCarousel(files: FileWithMetadata[]) {
+export function useMediaCarousel(files: FileWithMetadata[]) {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const handlePrevious = () => {
