@@ -1,6 +1,8 @@
 import { Stack, Alert, IconButton } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 
+import { type MediaUploadError } from "@/hooks/create/useMediaUpload";
+
 type ErrorStackPosition =
   | "top-left"
   | "top-center"
@@ -10,7 +12,7 @@ type ErrorStackPosition =
   | "bottom-right";
 
 type ErrorStackProps = {
-  errors: { id: string; message: string }[];
+  errors: MediaUploadError[];
   onRemoveError: (errorId: string) => void;
   position?: ErrorStackPosition;
 };
