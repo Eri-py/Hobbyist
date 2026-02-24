@@ -48,7 +48,7 @@ importers:
         version: link:../Shared/types
       '@hookform/resolvers':
         specifier: ^5.2.2
-        version: 5.2.2(react-hook-form@7.71.1(react@19.1.0))
+        version: 5.2.2(react-hook-form@7.71.2(react@19.1.0))
       '@react-native-community/datetimepicker':
         specifier: 8.6.0
         version: 8.6.0(expo@54.0.33)(react-native@0.81.5(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.1.0))(react@19.1.0)
@@ -122,8 +122,8 @@ importers:
         specifier: 19.1.0
         version: 19.1.0(react@19.1.0)
       react-hook-form:
-        specifier: ^7.71.1
-        version: 7.71.1(react@19.1.0)
+        specifier: ^7.71.2
+        version: 7.71.2(react@19.1.0)
       react-native:
         specifier: 0.81.5
         version: 0.81.5(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.1.0)
@@ -196,7 +196,7 @@ importers:
         version: link:../types
       '@hookform/resolvers':
         specifier: ^5.2.2
-        version: 5.2.2(react-hook-form@7.71.1(react@19.1.0))
+        version: 5.2.2(react-hook-form@7.71.2(react@19.1.0))
       '@tanstack/react-query':
         specifier: ^5.90.21
         version: 5.90.21(react@19.1.0)
@@ -207,8 +207,8 @@ importers:
         specifier: 19.1.0
         version: 19.1.0
       react-hook-form:
-        specifier: ^7.71.1
-        version: 7.71.1(react@19.1.0)
+        specifier: ^7.71.2
+        version: 7.71.2(react@19.1.0)
     devDependencies:
       cross-env:
         specifier: ^10.1.0
@@ -254,7 +254,7 @@ importers:
         version: link:../Shared/types
       '@hookform/resolvers':
         specifier: ^5.2.2
-        version: 5.2.2(react-hook-form@7.71.1(react@19.1.0))
+        version: 5.2.2(react-hook-form@7.71.2(react@19.1.0))
       '@mui/icons-material':
         specifier: ^7.3.8
         version: 7.3.8(@mui/material@7.3.8(@emotion/react@11.14.0(@types/react@19.2.14)(react@19.1.0))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.14)(react@19.1.0))(@types/react@19.2.14)(react@19.1.0))(@types/react@19.2.14)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(@types/react@19.2.14)(react@19.1.0)
@@ -286,8 +286,8 @@ importers:
         specifier: ^15.0.0
         version: 15.0.0(react@19.1.0)
       react-hook-form:
-        specifier: ^7.71.1
-        version: 7.71.1(react@19.1.0)
+        specifier: ^7.71.2
+        version: 7.71.2(react@19.1.0)
       zod:
         specifier: 3.25.76
         version: 3.25.76
@@ -4667,8 +4667,8 @@ packages:
     peerDependencies:
       react: 19.1.0
 
-  react-hook-form@7.71.1:
-    resolution: {integrity: sha512-9SUJKCGKo8HUSsCO+y0CtqkqI5nNuaDqTxyqPsZPqIwudpj4rCrAz/jZV+jn57bx5gtZKOh3neQu94DXMc+w5w==}
+  react-hook-form@7.71.2:
+    resolution: {integrity: sha512-1CHvcDYzuRUNOflt4MOq3ZM46AronNJtQ1S7tnX6YN4y72qhgiUItpacZUAQ0TyWYci3yz1X+rXaSxiuEm86PA==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       react: 19.1.0
@@ -6874,10 +6874,10 @@ snapshots:
       find-up: 5.0.0
       js-yaml: 4.1.1
 
-  '@hookform/resolvers@5.2.2(react-hook-form@7.71.1(react@19.1.0))':
+  '@hookform/resolvers@5.2.2(react-hook-form@7.71.2(react@19.1.0))':
     dependencies:
       '@standard-schema/utils': 0.3.0
-      react-hook-form: 7.71.1(react@19.1.0)
+      react-hook-form: 7.71.2(react@19.1.0)
 
   '@humanfs/core@0.19.1': {}
 
@@ -10738,7 +10738,7 @@ snapshots:
     dependencies:
       react: 19.1.0
 
-  react-hook-form@7.71.1(react@19.1.0):
+  react-hook-form@7.71.2(react@19.1.0):
     dependencies:
       react: 19.1.0
 
