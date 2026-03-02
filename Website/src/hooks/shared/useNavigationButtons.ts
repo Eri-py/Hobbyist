@@ -1,7 +1,9 @@
 import { useNavigate } from "@tanstack/react-router";
+import { useAuth } from "@hobbyist/hooks";
 
 export function useNavigationButtons() {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   // Create button.
   const handleCreateClick = () => {
@@ -25,11 +27,21 @@ export function useNavigationButtons() {
     navigate({ to: "/events" });
   };
 
+  const handleSettingsClick = () => {
+    if (user?.username) {
+      navigate({ to: `/profile/${user.username}/settings` });
+      return;
+    }
+
+    navigate({ to: "/profile" });
+  };
+
   return {
     handleCreateClick,
     handleMessagesClick,
     handleHomeClick,
     handleTradeClick,
     handleEventsClick,
+    handleSettingsClick,
   };
 }

@@ -16,6 +16,10 @@ export function useNavigation() {
   const { user } = useAuth();
 
   const getActiveTabFromPath = (pathname: string): string => {
+    if (user && pathname.startsWith(`/profile/${user.username}/settings`)) {
+      return "Settings";
+    }
+
     // Check if viewing own profile
     if (user && pathname.startsWith(`/profile/${user.username}`)) {
       return "Profile";

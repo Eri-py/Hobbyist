@@ -3,25 +3,16 @@ import type { ReactElement } from "react";
 import HomeIcon from "@mui/icons-material/Home";
 import StoreIcon from "@mui/icons-material/Store";
 import EventIcon from "@mui/icons-material/Event";
+import SettingsIcon from "@mui/icons-material/Settings";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
 import ListItemIcon from "@mui/material/ListItemIcon";
+import Stack from "@mui/material/Stack";
 import { styled } from "@mui/material/styles";
 
 import { useSidebar } from "@/hooks/app/useSidebar";
 import { useNavigationButtons } from "@/hooks/shared/useNavigationButtons";
 import { useNavigation } from "@/hooks/app/useNavigation";
-
-const CollapsedIcon = styled(ListItemIcon)({
-  minWidth: "fit-content",
-});
-
-const ExpandedText = styled(ListItemText)({
-  "& .MuiListItemText-primary": {
-    fontSize: 15,
-    fontWeight: 300,
-  },
-});
 
 type NavigationItem = {
   label: string;
@@ -29,8 +20,43 @@ type NavigationItem = {
   handleClick: () => void;
 };
 
+const NavigationContainer = styled(Stack)({
+  gap: 8,
+});
+
+const NavItemButton = styled(ListItemButton, {
+  shouldForwardProp: (prop) => prop !== "isSidebarOpen",
+})<{ isSidebarOpen: boolean }>(({ isSidebarOpen }) => ({
+  borderRadius: isSidebarOpen ? 8 : 12,
+  gap: isSidebarOpen ? 12 : 0,
+  height: isSidebarOpen ? 40 : "auto",
+}));
+
+const ExpandedIcon = styled(ListItemIcon)({
+  minWidth: "fit-content",
+});
+
+const ExpandedLabel = styled(ListItemText)({
+  "& .MuiListItemText-primary": {
+    fontSize: 15,
+    fontWeight: 300,
+  },
+});
+
+const CollapsedLabel = styled(ListItemText)({
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  maxHeight: 56,
+  "& .MuiListItemText-secondary": {
+    textAlign: "center",
+    fontSize: 12,
+  },
+});
+
 export function NavigationButtons() {
-  const { handleHomeClick, handleTradeClick, handleEventsClick } = useNavigationButtons();
+  const { handleHomeClick, handleTradeClick, handleEventsClick, handleSettingsClick } =
+    useNavigationButtons();
   const { getActiveTab } = useNavigation();
   const { isSidebarOpen } = useSidebar();
 
@@ -38,48 +64,30 @@ export function NavigationButtons() {
     { label: "Home", icon: <HomeIcon />, handleClick: handleHomeClick },
     { label: "Trade", icon: <StoreIcon />, handleClick: handleTradeClick },
     { label: "Events", icon: <EventIcon />, handleClick: handleEventsClick },
+    { label: "Settings", icon: <SettingsIcon />, handleClick: handleSettingsClick },
   ];
 
-  const navigationButtons = navigationItems.map((item, idx) => {
+  const navigationButtons = navigationItems.map((item) => {
     const isActive = getActiveTab(item.label);
-    const isLastItem = idx === navigationItems.length - 1;
 
     return (
-      <ListItemButton
+      <NavItemButton
         key={item.label}
-        sx={{
-          borderRadius: isSidebarOpen ? 1 : 1.5,
-          gap: isSidebarOpen ? 1.5 : 0,
-          height: isSidebarOpen ? 40 : "auto",
-          marginBottom: isSidebarOpen && isLastItem ? 1 : "0",
-        }}
+        isSidebarOpen={isSidebarOpen}
         selected={isActive}
         onClick={item.handleClick}
       >
         {isSidebarOpen ? (
           <>
-            <CollapsedIcon>{item.icon}</CollapsedIcon>
-            <ExpandedText primary={item.label} />
+            <ExpandedIcon>{item.icon}</ExpandedIcon>
+            <ExpandedLabel primary={item.label} />
           </>
         ) : (
-          <ListItemText
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              maxHeight: 56,
-              "& .MuiListItemText-secondary": {
-                textAlign: "center",
-                fontSize: 12,
-              },
-            }}
-            primary={item.icon}
-            secondary={item.label}
-          />
+          <CollapsedLabel primary={item.icon} secondary={item.label} />
         )}
-      </ListItemButton>
+      </NavItemButton>
     );
   });
 
-  return navigationButtons;
+  return <NavigationContainer>{navigationButtons}</NavigationContainer>;
 }
