@@ -16,7 +16,7 @@ export function CreateFormHeader({
 }: CreateFormHeaderProps) {
   return (
     <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-      <Stack gap={0.5}>
+      <Stack>
         <Typography variant="h5" sx={{ fontWeight: 600 }}>
           {title}
         </Typography>

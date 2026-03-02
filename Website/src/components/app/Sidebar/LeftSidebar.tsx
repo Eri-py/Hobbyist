@@ -56,7 +56,7 @@ export function LeftSidebar() {
         </IconButton>
       </Tooltip>
 
-      <Stack gap={4} alignItems={isSidebarOpen ? undefined : "center"}>
+      <Stack gap={2} alignItems={isSidebarOpen ? undefined : "center"}>
         {isAuthenticated && (
           <ProfileInfo isSidebarOpen={isSidebarOpen} username={username} location={location} />
         )}

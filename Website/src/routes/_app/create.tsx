@@ -15,9 +15,18 @@ import {
   MobileCreateForm,
   type MobileCreateTab,
 } from "@/components/create/mobile/MobileCreateForm";
+
 // import { CommunitySelector } from "@/components/create/CommunitySelector";
 
 export const Route = createFileRoute("/_app/create")({
+  // beforeLoad: () => {
+  //   if (
+  //     typeof window !== "undefined" &&
+  //     window.matchMedia(`(min-width: ${DESKTOP_MIN_WIDTH}px)`).matches
+  //   ) {
+  //     throw redirect({ to: "/" });
+  //   }
+  // },
   component: CreatePage,
 });
 

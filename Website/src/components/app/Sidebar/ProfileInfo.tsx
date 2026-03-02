@@ -2,7 +2,8 @@ import Stack from "@mui/material/Stack";
 import Avatar from "@mui/material/Avatar";
 import Typography from "@mui/material/Typography";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
-import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
+import LocationOffIcon from "@mui/icons-material/LocationOff";
+import LocationOnIcon from "@mui/icons-material/LocationOn";
 
 type ProfileInfoProps = {
   isSidebarOpen: boolean;
@@ -19,16 +20,26 @@ export function ProfileInfo({ isSidebarOpen, username, location }: ProfileInfoPr
 
       {isSidebarOpen && (
         <Stack>
-          <Typography fontSize={14} fontWeight={600} noWrap>
+          <Typography fontSize={18} fontWeight={600} noWrap>
             {username}
           </Typography>
+          <Typography></Typography>
 
-          <Stack direction="row" alignItems="center" gap={0.5} minWidth={0}>
-            <PlaceOutlinedIcon sx={{ fontSize: 14, color: "text.secondary" }} />
-            <Typography variant="caption" color="text.secondary" noWrap>
-              {location}
-            </Typography>
-          </Stack>
+          {location ? (
+            <Stack direction="row" alignItems="center" gap={0.5}>
+              <LocationOnIcon sx={{ fontSize: 14, color: "text.secondary" }} />
+              <Typography variant="caption" color="text.secondary" noWrap>
+                {location}
+              </Typography>
+            </Stack>
+          ) : (
+            <Stack direction="row" alignItems="center" gap={0.5}>
+              <LocationOffIcon sx={{ fontSize: 14, color: "text.secondary" }} />
+              <Typography variant="caption" color="text.secondary" noWrap>
+                No location set
+              </Typography>
+            </Stack>
+          )}
         </Stack>
       )}
     </Stack>

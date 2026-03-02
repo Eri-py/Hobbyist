@@ -4,7 +4,6 @@ import { get, useFormContext } from "react-hook-form";
 import Stack from "@mui/material/Stack";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
-import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import Paper from "@mui/material/Paper";
 import Chip from "@mui/material/Chip";
@@ -17,7 +16,7 @@ import type { FileWithMetadata } from "@/hooks/create/useMediaUpload";
 import type { CreateFormSchemaTypes } from "@hobbyist/form-schemas";
 import { ActionButtons } from "@/components/create/ActionButtons";
 import { CreateFormHeader } from "@/components/create/CreateFormHeader";
-import { CreateTips } from "@/components/create/CreateTips";
+import { TitleFormInput } from "@/components/create/FormInputs";
 import { UploadArea } from "@/components/create/UploadArea";
 import { SortableImageGrid } from "@/components/create/desktop/SortableImageGrid";
 
@@ -51,78 +50,63 @@ export function DesktopCreateForm({
     { label: "Fair", value: 2 },
   ] as const;
 
-  const titleValue = watch("title") || "";
   const conditionValue = watch("condition");
   const isTradable = watch("availableForTrade") ?? false;
 
   return (
     <Stack
       width="100%"
-      maxWidth={1500}
+      maxWidth={1280}
       direction="row"
-      justifyContent="space-between"
+      justifyContent="center"
       marginX="auto"
-      paddingX={4}
+      paddingX={{ xs: 2, md: 4 }}
       paddingY={3}
-      alignItems="stretch"
+      alignItems="flex-start"
       flex={1}
     >
-      <Stack gap={2} flex={1} width="auto" maxWidth={900} minWidth={0}>
-        <CreateFormHeader rightAction={<Button variant="text">Clear</Button>} />
+      <Stack width="100%" gap={3}>
+        <CreateFormHeader
+          rightAction={
+            <Button variant="text" type="button">
+              Clear post
+            </Button>
+          }
+        />
 
-        <Stack gap={3}>
-          <Stack flex={1} gap={3}>
-            <Box sx={{ position: "relative" }}>
-              <TextField
-                {...register("title")}
-                variant="outlined"
-                placeholder="e.g. Mint Charizard holo, PSA 9"
-                fullWidth
-                error={!!get(errors, "title")}
-                helperText={get(errors, "title")?.message as string | undefined}
-              />
-              <Typography
-                variant="caption"
-                sx={{
-                  position: "absolute",
-                  right: 12,
-                  bottom: get(errors, "title") ? 24 : 8,
-                  color: "text.secondary",
-                  fontSize: "0.75rem",
-                }}
-              >
-                {titleValue.length}/300
-              </Typography>
-            </Box>
+        <Stack direction="row" gap={{ xs: 3, md: 6 }} width="100%" alignItems="flex-start">
+          <Stack flex={2} gap={2}>
+            <Paper
+              elevation={0}
+              sx={{
+                width: "100%",
+                minHeight: 520,
+                borderRadius: 3,
+                overflow: "hidden",
+                display: "flex",
+                flexDirection: "column",
+                backgroundColor: "transparent",
+              }}
+            >
+              {files.length > 0 ? (
+                <SortableImageGrid files={files} removeFile={removeFile} onReorder={reorderFiles} />
+              ) : (
+                <UploadArea getRootProps={getRootProps} isDragActive={isDragActive} />
+              )}
+            </Paper>
 
-            <Stack gap={1}>
-              <Typography variant="h6">Images & Video</Typography>
-              <Paper
-                elevation={0}
-                sx={{
-                  width: "100%",
-                  minHeight: 150,
-                  borderRadius: 2,
-                  overflow: "hidden",
-                  display: "flex",
-                  flexDirection: "column",
-                  backgroundColor: "transparent",
-                }}
-              >
-                {files.length > 0 ? (
-                  <SortableImageGrid
-                    files={files}
-                    removeFile={removeFile}
-                    onReorder={reorderFiles}
-                  />
-                ) : (
-                  <UploadArea getRootProps={getRootProps} isDragActive={isDragActive} />
-                )}
-              </Paper>
-            </Stack>
+            <Typography variant="body2" color="text.secondary" textAlign="center" px={2}>
+              We recommend using high quality .jpg files less than 20 MB or .mp4 files less than 200
+              MB.
+            </Typography>
+          </Stack>
+
+          <Stack gap={3} flex={3} width="auto" maxWidth={760} minWidth={0}>
+            <TitleFormInput label="Title" placeholder="e.g. Mint Charizard holo, PSA 9" />
 
             <TextField
               {...register("description")}
+              label="Description"
               placeholder="Describe condition, notable details, and what makes this collectible special"
               multiline
               rows={5}
@@ -193,37 +177,23 @@ export function DesktopCreateForm({
                     label="Available for trade"
                   />
 
-                  {isTradable && (
-                    <TextField
-                      {...register("lookingFor")}
-                      label="What are you looking for?"
-                      placeholder="e.g. Blastoise cards, sealed booster packs, vintage items"
-                      fullWidth
-                      size="small"
-                      error={!!get(errors, "lookingFor")}
-                      helperText={get(errors, "lookingFor")?.message as string | undefined}
-                    />
-                  )}
+                  <TextField
+                    {...register("lookingFor")}
+                    label="What are you looking for?"
+                    placeholder="e.g. Blastoise cards, sealed booster packs, vintage items"
+                    fullWidth
+                    size="small"
+                    disabled={!isTradable}
+                    error={!!get(errors, "lookingFor")}
+                    helperText={get(errors, "lookingFor")?.message as string | undefined}
+                  />
                 </Stack>
               </Paper>
             </Stack>
+
+            <ActionButtons isSubmitting={isSubmitting} />
           </Stack>
         </Stack>
-
-        <ActionButtons isSubmitting={isSubmitting} />
-      </Stack>
-
-      <Stack
-        sx={{
-          flex: 1,
-          minWidth: 280,
-          maxWidth: 420,
-          height: "100%",
-
-          p: 2,
-        }}
-      >
-        <CreateTips />
       </Stack>
     </Stack>
   );
