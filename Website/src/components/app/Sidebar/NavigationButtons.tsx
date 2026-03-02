@@ -13,6 +13,7 @@ import { styled } from "@mui/material/styles";
 import { useSidebar } from "@/hooks/app/useSidebar";
 import { useNavigationButtons } from "@/hooks/shared/useNavigationButtons";
 import { useNavigation } from "@/hooks/app/useNavigation";
+import { useAuth } from "@hobbyist/hooks";
 
 type NavigationItem = {
   label: string;
@@ -59,12 +60,15 @@ export function NavigationButtons() {
     useNavigationButtons();
   const { getActiveTab } = useNavigation();
   const { isSidebarOpen } = useSidebar();
+  const { isAuthenticated } = useAuth();
 
   const navigationItems: NavigationItem[] = [
     { label: "Home", icon: <HomeIcon />, handleClick: handleHomeClick },
     { label: "Trade", icon: <StoreIcon />, handleClick: handleTradeClick },
     { label: "Events", icon: <EventIcon />, handleClick: handleEventsClick },
-    { label: "Settings", icon: <SettingsIcon />, handleClick: handleSettingsClick },
+    ...(isAuthenticated
+      ? [{ label: "Settings", icon: <SettingsIcon />, handleClick: handleSettingsClick }]
+      : []),
   ];
 
   const navigationButtons = navigationItems.map((item) => {

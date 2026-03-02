@@ -1,9 +1,9 @@
 import { alpha, useTheme } from "@mui/material/styles";
 import Stack from "@mui/material/Stack";
 import List from "@mui/material/List";
-import FormControlLabel from "@mui/material/FormControlLabel";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
+import Typography from "@mui/material/Typography";
 import MenuIcon from "@mui/icons-material/Menu";
 
 import { useThemeToggle } from "@/hooks/shared/useThemeToggle";
@@ -13,11 +13,11 @@ import { NavigationButtons } from "./NavigationButtons";
 import { ProfileInfo } from "./ProfileInfo";
 import { useAuth } from "@hobbyist/hooks";
 
-export function Sidebar() {
+export function LeftSidebar() {
   const { mode, toggleTheme } = useThemeToggle();
   const { isSidebarOpen, toggleSidebar } = useSidebar();
   const theme = useTheme();
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
 
   const username = user?.username ?? null;
   const location = null;
@@ -40,7 +40,7 @@ export function Sidebar() {
             position: "absolute",
             right: 0,
             transform: "translate(50%, 150%)",
-            zIndex: 2,
+            zIndex: 3,
             width: 40,
             height: 40,
             borderRadius: "50%",
@@ -57,7 +57,9 @@ export function Sidebar() {
       </Tooltip>
 
       <Stack gap={4} alignItems={isSidebarOpen ? undefined : "center"}>
-        <ProfileInfo isSidebarOpen={isSidebarOpen} username={username} location={location} />
+        {isAuthenticated && (
+          <ProfileInfo isSidebarOpen={isSidebarOpen} username={username} location={location} />
+        )}
 
         {/* Main sidebar routes */}
         <List disablePadding>
@@ -66,11 +68,18 @@ export function Sidebar() {
       </Stack>
 
       <Stack component="footer" paddingBottom={2}>
-        <FormControlLabel
-          control={<ThemeSwitch sx={{ m: 1 }} checked={mode === "dark"} onChange={toggleTheme} />}
-          label={isSidebarOpen ? "Toggle theme" : ""}
-          slotProps={{ typography: { sx: { fontWeight: 300 } } }}
-        />
+        {isSidebarOpen ? (
+          <Stack direction="row" alignItems="center" justifyContent="space-between" px={1.25}>
+            <Typography variant="body2" fontWeight={300}>
+              Toggle theme
+            </Typography>
+            <ThemeSwitch checked={mode === "dark"} onChange={toggleTheme} />
+          </Stack>
+        ) : (
+          <Stack alignItems="center">
+            <ThemeSwitch checked={mode === "dark"} onChange={toggleTheme} />
+          </Stack>
+        )}
       </Stack>
     </Stack>
   );

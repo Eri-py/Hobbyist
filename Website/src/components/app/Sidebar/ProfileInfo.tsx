@@ -23,14 +23,12 @@ export function ProfileInfo({ isSidebarOpen, username, location }: ProfileInfoPr
             {username}
           </Typography>
 
-          {location && (
-            <Stack direction="row" alignItems="center" gap={0.5} minWidth={0}>
-              <PlaceOutlinedIcon sx={{ fontSize: 14, color: "text.secondary" }} />
-              <Typography variant="caption" color="text.secondary" noWrap>
-                {location}
-              </Typography>
-            </Stack>
-          )}
+          <Stack direction="row" alignItems="center" gap={0.5} minWidth={0}>
+            <PlaceOutlinedIcon sx={{ fontSize: 14, color: "text.secondary" }} />
+            <Typography variant="caption" color="text.secondary" noWrap>
+              {location}
+            </Typography>
+          </Stack>
         </Stack>
       )}
     </Stack>
