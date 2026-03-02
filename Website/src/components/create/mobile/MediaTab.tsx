@@ -1,40 +1,30 @@
 import type { DropzoneRootProps } from "react-dropzone";
 import type { FileWithMetadata } from "@/hooks/create/useMediaUpload";
-import { useTheme } from "@mui/material/styles";
-import useMediaQuery from "@mui/material/useMediaQuery";
 
 import Stack from "@mui/material/Stack";
 import Paper from "@mui/material/Paper";
-import Box from "@mui/material/Box";
 
-import { MediaDisplay } from "../MediaDisplay";
-import { UploadArea } from "../UploadArea";
+import { MediaCarousel } from "@/components/create/mobile/MediaCarousel";
+import { UploadArea } from "@/components/create/UploadArea";
+import { useMediaCarousel } from "@/hooks/create/useMediaCarousel";
 
 type MediaTabProps = {
   files: FileWithMetadata[];
   getRootProps: <T extends DropzoneRootProps>(props?: T) => T;
   isDragActive: boolean;
   removeFile: (fileId: string) => void;
-  reorderFiles: (newOrder: FileWithMetadata[]) => void;
 };
 
-export function MediaTab({
-  files,
-  getRootProps,
-  isDragActive,
-  removeFile,
-  reorderFiles,
-}: MediaTabProps) {
-  const theme = useTheme();
-  const isDesktopView = useMediaQuery(theme.breakpoints.up("md"));
+export function MediaTab({ files, getRootProps, isDragActive, removeFile }: MediaTabProps) {
+  const { currentIndex, handlePrevious, handleNext, currentFile } = useMediaCarousel(files);
 
   return (
-    <Stack gap={2}>
+    <Stack gap={3}>
       <Paper
         elevation={0}
         sx={{
           width: "100%",
-          minHeight: isDesktopView ? 400 : 300,
+          minHeight: 250,
           borderRadius: 2,
           overflow: "hidden",
           display: "flex",
@@ -43,14 +33,16 @@ export function MediaTab({
         }}
       >
         {files.length > 0 ? (
-          <Box sx={{ p: 2, flex: 1 }}>
-            <MediaDisplay
-              files={files}
-              getRootProps={getRootProps}
-              removeFile={removeFile}
-              reorderFiles={reorderFiles}
-            />
-          </Box>
+          <MediaCarousel
+            currentFile={currentFile}
+            currentIndex={currentIndex}
+            totalFiles={files.length}
+            onPrevious={handlePrevious}
+            onNext={handleNext}
+            onRemove={removeFile}
+            getRootProps={getRootProps}
+            showCounter
+          />
         ) : (
           <UploadArea getRootProps={getRootProps} isDragActive={isDragActive} />
         )}

@@ -1,26 +1,20 @@
 import { useFormContext, get } from "react-hook-form";
-import { useTheme } from "@mui/material/styles";
-import useMediaQuery from "@mui/material/useMediaQuery";
 
 import Stack from "@mui/material/Stack";
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 
-export function TextTab() {
-  const theme = useTheme();
-  const isDesktopView = useMediaQuery(theme.breakpoints.up("md"));
-
+export function DescriptionTab() {
   const {
     register,
     formState: { errors },
     watch,
   } = useFormContext();
-
   const titleValue = watch("title") || "";
 
   return (
-    <Stack gap={2}>
+    <Stack gap={3}>
       <Box sx={{ position: "relative" }}>
         <TextField
           {...register("title")}
@@ -37,7 +31,6 @@ export function TextTab() {
             right: 12,
             bottom: errors.title ? 24 : 8,
             color: "text.secondary",
-            fontSize: "0.75rem",
           }}
         >
           {titleValue.length}/300
@@ -48,11 +41,11 @@ export function TextTab() {
         {...register("description")}
         placeholder="Description"
         multiline
-        rows={isDesktopView ? 8 : 6}
+        rows={7}
         fullWidth
         variant="outlined"
-        error={!!errors.description}
-        helperText={get(errors, "title")?.message}
+        error={!!get(errors, "description")}
+        helperText={get(errors, "description")?.message}
         slotProps={{
           htmlInput: {
             sx: {

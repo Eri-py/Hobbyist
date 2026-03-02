@@ -3,7 +3,6 @@ import type { DropzoneRootProps } from "react-dropzone";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined";
-import { useDeviceType } from "@/hooks/shared/useDeviceType";
 
 type UploadAreaProps = {
   getRootProps: <T extends DropzoneRootProps>(props?: T) => T;
@@ -11,7 +10,6 @@ type UploadAreaProps = {
 };
 
 export function UploadArea({ getRootProps, isDragActive = false }: UploadAreaProps) {
-  const { isDesktop } = useDeviceType();
   return (
     <Box
       {...getRootProps()}
@@ -28,11 +26,10 @@ export function UploadArea({ getRootProps, isDragActive = false }: UploadAreaPro
         borderRadius: 2,
         backgroundColor: "transparent",
         padding: 6,
-        minHeight: isDesktop ? 400 : 300,
         cursor: "pointer",
         transition: "all 0.2s ease",
         "&:hover": {
-          borderColor: "primary.main",
+          borderColor: "white",
         },
       }}
     >

@@ -12,7 +12,7 @@ import type { FileWithMetadata } from "@/hooks/create/useMediaUpload";
 import Stack from "@mui/material/Stack";
 import { styled } from "@mui/material/styles";
 
-import { SortableMediaItem } from "./SortableMediaItem";
+import { SortableMediaItem } from "@/components/create/desktop/SortableMediaItem";
 
 const ImageGrid = styled(Stack)(({ theme }) => ({
   overflowX: "auto",

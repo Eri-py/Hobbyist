@@ -17,7 +17,7 @@ export function Sidebar() {
     <Stack
       width={isSidebarOpen ? 300 : 90}
       justifyContent="space-between"
-      borderRight={`1px solid ${alpha(theme.palette.primary.main, 0.25)}`}
+      borderRight={`1px solid ${alpha(theme.palette.divider, 0.25)}`}
       paddingInline={1}
     >
       <List>

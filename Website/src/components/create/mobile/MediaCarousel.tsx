@@ -66,7 +66,6 @@ export function MediaCarousel({
     >
       <MediaPreview fileMetadata={currentFile} onRemove={onRemove} showRemoveButton={false} />
 
-      {/* Edit/Check button */}
       {showEditButton && onEditToggle && (
         <OverlayIconButton
           onClick={onEditToggle}
@@ -85,7 +84,6 @@ export function MediaCarousel({
         </OverlayIconButton>
       )}
 
-      {/* Navigation arrows */}
       {totalFiles > 1 && (
         <>
           <OverlayIconButton
@@ -114,7 +112,6 @@ export function MediaCarousel({
         </>
       )}
 
-      {/* Action buttons */}
       {showCounter && (
         <Box
           sx={{
