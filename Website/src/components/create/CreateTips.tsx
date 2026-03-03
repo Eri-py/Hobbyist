@@ -40,7 +40,7 @@ export function CreateTips({ activeTip }: CreateTipsProps) {
       <List dense sx={{ py: 0.5 }}>
         {Object.entries(TIP_TEXT).map((entry) => (
           <ListItem key={entry[0]} sx={{ color: "text.secondary", py: 0.25 }}>
-            <ListItemIcon sx={{ minWidth: 28 }}>
+            <ListItemIcon>
               <TipsAndUpdatesIcon fontSize="small" sx={{ color: "text.secondary" }} />
             </ListItemIcon>
             <ListItemText primary={entry[1]} sx={{ my: 0 }} />

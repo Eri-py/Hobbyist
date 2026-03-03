@@ -1,17 +1,21 @@
 import { type SyntheticEvent } from "react";
 import type { DropzoneRootProps } from "react-dropzone";
+
 import type { FileWithMetadata } from "@/hooks/create/useMediaUpload";
 
 import Stack from "@mui/material/Stack";
 import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
 import Paper from "@mui/material/Paper";
+import Box from "@mui/material/Box";
 
 import { CreateFormHeader } from "@/components/create/CreateFormHeader";
 import { CreateTips, type CreateTipKey } from "@/components/create/CreateTips";
-import { DescriptionTab } from "@/components/create/mobile/DescriptionTab";
-import { MediaTab } from "@/components/create/mobile/MediaTab";
 import { ActionButtons } from "@/components/create/ActionButtons";
+import { DescriptionFormInput, TitleFormInput } from "@/components/create/FormInputs";
+import { MediaCarousel } from "@/components/create/MediaCarousel";
+import { UploadArea } from "@/components/create/UploadArea";
+import { useMediaCarousel } from "@/hooks/create/useMediaCarousel";
 
 export type MobileCreateTab = CreateTipKey;
 
@@ -34,6 +38,8 @@ export function MobileCreateForm({
   activeTab,
   onTabChange,
 }: MobileCreateFormProps) {
+  const { currentIndex, handlePrevious, handleNext, currentFile } = useMediaCarousel(files);
+
   return (
     <Stack
       width="100%"
@@ -53,15 +59,45 @@ export function MobileCreateForm({
         </Tabs>
 
         <Stack gap={3}>
-          {activeTab === "details" && <DescriptionTab />}
-          {activeTab === "media" && (
-            <MediaTab
-              files={files}
-              getRootProps={getRootProps}
-              isDragActive={isDragActive}
-              removeFile={removeFile}
-            />
+          {activeTab === "details" && (
+            <Stack gap={3}>
+              <TitleFormInput placeholder="Title" />
+
+              <DescriptionFormInput placeholder="Description" rows={7} />
+            </Stack>
           )}
+
+          {activeTab === "media" && (
+            <Paper
+              elevation={0}
+              sx={{
+                width: "100%",
+                borderRadius: 2,
+                overflow: "hidden",
+                display: "flex",
+                flexDirection: "column",
+                backgroundColor: "transparent",
+              }}
+            >
+              <Box sx={{ width: "100%", aspectRatio: "8 / 7", minHeight: 250, display: "flex" }}>
+                {files.length > 0 ? (
+                  <MediaCarousel
+                    currentFile={currentFile}
+                    currentIndex={currentIndex}
+                    totalFiles={files.length}
+                    onPrevious={handlePrevious}
+                    onNext={handleNext}
+                    onRemove={removeFile}
+                    getRootProps={getRootProps}
+                    showCounter
+                  />
+                ) : (
+                  <UploadArea getRootProps={getRootProps} isDragActive={isDragActive} />
+                )}
+              </Box>
+            </Paper>
+          )}
+
           {activeTab === "preview" && <div />}
         </Stack>
 

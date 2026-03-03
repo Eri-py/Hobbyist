@@ -17,7 +17,7 @@ export function CreateFormHeader({
   return (
     <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
       <Stack>
-        <Typography variant="h5" sx={{ fontWeight: 600 }}>
+        <Typography variant="h4" sx={{ fontWeight: 500 }}>
           {title}
         </Typography>
         <Typography variant="body2" color="text.secondary">

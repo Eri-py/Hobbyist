@@ -11,34 +11,17 @@ type ActionButtonsProps = {
 
 export function ActionButtons({ isSubmitting }: ActionButtonsProps) {
   const { isDesktop } = useDeviceType();
-
-  if (isDesktop) {
-    return (
-      <Stack direction="row" gap={1} width="50%" alignSelf="flex-end">
-        <Button variant="outlined" fullWidth size="medium" type="button">
-          Save Draft
-        </Button>
-        <Button
-          variant="contained"
-          size="medium"
-          type="submit"
-          disabled={isSubmitting}
-          sx={{ minWidth: 200 }}
-        >
-          {isSubmitting ? "Posting..." : "Post"}
-        </Button>
-      </Stack>
-    );
-  }
-
   return (
-    <Stack direction="row" gap={2} width="100%" alignSelf="flex-end" justifyContent="flex-end">
+    <Stack direction="row" gap={isDesktop ? 3 : 2} alignSelf="flex-end" justifyContent="flex-end">
       <Button
         variant="text"
         type="button"
+        size="large"
         startIcon={<DownloadRoundedIcon />}
         sx={{
+          fontSize: { md: 17 },
           "& .MuiButton-startIcon .MuiSvgIcon-root": {
+            fontSize: { md: 17 },
             color: "primary.main",
           },
         }}
@@ -49,10 +32,13 @@ export function ActionButtons({ isSubmitting }: ActionButtonsProps) {
         variant="text"
         type="submit"
         disabled={isSubmitting}
+        size="large"
         startIcon={<SendRoundedIcon />}
         sx={{
+          fontSize: { md: 17 },
           border: "none",
           "& .MuiButton-startIcon .MuiSvgIcon-root": {
+            fontSize: { md: 17 },
             color: "primary.main",
           },
         }}

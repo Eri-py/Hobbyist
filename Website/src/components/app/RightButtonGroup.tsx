@@ -33,9 +33,6 @@ export function RightButtonGroup() {
             paddingBlock: 1,
             paddingInline: 2,
             fontSize: 16,
-            "&:hover": {
-              backgroundColor: "rgba(255, 255, 255, 0.08)",
-            },
           }}
         >
           Create

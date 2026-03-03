@@ -1,8 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { useDeviceType } from "@/hooks/shared/useDeviceType";
-import { DesktopLayout } from "@/components/app/Layout/DesktopLayout";
-import { MobileLayout } from "@/components/app/Layout/MobileLayout";
+import { ResponsiveLayout } from "@/components/app/Layout/ResponsiveLayout";
 import { AppProvider } from "@/providers/app/AppProvider";
 
 export const Route = createFileRoute("/_app")({
@@ -10,7 +8,9 @@ export const Route = createFileRoute("/_app")({
 });
 
 function AppLayout() {
-  const { isDesktop } = useDeviceType();
-
-  return <AppProvider>{isDesktop ? <DesktopLayout /> : <MobileLayout />}</AppProvider>;
+  return (
+    <AppProvider>
+      <ResponsiveLayout />
+    </AppProvider>
+  );
 }

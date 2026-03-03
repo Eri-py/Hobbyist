@@ -23,7 +23,6 @@ export function ProfileInfo({ isSidebarOpen, username, location }: ProfileInfoPr
           <Typography fontSize={18} fontWeight={600} noWrap>
             {username}
           </Typography>
-          <Typography></Typography>
 
           {location ? (
             <Stack direction="row" alignItems="center" gap={0.5}>

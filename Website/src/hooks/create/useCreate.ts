@@ -19,7 +19,7 @@ const createPostApi = async (formData: FormData) => {
 const mobileSteps: Record<number, (keyof CreateFormSchemaTypes)[]> = {
   0: [], // Images handled separately
   1: ["title", "description"],
-  2: ["condition", "availableForTrade", "lookingFor"],
+  2: ["availableForTrade", "lookingFor"],
 };
 
 export function useCreate() {
@@ -30,6 +30,10 @@ export function useCreate() {
   const methods = useForm<CreateFormSchemaTypes>({
     mode: "onChange",
     resolver: zodResolver(CreateFormSchema),
+    defaultValues: {
+      availableForTrade: false,
+      lookingFor: "",
+    },
   });
 
   const createPostMutation = useMutation({
@@ -79,7 +83,6 @@ export function useCreate() {
     // Add all form fields
     formData.append("title", values.title);
     formData.append("description", values.description);
-    formData.append("condition", values.condition.toString());
     formData.append("availableForTrade", (values.availableForTrade ?? false).toString());
 
     if (values.lookingFor) {

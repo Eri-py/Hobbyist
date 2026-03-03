@@ -9,12 +9,14 @@ type MediaPreviewTypes = {
   fileMetadata: FileWithMetadata;
   onRemove?: (fileId: string) => void;
   showRemoveButton?: boolean;
+  videoMode?: "interactive" | "thumbnail";
 };
 
 export function MediaPreview({
   fileMetadata,
   onRemove,
   showRemoveButton = false,
+  videoMode = "interactive",
 }: MediaPreviewTypes) {
   const isImage = fileMetadata.file.type.startsWith("image/");
 
@@ -54,6 +56,33 @@ export function MediaPreview({
             <CloseIcon fontSize="small" sx={{ color: "white" }} />
           </OverlayIconButton>
         )}
+      </Box>
+    );
+  }
+
+  if (videoMode === "thumbnail") {
+    return (
+      <Box
+        sx={{
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: "black",
+        }}
+      >
+        <video
+          src={fileMetadata.preview}
+          muted
+          playsInline
+          preload="metadata"
+          controls={false}
+          onLoadedData={(event) => {
+            event.currentTarget.currentTime = 0.01;
+          }}
+          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+        />
       </Box>
     );
   }

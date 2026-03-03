@@ -110,7 +110,7 @@ export function VideoPlayer({ src, onRemove, showRemoveButton = false }: VideoPl
       <video
         ref={videoRef}
         src={src}
-        style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }}
+        style={{ width: "100%", height: "100%", objectFit: "contain" }}
         muted={isMuted}
         autoPlay
         playsInline

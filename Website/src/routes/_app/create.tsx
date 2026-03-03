@@ -16,17 +16,7 @@ import {
   type MobileCreateTab,
 } from "@/components/create/mobile/MobileCreateForm";
 
-// import { CommunitySelector } from "@/components/create/CommunitySelector";
-
 export const Route = createFileRoute("/_app/create")({
-  // beforeLoad: () => {
-  //   if (
-  //     typeof window !== "undefined" &&
-  //     window.matchMedia(`(min-width: ${DESKTOP_MIN_WIDTH}px)`).matches
-  //   ) {
-  //     throw redirect({ to: "/" });
-  //   }
-  // },
   component: CreatePage,
 });
 
@@ -42,8 +32,7 @@ function CreatePage() {
     errors,
     removeError,
   } = useMediaUpload();
-  const [activeTab, setActiveTab] = useState<MobileCreateTab>("details");
-  // const [selectedCommunity, setSelectedCommunity] = useState<string>("Select a community");
+  const [activeTab, setActiveTab] = useState<MobileCreateTab>("media");
   const { methods, serverErrorMessage, handleSubmit, isSubmitting } = useCreate();
 
   const allErrors = useMemo(() => {
