@@ -14,8 +14,8 @@ export const mainTheme = (isDarkMode: boolean) =>
     palette: {
       mode: isDarkMode ? "dark" : "light",
       primary: {
-        main: "#1565c0",
-        dark: "#0d47a1",
+        main: "#0d47a1",
+        dark: "#082f69",
         light: "#42a5f5",
         contrastText: "#ffffff",
       },
@@ -57,6 +57,7 @@ export const mainTheme = (isDarkMode: boolean) =>
           root: {
             textTransform: "none",
             borderRadius: 8,
+            color: isDarkMode ? "white" : "black",
           },
         },
       },

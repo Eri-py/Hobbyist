@@ -3,17 +3,14 @@ import type { FileWithMetadata } from "@/hooks/create/useMediaUpload";
 import type { DropzoneRootProps } from "react-dropzone";
 
 import Box from "@mui/material/Box";
-import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
-import EditIcon from "@mui/icons-material/Edit";
-import CheckIcon from "@mui/icons-material/Check";
+import DeleteIcon from "@mui/icons-material/Delete";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { useTheme } from "@mui/material/styles";
 
 import { OverlayIconButton } from "@/components/shared/Media/OverlayIconButton";
 import { MediaPreview } from "@/components/shared/Media/MediaPreview";
-import { useDeviceType } from "@/hooks/shared/useDeviceType";
 
 type MediaCarouselProps = {
   currentFile: FileWithMetadata;
@@ -24,10 +21,6 @@ type MediaCarouselProps = {
   onRemove: (fileId: string) => void;
   getRootProps?: <T extends DropzoneRootProps>(props?: T) => T;
   showCounter?: boolean;
-  showRemoveButton?: boolean;
-  showEditButton?: boolean;
-  isEditMode?: boolean;
-  onEditToggle?: () => void;
 };
 
 export function MediaCarousel({
@@ -39,13 +32,8 @@ export function MediaCarousel({
   onRemove,
   getRootProps,
   showCounter = true,
-  showRemoveButton = true,
-  showEditButton = false,
-  isEditMode = false,
-  onEditToggle,
 }: MediaCarouselProps) {
   const theme = useTheme();
-  const { isDesktop } = useDeviceType();
 
   const handleRemove = (event: MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
@@ -55,37 +43,17 @@ export function MediaCarousel({
   return (
     <Box
       sx={{
-        position: "relative",
         width: "100%",
-        aspectRatio: isDesktop ? 5 / 4 : 8 / 7,
+        height: "100%",
+        position: "relative",
         borderRadius: 2,
         overflow: "hidden",
-        border: `2px solid ${theme.palette.divider}`,
+        border: `2px solid ${theme.palette.primary.main}`,
         backgroundColor: "rgba(0, 0, 0, 0.1)",
       }}
     >
       <MediaPreview fileMetadata={currentFile} onRemove={onRemove} showRemoveButton={false} />
 
-      {/* Edit/Check button */}
-      {showEditButton && onEditToggle && (
-        <OverlayIconButton
-          onClick={onEditToggle}
-          sx={{
-            position: "absolute",
-            top: 8,
-            left: 8,
-          }}
-          size="small"
-        >
-          {isEditMode ? (
-            <CheckIcon sx={{ color: "white" }} />
-          ) : (
-            <EditIcon sx={{ color: "white" }} />
-          )}
-        </OverlayIconButton>
-      )}
-
-      {/* Navigation arrows */}
       {totalFiles > 1 && (
         <>
           <OverlayIconButton
@@ -114,7 +82,6 @@ export function MediaCarousel({
         </>
       )}
 
-      {/* Action buttons */}
       {showCounter && (
         <Box
           sx={{
@@ -147,11 +114,9 @@ export function MediaCarousel({
               <AddIcon sx={{ color: "white" }} />
             </OverlayIconButton>
           )}
-          {showRemoveButton && (
-            <OverlayIconButton onClick={handleRemove} size="small">
-              <DeleteIcon sx={{ color: "white" }} />
-            </OverlayIconButton>
-          )}
+          <OverlayIconButton onClick={handleRemove} size="small">
+            <DeleteIcon sx={{ color: "white" }} />
+          </OverlayIconButton>
         </Box>
       )}
     </Box>

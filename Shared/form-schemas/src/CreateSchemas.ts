@@ -15,11 +15,6 @@ export const CreateFormSchema = z.object({
     .min(10, "Description must be at least 10 characters")
     .max(2000, "Description must be less than 2000 characters"),
 
-  condition: z
-    .number()
-    .min(0, "Please select a valid condition")
-    .max(3, "Please select a valid condition"),
-
   availableForTrade: z.boolean().optional(),
 
   lookingFor: z.string().trim().max(500, "Must be less than 500 characters").optional(),

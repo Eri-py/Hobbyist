@@ -1,18 +1,15 @@
 import Toolbar from "@mui/material/Toolbar";
 import Button from "@mui/material/Button";
-import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
-import MenuIcon from "@mui/icons-material/Menu";
+import TextField from "@mui/material/TextField";
+import InputAdornment from "@mui/material/InputAdornment";
+import SearchIcon from "@mui/icons-material/Search";
 
 import { LogoWithName } from "@/components/shared/Logo";
+import { RightButtonGroup } from "@/components/app/RightButtonGroup";
 import { NavbarContainer } from "./NavbarContainer";
-import { useDesktopHeader } from "@/hooks/app/useDesktopHeader";
-import { useSidebar } from "@/hooks/app/useSidebar";
 
 export function DesktopNavbar() {
-  const { searchBar, rightButtons } = useDesktopHeader();
-  const { toggleSidebar } = useSidebar();
-
   return (
     <NavbarContainer>
       <Toolbar
@@ -23,11 +20,8 @@ export function DesktopNavbar() {
           paddingBlock: 1,
         }}
       >
-        {/* Left: Menu + Logo */}
+        {/* Left: Logo */}
         <Stack direction="row" alignItems="center">
-          <IconButton size="large" onClick={toggleSidebar}>
-            <MenuIcon />
-          </IconButton>
           <Button
             variant="text"
             disableRipple
@@ -42,10 +36,23 @@ export function DesktopNavbar() {
         </Stack>
 
         {/* Center: Search Bar */}
-        {searchBar}
+        <TextField
+          placeholder="Search"
+          size="small"
+          sx={{ width: { lg: 360, xl: 700 } }}
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon color="action" fontSize="small" />
+                </InputAdornment>
+              ),
+            },
+          }}
+        />
 
         {/* Right: Buttons */}
-        {rightButtons}
+        <RightButtonGroup />
       </Toolbar>
     </NavbarContainer>
   );
