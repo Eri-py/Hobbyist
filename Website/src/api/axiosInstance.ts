@@ -22,6 +22,7 @@ const processQueue = (error: unknown = null) => {
       promise.resolve();
     }
   });
+  failedQueue.length = 0;
 };
 
 const getNewAccessToken = () => {
@@ -34,6 +35,11 @@ axiosInstance.interceptors.response.use(undefined, async (error: AxiosError) => 
   const originalRequest = error.config as CustomAxiosRequestConfig;
 
   if (error.response?.status !== 401) {
+    return Promise.reject(error);
+  }
+
+  // Never try to refresh when the refresh endpoint itself fails
+  if (originalRequest.url?.includes("auth/refresh-token")) {
     return Promise.reject(error);
   }
 

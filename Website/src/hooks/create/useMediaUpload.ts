@@ -140,9 +140,7 @@ export function useMediaUpload() {
 
       if (!fileToRemove) return prev;
 
-      if (fileToRemove) {
-        URL.revokeObjectURL(fileToRemove.preview);
-      }
+      URL.revokeObjectURL(fileToRemove.preview);
 
       return prev.filter((f) => f.id !== fileId);
     });
@@ -152,8 +150,19 @@ export function useMediaUpload() {
     setErrors((prev) => prev.filter((error) => error.id !== errorId));
   }, []);
 
+  const addError = useCallback((message: string) => {
+    setErrors((prev) => [...prev, createMediaUploadError(message)]);
+  }, []);
+
   const reorderFiles = useCallback((newOrder: FileWithMetadata[]) => {
     setFilesWithMetadata(newOrder);
+  }, []);
+
+  const clearFiles = useCallback(() => {
+    setFilesWithMetadata((prev) => {
+      prev.forEach((f) => URL.revokeObjectURL(f.preview));
+      return [];
+    });
   }, []);
 
   return {
@@ -164,6 +173,8 @@ export function useMediaUpload() {
     isDragActive,
     removeFile,
     removeError,
+    addError,
     reorderFiles,
+    clearFiles,
   };
 }

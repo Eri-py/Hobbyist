@@ -1,6 +1,5 @@
 import { get, useFormContext } from "react-hook-form";
 
-import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
@@ -11,12 +10,12 @@ import type { CreateFormSchemaTypes } from "@hobbyist/form-schemas";
 
 type TitleFormInputProps = {
   label?: string;
-  placeholder: string;
+  placeholder?: string;
 };
 
 type DescriptionFormInputProps = {
   label?: string;
-  placeholder: string;
+  placeholder?: string;
   rows?: number;
 };
 
@@ -24,56 +23,43 @@ type TradeOptionsFormInputProps = {
   heading?: string;
   toggleLabel?: string;
   fieldLabel?: string;
-  placeholder?: string;
 };
 
-export function TitleFormInput({ label = "Title", placeholder }: TitleFormInputProps) {
+export function TitleFormInput({
+  label = "Title",
+  placeholder = "e.g. Mint Charizard holo, PSA 9",
+}: TitleFormInputProps) {
   const {
     register,
     formState: { errors },
-    watch,
   } = useFormContext<CreateFormSchemaTypes>();
 
-  const titleValue = watch("title") || "";
   const titleError = get(errors, "title");
 
   return (
     <Stack gap={1}>
       <Typography variant="subtitle2">{label}</Typography>
-      <Box sx={{ position: "relative" }}>
-        <TextField
-          {...register("title")}
-          variant="outlined"
-          placeholder={placeholder}
-          fullWidth
-          sx={{
-            "& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline": {
-              borderColor: "primary.main",
-            },
-          }}
-          error={!!titleError}
-          helperText={titleError?.message as string | undefined}
-        />
-        <Typography
-          variant="caption"
-          sx={{
-            position: "absolute",
-            right: 12,
-            bottom: titleError ? 24 : 8,
-            color: "text.secondary",
-            fontSize: "0.75rem",
-          }}
-        >
-          {titleValue.length}/300
-        </Typography>
-      </Box>
+      <TextField
+        {...register("title")}
+        variant="outlined"
+        placeholder={placeholder}
+        autoComplete="off"
+        fullWidth
+        sx={{
+          "& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline": {
+            borderColor: "primary.main",
+          },
+        }}
+        error={!!titleError}
+        helperText={titleError?.message as string | undefined}
+      />
     </Stack>
   );
 }
 
 export function DescriptionFormInput({
   label = "Description",
-  placeholder,
+  placeholder = "Describe condition, notable details, and what makes this collectible special",
   rows = 5,
 }: DescriptionFormInputProps) {
   const {
@@ -93,6 +79,7 @@ export function DescriptionFormInput({
         rows={rows}
         fullWidth
         variant="outlined"
+        autoComplete="off"
         sx={{
           "& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline": {
             borderColor: "primary.main",
@@ -118,7 +105,6 @@ export function TradeOptionsFormInput({
   heading = "Trade preferences",
   toggleLabel = "Available for trade",
   fieldLabel = "What are you looking for?",
-  placeholder = "e.g. Blastoise cards, sealed booster packs, vintage items",
 }: TradeOptionsFormInputProps) {
   const {
     register,
@@ -143,29 +129,34 @@ export function TradeOptionsFormInput({
                 shouldDirty: true,
                 shouldTouch: true,
               });
+              if (!event.target.checked) {
+                setValue("lookingFor", "", { shouldDirty: true });
+              }
             }}
           />
         }
         label={toggleLabel}
       />
 
-      <TextField
-        {...register("lookingFor")}
-        label={fieldLabel}
-        placeholder={placeholder}
-        fullWidth
-        size="small"
-        sx={{
-          ...(isTradable && {
-            "& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline": {
-              borderColor: "primary.main",
-            },
-          }),
-        }}
-        disabled={!isTradable}
-        error={!!lookingForError}
-        helperText={lookingForError?.message as string | undefined}
-      />
+      <Stack gap={1}>
+        <TextField
+          {...register("lookingFor")}
+          placeholder={fieldLabel}
+          autoComplete="off"
+          fullWidth
+          size="small"
+          sx={{
+            ...(isTradable && {
+              "& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline": {
+                borderColor: "primary.main",
+              },
+            }),
+          }}
+          disabled={!isTradable}
+          error={!!lookingForError}
+          helperText={lookingForError?.message as string | undefined}
+        />
+      </Stack>
     </Stack>
   );
 }

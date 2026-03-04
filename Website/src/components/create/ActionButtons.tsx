@@ -3,16 +3,14 @@ import SendRoundedIcon from "@mui/icons-material/SendRounded";
 import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 
-import { useDeviceType } from "@/hooks/shared/useDeviceType";
-
 type ActionButtonsProps = {
   isSubmitting: boolean;
+  showPost?: boolean;
 };
 
-export function ActionButtons({ isSubmitting }: ActionButtonsProps) {
-  const { isDesktop } = useDeviceType();
+export function ActionButtons({ isSubmitting, showPost = true }: ActionButtonsProps) {
   return (
-    <Stack direction="row" gap={isDesktop ? 3 : 2} alignSelf="flex-end" justifyContent="flex-end">
+    <Stack direction="row" gap={2} alignSelf="flex-end" justifyContent="flex-end">
       <Button
         variant="text"
         type="button"
@@ -28,23 +26,25 @@ export function ActionButtons({ isSubmitting }: ActionButtonsProps) {
       >
         Save Draft
       </Button>
-      <Button
-        variant="text"
-        type="submit"
-        disabled={isSubmitting}
-        size="large"
-        startIcon={<SendRoundedIcon />}
-        sx={{
-          fontSize: { md: 17 },
-          border: "none",
-          "& .MuiButton-startIcon .MuiSvgIcon-root": {
+
+      {showPost && (
+        <Button
+          variant="text"
+          type="submit"
+          disabled={isSubmitting}
+          size="large"
+          startIcon={<SendRoundedIcon />}
+          sx={{
             fontSize: { md: 17 },
-            color: "primary.main",
-          },
-        }}
-      >
-        {isSubmitting ? "Posting..." : "Post"}
-      </Button>
+            "& .MuiButton-startIcon .MuiSvgIcon-root": {
+              fontSize: { md: 17 },
+              color: "primary.main",
+            },
+          }}
+        >
+          {isSubmitting ? "Posting..." : "Post"}
+        </Button>
+      )}
     </Stack>
   );
 }

@@ -6,10 +6,10 @@ import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined";
 
 type UploadAreaProps = {
   getRootProps: <T extends DropzoneRootProps>(props?: T) => T;
-  isDragActive?: boolean;
+  isDragActive: boolean;
 };
 
-export function UploadArea({ getRootProps, isDragActive = false }: UploadAreaProps) {
+export function UploadArea({ getRootProps, isDragActive }: UploadAreaProps) {
   return (
     <Stack
       {...getRootProps()}
