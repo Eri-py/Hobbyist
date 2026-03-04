@@ -28,7 +28,7 @@ This is a monorepo managed with pnpm workspaces:
 ### External Tools
 
 - **Docker**: PostgreSQL database container
-- **Tailscale**: VPN for device-to-device communication (bypasses network restrictions)
+- **Tailscale**: Required for all development — provides HTTPS across all devices via MagicDNS
 
 ## Prerequisites
 
@@ -36,7 +36,84 @@ This is a monorepo managed with pnpm workspaces:
 - **pnpm**: 10.x or higher (package manager)
 - **.NET SDK**: 9.0 or higher
 - **Docker**: For PostgreSQL database
-- **Tailscale**: (Optional) For cross-device development
+- **Tailscale**: Required — the project runs entirely over Tailscale HTTPS. Without it, nothing will work.
+
+## Tailscale Setup (Required)
+
+This project uses Tailscale MagicDNS for all networking. Every service (API, website, mobile) communicates over your Tailscale hostname with a real HTTPS certificate. There is no localhost fallback.
+
+### 1. Install and sign in to Tailscale
+
+Download from [tailscale.com](https://tailscale.com) and sign in on your development machine and any devices you want to test on.
+
+### 2. Find your MagicDNS hostname
+
+In the Tailscale admin console or app, find your machine's MagicDNS name. It will look like:
+
+```
+your-machine-name.tail123456.ts.net
+```
+
+### 3. Generate the HTTPS certificate
+
+Run this in an **elevated PowerShell** (Run as Administrator):
+
+```powershell
+cd certs
+tailscale cert your-machine-name.tail123456.ts.net
+```
+
+This places two files in the `certs/` folder:
+
+- `your-machine-name.tail123456.ts.net.crt`
+- `your-machine-name.tail123456.ts.net.key`
+
+> The cert is valid for 90 days. Re-run the same command to renew it.
+
+### 4. Configure environment files
+
+Update the env files with your hostname:
+
+**`Website/.env.development`**
+
+```
+VITE_TAILSCALE_HOST=your-machine-name.tail123456.ts.net
+VITE_API_BASE_URL=https://your-machine-name.tail123456.ts.net:7000/api
+```
+
+**`Mobile/.env.development`**
+
+```
+EXPO_PUBLIC_API_BASE_URL=https://your-machine-name.tail123456.ts.net:7000/api
+```
+
+**`Mobile/package.json`** — update the `dev` script:
+
+```json
+"dev": "set REACT_NATIVE_PACKAGER_HOSTNAME=your-machine-name.tail123456.ts.net && expo start"
+```
+
+**`WebServer/Hobbyist.Api/appsettings.Development.json`** — update `ClientOrigin.Address` and the `Kestrel` cert paths:
+
+```json
+{
+  "ClientOrigin": {
+    "Name": "Development",
+    "Address": "https://your-machine-name.tail123456.ts.net:3000"
+  },
+  "Kestrel": {
+    "Endpoints": {
+      "Https": {
+        "Url": "https://0.0.0.0:7000",
+        "Certificate": {
+          "Path": "../../certs/your-machine-name.tail123456.ts.net.crt",
+          "KeyPath": "../../certs/your-machine-name.tail123456.ts.net.key"
+        }
+      }
+    }
+  }
+}
+```
 
 ## Initial Setup
 
@@ -47,7 +124,23 @@ git clone https://github.com/Eri-py/Hobbyist.git
 cd Hobbyist
 ```
 
-### 2. Install Dependencies
+### 2. Copy and Edit Config Files
+
+Run the following script to copy all required config templates into place:
+
+```bash
+pnpm exec node Scripts/copy-configs.js
+```
+
+Then edit these files to fill in your own values:
+
+- `WebServer/Hobbyist.Api/appsettings.Development.json`
+- `Website/.env.development`
+- `Mobile/.env.development`
+
+You must update the Tailscale hostname and any secrets as described above.
+
+### 3. Install Dependencies
 
 ```bash
 # Install all workspace dependencies
@@ -121,9 +214,8 @@ dotnet run
 
 The API will be available at:
 
-- **HTTPS**: `https://localhost:7000`
-- **HTTP**: `http://localhost:5000`
-- **API Docs**: `https://localhost:7000/scalar/v1`
+- **HTTPS**: `https://your-machine-name.tail123456.ts.net:7000`
+- **API Docs**: `https://your-machine-name.tail123456.ts.net:7000/scalar/v1`
 
 ## Website Setup (React Web App)
 
@@ -138,15 +230,11 @@ cd Website
 pnpm dev
 ```
 
-The website will be available at `http://localhost:3000`.
+The website will be available at `https://your-machine-name.tail123456.ts.net:3000`.
 
 ### Configuration
 
-The web app connects to the backend API. The base URL is configured in `Website/src/api/axiosInstance.ts`:
-
-```typescript
-const API_BASE_URL = "https://localhost:7000/api";
-```
+The web app reads its API URL from the environment. Set `VITE_API_BASE_URL` in `Website/.env.development` — see [Tailscale Setup](#tailscale-setup-required) above.
 
 Authentication uses HTTP-only cookies for secure token storage.
 
@@ -154,25 +242,15 @@ Authentication uses HTTP-only cookies for secure token storage.
 
 ### Understanding the Dev Script
 
-The mobile dev script includes a special environment variable:
+The mobile dev script sets the Metro bundler hostname so your phone can find the JS bundle over Tailscale:
 
 ```json
-"dev": "set REACT_NATIVE_PACKAGER_HOSTNAME=100.85.42.14 && expo start"
+"dev": "set REACT_NATIVE_PACKAGER_HOSTNAME=your-machine-name.tail123456.ts.net && expo start"
 ```
 
-**Why this is needed:**
+Update the hostname to match your own Tailscale machine name — see [Tailscale Setup](#tailscale-setup-required).
 
-- `set` is a Windows command to set environment variables for the current session
-- `REACT_NATIVE_PACKAGER_HOSTNAME` tells Expo which IP address to use for the dev server
-- The IP address `100.85.42.14` is a Tailscale IP that allows devices to connect across networks
-- This bypasses school or corporate network restrictions that block direct device-to-device communication
-
-**For your setup:**
-
-1. **If you have no network restrictions:** Remove the set command entirely and just use `expo start`
-2. **If using Tailscale:** Replace `100.85.42.14` with your own Tailscale laptop IP (find it in the Tailscale app)
-3. **If on restricted network without Tailscale:** Set it to your local network IP (e.g., `192.168.1.100`)
-   - Find your IP with `ipconfig` (Windows) or `ifconfig` (Mac/Linux)
+> `set` is a Windows command. On Mac/Linux use: `REACT_NATIVE_PACKAGER_HOSTNAME=your-machine-name.tail123456.ts.net expo start`
 
 ### Running the Mobile App
 
@@ -193,17 +271,7 @@ pnpm dev
 
 ### Configuration
 
-The mobile app connects to the backend API. The base URL is configured in `Mobile/src/api/axiosInstance.ts`:
-
-```typescript
-const API_BASE_URL = "http://100.85.42.14:7001/api";
-```
-
-Update this IP to match your setup:
-
-- Use your Tailscale IP if using Tailscale
-- Use your local network IP if on the same network
-- Update the port if your backend runs on a different port
+The mobile app reads its API URL from the environment. Set `EXPO_PUBLIC_API_BASE_URL` in `Mobile/.env.development` — see [Tailscale Setup](#tailscale-setup-required) above.
 
 ## Development Workflow
 
@@ -247,13 +315,12 @@ This project involves multiple services communicating with each other. Understan
 
 ### Default Ports
 
-| Service             | Port | URL                      |
-| ------------------- | ---- | ------------------------ |
-| Backend API (HTTPS) | 7000 | `https://localhost:7000` |
-| Backend API (HTTP)  | 5000 | `http://localhost:5000`  |
-| PostgreSQL Database | 5432 | `localhost:5432`         |
-| Website (Vite)      | 3000 | `http://localhost:3000`  |
-| Expo Metro Bundler  | 8081 | `http://localhost:8081`  |
+| Service             | Port | URL                                                |
+| ------------------- | ---- | -------------------------------------------------- |
+| Backend API (HTTPS) | 7000 | `https://your-machine-name.tail123456.ts.net:7000` |
+| PostgreSQL Database | 5432 | `localhost:5432`                                   |
+| Website (Vite)      | 3000 | `https://your-machine-name.tail123456.ts.net:3000` |
+| Expo Metro Bundler  | 8081 | `https://your-machine-name.tail123456.ts.net:8081` |
 
 ### Connection Dependencies
 
@@ -261,24 +328,23 @@ Understanding how services connect helps when you need to change ports or IPs:
 
 ```
 Mobile App → Backend API
-├─ Mobile/src/api/axiosInstance.ts
-│  └─ API_BASE_URL = "http://100.85.42.14:7001/api"
+├─ Mobile/.env.development
+│  └─ EXPO_PUBLIC_API_BASE_URL = "https://your-machine.tail123456.ts.net:7000/api"
 │
 └─ Mobile/package.json (dev script)
-   └─ REACT_NATIVE_PACKAGER_HOSTNAME = 100.85.42.14
+   └─ REACT_NATIVE_PACKAGER_HOSTNAME = your-machine.tail123456.ts.net
 
 Website → Backend API
-└─ Website/src/api/axiosInstance.ts
-   └─ API_BASE_URL = "https://localhost:7000/api"
+└─ Website/.env.development
+   └─ VITE_API_BASE_URL = "https://your-machine.tail123456.ts.net:7000/api"
 
 Backend API → Database
 └─ WebServer/Hobbyist.Api/appsettings.Development.json
-   └─ ConnectionStrings.DefaultConnection
+   └─ ConnectionStrings.Development
 
 Backend API ← Allowed Origins (CORS)
 └─ WebServer/Hobbyist.Api/appsettings.Development.json
-   └─ ClientOrigin.Local (web)
-   └─ ClientOrigin.Network (mobile if needed)
+   └─ ClientOrigin.Address
 ```
 
 ### Platform-Specific Headers
@@ -295,23 +361,17 @@ These are automatically set in:
 
 ## Networking Setup with Tailscale
 
-Tailscale creates a private VPN network between your devices, useful when:
+All services communicate exclusively over Tailscale MagicDNS with a real HTTPS certificate. This means:
 
-- Your school/corporate network blocks direct device connections
-- You want to test on devices not on the same WiFi
-- You need consistent IPs across different networks
+- Any device on your Tailscale network can open the website or make API calls
+- No `localhost` fallback exists — this is intentional
+- The cert is tied to your machine's MagicDNS hostname and is valid for 90 days
 
-### Setup Steps
-
-1. Install Tailscale on your development machine and test devices
-2. Sign in to the same Tailscale account on all devices
-3. Find your development machine's Tailscale IP (usually starts with `100.`)
-4. Update the mobile app's API base URL to use this IP
-5. Update the dev script's `REACT_NATIVE_PACKAGER_HOSTNAME` to use this IP
+See [Tailscale Setup](#tailscale-setup-required) for full configuration steps.
 
 ## API Documentation
 
-When the backend is running, visit `https://localhost:7000/scalar/v1` for interactive API documentation.
+When the backend is running, visit `https://your-machine-name.tail123456.ts.net:7000/scalar/v1` for interactive API documentation.
 
 The documentation is auto-generated from the OpenAPI schema and allows you to test endpoints directly from the browser.
 
@@ -333,24 +393,22 @@ The documentation is auto-generated from the OpenAPI schema and allows you to te
 
 **SSL Certificate Errors:**
 
-```bash
-dotnet dev-certs https --trust
+Ensure you have generated the Tailscale cert and placed it in the `certs/` folder:
+
+```powershell
+cd certs
+tailscale cert your-machine-name.tail123456.ts.net
 ```
+
+The cert expires every 90 days — re-run the same command to renew.
 
 ### Mobile Issues
 
 **Cannot Connect to Dev Server:**
 
-- Verify the IP in the dev script matches your current setup
-- Check that Tailscale is running (if using Tailscale)
-- Try using local network IP instead
-- Ensure firewall allows connections on the Metro bundler port
-
-**"set" Command Not Found:**
-
-- The script uses Windows `set` command
-- On Mac/Linux, change to: `REACT_NATIVE_PACKAGER_HOSTNAME=100.85.42.14 expo start`
-- Or create platform-specific scripts
+- Verify Tailscale is running on both your development machine and the device
+- Confirm the hostname in `Mobile/.env.development` matches your machine's MagicDNS name
+- Ensure the Tailscale cert is present in `certs/` and hasn't expired
 
 ### Web Issues
 
@@ -378,6 +436,8 @@ pnpm install
 ```bash
 pnpm generate-types
 ```
+
+> Requires the backend to be running over Tailscale HTTPS.
 
 ## Project Status
 
