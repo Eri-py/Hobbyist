@@ -1,10 +1,10 @@
 import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
-import Button from "@mui/material/Button";
+import IconButton from "@mui/material/IconButton";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useEffect } from "react";
 
-import { LogoWithName } from "@/components/shared/Logo";
-import { useDeviceType } from "@/hooks/shared/useDeviceType";
 import { FormContainer } from "@/components/auth/FormContainer";
+import { useDeviceType } from "@/hooks/shared/useDeviceType";
 import { useAuth } from "@hobbyist/hooks";
 
 export const Route = createFileRoute("/_auth")({
@@ -12,9 +12,9 @@ export const Route = createFileRoute("/_auth")({
 });
 
 function AuthLayout() {
-  const { isDesktop } = useDeviceType();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
+  const { isDesktop } = useDeviceType();
 
   // Redirect authenticated users away from auth routes
   useEffect(() => {
@@ -30,23 +30,17 @@ function AuthLayout() {
 
   return (
     <FormContainer>
-      {isDesktop && (
-        <Button
-          variant="text"
-          disableRipple
-          sx={{
-            "&:hover": {
-              background: "none",
-            },
-            position: "absolute",
-            top: 32,
-            left: 48,
-          }}
-          onClick={() => navigate({ to: "/" })}
-        >
-          <LogoWithName size="large" color="white" />
-        </Button>
-      )}
+      <IconButton
+        onClick={() => navigate({ to: "/" })}
+        sx={{
+          position: "absolute",
+          top: isDesktop ? 32 : 16,
+          left: isDesktop ? 48 : 16,
+        }}
+        aria-label="Back to home"
+      >
+        <ArrowBackIcon sx={{ fontSize: isDesktop ? 32 : 24 }} />
+      </IconButton>
       <Outlet />
     </FormContainer>
   );
