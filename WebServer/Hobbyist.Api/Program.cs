@@ -24,10 +24,7 @@ if (builder.Environment.IsDevelopment())
             policy =>
             {
                 policy
-                    .WithOrigins(
-                        builder.Configuration["ClientOrigin:Local"]!,
-                        builder.Configuration["ClientOrigin:Network"]!
-                    )
+                    .WithOrigins(builder.Configuration["ClientOrigin:Address"]!)
                     .AllowAnyHeader()
                     .AllowCredentials();
             }
@@ -53,10 +50,7 @@ if (app.Environment.IsDevelopment())
 }
 app.UseCors(builder.Configuration["ClientOrigin:Name"]!);
 
-if (!app.Environment.IsDevelopment())
-{
-    app.UseHttpsRedirection();
-}
+app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 

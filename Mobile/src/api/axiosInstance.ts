@@ -2,7 +2,7 @@ import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
 
 import * as TokenManager from "@/api/tokenManager";
 
-const API_BASE_URL = "http://100.85.42.14:7001/api";
+const API_BASE_URL = "https://tail453415.ts.net:7000/api";
 
 type CustomAxiosRequestConfig = { _retry?: boolean } & InternalAxiosRequestConfig;
 

@@ -9,7 +9,7 @@
     }
   },
   "scripts": {
-    "generate-types": "cross-env NODE_TLS_REJECT_UNAUTHORIZED=0 openapi-typescript https://localhost:7000/openapi/v1.json -o types.ts",
+    "generate-types": "openapi-typescript https://tail453415.ts.net:7000/openapi/v1.json -o types.ts",
     "typecheck": "tsc --noEmit",
     "clean": "rimraf node_modules"
   },
