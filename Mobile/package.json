@@ -4,7 +4,7 @@
   "private": true,
   "main": "expo-router/entry",
   "scripts": {
-    "dev": "set REACT_NATIVE_PACKAGER_HOSTNAME=tail453415.ts.net && expo start",
+    "dev": "set REACT_NATIVE_PACKAGER_HOSTNAME=eri-windows.tail453415.ts.net && expo start",
     "build": "expo export",
     "lint": "expo lint",
     "lint:fix": "expo lint --fix",

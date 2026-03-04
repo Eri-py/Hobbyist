@@ -2,7 +2,7 @@ import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
 
 import * as TokenManager from "@/api/tokenManager";
 
-const API_BASE_URL = "https://tail453415.ts.net:7000/api";
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
 
 type CustomAxiosRequestConfig = { _retry?: boolean } & InternalAxiosRequestConfig;
 

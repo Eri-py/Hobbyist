@@ -1,6 +1,6 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
 
-const API_BASE_URL = "https://tail453415.ts.net:7000/api";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
