@@ -56,8 +56,8 @@ function Login() {
             <FormHeader
               header={loginHeaderConfig[step].header}
               subtext={loginHeaderConfig[step].subtext}
-              currentStep={String(step + 1)}
-              totalSteps={String(LOGIN_TOTAL_STEPS)}
+              activeStep={step}
+              totalSteps={LOGIN_TOTAL_STEPS}
             />
 
             {step === 0 && <UsernameAndPassword handleNext={handleNext} isPending={isStarting} />}

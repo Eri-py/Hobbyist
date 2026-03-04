@@ -59,8 +59,8 @@ function SignUp() {
             <FormHeader
               header={signUpHeaderConfig[step].header}
               subtext={signUpHeaderConfig[step].subtext}
-              currentStep={String(step + 1)}
-              totalSteps={String(SIGNUP_TOTAL_STEPS)}
+              activeStep={step}
+              totalSteps={SIGNUP_TOTAL_STEPS}
             />
 
             {step === 0 && <UsernameAndEmailStep handleNext={handleNext} isPending={isStarting} />}
