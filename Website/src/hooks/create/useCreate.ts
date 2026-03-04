@@ -101,10 +101,10 @@ export function useCreate() {
     }
 
     files.forEach((fileMetadata) => {
-      formData.append("images", fileMetadata.file);
+      formData.append("media", fileMetadata.file);
     });
 
-    console.log(Object.fromEntries(formData));
+    console.log([...formData.entries()]);
     // createPostMutation.mutate(formData);
   };
 

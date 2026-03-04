@@ -6,7 +6,7 @@
       "request": "launch",
       "program": "dotnet",
       "args": ["watch", "run", "--non-interactive"],
-      "cwd": "${workspaceFolder}/ApiServer/Hobbyist.Api",
+      "cwd": "${workspaceFolder}/WebServer/Hobbyist.Api",
       "stopAtEntry": false,
       "console": "integratedTerminal",
       "env": {
@@ -15,8 +15,8 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "\\bNow listening on:\\s+(http?://\\S+)",
-        "uriFormat": "%s/scalar/v1",
+        "pattern": "\\bNow listening on:\\s+https?://.*:(\\d+)",
+        "uriFormat": "https://{your-machine-name.tail123456.ts.net}:%s/scalar/v1",
         "killOnServerStop": true
       }
     }
