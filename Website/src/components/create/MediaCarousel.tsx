@@ -19,7 +19,7 @@ type MediaCarouselProps = {
   onPrevious: () => void;
   onNext: () => void;
   onRemove: (fileId: string) => void;
-  getRootProps?: <T extends DropzoneRootProps>(props?: T) => T;
+  getRootProps: <T extends DropzoneRootProps>(props?: T) => T;
   showCounter?: boolean;
 };
 

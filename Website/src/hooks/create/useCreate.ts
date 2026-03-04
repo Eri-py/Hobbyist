@@ -15,16 +15,18 @@ const createPostApi = async (formData: FormData) => {
   });
 };
 
-// Define which fields belong to each mobile step
-const mobileSteps: Record<number, (keyof CreateFormSchemaTypes)[]> = {
-  0: [], // Images handled separately
-  1: ["title", "description"],
-  2: ["availableForTrade", "lookingFor"],
+// --- Mobile step configuration ---
+
+// Define which form fields belong to each mobile step
+const mobileStepFields: Record<number, (keyof CreateFormSchemaTypes)[]> = {
+  0: [], // Images — handled separately (not a zod field)
+  1: ["title", "description", "availableForTrade", "lookingFor"],
 };
+
+const MOBILE_STEP_COUNT = Object.keys(mobileStepFields).length;
 
 export function useCreate() {
   const { serverErrorMessage, handleServerError, clearServerError } = useServerError();
-  const [activeStep, setActiveStep] = useState<number>(0);
 
   // Initialize form methods
   const methods = useForm<CreateFormSchemaTypes>({
@@ -42,29 +44,30 @@ export function useCreate() {
     onError: (error: ServerError) => handleServerError(error),
   });
 
-  // Handle mobile step navigation with validation
-  const handleNext = useCallback(
-    async (files: FileWithMetadata[]) => {
-      const currentStepFields = mobileSteps[activeStep];
+  // --- Mobile step logic ---
 
-      // handling for image step
+  const [activeStep, setActiveStep] = useState<number>(0);
+
+  const handleNext = useCallback(
+    async (files: FileWithMetadata[], onFilesError: (message: string) => void) => {
+      const currentFields = mobileStepFields[activeStep];
+
+      // Step 0: images — no zod fields, just check we have files
       if (activeStep === 0) {
         if (files.length === 0) {
-          // TODO: Add error
-          console.log("TODO: Add error for continue without images");
+          onFilesError("Please upload at least one image or video before continuing.");
           return;
         }
-        setActiveStep((prev) => Math.min(prev + 1, 2));
+        setActiveStep((prev) => Math.min(prev + 1, MOBILE_STEP_COUNT - 1));
         return;
       }
 
-      const isValid = await methods.trigger(currentStepFields);
-      if (!isValid) {
-        return;
-      }
+      // Validate the current step's fields
+      const isValid = await methods.trigger(currentFields);
+      if (!isValid) return;
 
       clearServerError();
-      setActiveStep((prev) => Math.min(prev + 1, 2));
+      setActiveStep((prev) => Math.min(prev + 1, MOBILE_STEP_COUNT - 1));
     },
     [activeStep, clearServerError, methods],
   );
@@ -73,14 +76,22 @@ export function useCreate() {
     setActiveStep((prev) => Math.max(prev - 1, 0));
   }, []);
 
-  // Handle form submission
-  const handleSubmit = (files: FileWithMetadata[]) => {
+  // --- Shared submit logic ---
+
+  const handleSubmit = (
+    values: CreateFormSchemaTypes,
+    files: FileWithMetadata[],
+    onFilesError: (message: string) => void,
+  ) => {
     clearServerError();
 
-    const formData = new FormData();
-    const values = methods.getValues();
+    if (files.length === 0) {
+      onFilesError("Please upload at least one image or video before continuing.");
+      return;
+    }
 
-    // Add all form fields
+    const formData = new FormData();
+
     formData.append("title", values.title);
     formData.append("description", values.description);
     formData.append("availableForTrade", (values.availableForTrade ?? false).toString());
@@ -89,34 +100,31 @@ export function useCreate() {
       formData.append("lookingFor", values.lookingFor);
     }
 
-    // Add images - extract the actual File object from FileWithMetadata
     files.forEach((fileMetadata) => {
       formData.append("images", fileMetadata.file);
     });
 
-    console.log(formData);
-
+    console.log(Object.fromEntries(formData));
     // createPostMutation.mutate(formData);
   };
 
   return {
-    // Form methods
+    // Form
     methods,
 
-    // State
+    // Mobile step navigation
     activeStep,
-    setActiveStep,
+    handleNext,
+    handleBack,
 
-    // Server error handling
+    // Errors
     serverErrorMessage,
     clearServerError,
 
-    // Actions
-    handleNext,
-    handleBack,
+    // Submit
     handleSubmit,
 
-    // Mutation states
+    // Mutation state
     isSubmitting: createPostMutation.isPending,
   };
 }

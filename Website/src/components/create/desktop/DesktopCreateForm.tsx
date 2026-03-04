@@ -6,7 +6,6 @@ import Typography from "@mui/material/Typography";
 
 import type { FileWithMetadata } from "@/hooks/create/useMediaUpload";
 import { ActionButtons } from "@/components/create/ActionButtons";
-import { CreateFormHeader } from "@/components/create/CreateFormHeader";
 import {
   DescriptionFormInput,
   TitleFormInput,
@@ -21,6 +20,7 @@ type DesktopCreateFormProps = {
   removeFile: (fileId: string) => void;
   reorderFiles: (newOrder: FileWithMetadata[]) => void;
   isSubmitting: boolean;
+  onClear: () => void;
 };
 
 export function DesktopCreateForm({
@@ -30,17 +30,24 @@ export function DesktopCreateForm({
   removeFile,
   reorderFiles,
   isSubmitting,
+  onClear,
 }: DesktopCreateFormProps) {
   return (
     <Stack direction="row" width="100%" maxWidth={1280} marginX="auto" padding={2}>
       <Stack width="100%" gap={3}>
-        <CreateFormHeader
-          rightAction={
-            <Button variant="text" type="button">
-              Clear post
-            </Button>
-          }
-        />
+        <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+          <Stack>
+            <Typography variant="h4" sx={{ fontWeight: 500 }}>
+              Create post
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Showcase your collectible.
+            </Typography>
+          </Stack>
+          <Button variant="text" type="button" onClick={onClear}>
+            Clear post
+          </Button>
+        </Stack>
 
         <Stack direction="row" gap={3} width="100%">
           <Stack flex={2} maxWidth={500} gap={1}>
@@ -55,13 +62,9 @@ export function DesktopCreateForm({
           </Stack>
 
           <Stack gap={3} flex={3}>
-            <TitleFormInput label="Title" placeholder="e.g. Mint Charizard holo, PSA 9" />
+            <TitleFormInput />
 
-            <DescriptionFormInput
-              label="Description"
-              placeholder="Describe condition, notable details, and what makes this collectible special"
-              rows={5}
-            />
+            <DescriptionFormInput rows={5} />
 
             <TradeOptionsFormInput />
 
