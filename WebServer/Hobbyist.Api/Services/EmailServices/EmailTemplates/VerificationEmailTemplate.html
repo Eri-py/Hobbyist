@@ -1,79 +1,158 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Email Verification</title>
+    <style>
+      @media only screen and (max-width: 600px) {
+        .card {
+          width: 100% !important;
+        }
+        .header-td {
+          padding: 28px 24px 24px !important;
+        }
+        .body-td {
+          padding: 28px 24px 24px !important;
+        }
+        .footer-td {
+          padding: 16px 24px !important;
+        }
+        .otp-code {
+          font-size: 28px !important;
+          letter-spacing: 6px !important;
+        }
+        .h1 {
+          font-size: 22px !important;
+        }
+      }
+    </style>
   </head>
-  <div style="margin: 0; padding: 20px; font-family: Arial, sans-serif; background-color: #f5f5f5">
-    <div
-      style="
-        max-width: 600px;
-        margin: 0 auto;
-        background-color: #fff;
-        border-radius: 8px;
-        overflow: hidden;
-      "
-    >
-      <!-- Header -->
-      <div style="background-color: #365cce; color: #fff; padding: 40px 20px; text-align: center">
-        <p style="margin: 0; font-size: 14px; text-transform: uppercase; letter-spacing: 1px">
-          Thanks for signing up!
-        </p>
-        <h1 style="margin: 10px 0 0 0; font-size: 24px; font-weight: bold">
-          Verify your Email Address
-        </h1>
-      </div>
-
-      <!-- Content -->
-      <div style="padding: 30px 20px">
-        <h2 style="color: #374151; margin: 0 0 15px 0">Hello {{Username}},</h2>
-        <p style="color: #666; line-height: 1.6; margin: 0 0 25px 0">
-          Please use the following One Time Password (OTP) to verify your account:
-        </p>
-
-        <!-- OTP Code -->
-        <div style="text-align: center; margin: 30px 0">
-          <span
+  <body style="margin: 0; padding: 0; background-color: #eef0f7; font-family: Arial, sans-serif">
+    <!-- Wrapper -->
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td align="center" style="padding: 32px 16px">
+          <!-- Card -->
+          <table
+            class="card"
+            width="560"
+            cellpadding="0"
+            cellspacing="0"
+            border="0"
             style="
-              background-color: #f8fafc;
-              border: 2px solid #365cce;
-              border-radius: 8px;
-              color: #365cce;
-              font-size: 28px;
-              font-weight: bold;
-              font-family: monospace;
-              padding: 15px 25px;
-              letter-spacing: 8px;
+              max-width: 560px;
+              background-color: #ffffff;
+              border-radius: 16px;
+              overflow: hidden;
             "
           >
-            {{Otp}}
-          </span>
-        </div>
+            <!-- Header -->
+            <tr>
+              <td
+                class="header-td"
+                style="background-color: #2d4abf; padding: 40px 40px 32px; text-align: left"
+              >
+                <p
+                  style="
+                    margin: 0;
+                    font-size: 13px;
+                    color: #dce5ff;
+                    letter-spacing: 1px;
+                    text-transform: uppercase;
+                  "
+                >
+                  Hobbyist Team
+                </p>
+                <h1
+                  class="h1"
+                  style="
+                    margin: 10px 0 0 0;
+                    font-size: 26px;
+                    font-weight: bold;
+                    color: #ffffff;
+                    line-height: 1.25;
+                  "
+                >
+                  Verify your email address
+                </h1>
+              </td>
+            </tr>
 
-        <p style="color: #666; margin: 20px 0; text-align: center">
-          <strong>This code expires in {{OtpValidFor}}</strong>
-        </p>
+            <!-- Body -->
+            <tr>
+              <td class="body-td" style="padding: 36px 40px 28px">
+                <p style="margin: 0 0 24px 0; font-size: 15px; color: #6b7280; line-height: 1.6">
+                  Use the one-time password below to verify your account and get started.
+                </p>
 
-        <p style="color: #666; margin: 30px 0 0 0">
-          Thank you,<br />
-          <strong>Your Team</strong>
-        </p>
-      </div>
+                <!-- OTP Block -->
+                <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                  <tr>
+                    <td
+                      align="center"
+                      style="
+                        background-color: #f6f8ff;
+                        border: 2px solid #dde4ff;
+                        border-radius: 12px;
+                        padding: 28px 24px;
+                      "
+                    >
+                      <p
+                        class="otp-code"
+                        style="
+                          margin: 0;
+                          font-family: &quot;Courier New&quot;, Courier, monospace;
+                          font-size: 36px;
+                          font-weight: bold;
+                          color: #2d4abf;
+                          letter-spacing: 10px;
+                        "
+                      >
+                        {{Otp}}
+                      </p>
+                      <p style="margin: 12px 0 0 0; font-size: 13px; color: #9ca3af">
+                        Expires in <strong style="color: #4f6ee8">{{OtpValidFor}}</strong>
+                      </p>
+                    </td>
+                  </tr>
+                </table>
 
-      <!-- Footer -->
-      <div
-        style="
-          background-color: #f8f9fa;
-          padding: 20px;
-          text-align: center;
-          border-top: 1px solid #e9ecef;
-        "
-      >
-        <p style="color: #888; font-size: 12px; margin: 0">
-          If you didn't request this verification, please ignore this email.
-        </p>
-      </div>
-    </div>
-  </div>
+                <p
+                  style="
+                    margin: 28px 0 0 0;
+                    padding-top: 28px;
+                    border-top: 1px solid #f1f3f9;
+                    font-size: 14px;
+                    color: #6b7280;
+                    line-height: 1.7;
+                  "
+                >
+                  Thank you,<br /><strong style="color: #1a2340">Hobbyist Team</strong>
+                </p>
+              </td>
+            </tr>
+
+            <!-- Footer -->
+            <tr>
+              <td
+                class="footer-td"
+                style="
+                  background-color: #f8f9fc;
+                  border-top: 1px solid #edf0f7;
+                  padding: 20px 40px;
+                  text-align: center;
+                "
+              >
+                <p style="margin: 0; font-size: 12px; color: #b0b7c3; line-height: 1.6">
+                  If you didn't request this, you can safely ignore this email.<br />Someone else
+                  may have typed your address by mistake.
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
 </html>
