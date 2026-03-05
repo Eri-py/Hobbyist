@@ -8,8 +8,12 @@ import SearchIcon from "@mui/icons-material/Search";
 import { LogoWithName } from "@/components/shared/Logo";
 import { RightButtonGroup } from "@/components/app/RightButtonGroup";
 import { NavbarContainer } from "./NavbarContainer";
+import { useFeatureFlags } from "@hobbyist/hooks";
+import { FeatureFlags } from "@hobbyist/types";
 
 export function DesktopNavbar() {
+  const flags = useFeatureFlags();
+
   return (
     <NavbarContainer>
       <Toolbar
@@ -36,20 +40,22 @@ export function DesktopNavbar() {
         </Stack>
 
         {/* Center: Search Bar */}
-        <TextField
-          placeholder="Search"
-          size="small"
-          sx={{ width: { lg: 360, xl: 700 } }}
-          slotProps={{
-            input: {
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon color="action" fontSize="small" />
-                </InputAdornment>
-              ),
-            },
-          }}
-        />
+        {flags[FeatureFlags.Search] && (
+          <TextField
+            placeholder="Search"
+            size="small"
+            sx={{ width: { lg: 360, xl: 700 } }}
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon color="action" fontSize="small" />
+                  </InputAdornment>
+                ),
+              },
+            }}
+          />
+        )}
 
         {/* Right: Buttons */}
         <RightButtonGroup />

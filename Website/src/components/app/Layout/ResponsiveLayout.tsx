@@ -1,6 +1,7 @@
 import Stack from "@mui/material/Stack";
 
-import { useAuth } from "@hobbyist/hooks";
+import { useAuth, useFeatureFlags } from "@hobbyist/hooks";
+import { FeatureFlags } from "@hobbyist/types";
 import { useDeviceType } from "@/hooks/shared/useDeviceType";
 import { useSidebar } from "@/hooks/app/useSidebar";
 import { DesktopNavbar } from "@/components/app/Navbar/DesktopNavbar";
@@ -14,6 +15,7 @@ export function ResponsiveLayout() {
   const { isDesktop } = useDeviceType();
   const { isSidebarOpen } = useSidebar();
   const { isAuthenticated } = useAuth();
+  const flags = useFeatureFlags();
 
   return (
     <Stack sx={{ height: "100dvh", overflow: "hidden" }}>
@@ -36,7 +38,7 @@ export function ResponsiveLayout() {
           <CustomOutlet padding={isDesktop ? 2 : 1} minHeight={isDesktop ? 0 : undefined} />
         </Stack>
 
-        {isDesktop && isAuthenticated && (
+        {isDesktop && isAuthenticated && flags[FeatureFlags.RightSidebar] && (
           <Stack flex={1} maxWidth={340}>
             <RightSidebar />
           </Stack>

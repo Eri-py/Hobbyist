@@ -15,6 +15,8 @@ import Stack from "@mui/material/Stack";
 import { useNavigationButtons } from "@/hooks/shared/useNavigationButtons";
 import { useProfile } from "@/hooks/profile/useProfile";
 import { useNavigation } from "@/hooks/app/useNavigation";
+import { useFeatureFlags } from "@hobbyist/hooks";
+import { FeatureFlags } from "@hobbyist/types";
 
 const NotificationBadge = styled(Badge)`
   & .${badgeClasses.badge} {
@@ -49,6 +51,7 @@ export function NavigationButtons() {
     useNavigationButtons();
   const { handleProfileClick } = useProfile();
   const { getActiveTab } = useNavigation();
+  const flags = useFeatureFlags();
 
   const navigationItems: NavigationItem[] = [
     {
@@ -56,22 +59,30 @@ export function NavigationButtons() {
       icon: <HomeIcon style={{ fontSize: 28 }} />,
       handleClick: handleHomeClick,
     },
-    {
-      label: "Events",
-      icon: <EventIcon style={{ fontSize: 28 }} />,
-      handleClick: handleEventsClick,
-    },
+    ...(flags[FeatureFlags.Events]
+      ? [
+          {
+            label: "Events",
+            icon: <EventIcon style={{ fontSize: 28 }} />,
+            handleClick: handleEventsClick,
+          },
+        ]
+      : []),
     {
       label: "Create",
       icon: <AddIcon style={{ fontSize: 28 }} />,
       handleClick: handleCreateClick,
     },
-    {
-      label: "Messages",
-      icon: <ChatIconOulined style={{ fontSize: 28 }} />,
-      notifications: 2,
-      handleClick: handleMessagesClick,
-    },
+    ...(flags[FeatureFlags.Messages]
+      ? [
+          {
+            label: "Messages",
+            icon: <ChatIconOulined style={{ fontSize: 28 }} />,
+            notifications: 2,
+            handleClick: handleMessagesClick,
+          },
+        ]
+      : []),
     {
       label: "Profile",
       icon: <PersonIcon style={{ fontSize: 28 }} />,

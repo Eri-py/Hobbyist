@@ -4,6 +4,9 @@
     "Events": true,
     "Messages": true,
     "Search": true,
-    "Create": true
+    "Create": true,
+    "OAuthButtons": true,
+    "RightSidebar": true,
+    "Settings": true
   }
 }

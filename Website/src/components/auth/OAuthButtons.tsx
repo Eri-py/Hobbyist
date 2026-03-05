@@ -6,6 +6,8 @@ import Typography from "@mui/material/Typography";
 
 import { GoogleIcon } from "@/components/shared/CustomIcons";
 import Button from "@mui/material/Button";
+import { useFeatureFlags } from "@hobbyist/hooks";
+import { FeatureFlags } from "@hobbyist/types";
 
 type OAuthButtonGroupTypes = {
   mode: "login" | "sign-up";
@@ -13,6 +15,9 @@ type OAuthButtonGroupTypes = {
 
 export function OAuthButtons({ mode }: OAuthButtonGroupTypes) {
   const theme = useTheme();
+  const flags = useFeatureFlags();
+
+  if (!flags[FeatureFlags.OAuthButtons]) return null;
 
   return (
     <Stack gap={1.5}>

@@ -8,6 +8,9 @@ export const FeatureFlags = {
   Messages: "Messages",
   Search: "Search",
   Create: "Create",
+  OAuthButtons: "OAuthButtons",
+  RightSidebar: "RightSidebar",
+  Settings: "Settings",
 } as const;
 
 export type FeatureFlag = (typeof FeatureFlags)[keyof typeof FeatureFlags];
