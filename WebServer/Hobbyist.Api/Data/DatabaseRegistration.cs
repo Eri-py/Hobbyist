@@ -7,13 +7,14 @@ public static class DatabaseRegistration
 {
     public static void AddDatabases(this IServiceCollection services, IConfiguration configs)
     {
-        var environment = configs["ASPNETCORE_ENVIRONMENT"];
-        if (environment == "Development")
+        var connectionString = configs.GetConnectionString("DefaultConnection");
+        if (string.IsNullOrWhiteSpace(connectionString))
         {
-            // Database Access
-            services.AddDbContext<HobbyistDbContext>(options =>
-                options.UseNpgsql(configs.GetConnectionString("Development"))
+            throw new InvalidOperationException(
+                "Missing 'ConnectionStrings:DefaultConnection' configuration."
             );
         }
+
+        services.AddDbContext<HobbyistDbContext>(options => options.UseNpgsql(connectionString));
     }
 }

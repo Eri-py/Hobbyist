@@ -15,22 +15,29 @@ builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
-if (builder.Environment.IsDevelopment())
+var clientOriginName = builder.Configuration["ClientOrigin:Name"];
+var clientOriginAddress = builder.Configuration["ClientOrigin:Address"];
+if (string.IsNullOrWhiteSpace(clientOriginName) || string.IsNullOrWhiteSpace(clientOriginAddress))
 {
-    builder.Services.AddCors(options =>
-    {
-        options.AddPolicy(
-            name: builder.Configuration["ClientOrigin:Name"]!,
-            policy =>
-            {
-                policy
-                    .WithOrigins(builder.Configuration["ClientOrigin:Address"]!)
-                    .AllowAnyHeader()
-                    .AllowCredentials();
-            }
-        );
-    });
+    throw new InvalidOperationException(
+        "Missing CORS configuration. Set both 'ClientOrigin:Name' and 'ClientOrigin:Address'."
+    );
 }
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(
+        name: clientOriginName,
+        policy =>
+        {
+            policy
+                .WithOrigins(clientOriginAddress)
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials();
+        }
+    );
+});
 
 builder.Services.AddDatabases(builder.Configuration);
 builder.Services.AddAuthServices(builder.Configuration);
@@ -48,9 +55,8 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
     app.MapScalarApiReference();
 }
-app.UseCors(builder.Configuration["ClientOrigin:Name"]!);
+app.UseCors(clientOriginName);
 
-app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
