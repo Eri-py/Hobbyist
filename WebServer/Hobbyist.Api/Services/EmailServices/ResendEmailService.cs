@@ -24,16 +24,20 @@ public class ResendEmailService(IConfiguration configuration) : IEmailService
             var bodyBuilder = new BodyBuilder { HtmlBody = body };
             message.Body = bodyBuilder.ToMessageBody();
 
+            Console.WriteLine(message.From);
+            Console.WriteLine(message.To);
+
             using var client = new SmtpClient();
-            await client.ConnectAsync("smtp.resend.com", 465, SecureSocketOptions.SslOnConnect);
+            await client.ConnectAsync("smtp.resend.com", 2465, SecureSocketOptions.SslOnConnect);
             await client.AuthenticateAsync("resend", configuration["Resend:ApiKey"]);
             await client.SendAsync(message);
             await client.DisconnectAsync(true);
 
             return Result.NoContent();
         }
-        catch (Exception)
+        catch (Exception e)
         {
+            Console.WriteLine(e);
             return Result.InternalServerError("An unexpected error has occured");
         }
     }
