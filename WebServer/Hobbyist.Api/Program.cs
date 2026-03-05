@@ -30,7 +30,11 @@ builder.Services.AddCors(options =>
         name: clientOriginName,
         policy =>
         {
-            policy.WithOrigins(clientOriginAddress).AllowAnyHeader().AllowCredentials();
+            policy
+                .WithOrigins(clientOriginAddress)
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials();
         }
     );
 });
@@ -53,7 +57,6 @@ if (app.Environment.IsDevelopment())
 }
 app.UseCors(clientOriginName);
 
-app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
