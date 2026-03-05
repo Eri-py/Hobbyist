@@ -4,43 +4,6 @@
  */
 
 export interface paths {
-    "/api/Test/ping": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "text/plain": string;
-                        "application/json": string;
-                        "text/json": string;
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/Auth/get-user-details": {
         parameters: {
             query?: never;
@@ -85,7 +48,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: {
+        get?: never;
+        put?: never;
+        post: {
             parameters: {
                 query?: never;
                 header?: never;
@@ -107,37 +72,27 @@ export interface paths {
                 };
             };
         };
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/Auth/refresh-token-mobile": {
+    "/api/feature-flags": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
-        put?: never;
-        post: {
+        get: {
             parameters: {
                 query?: never;
                 header?: never;
                 path?: never;
                 cookie?: never;
             };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["RefreshTokenRequest"];
-                    "text/json": components["schemas"]["RefreshTokenRequest"];
-                    "application/*+json": components["schemas"]["RefreshTokenRequest"];
-                };
-            };
+            requestBody?: never;
             responses: {
                 /** @description OK */
                 200: {
@@ -145,13 +100,15 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["AuthResult"];
-                        "application/json": components["schemas"]["AuthResult"];
-                        "text/json": components["schemas"]["AuthResult"];
+                        "text/plain": components["schemas"]["FeatureFlagsResponse"];
+                        "application/json": components["schemas"]["FeatureFlagsResponse"];
+                        "text/json": components["schemas"]["FeatureFlagsResponse"];
                     };
                 };
             };
         };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -479,6 +436,11 @@ export interface components {
             lastname: string;
             dateOfBirth: string;
         };
+        FeatureFlagsResponse: {
+            flags: {
+                [key: string]: boolean;
+            };
+        };
         GetUserResponse: {
             isAuthenticated: boolean;
             user?: components["schemas"]["UserDto"];
@@ -486,9 +448,6 @@ export interface components {
         OtpResponse: {
             /** Format: date-time */
             otpExpiresAt: string;
-        };
-        RefreshTokenRequest: {
-            refreshToken: string;
         };
         ResendOtpRequest: {
             email: string;

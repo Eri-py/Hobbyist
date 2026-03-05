@@ -1,0 +1,9 @@
+{
+  "FeatureManagement": {
+    "Trade": true,
+    "Events": true,
+    "Messages": true,
+    "Search": true,
+    "Create": true
+  }
+}
