@@ -39,6 +39,10 @@ builder.Services.AddCors(options =>
     );
 });
 
+Console.WriteLine($"Jwt:Secret is null: {builder.Configuration["Jwt:Secret"] == null}");
+Console.WriteLine($"Jwt:Issuer is null: {builder.Configuration["Jwt:Issuer"] == null}");
+Console.WriteLine($"Jwt:Audience is null: {builder.Configuration["Jwt:Audience"] == null}");
+
 builder.Services.AddDatabases(builder.Configuration);
 builder.Services.AddAuthServices(builder.Configuration);
 builder.Services.AddScoped<IOtpService, OtpService>();
