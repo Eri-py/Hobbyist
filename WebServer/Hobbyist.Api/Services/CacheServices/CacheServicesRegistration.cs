@@ -7,11 +7,24 @@ public static class CacheServicesRegistration
         IConfiguration configuration
     )
     {
-        var redisConnectionString =
+        var raw =
             configuration.GetConnectionString("Redis")
             ?? throw new InvalidOperationException(
                 "Missing 'ConnectionStrings:Redis' configuration."
             );
+
+        string redisConnectionString;
+        if (raw.StartsWith("redis://") || raw.StartsWith("rediss://"))
+        {
+            var uri = new Uri(raw);
+            var password = uri.UserInfo.Split(':')[1];
+            var isSsl = raw.StartsWith("rediss://");
+            redisConnectionString = $"{uri.Host}:{uri.Port},password={password},ssl={isSsl}";
+        }
+        else
+        {
+            redisConnectionString = raw; // already in correct format (local dev)
+        }
 
         services.AddStackExchangeRedisCache(options =>
         {

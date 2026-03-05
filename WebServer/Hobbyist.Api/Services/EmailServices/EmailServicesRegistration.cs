@@ -13,5 +13,9 @@ public static class EmailServicesRegistration
         {
             services.AddScoped<IEmailService, MailtrapEmailService>();
         }
+        else if (environment.IsProduction())
+        {
+            services.AddScoped<IEmailService, ResendEmailService>();
+        }
     }
 }

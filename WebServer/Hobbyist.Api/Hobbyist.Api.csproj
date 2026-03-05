@@ -24,4 +24,9 @@
   <ItemGroup>
     <ProjectReference Include="..\Hobbyist.Common\Hobbyist.Common.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="Services/EmailServices/EmailTemplates/**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
 </Project>
