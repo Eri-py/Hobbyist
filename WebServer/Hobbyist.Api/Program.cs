@@ -5,6 +5,7 @@ using Hobbyist.Api.Services.EmailServices;
 using Hobbyist.Api.Services.LoginServices;
 using Hobbyist.Api.Services.OtpServices;
 using Hobbyist.Api.Services.SignUpServices;
+using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -48,6 +49,13 @@ builder.Services.AddEmailServices(builder.Environment);
 builder.Services.AddCacheServices();
 
 var app = builder.Build();
+
+// Run migrations on startup
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<HobbyistDbContext>();
+    db.Database.Migrate();
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
