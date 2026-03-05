@@ -50,12 +50,12 @@ builder.Services.AddCacheServices();
 
 var app = builder.Build();
 
-// // Run migrations on startup
-// using (var scope = app.Services.CreateScope())
-// {
-//     var db = scope.ServiceProvider.GetRequiredService<HobbyistDbContext>();
-//     db.Database.Migrate();
-// }
+// Run migrations on startup
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<HobbyistDbContext>();
+    db.Database.Migrate();
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
