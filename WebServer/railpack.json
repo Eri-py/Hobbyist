@@ -1,0 +1,5 @@
+{
+  "provider": "dotnet",
+  "buildCommand": "dotnet publish Hobbyist.Api/Hobbyist.Api.csproj -c Release -o out",
+  "startCommand": "dotnet out/Hobbyist.Api.dll"
+}
