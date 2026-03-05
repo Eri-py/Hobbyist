@@ -6,9 +6,18 @@ using Hobbyist.Api.Services.LoginServices;
 using Hobbyist.Api.Services.OtpServices;
 using Hobbyist.Api.Services.SignUpServices;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.FeatureManagement;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder
+    .Configuration.AddJsonFile("featureflags.json", optional: false, reloadOnChange: true)
+    .AddJsonFile(
+        $"featureflags.{builder.Environment.EnvironmentName}.json",
+        optional: true,
+        reloadOnChange: true
+    );
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -47,6 +56,7 @@ builder.Services.AddScoped<ILoginService, LoginService>();
 builder.Services.AddScoped<ISignUpService, SignUpService>();
 builder.Services.AddEmailServices(builder.Environment);
 builder.Services.AddCacheServices(builder.Configuration);
+builder.Services.AddFeatureManagement();
 
 var app = builder.Build();
 
@@ -65,6 +75,7 @@ if (app.Environment.IsDevelopment())
 }
 app.UseCors(clientOriginName);
 
+app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
