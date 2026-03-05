@@ -21,6 +21,6 @@
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.16.0" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="$(MSBuildThisFileDirectory)../Hobbyist.Common/Hobbyist.Common.csproj" />
+    <ProjectReference Include="..\Hobbyist.Common\Hobbyist.Common.csproj" />
   </ItemGroup>
 </Project>
