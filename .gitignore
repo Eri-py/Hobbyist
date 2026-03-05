@@ -73,7 +73,7 @@ TestResult.xml
 # ============================================
 # ENVIRONMENT & CONFIG
 # ============================================
-.env
+.env.*
 .env.local
 .env.*.local
 
