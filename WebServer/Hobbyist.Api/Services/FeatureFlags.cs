@@ -13,4 +13,7 @@ public static class FeatureFlags
     public const string Messages = "Messages";
     public const string Search = "Search";
     public const string Create = "Create";
+    public const string OAuthButtons = "OAuthButtons";
+    public const string RightSidebar = "RightSidebar";
+    public const string Settings = "Settings";
 }

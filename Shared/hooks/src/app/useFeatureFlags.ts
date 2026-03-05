@@ -27,5 +27,5 @@ export function useFeatureFlagsProvider(axiosInstance: AxiosInstance) {
     refetchOnWindowFocus: false,
   });
 
-  return { value: data ?? null, isPending };
+  return { value: data ?? {}, isPending };
 }

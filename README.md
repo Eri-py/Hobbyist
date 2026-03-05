@@ -2,7 +2,7 @@
 
 A full-stack monorepo for hobbyists to connect, trade, and share interests.
 
-**Stack:** React Native (Expo) · React + Vite · .NET 9 · PostgreSQL · Tailscale (required)
+**Stack:** React Native (Expo) · React + Vite · .NET 9 · PostgreSQL · Redis · Tailscale (required)
 
 ## Tech Stack
 
@@ -13,6 +13,7 @@ A full-stack monorepo for hobbyists to connect, trade, and share interests.
 | Shared     | TanStack Query, React Hook Form, Zod, Axios                                                                                                                                                                                                          |
 | Backend    | .NET Core 9, Entity Framework Core, JWT Auth                                                                                                                                                                                                         |
 | Database   | PostgreSQL (Docker)                                                                                                                                                                                                                                  |
+| Cache      | Redis (Docker)                                                                                                                                                                                                                                       |
 | Networking | [Tailscale](https://tailscale.com/download) — stable HTTPS across all devices regardless of network/IP. Without it, any device not on the same WiFi as the server machine, or where the server's IP has changed, won't be able to reach the servers. |
 
 ## Structure
@@ -37,6 +38,8 @@ git clone https://github.com/Eri-py/Hobbyist.git
 cd Hobbyist
 pnpm exec node Scripts/copy-configs.js
 ```
+
+This copies all config templates from `Setup/` to their target locations, including `appsettings.Development.json` and `featureflags.Development.json` (gitignored — edit them locally).
 
 ### 2. Tailscale & HTTPS cert
 
@@ -118,6 +121,31 @@ dotnet ef database update
 
 > First time: `dotnet tool install --global dotnet-ef`
 
+### 6. Redis
+
+```bash
+docker run --name hobbyist-redis -p 6379:6379 -d redis:latest
+```
+
+Then add the connection string to `WebServer/Hobbyist.Api/appsettings.Development.json`:
+
+```json
+{
+  "ConnectionStrings": {
+    "Redis": "localhost:6379"
+  }
+}
+```
+
+### 7. Feature flags (dev overrides)
+
+`featureflags.Development.json` is gitignored — each developer controls their own flags locally. It's created for you by `copy-configs.js` in step 1 (all flags enabled by default). When you add a new flag:
+
+1. Add it to `featureflags.json` (set `false`)
+2. Run `pnpm generate-feature-flags` — regenerates `Services/FeatureFlags.cs` and `Shared/types/src/featureFlags.ts`
+3. Run `pnpm generate-types` — regenerates the TypeScript types from the OpenAPI schema
+4. Add it to your local `featureflags.Development.json`
+
 ## Ports
 
 | Service    | Port |
@@ -125,6 +153,7 @@ dotnet ef database update
 | API        | 7000 |
 | Website    | 3000 |
 | PostgreSQL | 5432 |
+| Redis      | 6379 |
 
 ## Running
 
@@ -148,12 +177,13 @@ pnpm run dev
 ## Common Commands
 
 ```bash
-pnpm typecheck       # Type check all projects
-pnpm lint                # Lint
-pnpm build           # Production build
-pnpm generate-types  # Generate TS types from OpenAPI (requires backend running)
-pnpm clean           # Remove node_modules and build artifacts
-pnpm reset           # Clean + reinstall
+pnpm typecheck                # Type check all projects
+pnpm lint                     # Lint
+pnpm build                    # Production build
+pnpm generate-types           # Generate TS types from OpenAPI (requires backend running)
+pnpm generate-feature-flags   # Regenerate FeatureFlags.cs + featureFlags.ts from featureflags.json
+pnpm clean                    # Remove node_modules and build artifacts
+pnpm reset                    # Clean + reinstall
 ```
 
 ## API Docs
@@ -163,6 +193,7 @@ pnpm reset           # Clean + reinstall
 ## Troubleshooting
 
 - **DB errors** — check Docker is running (`docker ps`) and the connection string matches
+- **Redis errors** — check Docker is running (`docker ps`) and Redis connection string is set in `appsettings.Development.json`
 - **Migration issues** — delete `Migrations/`, re-run `dotnet ef migrations add InitialCreate && dotnet ef database update`
 - **SSL errors** — verify cert exists in `certs/` and hasn't expired
 - **Mobile can't connect** — confirm Tailscale is running on both machine and device

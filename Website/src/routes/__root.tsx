@@ -4,6 +4,7 @@ import CssBaseline from "@mui/material/CssBaseline";
 import { CustomThemeProvider } from "@/providers/shared/CustomThemeProvider";
 import { BreakpointProvider } from "@/providers/shared/BreakpointProvider";
 import { AuthProvider } from "@/providers/app/AuthProvider";
+import { FeatureFlagsProvider } from "@/providers/root/FeatureFlagsProvider";
 
 export const Route = createRootRoute({
   component: Root,
@@ -14,9 +15,11 @@ function Root() {
     <CustomThemeProvider>
       <CssBaseline />
       <BreakpointProvider>
-        <AuthProvider>
-          <Outlet />
-        </AuthProvider>
+        <FeatureFlagsProvider>
+          <AuthProvider>
+            <Outlet />
+          </AuthProvider>
+        </FeatureFlagsProvider>
       </BreakpointProvider>
     </CustomThemeProvider>
   );

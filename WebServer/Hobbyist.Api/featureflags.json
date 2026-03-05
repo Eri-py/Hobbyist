@@ -4,6 +4,9 @@
     "Events": false,
     "Messages": false,
     "Search": false,
-    "Create": false
+    "Create": false,
+    "OAuthButtons": false,
+    "RightSidebar": false,
+    "Settings": false
   }
 }

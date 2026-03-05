@@ -82,6 +82,9 @@ appsettings.*.json
 !appsettings.json
 !appsettings.*.Example.json
 
+# Feature flags (dev overrides are personal — don't commit)
+featureflags.Development.json
+
 #Cerificates
 cert/
 
