@@ -17,6 +17,10 @@ const copies = [
     to: join(root, "WebServer", "Hobbyist.Api", "appsettings.Development.json"),
   },
   {
+    from: join(root, "Setup", "featureflags.Development.Example.json"),
+    to: join(root, "WebServer", "Hobbyist.Api", "featureflags.Development.json"),
+  },
+  {
     from: join(root, "Setup", ".env.development.website"),
     to: join(root, "Website", ".env.development"),
   },
