@@ -46,7 +46,7 @@ builder.Services.AddScoped<IOtpService, OtpService>();
 builder.Services.AddScoped<ILoginService, LoginService>();
 builder.Services.AddScoped<ISignUpService, SignUpService>();
 builder.Services.AddEmailServices(builder.Environment);
-builder.Services.AddCacheServices();
+builder.Services.AddCacheServices(builder.Configuration);
 
 var app = builder.Build();
 
