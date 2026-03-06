@@ -1,5 +1,6 @@
 using Hobbyist.Api.Extensions.ServiceRegistrations;
 using Hobbyist.Api.Middleware;
+using Microsoft.AspNetCore.HttpOverrides;
 using Scalar.AspNetCore;
 using Serilog;
 
@@ -30,6 +31,17 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
     app.MapScalarApiReference();
 }
+
+// Railway terminates TLS at the edge and forwards plain HTTP internally.
+// UseForwardedHeaders lets the app see the real client IP and the original
+// HTTPS scheme — which is required for correct rate-limit bucketing and any
+// URL generation.
+app.UseForwardedHeaders(
+    new ForwardedHeadersOptions
+    {
+        ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto,
+    }
+);
 
 app.UseCors(builder.Configuration.GetCorsPolicy());
 app.UseMiddleware<ExceptionHandlingMiddleware>();
