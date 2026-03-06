@@ -1,6 +1,6 @@
-using System;
+using Hobbyist.Api.Services.EmailServices;
 
-namespace Hobbyist.Api.Services.EmailServices;
+namespace Hobbyist.Api.Extensions.ServiceRegistrations;
 
 public static class EmailServicesRegistration
 {

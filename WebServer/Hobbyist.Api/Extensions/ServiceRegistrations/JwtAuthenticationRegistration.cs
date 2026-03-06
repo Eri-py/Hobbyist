@@ -1,13 +1,15 @@
 using System.Text;
-using Hobbyist.Api.Services.TokenServices;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 
-namespace Hobbyist.Api.Services.AuthServices;
+namespace Hobbyist.Api.Extensions.ServiceRegistrations;
 
-public static class AuthServiceRegistration
+public static class AuthServicesRegistration
 {
-    public static void AddAuthServices(this IServiceCollection services, IConfiguration configs)
+    public static void AddJwtAuthentication(
+        this IServiceCollection services,
+        IConfiguration configs
+    )
     {
         services
             .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -34,8 +36,5 @@ public static class AuthServiceRegistration
                     },
                 };
             });
-
-        services.AddScoped<ITokenService, JwtService>();
-        services.AddScoped<IAuthService, AuthService>();
     }
 }

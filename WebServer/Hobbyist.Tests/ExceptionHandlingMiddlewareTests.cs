@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Hobbyist.Api.Middleware;
+using Hobbyist.Common;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -37,7 +38,7 @@ public class ExceptionHandlingMiddlewareTests
         var doc = JsonDocument.Parse(json);
         Assert.That(
             doc.RootElement.GetProperty("message").GetString(),
-            Is.EqualTo("An unexpected error occurred.")
+            Is.EqualTo(ErrorMessages.UnexpectedError)
         );
     }
 
