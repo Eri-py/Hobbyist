@@ -40,7 +40,7 @@ var forwardedHeadersOptions = new ForwardedHeadersOptions
 {
     ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto,
     // Only trust a single forwarding proxy (Railway edge).
-    ForwardLimit = 1,
+    ForwardLimit = 2,
 };
 
 // Railway's proxy is not loopback, so clear the default restrictions so
@@ -49,6 +49,25 @@ forwardedHeadersOptions.KnownNetworks.Clear();
 forwardedHeadersOptions.KnownProxies.Clear();
 
 app.UseForwardedHeaders(forwardedHeadersOptions);
+app.Use(
+    async (context, next) =>
+    {
+        var xForwardedFor = context.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+        var cfConnectingIp = context.Request.Headers["CF-Connecting-IP"].FirstOrDefault();
+        var remoteIp = context.Connection.RemoteIpAddress?.ToString();
+        var requestPath = context.Request.Path;
+        var requestMethod = context.Request.Method;
+
+        Console.WriteLine($"=== START ===");
+        Console.WriteLine($"Request: {requestMethod} {requestPath}");
+        Console.WriteLine($"X-Forwarded-For: {xForwardedFor ?? "null"}");
+        Console.WriteLine($"CF-Connecting-IP: {cfConnectingIp ?? "null"}");
+        Console.WriteLine($"RemoteIp: {remoteIp ?? "null"}");
+        Console.WriteLine($"=============\n");
+
+        await next();
+    }
+);
 app.UseCors(builder.Configuration.GetCorsPolicy());
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseSerilogRequestLogging(opts =>
