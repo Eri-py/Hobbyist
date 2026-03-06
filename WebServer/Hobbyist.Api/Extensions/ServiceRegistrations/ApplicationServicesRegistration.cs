@@ -35,6 +35,5 @@ public static class ApplicationServicesRegistration
         // Auth & security
         services.AddJwtAuthentication(configuration);
         services.AddAppCors(configuration);
-        services.AddOtpRateLimiting();
     }
 }

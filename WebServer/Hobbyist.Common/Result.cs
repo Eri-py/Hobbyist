@@ -25,6 +25,9 @@ public enum ResultTypes
 
     /// <summary>Operation failed due to an unexpected server error</summary>
     InternalServerError,
+
+    /// <summary>Operation failed because the rate limit for this resource was exceeded</summary>
+    TooManyRequests,
 }
 
 /// <summary>
@@ -61,6 +64,10 @@ public record Result(string? Message, ResultTypes ResultType)
     /// <summary>Creates a result indicating an unexpected server error</summary>
     public static Result InternalServerError(string message) =>
         new(message, ResultTypes.InternalServerError);
+
+    /// <summary>Creates a result indicating the rate limit for this resource has been exceeded</summary>
+    public static Result TooManyRequests(string message) =>
+        new(message, ResultTypes.TooManyRequests);
 }
 
 /// <summary>
@@ -98,6 +105,10 @@ public record Result<T>(string? Message, ResultTypes ResultType, T? Content = de
     /// <summary>Creates a result indicating an unexpected server error</summary>
     public static Result<T> InternalServerError(string message) =>
         new(message, ResultTypes.InternalServerError);
+
+    /// <summary>Creates a result indicating the rate limit for this resource has been exceeded</summary>
+    public static Result<T> TooManyRequests(string message) =>
+        new(message, ResultTypes.TooManyRequests);
 
     /// <summary>
     /// Creates an error result from a non-generic error Result.

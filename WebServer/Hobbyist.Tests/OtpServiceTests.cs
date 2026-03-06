@@ -37,14 +37,18 @@ public class OtpServiceTests
     #region CreateOtp Tests
 
     [Test]
-    public void CreateOtp_ReturnsSixDigitOtp()
+    public void CreateOtp_ReturnsSixCharacterOtp()
     {
         // Act
         var result = _otpService.CreateOtp(OtpConfig.OtpValidForMinutes);
 
         // Assert
         Assert.That(result.Value, Has.Length.EqualTo(6));
-        Assert.That(result.Value, Does.Match(@"^\d{6}$"), "OTP should be exactly 6 digits");
+        Assert.That(
+            result.Value,
+            Does.Match(@"^[A-Z0-9]{6}$"),
+            "OTP should be exactly 6 uppercase alphanumeric characters"
+        );
     }
 
     [Test]
@@ -74,15 +78,19 @@ public class OtpServiceTests
     }
 
     [Test]
-    public void CreateOtp_AllDigitsAreValid()
+    public void CreateOtp_AllCharactersAreUppercaseAlphanumeric()
     {
         // Act
         var result = _otpService.CreateOtp(OtpConfig.OtpValidForMinutes);
 
         // Assert
-        foreach (var digit in result.Value)
+        foreach (var ch in result.Value)
         {
-            Assert.That(char.IsDigit(digit), Is.True, $"Character '{digit}' should be a digit");
+            Assert.That(
+                char.IsUpper(ch) || char.IsDigit(ch),
+                Is.True,
+                $"Character '{ch}' should be an uppercase letter or digit"
+            );
         }
     }
 
@@ -91,7 +99,7 @@ public class OtpServiceTests
     #region SendOtpAsync Tests
 
     [Test]
-    public async Task SendOtpAsync_SendsEmailWithSixDigitOtp()
+    public async Task SendOtpAsync_SendsEmailWithSixCharacterAlphanumericOtp()
     {
         // Arrange
         _mockEmailService
@@ -114,7 +122,7 @@ public class OtpServiceTests
         // Assert
         Assert.That(capturedOtp, Is.Not.Null);
         Assert.That(capturedOtp, Has.Length.EqualTo(6));
-        Assert.That(capturedOtp, Does.Match(@"^\d{6}$"));
+        Assert.That(capturedOtp, Does.Match(@"^[A-Z0-9]{6}$"));
     }
 
     [Test]
@@ -295,6 +303,101 @@ public class OtpServiceTests
         );
     }
 
+    [Test]
+    public async Task SendOtpAsync_WhenRateLimitExceeded_ReturnsTooManyRequests()
+    {
+        // Arrange
+        OtpRateLimitEntry? rateLimitEntry = new(
+            OtpConfig.OtpMaxSendsPerWindow,
+            DateTime.UtcNow.AddMinutes(5)
+        );
+        _mockCache
+            .Setup(x =>
+                x.TryGetValue($"ratelimit_otp_{TestPurpose}_{TestEmail}", out rateLimitEntry)
+            )
+            .Returns(true);
+
+        // Act
+        var result = await _otpService.SendOtpAsync(TestEmail, TestPurpose);
+
+        // Assert
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.ResultType, Is.EqualTo(ResultTypes.TooManyRequests));
+            Assert.That(result.Message, Is.EqualTo(ErrorMessages.TooManyOtpRequests));
+        }
+    }
+
+    [Test]
+    public async Task SendOtpAsync_WhenRateLimitExceeded_DoesNotSendEmail()
+    {
+        // Arrange
+        OtpRateLimitEntry? rateLimitEntry = new(
+            OtpConfig.OtpMaxSendsPerWindow,
+            DateTime.UtcNow.AddMinutes(5)
+        );
+        _mockCache
+            .Setup(x =>
+                x.TryGetValue($"ratelimit_otp_{TestPurpose}_{TestEmail}", out rateLimitEntry)
+            )
+            .Returns(true);
+
+        // Act
+        await _otpService.SendOtpAsync(TestEmail, TestPurpose);
+
+        // Assert
+        _mockEmailService.Verify(
+            x => x.SendOtpEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()),
+            Times.Never
+        );
+    }
+
+    [Test]
+    public async Task SendOtpAsync_WhenEmailFails_DoesNotIncrementRateLimit()
+    {
+        // Arrange
+        _mockEmailService
+            .Setup(x =>
+                x.SendOtpEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())
+            )
+            .ReturnsAsync(Result.InternalServerError(ErrorMessages.UnexpectedError));
+
+        // Act
+        await _otpService.SendOtpAsync(TestEmail, TestPurpose);
+
+        // Assert — Set should never be called with an OtpRateLimitEntry
+        _mockCache.Verify(
+            x => x.Set(It.IsAny<string>(), It.IsAny<OtpRateLimitEntry>(), It.IsAny<TimeSpan>()),
+            Times.Never
+        );
+    }
+
+    [Test]
+    public async Task SendOtpAsync_WhenEmailSucceeds_IncrementsRateLimit()
+    {
+        // Arrange
+        _mockEmailService
+            .Setup(x =>
+                x.SendOtpEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())
+            )
+            .ReturnsAsync(Result.NoContent());
+
+        // Act
+        await _otpService.SendOtpAsync(TestEmail, TestPurpose);
+
+        // Assert — Set should be called exactly once with an OtpRateLimitEntry
+        _mockCache.Verify(
+            x =>
+                x.Set(
+                    $"ratelimit_otp_{TestPurpose}_{TestEmail}",
+                    It.IsAny<OtpRateLimitEntry>(),
+                    It.IsAny<TimeSpan>()
+                ),
+            Times.Once
+        );
+    }
+
     #endregion
 
     #region VerifyOtp Tests
@@ -303,7 +406,7 @@ public class OtpServiceTests
     public void VerifyOtp_WithValidOtp_ReturnsSuccess()
     {
         // Arrange
-        var expectedOtp = "123456";
+        var expectedOtp = "AB12CD";
         string? outValue = expectedOtp;
         _mockCache
             .Setup(x => x.TryGetValue($"otp_{TestPurpose}_{TestEmail}", out outValue))
@@ -324,7 +427,7 @@ public class OtpServiceTests
     public void VerifyOtp_WithValidOtp_RemovesOtpFromCache()
     {
         // Arrange
-        var expectedOtp = "123456";
+        var expectedOtp = "AB12CD";
         string? outValue = expectedOtp;
         _mockCache
             .Setup(x => x.TryGetValue($"otp_{TestPurpose}_{TestEmail}", out outValue))
@@ -341,7 +444,7 @@ public class OtpServiceTests
     public void VerifyOtp_WithValidOtp_SetsVerifiedFlagInCache()
     {
         // Arrange
-        var expectedOtp = "123456";
+        var expectedOtp = "AB12CD";
         string? outValue = expectedOtp;
         _mockCache
             .Setup(x => x.TryGetValue($"otp_{TestPurpose}_{TestEmail}", out outValue))
@@ -378,7 +481,7 @@ public class OtpServiceTests
     public void VerifyOtp_WithInvalidOtp_ReturnsBadRequest()
     {
         // Arrange
-        string? outValue = "123456";
+        string? outValue = "AB12CD";
         _mockCache
             .Setup(x => x.TryGetValue($"otp_{TestPurpose}_{TestEmail}", out outValue))
             .Returns(true);
@@ -405,7 +508,7 @@ public class OtpServiceTests
             .Returns(false);
 
         // Act
-        var result = _otpService.VerifyOtp(TestEmail, "123456", TestPurpose);
+        var result = _otpService.VerifyOtp(TestEmail, "AB12CD", TestPurpose);
 
         // Assert
         using (Assert.EnterMultipleScope())
@@ -420,7 +523,7 @@ public class OtpServiceTests
     public void VerifyOtp_WithInvalidOtp_DoesNotSetVerifiedFlag()
     {
         // Arrange
-        string? outValue = "123456";
+        string? outValue = "AB12CD";
         _mockCache
             .Setup(x => x.TryGetValue($"otp_{TestPurpose}_{TestEmail}", out outValue))
             .Returns(true);
@@ -439,7 +542,7 @@ public class OtpServiceTests
     public void VerifyOtp_WithInvalidOtp_DoesNotRemoveOtpFromCache()
     {
         // Arrange
-        string? outValue = "123456";
+        string? outValue = "AB12CD";
         _mockCache
             .Setup(x => x.TryGetValue($"otp_{TestPurpose}_{TestEmail}", out outValue))
             .Returns(true);

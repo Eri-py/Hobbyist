@@ -7,7 +7,7 @@ const usernameSchema = z
   .max(30, "Username must be less than 30 characters")
   .regex(
     /^[A-Za-z0-9_\-.]+$/,
-    "Username can only contain letters, numbers, dots, dashes, and underscores"
+    "Username can only contain letters, numbers, dots, dashes, and underscores",
   );
 
 const emailSchema = z.string().email("Invalid email address").max(100, "Maximum 100 characters");
@@ -67,7 +67,7 @@ const dateOfBirthSchema = z
 export const SignUpFormSchema = z.object({
   username: usernameSchema,
   email: emailSchema,
-  otp: z.string().trim().length(6, "Invalid otp"),
+  otp: z.string().trim().length(6, "Invalid code").toUpperCase(),
   password: passwordSchema,
   confirmPassword: z.string().nonempty("Please enter password again"),
   firstname: nameSchema("Firstname"),

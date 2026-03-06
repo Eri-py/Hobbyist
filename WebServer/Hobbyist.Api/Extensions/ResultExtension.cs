@@ -46,6 +46,10 @@ public static class ResultExtensions
             {
                 StatusCode = 500,
             },
+            ResultTypes.TooManyRequests => new ObjectResult(new { message = result.Message })
+            {
+                StatusCode = 429,
+            },
             _ => new ObjectResult(new { message = "An unexpected error occurred" })
             {
                 StatusCode = 500,
@@ -74,6 +78,10 @@ public static class ResultExtensions
             ResultTypes.InternalServerError => new ObjectResult(new { message = result.Message })
             {
                 StatusCode = 500,
+            },
+            ResultTypes.TooManyRequests => new ObjectResult(new { message = result.Message })
+            {
+                StatusCode = 429,
             },
             _ => new ObjectResult(new { message = "An unexpected error occurred" })
             {
