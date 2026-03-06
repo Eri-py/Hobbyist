@@ -36,13 +36,19 @@ if (app.Environment.IsDevelopment())
 // UseForwardedHeaders lets the app see the real client IP and the original
 // HTTPS scheme — which is required for correct rate-limit bucketing and any
 // URL generation.
-app.UseForwardedHeaders(
-    new ForwardedHeadersOptions
-    {
-        ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto,
-    }
-);
+var forwardedHeadersOptions = new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto,
+    // Only trust a single forwarding proxy (Railway edge).
+    ForwardLimit = 1,
+};
 
+// Railway's proxy is not loopback, so clear the default restrictions so
+// forwarded headers from the edge proxy are honored.
+forwardedHeadersOptions.KnownNetworks.Clear();
+forwardedHeadersOptions.KnownProxies.Clear();
+
+app.UseForwardedHeaders(forwardedHeadersOptions);
 app.UseCors(builder.Configuration.GetCorsPolicy());
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseSerilogRequestLogging(opts =>
