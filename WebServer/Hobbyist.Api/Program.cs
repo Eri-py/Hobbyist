@@ -1,4 +1,5 @@
 using Hobbyist.Api.Data;
+using Hobbyist.Api.Middleware;
 using Hobbyist.Api.Services.AuthServices;
 using Hobbyist.Api.Services.CacheServices;
 using Hobbyist.Api.Services.EmailServices;
@@ -8,8 +9,19 @@ using Hobbyist.Api.Services.SignUpServices;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.FeatureManagement;
 using Scalar.AspNetCore;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog(
+    (context, config) =>
+    {
+        config
+            .ReadFrom.Configuration(context.Configuration)
+            .Enrich.FromLogContext()
+            .WriteTo.Console();
+    }
+);
 
 builder
     .Configuration.AddJsonFile("featureflags.json", optional: false, reloadOnChange: true)
@@ -75,6 +87,8 @@ if (app.Environment.IsDevelopment())
 }
 app.UseCors(clientOriginName);
 
+app.UseMiddleware<ExceptionHandlingMiddleware>();
+app.UseSerilogRequestLogging();
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();

@@ -8,7 +8,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Hobbyist.Api.Services.AuthServices;
 
-public class AuthService(ITokenService tokenService, HobbyistDbContext context) : IAuthService
+public class AuthService(
+    ITokenService tokenService,
+    HobbyistDbContext context,
+    ILogger<AuthService> logger
+) : IAuthService
 {
     public async Task<GetUserResponse> GetUserDetailsAsync(
         ClaimsPrincipal user,
@@ -16,12 +20,24 @@ public class AuthService(ITokenService tokenService, HobbyistDbContext context) 
         HttpRequest request
     )
     {
-        // Load user details from claims and verify account still exists
-        var userDto = await GetUserDtoAsync(user);
+        var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        // No valid claims — unauthenticated request, nothing to warn about
+        if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var userGuid))
+        {
+            return new GetUserResponse { IsAuthenticated = false, User = null };
+        }
+
+        var userDto = await GetUserDtoAsync(userGuid, user);
         if (userDto == null)
         {
-            // User was deleted - clear cookies and return unauthenticated
+            // Token was valid but the account no longer exists
             var platform = request.GetPlatform();
+            logger.LogWarning(
+                "get-user-details called for deleted user {UserId} (platform: {Platform})",
+                userId,
+                platform
+            );
             if (platform == "web")
             {
                 httpContext.ClearAuthCookies();
@@ -58,16 +74,8 @@ public class AuthService(ITokenService tokenService, HobbyistDbContext context) 
         return tokenService.VerifyRefreshTokenAsync(refreshToken);
     }
 
-    private async Task<UserDto?> GetUserDtoAsync(ClaimsPrincipal user)
+    private async Task<UserDto?> GetUserDtoAsync(Guid userGuid, ClaimsPrincipal user)
     {
-        // Extract user id from claims
-        var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-        if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var userGuid))
-        {
-            return null;
-        }
-
         // Verify user still exists in database
         var userExists = await context.Users.AnyAsync(u => u.Id == userGuid);
         if (!userExists)
@@ -77,7 +85,7 @@ public class AuthService(ITokenService tokenService, HobbyistDbContext context) 
 
         return new UserDto
         {
-            Id = userId,
+            Id = userGuid.ToString(),
             Username = user.Identity!.Name!,
             Email = user.FindFirst(ClaimTypes.Email)!.Value,
             Firstname = user.FindFirst(ClaimTypes.GivenName)!.Value,
