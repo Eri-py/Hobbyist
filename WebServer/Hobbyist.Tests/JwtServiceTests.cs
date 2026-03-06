@@ -5,6 +5,7 @@ using Hobbyist.Api.Services.TokenServices;
 using Hobbyist.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Hobbyist.Tests;
 
@@ -59,7 +60,7 @@ public class JwtServiceTests : DatabaseTestBase
             )
             .Build();
 
-        _jwtService = new JwtService(configuration, Context);
+        _jwtService = new JwtService(configuration, Context, NullLogger<JwtService>.Instance);
         return Task.CompletedTask;
     }
 

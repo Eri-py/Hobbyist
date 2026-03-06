@@ -39,7 +39,7 @@ public abstract class DatabaseTestBase
         // Get connection string from environment or use local development default
         var baseConnectionString =
             Environment.GetEnvironmentVariable("TEST_DB_CONNECTION_STRING")
-            ?? _configs.GetConnectionString("Development");
+            ?? _configs.GetConnectionString("DefaultConnection");
 
         // Parse the connection string and replace the database name
         var connectionStringBuilder = new Npgsql.NpgsqlConnectionStringBuilder(baseConnectionString)

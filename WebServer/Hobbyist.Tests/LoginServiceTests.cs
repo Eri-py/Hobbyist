@@ -6,6 +6,7 @@ using Hobbyist.Api.Services.TokenServices;
 using Hobbyist.Common;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
 namespace Hobbyist.Tests;
@@ -45,7 +46,12 @@ public class LoginServiceTests : DatabaseTestBase
     {
         _otpServiceMock = new Mock<IOtpService>();
         _tokenServiceMock = new Mock<ITokenService>();
-        _loginService = new LoginService(Context, _otpServiceMock.Object, _tokenServiceMock.Object);
+        _loginService = new LoginService(
+            Context,
+            _otpServiceMock.Object,
+            _tokenServiceMock.Object,
+            NullLogger<LoginService>.Instance
+        );
         return Task.CompletedTask;
     }
 

@@ -5,6 +5,7 @@ using Hobbyist.Api.Services.SignUpServices;
 using Hobbyist.Api.Services.TokenServices;
 using Hobbyist.Common;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
 namespace Hobbyist.Tests;
@@ -26,7 +27,8 @@ public class SignUpServiceTests : DatabaseTestBase
         _signUpService = new SignUpService(
             Context,
             _otpServiceMock.Object,
-            _tokenServiceMock.Object
+            _tokenServiceMock.Object,
+            NullLogger<SignUpService>.Instance
         );
 
         return Task.CompletedTask;

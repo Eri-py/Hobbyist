@@ -1,15 +1,17 @@
-using Hobbyist.Api.Data;
-using Hobbyist.Api.Services.AuthServices;
-using Hobbyist.Api.Services.CacheServices;
-using Hobbyist.Api.Services.EmailServices;
-using Hobbyist.Api.Services.LoginServices;
-using Hobbyist.Api.Services.OtpServices;
-using Hobbyist.Api.Services.SignUpServices;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.FeatureManagement;
+using Hobbyist.Api.Extensions.ServiceRegistrations;
+using Hobbyist.Api.Middleware;
 using Scalar.AspNetCore;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog(
+    (context, config) =>
+        config
+            .ReadFrom.Configuration(context.Configuration)
+            .Enrich.FromLogContext()
+            .WriteTo.Console()
+);
 
 builder
     .Configuration.AddJsonFile("featureflags.json", optional: false, reloadOnChange: true)
@@ -19,63 +21,26 @@ builder
         reloadOnChange: true
     );
 
-// Add services to the container.
-builder.Services.AddControllers();
-
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
-
-var clientOriginName = builder.Configuration["ClientOrigin:Name"];
-var clientOriginAddress = builder.Configuration["ClientOrigin:Address"];
-if (string.IsNullOrWhiteSpace(clientOriginName) || string.IsNullOrWhiteSpace(clientOriginAddress))
-{
-    throw new InvalidOperationException(
-        "Missing CORS configuration. Set both 'ClientOrigin:Name' and 'ClientOrigin:Address'."
-    );
-}
-
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy(
-        name: clientOriginName,
-        policy =>
-        {
-            policy
-                .WithOrigins(clientOriginAddress)
-                .AllowAnyHeader()
-                .AllowAnyMethod()
-                .AllowCredentials();
-        }
-    );
-});
-
-builder.Services.AddDatabases(builder.Configuration);
-builder.Services.AddAuthServices(builder.Configuration);
-builder.Services.AddScoped<IOtpService, OtpService>();
-builder.Services.AddScoped<ILoginService, LoginService>();
-builder.Services.AddScoped<ISignUpService, SignUpService>();
-builder.Services.AddEmailServices(builder.Environment);
-builder.Services.AddCacheServices(builder.Configuration);
-builder.Services.AddFeatureManagement();
+builder.Services.AddApplicationServices(builder.Configuration, builder.Environment);
 
 var app = builder.Build();
 
-// Run migrations on startup
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<HobbyistDbContext>();
-    db.Database.Migrate();
-}
-
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
     app.MapScalarApiReference();
 }
-app.UseCors(clientOriginName);
 
-app.UseHttpsRedirection();
+app.UseCors(builder.Configuration.GetCorsPolicy());
+app.UseMiddleware<ExceptionHandlingMiddleware>();
+app.UseSerilogRequestLogging(opts =>
+    opts.GetLevel = (ctx, _, _) =>
+        ctx.Request.Path.StartsWithSegments("/scalar")
+        || ctx.Request.Path.StartsWithSegments("/openapi")
+            ? Serilog.Events.LogEventLevel.Verbose
+            : Serilog.Events.LogEventLevel.Information
+);
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 

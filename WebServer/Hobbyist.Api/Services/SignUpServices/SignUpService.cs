@@ -12,7 +12,8 @@ namespace Hobbyist.Api.Services.SignUpServices;
 public class SignUpService(
     HobbyistDbContext context,
     IOtpService otpService,
-    ITokenService tokenService
+    ITokenService tokenService,
+    ILogger<SignUpService> logger
 ) : ISignUpService
 {
     public async Task<Result<OtpResponse>> StartSignUpAsync(StartSignUpRequest request)
@@ -25,6 +26,12 @@ public class SignUpService(
         var (exists, errorMessage) = await CheckExistingUserAsync(username, email);
         if (exists)
         {
+            logger.LogWarning(
+                "Sign-up conflict for username '{Username}' / email '{Email}': {Error}",
+                username,
+                email,
+                errorMessage
+            );
             return Result<OtpResponse>.Conflict(errorMessage);
         }
 
@@ -107,7 +114,6 @@ public class SignUpService(
             await context.SaveChangesAsync();
             await transaction.CommitAsync();
 
-            // Clear OTP verification now that user is created
             otpService.ClearVerification(email, SignUpConfig.SignUpPurpose);
 
             // Generate access token for immediate use
@@ -127,10 +133,10 @@ public class SignUpService(
                 }
             );
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // Rollback on any error
             await transaction.RollbackAsync();
+            logger.LogError(ex, "Transaction failed during sign-up completion for {Email}", email);
             return Result<AuthResult>.InternalServerError(ErrorMessages.UnexpectedError);
         }
     }

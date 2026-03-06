@@ -5,7 +5,8 @@ using MimeKit;
 
 namespace Hobbyist.Api.Services.EmailServices;
 
-public class ResendEmailService(IConfiguration configuration) : IEmailService
+public class ResendEmailService(IConfiguration configuration, ILogger<ResendEmailService> logger)
+    : IEmailService
 {
     public async Task<Result> SendEmailAsync(string to, string subject, string body)
     {
@@ -32,8 +33,14 @@ public class ResendEmailService(IConfiguration configuration) : IEmailService
 
             return Result.NoContent();
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            logger.LogError(
+                ex,
+                "Failed to send email to {To} with subject '{Subject}'",
+                to,
+                subject
+            );
             return Result.InternalServerError("An unexpected error has occured");
         }
     }

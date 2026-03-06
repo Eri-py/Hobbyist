@@ -1,7 +1,7 @@
-using System;
+using Hobbyist.Api.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace Hobbyist.Api.Data;
+namespace Hobbyist.Api.Extensions.ServiceRegistrations;
 
 public static class DatabaseRegistration
 {

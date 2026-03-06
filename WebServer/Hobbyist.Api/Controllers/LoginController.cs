@@ -3,6 +3,7 @@ using Hobbyist.Api.Extensions;
 using Hobbyist.Api.Services.LoginServices;
 using Hobbyist.Common;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Hobbyist.Api.Controllers
 {
@@ -11,6 +12,7 @@ namespace Hobbyist.Api.Controllers
     public class LoginController(ILoginService loginService) : ControllerBase
     {
         [HttpPost("start")]
+        [EnableRateLimiting("otp")]
         public async Task<ActionResult<StartLoginResponse>> StartLogin(
             [FromBody] StartLoginRequest request
         )
@@ -20,6 +22,7 @@ namespace Hobbyist.Api.Controllers
         }
 
         [HttpPost("resend-otp")]
+        [EnableRateLimiting("otp")]
         public async Task<ActionResult<OtpResponse>> ResendOtp([FromBody] ResendOtpRequest request)
         {
             var result = await loginService.ResendOtpAsync(request);

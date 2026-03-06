@@ -5,7 +5,8 @@ using Hobbyist.Common;
 
 namespace Hobbyist.Api.Services.OtpServices;
 
-public class OtpService(ICache cache, IEmailService emailService) : IOtpService
+public class OtpService(ICache cache, IEmailService emailService, ILogger<OtpService> logger)
+    : IOtpService
 {
     public OtpDetails CreateOtp(int otpValidForMinutes)
     {
@@ -40,7 +41,6 @@ public class OtpService(ICache cache, IEmailService emailService) : IOtpService
         // Store OTP in cache with expiration
         cache.Set(cacheKey, otpDetails.Value, TimeSpan.FromMinutes(OtpConfig.OtpValidForMinutes));
 
-        // Return success with expiration time
         return Result<OtpResponse>.Success(new OtpResponse { OtpExpiresAt = otpDetails.ExpiresAt });
     }
 
@@ -52,6 +52,11 @@ public class OtpService(ICache cache, IEmailService emailService) : IOtpService
         // Validate OTP against stored value
         if (!cache.TryGetValue<string>(cacheKey, out var cachedOtp) || cachedOtp?.ToString() != otp)
         {
+            logger.LogWarning(
+                "OTP verification failed for {Email} (purpose: '{Purpose}')",
+                email,
+                purpose
+            );
             return Result.BadRequest(ErrorMessages.InvalidOrExpiredOtp);
         }
 

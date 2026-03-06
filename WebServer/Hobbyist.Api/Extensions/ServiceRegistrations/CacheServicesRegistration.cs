@@ -1,4 +1,6 @@
-namespace Hobbyist.Api.Services.CacheServices;
+using Hobbyist.Api.Services.CacheServices;
+
+namespace Hobbyist.Api.Extensions.ServiceRegistrations;
 
 public static class CacheServicesRegistration
 {
@@ -23,7 +25,7 @@ public static class CacheServicesRegistration
         }
         else
         {
-            redisConnectionString = raw; // already in correct format (local dev)
+            redisConnectionString = raw;
         }
 
         services.AddStackExchangeRedisCache(options =>

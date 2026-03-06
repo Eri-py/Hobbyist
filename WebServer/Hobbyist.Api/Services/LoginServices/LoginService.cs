@@ -12,7 +12,8 @@ namespace Hobbyist.Api.Services.LoginServices;
 public class LoginService(
     HobbyistDbContext context,
     IOtpService otpService,
-    ITokenService tokenService
+    ITokenService tokenService,
+    ILogger<LoginService> logger
 ) : ILoginService
 {
     public async Task<Result<StartLoginResponse>> StartLoginAsync(StartLoginRequest request)
@@ -26,7 +27,10 @@ public class LoginService(
             u.Username == identifier || u.Email == identifier
         );
         if (user is null)
+        {
+            logger.LogWarning("Login attempt with unknown identifier '{Identifier}'", identifier);
             return Result<StartLoginResponse>.NotFound(ErrorMessages.InvalidLoginCredentials);
+        }
 
         // Verify password against stored hash
         var verifyPasswordResult = new PasswordHasher<UserEntity>().VerifyHashedPassword(
@@ -36,7 +40,10 @@ public class LoginService(
         );
 
         if (verifyPasswordResult == PasswordVerificationResult.Failed)
+        {
+            logger.LogWarning("Invalid password attempt for {Email}", user.Email);
             return Result<StartLoginResponse>.NotFound(ErrorMessages.InvalidLoginCredentials);
+        }
 
         // Send OTP for email verification
         var otpResult = await otpService.SendOtpAsync(user.Email!, LoginConfig.LoginPurpose);
@@ -45,7 +52,6 @@ public class LoginService(
             return Result<StartLoginResponse>.FromError(otpResult);
         }
 
-        // Return success with OTP expiration and user email
         var response = new StartLoginResponse
         {
             OtpExpiresAt = otpResult.Content!.OtpExpiresAt.ToString("o"),
@@ -96,7 +102,6 @@ public class LoginService(
             await context.SaveChangesAsync();
             await transaction.CommitAsync();
 
-            // Create access token and return authentication result
             var accessTokenDetails = tokenService.CreateAccessToken(
                 user,
                 TokenConfig.AccessTokenValidForMinutes
@@ -111,10 +116,14 @@ public class LoginService(
                 }
             );
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // Rollback transaction on error
             await transaction.RollbackAsync();
+            logger.LogError(
+                ex,
+                "Transaction failed during login completion for {Email}",
+                user?.Email
+            );
             return Result<AuthResult>.InternalServerError(ErrorMessages.UnexpectedError);
         }
     }

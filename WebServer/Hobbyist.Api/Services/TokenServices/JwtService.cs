@@ -11,7 +11,11 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace Hobbyist.Api.Services.TokenServices;
 
-public class JwtService(IConfiguration configuration, HobbyistDbContext context) : ITokenService
+public class JwtService(
+    IConfiguration configuration,
+    HobbyistDbContext context,
+    ILogger<JwtService> logger
+) : ITokenService
 {
     public TokenDetails CreateAccessToken(UserEntity user, int tokenValidForMinutes)
     {
@@ -79,6 +83,10 @@ public class JwtService(IConfiguration configuration, HobbyistDbContext context)
             // Check if token is non-existent or expired
             if (token is null || token.TokenExpiresAt < DateTime.UtcNow)
             {
+                logger.LogWarning(
+                    "Refresh token validation failed: {Reason}",
+                    token is null ? "not found" : "expired"
+                );
                 return Result<AuthResult>.Unauthorized(ErrorMessages.InvalidRefreshToken);
             }
 
@@ -106,9 +114,10 @@ public class JwtService(IConfiguration configuration, HobbyistDbContext context)
                 }
             );
         }
-        catch
+        catch (Exception ex)
         {
             await transaction.RollbackAsync();
+            logger.LogError(ex, "Transaction failed during refresh token rotation");
             return Result<AuthResult>.InternalServerError(ErrorMessages.UnexpectedError);
         }
     }

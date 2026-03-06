@@ -2,6 +2,7 @@ using Hobbyist.Api.Services.CacheServices;
 using Hobbyist.Api.Services.EmailServices;
 using Hobbyist.Api.Services.OtpServices;
 using Hobbyist.Common;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
 namespace Hobbyist.Tests;
@@ -26,7 +27,11 @@ public class OtpServiceTests
     {
         _mockCache = new Mock<ICache>();
         _mockEmailService = new Mock<IEmailService>();
-        _otpService = new OtpService(_mockCache.Object, _mockEmailService.Object);
+        _otpService = new OtpService(
+            _mockCache.Object,
+            _mockEmailService.Object,
+            NullLogger<OtpService>.Instance
+        );
     }
 
     #region CreateOtp Tests
