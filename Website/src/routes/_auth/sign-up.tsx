@@ -42,7 +42,7 @@ function SignUp() {
       paddingInline={1}
       gap={2}
       sx={{
-        width: { xs: "100%", md: "480px" },
+        maxWidth: 500,
         height: "fit-content",
         backgroundColor: theme.palette.background.default,
       }}
