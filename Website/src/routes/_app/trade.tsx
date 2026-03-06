@@ -1,7 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { FeatureGate } from "@/components/shared/FeatureGate";
+import { FeatureFlags } from "@hobbyist/types";
 
 export const Route = createFileRoute("/_app/trade")({
-  component: TradePage,
+  component: () => (
+    <FeatureGate flag={FeatureFlags.Trade}>
+      <TradePage />
+    </FeatureGate>
+  ),
 });
 
 function TradePage() {

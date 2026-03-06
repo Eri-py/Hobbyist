@@ -4,12 +4,18 @@ import SearchIcon from "@mui/icons-material/Search";
 import StoreOutlinedIcon from "@mui/icons-material/StoreOutlined";
 import StoreIcon from "@mui/icons-material/Store";
 
+import { useFeatureFlags } from "@hobbyist/hooks";
+import { FeatureFlags } from "@hobbyist/types";
 import { useNavigation } from "@/hooks/app/useNavigation";
 import { MobileHeaderContext, type MobileHeaderContextTypes } from "@/hooks/app/useMobileHeader";
 
 // Default mobile header components
 const DefaultLeftSlot = () => {
   const { activeTab } = useNavigation();
+  const flags = useFeatureFlags();
+
+  if (!flags[FeatureFlags.Trade]) return <div style={{ width: 40 }} />;
+
   return (
     <IconButton>
       {activeTab === "Trade" ? (
@@ -22,6 +28,10 @@ const DefaultLeftSlot = () => {
 };
 const DefaultCenterSlot = () => <div></div>;
 const DefaultRightSlot = () => {
+  const flags = useFeatureFlags();
+
+  if (!flags[FeatureFlags.Search]) return <div style={{ width: 40 }} />;
+
   return (
     <IconButton>
       <SearchIcon />
@@ -47,7 +57,7 @@ export function MobileHeaderProvider({ children }: MobileHeaderProviderTypes) {
       setCenterSlot: setCustomCenterSlot,
       setRightSlot: setCustomRightSlot,
     }),
-    [customLeftSlot, customCenterSlot, customRightSlot]
+    [customLeftSlot, customCenterSlot, customRightSlot],
   );
 
   return <MobileHeaderContext.Provider value={value}>{children}</MobileHeaderContext.Provider>;

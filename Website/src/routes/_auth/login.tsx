@@ -39,7 +39,7 @@ function Login() {
       paddingInline={1}
       gap={2}
       sx={{
-        maxWidth: { xs: "100%", md: "480px" },
+        maxWidth: 500,
         height: "fit-content",
         backgroundColor: theme.palette.background.default,
       }}
