@@ -16,4 +16,16 @@ public static class OtpConfig
     /// Time in minutes that OTP verification stays valid
     /// </summary>
     public const int OtpVerifiedForMinutes = 15;
+
+    /// <summary>
+    /// Maximum number of OTP sends allowed per email per window
+    /// </summary>
+    public const int OtpMaxSendsPerWindow = 5;
+
+    /// <summary>
+    /// The rate limit window duration in minutes
+    /// </summary>
+    public const int OtpRateLimitWindowMinutes = 10;
 }
+
+public record OtpRateLimitEntry(int Count, DateTime WindowExpiry);

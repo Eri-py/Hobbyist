@@ -29,6 +29,12 @@ public static class ErrorMessages
     /// </summary>
     public const string InvalidRefreshToken = "Invalid or expired refresh token";
 
+    /// <summary>
+    /// Message shown when too many OTP requests have been made for a given email.
+    /// </summary>
+    public const string TooManyOtpRequests =
+        "Too many verification code requests. Please wait before trying again.";
+
     #endregion
 
     #region Conflict Errors

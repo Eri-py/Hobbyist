@@ -10,8 +10,11 @@ public class OtpService(ICache cache, IEmailService emailService, ILogger<OtpSer
 {
     public OtpDetails CreateOtp(int otpValidForMinutes)
     {
-        // Generate 6-digit OTP with leading zeros
-        var token = (CryptoRandom.NextInt() % 1000000).ToString("000000");
+        // Generate 6-character alphanumeric OTP (case-insensitive, uppercase)
+        const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        var token = new string(
+            [.. Enumerable.Range(0, 6).Select(_ => chars[CryptoRandom.NextInt() % chars.Length])]
+        );
         var expiresAt = DateTime.UtcNow.AddMinutes(otpValidForMinutes);
 
         return new OtpDetails { Value = token, ExpiresAt = expiresAt };
@@ -19,6 +22,13 @@ public class OtpService(ICache cache, IEmailService emailService, ILogger<OtpSer
 
     public async Task<Result<OtpResponse>> SendOtpAsync(string email, string purpose)
     {
+        // Enforce per-email rate limit
+        var rateLimitResult = CheckSendRateLimit(email, purpose);
+        if (!rateLimitResult.IsSuccess)
+        {
+            return Result<OtpResponse>.FromError(rateLimitResult);
+        }
+
         // Generate cache key for OTP storage
         var cacheKey = GetOtpCacheKey(email, purpose);
 
@@ -38,6 +48,9 @@ public class OtpService(ICache cache, IEmailService emailService, ILogger<OtpSer
             return Result<OtpResponse>.FromError(emailResult);
         }
 
+        // Increment rate limit counter only after successful send
+        IncrementSendRateLimit(email, purpose);
+
         // Store OTP in cache with expiration
         cache.Set(cacheKey, otpDetails.Value, TimeSpan.FromMinutes(OtpConfig.OtpValidForMinutes));
 
@@ -50,7 +63,10 @@ public class OtpService(ICache cache, IEmailService emailService, ILogger<OtpSer
         var cacheKey = GetOtpCacheKey(email, purpose);
 
         // Validate OTP against stored value
-        if (!cache.TryGetValue<string>(cacheKey, out var cachedOtp) || cachedOtp?.ToString() != otp)
+        if (
+            !cache.TryGetValue<string>(cacheKey, out var cachedOtp)
+            || !string.Equals(cachedOtp, otp, StringComparison.OrdinalIgnoreCase)
+        )
         {
             logger.LogWarning(
                 "OTP verification failed for {Email} (purpose: '{Purpose}')",
@@ -84,6 +100,40 @@ public class OtpService(ICache cache, IEmailService emailService, ILogger<OtpSer
     }
 
     private static string GetOtpCacheKey(string email, string purpose) => $"otp_{purpose}_{email}";
+
+    private Result CheckSendRateLimit(string email, string purpose)
+    {
+        var rateLimitKey = $"ratelimit_otp_{purpose}_{email}";
+        cache.TryGetValue<OtpRateLimitEntry>(rateLimitKey, out var entry);
+
+        if (entry is not null && entry.Count >= OtpConfig.OtpMaxSendsPerWindow)
+        {
+            logger.LogWarning(
+                "OTP send rate limit exceeded for {Email} (purpose: '{Purpose}')",
+                email,
+                purpose
+            );
+            return Result.TooManyRequests(ErrorMessages.TooManyOtpRequests);
+        }
+
+        return Result.NoContent();
+    }
+
+    private void IncrementSendRateLimit(string email, string purpose)
+    {
+        var rateLimitKey = $"ratelimit_otp_{purpose}_{email}";
+        cache.TryGetValue<OtpRateLimitEntry>(rateLimitKey, out var entry);
+
+        // Anchor window on first request for fixed window.
+        var windowExpiry =
+            entry?.WindowExpiry ?? DateTime.UtcNow.AddMinutes(OtpConfig.OtpRateLimitWindowMinutes);
+
+        cache.Set(
+            rateLimitKey,
+            new OtpRateLimitEntry(Count: (entry?.Count ?? 0) + 1, WindowExpiry: windowExpiry),
+            windowExpiry - DateTime.UtcNow
+        );
+    }
 
     private static string GetVerifiedCacheKey(string email, string purpose) =>
         $"verified_{purpose}_{email}";

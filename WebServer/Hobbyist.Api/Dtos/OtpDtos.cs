@@ -12,7 +12,7 @@ public record class VerifyOtpRequest
     public required string Email { get; set; }
 
     [Required]
-    [Length(6, 6, ErrorMessage = "Must be 6 digits")]
+    [Length(6, 6, ErrorMessage = "Must be 6 characters")]
     public required string Otp { get; set; }
 }
 
