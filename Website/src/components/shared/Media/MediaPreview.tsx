@@ -1,3 +1,4 @@
+import { type MouseEvent } from "react";
 import Box from "@mui/material/Box";
 import CloseIcon from "@mui/icons-material/Close";
 
@@ -20,7 +21,7 @@ export function MediaPreview({
 }: MediaPreviewTypes) {
   const isImage = fileMetadata.file.type.startsWith("image/");
 
-  const handleRemove = (e: React.MouseEvent) => {
+  const handleRemove = (e: MouseEvent) => {
     e.stopPropagation();
     onRemove?.(fileMetadata.id);
   };

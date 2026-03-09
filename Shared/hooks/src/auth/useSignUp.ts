@@ -1,4 +1,4 @@
-import { type ReactNode, useState } from "react";
+import { type ReactNode, type KeyboardEvent, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -148,7 +148,7 @@ export function useSignUp(
   };
 
   // Handle enter key press
-  const onEnter = (e: React.KeyboardEvent) => {
+  const onEnter = (e: KeyboardEvent) => {
     if (e.key === "Enter") {
       e.preventDefault();
 
