@@ -479,7 +479,7 @@ public class SignUpServiceTests : DatabaseTestBase
             Assert.That(createdUser.Firstname, Is.EqualTo(request.Firstname));
             Assert.That(createdUser.Lastname, Is.EqualTo(request.Lastname));
             Assert.That(createdUser.PasswordHash, Is.Not.EqualTo(request.Password));
-            Assert.That(createdUser.PasswordHash, Is.Not.Null.Or.Empty);
+            Assert.That(createdUser.PasswordHash, Is.Not.Null.And.Not.Empty);
             Assert.That(createdUser.DateOfBirth, Is.EqualTo(DateOnly.Parse(request.DateOfBirth)));
             Assert.That(createdUser.CreatedAt, Is.EqualTo(DateTime.UtcNow).Within(5).Seconds);
         }
