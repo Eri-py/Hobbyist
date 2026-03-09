@@ -1,11 +1,13 @@
+import { useState, type SyntheticEvent } from "react";
 import { useNavigate } from "@tanstack/react-router";
+
 import Snackbar, { type SnackbarCloseReason } from "@mui/material/Snackbar";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
 import CloseIcon from "@mui/icons-material/Close";
-import { useState } from "react";
+
 import { useDeviceType } from "@/hooks/shared/useDeviceType";
 
 export function LoginSnackbar() {
@@ -13,7 +15,7 @@ export function LoginSnackbar() {
   const [open, setOpen] = useState(true);
   const { isDesktop } = useDeviceType();
 
-  const handleClose = (_: React.SyntheticEvent | Event, reason?: SnackbarCloseReason) => {
+  const handleClose = (_: SyntheticEvent | Event, reason?: SnackbarCloseReason) => {
     if (reason === "clickaway") {
       return;
     }

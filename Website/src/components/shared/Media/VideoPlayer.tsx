@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, type MouseEvent } from "react";
 
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
@@ -89,7 +89,7 @@ export function VideoPlayer({ src, onRemove, showRemoveButton = false }: VideoPl
     return `${minutes}:${seconds.toString().padStart(2, "0")}`;
   };
 
-  const handleRemove = (e: React.MouseEvent) => {
+  const handleRemove = (e: MouseEvent) => {
     e.stopPropagation();
     onRemove?.();
   };

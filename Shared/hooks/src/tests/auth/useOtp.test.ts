@@ -1,0 +1,238 @@
+import { renderHook, act } from "@testing-library/react";
+import { vi, beforeEach, describe, it, expect } from "vitest";
+
+// ---------------------------------------------------------------------------
+// Module mocks — declared before the imports they affect
+// ---------------------------------------------------------------------------
+
+const capturedMutations: Array<{
+  mutationFn: (args: { data: { email: string }; mode: "login" | "signup" }) => Promise<any>;
+  onSuccess: (response: any) => void;
+  onError: (error: any) => void;
+}> = [];
+
+const capturedMutates: ReturnType<typeof vi.fn>[] = [];
+
+vi.mock("@tanstack/react-query", () => ({
+  useMutation: vi.fn().mockImplementation((opts: any) => {
+    capturedMutations.push(opts);
+    const mutate = vi.fn();
+    capturedMutates.push(mutate);
+    return { mutate, isPending: false };
+  }),
+}));
+
+const { mockHandleServerError, mockClearServerError } = vi.hoisted(() => ({
+  mockHandleServerError: vi.fn(),
+  mockClearServerError: vi.fn(),
+}));
+
+vi.mock("../../shared/useServerError", () => ({
+  useServerError: vi.fn().mockReturnValue({
+    serverErrorMessage: null,
+    handleServerError: mockHandleServerError,
+    clearServerError: mockClearServerError,
+  }),
+}));
+
+import { useOtp } from "../../auth/useOtp";
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+const mockAxios = { post: vi.fn() } as any;
+const FIVE_MINUTES_MS = 5 * 60 * 1000;
+
+// ---------------------------------------------------------------------------
+// Tests
+// ---------------------------------------------------------------------------
+
+describe("useOtp", () => {
+  let futureDate: Date;
+
+  beforeEach(() => {
+    capturedMutations.length = 0;
+    capturedMutates.length = 0;
+    mockHandleServerError.mockReset();
+    mockClearServerError.mockReset();
+    mockAxios.post.mockReset();
+    futureDate = new Date(Date.now() + FIVE_MINUTES_MS);
+  });
+
+  describe("initial state", () => {
+    it("starts with resend disabled", () => {
+      // Act
+      const { result } = renderHook(() => useOtp(futureDate, mockAxios));
+
+      // Assert
+      expect(result.current.isResendDisabled).toBe(true);
+    });
+
+    it("starts with endTime matching the initial expiry timestamp", () => {
+      // Act
+      const { result } = renderHook(() => useOtp(futureDate, mockAxios));
+
+      // Assert
+      expect(result.current.endTime).toBe(futureDate.getTime());
+    });
+
+    it("exposes server error state from useServerError", () => {
+      // Act
+      const { result } = renderHook(() => useOtp(futureDate, mockAxios));
+
+      // Assert
+      expect(result.current.serverErrorMessage).toBeNull();
+    });
+  });
+
+  describe("isResendDisabled timer", () => {
+    it("enables resend after 1/5th of the initial OTP duration", () => {
+      // Arrange
+      vi.useFakeTimers();
+      const now = Date.now();
+      const expiresAt = new Date(now + FIVE_MINUTES_MS);
+      const oneFifth = (expiresAt.getTime() - now) / 5;
+
+      const { result } = renderHook(() => useOtp(expiresAt, mockAxios));
+      expect(result.current.isResendDisabled).toBe(true);
+
+      // Act
+      act(() => vi.advanceTimersByTime(oneFifth));
+
+      // Assert
+      expect(result.current.isResendDisabled).toBe(false);
+      vi.useRealTimers();
+    });
+
+    it("remains disabled just before the 1/5th mark", () => {
+      // Arrange
+      vi.useFakeTimers();
+      const now = Date.now();
+      const expiresAt = new Date(now + FIVE_MINUTES_MS);
+      const justBeforeOneFifth = (expiresAt.getTime() - now) / 5 - 1;
+
+      const { result } = renderHook(() => useOtp(expiresAt, mockAxios));
+
+      // Act
+      act(() => vi.advanceTimersByTime(justBeforeOneFifth));
+
+      // Assert
+      expect(result.current.isResendDisabled).toBe(true);
+      vi.useRealTimers();
+    });
+  });
+
+  describe("handleResend", () => {
+    it("calls mutate with the correct data and signup mode", () => {
+      // Arrange
+      const { result } = renderHook(() => useOtp(futureDate, mockAxios));
+      const data = { email: "test@example.com" };
+
+      // Act
+      act(() => result.current.handleResend(data, "signup"));
+
+      // Assert
+      expect(capturedMutates[0]).toHaveBeenCalledWith({ data, mode: "signup" });
+    });
+
+    it("calls mutate with the correct data and login mode", () => {
+      // Arrange
+      const { result } = renderHook(() => useOtp(futureDate, mockAxios));
+      const data = { email: "test@example.com" };
+
+      // Act
+      act(() => result.current.handleResend(data, "login"));
+
+      // Assert
+      expect(capturedMutates[0]).toHaveBeenCalledWith({ data, mode: "login" });
+    });
+  });
+
+  describe("mutationFn endpoint routing", () => {
+    it("posts to sign-up/resend-otp when mode is signup", async () => {
+      // Arrange
+      mockAxios.post.mockResolvedValue({ data: { otpExpiresAt: new Date().toISOString() } });
+      renderHook(() => useOtp(futureDate, mockAxios));
+
+      // Act
+      await capturedMutations[0].mutationFn({ data: { email: "a@b.com" }, mode: "signup" });
+
+      // Assert
+      expect(mockAxios.post).toHaveBeenCalledWith(
+        "sign-up/resend-otp",
+        expect.objectContaining({ email: "a@b.com" }),
+      );
+    });
+
+    it("posts to login/resend-otp when mode is login", async () => {
+      // Arrange
+      mockAxios.post.mockResolvedValue({ data: { otpExpiresAt: new Date().toISOString() } });
+      renderHook(() => useOtp(futureDate, mockAxios));
+
+      // Act
+      await capturedMutations[0].mutationFn({ data: { email: "a@b.com" }, mode: "login" });
+
+      // Assert
+      expect(mockAxios.post).toHaveBeenCalledWith(
+        "login/resend-otp",
+        expect.objectContaining({ email: "a@b.com" }),
+      );
+    });
+  });
+
+  describe("onSuccess", () => {
+    it("updates endTime to the new OTP expiry", () => {
+      // Arrange
+      vi.useFakeTimers();
+      const { result } = renderHook(() => useOtp(futureDate, mockAxios));
+      const newExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 min
+
+      // Act
+      act(() =>
+        capturedMutations[0].onSuccess({ data: { otpExpiresAt: newExpiry.toISOString() } }),
+      );
+
+      // Assert
+      expect(result.current.endTime).toBe(newExpiry.getTime());
+      vi.useRealTimers();
+    });
+
+    it("resets isResendDisabled to true after a successful resend", () => {
+      // Arrange
+      vi.useFakeTimers();
+      const now = Date.now();
+      const expiresAt = new Date(now + FIVE_MINUTES_MS);
+      const oneFifth = (expiresAt.getTime() - now) / 5;
+      const { result } = renderHook(() => useOtp(expiresAt, mockAxios));
+
+      // Enable resend first
+      act(() => vi.advanceTimersByTime(oneFifth));
+      expect(result.current.isResendDisabled).toBe(false);
+
+      // Act: successful resend
+      const newExpiry = new Date(Date.now() + FIVE_MINUTES_MS);
+      act(() =>
+        capturedMutations[0].onSuccess({ data: { otpExpiresAt: newExpiry.toISOString() } }),
+      );
+
+      // Assert: resend is disabled again while the new window starts
+      expect(result.current.isResendDisabled).toBe(true);
+      vi.useRealTimers();
+    });
+  });
+
+  describe("onError", () => {
+    it("calls handleServerError with the error", () => {
+      // Arrange
+      renderHook(() => useOtp(futureDate, mockAxios));
+      const error = new Error("Network error") as any;
+
+      // Act
+      act(() => capturedMutations[0].onError(error));
+
+      // Assert
+      expect(mockHandleServerError).toHaveBeenCalledWith(error);
+    });
+  });
+});

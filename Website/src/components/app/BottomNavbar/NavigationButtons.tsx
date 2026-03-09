@@ -1,5 +1,4 @@
-import type { ReactElement } from "react";
-import React from "react";
+import { type ReactElement, type CSSProperties, cloneElement } from "react";
 
 import AddIcon from "@mui/icons-material/Add";
 import HomeIcon from "@mui/icons-material/Home";
@@ -40,7 +39,7 @@ const LabelText = styled(Typography)(() => ({
 
 type NavigationItem = {
   label: string;
-  icon: ReactElement<{ style?: React.CSSProperties }>;
+  icon: ReactElement<{ style?: CSSProperties }>;
   handleClick: () => void;
   notifications?: number;
 };
@@ -95,7 +94,7 @@ export function NavigationButtons() {
     const iconColor = isActive ? theme.palette.primary.light : undefined;
     const textColor = isActive ? theme.palette.primary.light : theme.palette.text.secondary;
 
-    const coloredIcon = React.cloneElement(item.icon, {
+    const coloredIcon = cloneElement(item.icon, {
       style: { ...item.icon.props.style, color: iconColor, width: 28 },
     });
 

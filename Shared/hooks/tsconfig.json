@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     /*Environment */
-    "target": "ES2020",
+    "target": "ES2022",
 
     /* Modules */
     "module": "ESNext",
@@ -26,7 +26,10 @@
     "noUncheckedSideEffectImports": true,
 
     /* Completeness */
-    "skipLibCheck": true
+    "skipLibCheck": true,
+
+    /* JSX */
+    "jsx": "react-jsx"
   },
   "include": ["**/*.ts", "**/*.tsx"],
   "exclude": ["node_modules", "dist"]
