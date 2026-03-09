@@ -1,14 +1,14 @@
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using Hobbyist.Api.Data.Entities;
 using Hobbyist.Api.Dtos;
-using Hobbyist.Api.Services.AuthServices;
-using Hobbyist.Api.Services.TokenServices;
+using Hobbyist.Api.Services.Auth.AuthServices;
+using Hobbyist.Api.Services.Auth.TokenServices;
 using Hobbyist.Common;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
-namespace Hobbyist.Tests;
+namespace Hobbyist.Tests.Auth;
 
 [TestFixture]
 public class AuthServiceTests : DatabaseTestBase

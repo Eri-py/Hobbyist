@@ -1,4 +1,4 @@
-using System.IdentityModel.Tokens.Jwt;
+﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -9,7 +9,7 @@ using Hobbyist.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
-namespace Hobbyist.Api.Services.TokenServices;
+namespace Hobbyist.Api.Services.Auth.TokenServices;
 
 public class JwtService(
     IConfiguration configuration,

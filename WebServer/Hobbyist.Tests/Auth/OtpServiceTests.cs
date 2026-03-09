@@ -1,11 +1,11 @@
+﻿using Hobbyist.Api.Services.Auth.OtpServices;
 using Hobbyist.Api.Services.CacheServices;
 using Hobbyist.Api.Services.EmailServices;
-using Hobbyist.Api.Services.OtpServices;
 using Hobbyist.Common;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
-namespace Hobbyist.Tests;
+namespace Hobbyist.Tests.Auth;
 
 /// <summary>
 /// Unit tests for OtpService.

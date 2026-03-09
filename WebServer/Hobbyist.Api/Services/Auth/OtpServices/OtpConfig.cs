@@ -1,4 +1,4 @@
-namespace Hobbyist.Api.Services.OtpServices;
+﻿namespace Hobbyist.Api.Services.Auth.OtpServices;
 
 public static class OtpConfig
 {

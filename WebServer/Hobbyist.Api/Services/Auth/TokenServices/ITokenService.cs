@@ -1,8 +1,8 @@
-using Hobbyist.Api.Data.Entities;
+﻿using Hobbyist.Api.Data.Entities;
 using Hobbyist.Api.Dtos;
 using Hobbyist.Common;
 
-namespace Hobbyist.Api.Services.TokenServices;
+namespace Hobbyist.Api.Services.Auth.TokenServices;
 
 /// <summary>
 /// Contains token value and expiration information.

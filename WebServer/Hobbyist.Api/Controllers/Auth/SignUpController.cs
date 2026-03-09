@@ -1,10 +1,10 @@
-using Hobbyist.Api.Dtos;
+﻿using Hobbyist.Api.Dtos;
 using Hobbyist.Api.Extensions;
-using Hobbyist.Api.Services.SignUpServices;
+using Hobbyist.Api.Services.Auth.SignUpServices;
 using Hobbyist.Common;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Hobbyist.Api.Controllers
+namespace Hobbyist.Api.Controllers.Auth
 {
     [Route("api/sign-up")]
     [ApiController]

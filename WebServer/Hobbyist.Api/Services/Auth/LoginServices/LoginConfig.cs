@@ -1,4 +1,4 @@
-namespace Hobbyist.Api.Services.LoginServices;
+﻿namespace Hobbyist.Api.Services.Auth.LoginServices;
 
 public static class LoginConfig
 {

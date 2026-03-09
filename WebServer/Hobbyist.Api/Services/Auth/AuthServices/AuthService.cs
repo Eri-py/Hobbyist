@@ -1,12 +1,12 @@
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using Hobbyist.Api.Data;
 using Hobbyist.Api.Dtos;
 using Hobbyist.Api.Extensions;
-using Hobbyist.Api.Services.TokenServices;
+using Hobbyist.Api.Services.Auth.TokenServices;
 using Hobbyist.Common;
 using Microsoft.EntityFrameworkCore;
 
-namespace Hobbyist.Api.Services.AuthServices;
+namespace Hobbyist.Api.Services.Auth.AuthServices;
 
 public class AuthService(
     ITokenService tokenService,

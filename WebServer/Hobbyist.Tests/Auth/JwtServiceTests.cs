@@ -1,13 +1,13 @@
-using System.IdentityModel.Tokens.Jwt;
+﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Hobbyist.Api.Data.Entities;
-using Hobbyist.Api.Services.TokenServices;
+using Hobbyist.Api.Services.Auth.TokenServices;
 using Hobbyist.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 
-namespace Hobbyist.Tests;
+namespace Hobbyist.Tests.Auth;
 
 [TestFixture]
 public class JwtServiceTests : DatabaseTestBase

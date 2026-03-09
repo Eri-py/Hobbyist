@@ -1,9 +1,9 @@
-using Hobbyist.Api.Dtos;
+﻿using Hobbyist.Api.Dtos;
 using Hobbyist.Api.Services.CacheServices;
 using Hobbyist.Api.Services.EmailServices;
 using Hobbyist.Common;
 
-namespace Hobbyist.Api.Services.OtpServices;
+namespace Hobbyist.Api.Services.Auth.OtpServices;
 
 public class OtpService(ICache cache, IEmailService emailService, ILogger<OtpService> logger)
     : IOtpService

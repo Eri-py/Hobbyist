@@ -1,7 +1,7 @@
-using Hobbyist.Api.Dtos;
+﻿using Hobbyist.Api.Dtos;
 using Hobbyist.Common;
 
-namespace Hobbyist.Api.Services.SignUpServices;
+namespace Hobbyist.Api.Services.Auth.SignUpServices;
 
 public interface ISignUpService
 {
