@@ -1,4 +1,4 @@
-namespace Hobbyist.Api.Services.SignUpServices;
+﻿namespace Hobbyist.Api.Services.Auth.SignUpServices;
 
 public static class SignUpConfig
 {

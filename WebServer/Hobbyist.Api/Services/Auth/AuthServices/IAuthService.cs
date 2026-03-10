@@ -1,8 +1,8 @@
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using Hobbyist.Api.Dtos;
 using Hobbyist.Common;
 
-namespace Hobbyist.Api.Services.AuthServices;
+namespace Hobbyist.Api.Services.Auth.AuthServices;
 
 public interface IAuthService
 {

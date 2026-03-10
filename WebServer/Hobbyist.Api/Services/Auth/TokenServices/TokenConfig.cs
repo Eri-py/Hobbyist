@@ -1,4 +1,4 @@
-namespace Hobbyist.Api.Services.TokenServices;
+﻿namespace Hobbyist.Api.Services.Auth.TokenServices;
 
 public static class TokenConfig
 {

@@ -1,13 +1,13 @@
-using Hobbyist.Api.Data;
+﻿using Hobbyist.Api.Data;
 using Hobbyist.Api.Data.Entities;
 using Hobbyist.Api.Dtos;
-using Hobbyist.Api.Services.OtpServices;
-using Hobbyist.Api.Services.TokenServices;
+using Hobbyist.Api.Services.Auth.OtpServices;
+using Hobbyist.Api.Services.Auth.TokenServices;
 using Hobbyist.Common;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
-namespace Hobbyist.Api.Services.SignUpServices;
+namespace Hobbyist.Api.Services.Auth.SignUpServices;
 
 public class SignUpService(
     HobbyistDbContext context,

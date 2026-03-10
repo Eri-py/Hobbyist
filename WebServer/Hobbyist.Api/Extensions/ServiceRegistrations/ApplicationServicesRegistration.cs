@@ -1,8 +1,8 @@
-using Hobbyist.Api.Services.AuthServices;
-using Hobbyist.Api.Services.LoginServices;
-using Hobbyist.Api.Services.OtpServices;
-using Hobbyist.Api.Services.SignUpServices;
-using Hobbyist.Api.Services.TokenServices;
+﻿using Hobbyist.Api.Services.Auth.AuthServices;
+using Hobbyist.Api.Services.Auth.LoginServices;
+using Hobbyist.Api.Services.Auth.OtpServices;
+using Hobbyist.Api.Services.Auth.SignUpServices;
+using Hobbyist.Api.Services.Auth.TokenServices;
 using Microsoft.FeatureManagement;
 
 namespace Hobbyist.Api.Extensions.ServiceRegistrations;

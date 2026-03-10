@@ -1,10 +1,10 @@
-using Hobbyist.Api.Dtos;
+﻿using Hobbyist.Api.Dtos;
 using Hobbyist.Api.Extensions;
-using Hobbyist.Api.Services.LoginServices;
+using Hobbyist.Api.Services.Auth.LoginServices;
 using Hobbyist.Common;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Hobbyist.Api.Controllers
+namespace Hobbyist.Api.Controllers.Auth
 {
     [Route("api/[controller]")]
     [ApiController]

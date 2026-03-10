@@ -1,15 +1,15 @@
-using Hobbyist.Api.Data.Entities;
+﻿using Hobbyist.Api.Data.Entities;
 using Hobbyist.Api.Dtos;
-using Hobbyist.Api.Services.LoginServices;
-using Hobbyist.Api.Services.OtpServices;
-using Hobbyist.Api.Services.TokenServices;
+using Hobbyist.Api.Services.Auth.LoginServices;
+using Hobbyist.Api.Services.Auth.OtpServices;
+using Hobbyist.Api.Services.Auth.TokenServices;
 using Hobbyist.Common;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
-namespace Hobbyist.Tests;
+namespace Hobbyist.Tests.Auth;
 
 [TestFixture]
 public class LoginServiceTests : DatabaseTestBase
