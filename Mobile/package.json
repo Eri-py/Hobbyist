@@ -19,7 +19,7 @@
     "@hookform/resolvers": "^5.2.2",
     "@react-native-community/datetimepicker": "8.6.0",
     "@react-native-picker/picker": "2.11.1",
-    "@react-navigation/bottom-tabs": "^7.14.0",
+    "@react-navigation/bottom-tabs": "^7.15.5",
     "@react-navigation/drawer": "^7.8.1",
     "@react-navigation/elements": "^2.9.5",
     "@react-navigation/native": "^7.1.28",
