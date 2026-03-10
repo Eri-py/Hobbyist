@@ -1,4 +1,5 @@
 import { type ReactElement, type CSSProperties, cloneElement } from "react";
+import { useNavigate } from "@tanstack/react-router";
 
 import AddIcon from "@mui/icons-material/Add";
 import HomeIcon from "@mui/icons-material/Home";
@@ -46,8 +47,8 @@ type NavigationItem = {
 
 export function NavigationButtons() {
   const theme = useTheme();
-  const { handleHomeClick, handleMessagesClick, handleCreateClick, handleEventsClick } =
-    useNavigationButtons();
+  const { handleHomeClick, handleMessagesClick, handleEventsClick } = useNavigationButtons();
+  const navigate = useNavigate();
   const { handleProfileClick } = useProfile();
   const { getActiveTab } = useNavigation();
   const flags = useFeatureFlags();
@@ -70,7 +71,7 @@ export function NavigationButtons() {
     {
       label: "Create",
       icon: <AddIcon style={{ fontSize: 28 }} />,
-      handleClick: handleCreateClick,
+      handleClick: () => navigate({ to: "/create" }),
     },
     ...(flags[FeatureFlags.Messages]
       ? [
