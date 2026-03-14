@@ -21,8 +21,6 @@ public class HobbyistDbContextFactory : IDesignTimeDbContextFactory<HobbyistDbCo
 
         var connectionString = DatabaseConnectionString.Normalize(raw);
 
-        Console.WriteLine(connectionString);
-
         var options = new DbContextOptionsBuilder<HobbyistDbContext>()
             .UseNpgsql(connectionString)
             .Options;

@@ -69,7 +69,7 @@ describe("useFeatureFlags", () => {
 describe("useFeatureFlagsProvider", () => {
   const mockAxios = { get: vi.fn() } as any;
 
-  it("returns isPending true and an empty flags map while the query is loading", () => {
+  it("returns isPending true while the query is loading", () => {
     // Arrange
     mockUseQuery.mockReturnValue({ data: undefined, isPending: true } as any);
 
@@ -78,7 +78,29 @@ describe("useFeatureFlagsProvider", () => {
 
     // Assert
     expect(result.current.isPending).toBe(true);
+  });
+
+  it("returns an empty flags map while the query is loading", () => {
+    // Arrange
+    mockUseQuery.mockReturnValue({ data: undefined, isPending: true } as any);
+
+    // Act
+    const { result } = renderHook(() => useFeatureFlagsProvider(mockAxios));
+
+    // Assert
     expect(result.current.value).toEqual({});
+  });
+
+  it("returns isPending false when loaded", () => {
+    // Arrange
+    const flags = { newUI: true, analytics: false };
+    mockUseQuery.mockReturnValue({ data: flags, isPending: false } as any);
+
+    // Act
+    const { result } = renderHook(() => useFeatureFlagsProvider(mockAxios));
+
+    // Assert
+    expect(result.current.isPending).toBe(false);
   });
 
   it("returns the flags from the query response when loaded", () => {
@@ -90,7 +112,6 @@ describe("useFeatureFlagsProvider", () => {
     const { result } = renderHook(() => useFeatureFlagsProvider(mockAxios));
 
     // Assert
-    expect(result.current.isPending).toBe(false);
     expect(result.current.value).toEqual(flags);
   });
 

@@ -111,7 +111,7 @@ public class AuthServiceTests : DatabaseTestBase
     }
 
     [Test]
-    public async Task GetUserDetailsAsync_WithDeletedUser_WebPlatform_ReturnsFalseAndClearsCookies()
+    public async Task GetUserDetailsAsync_WithDeletedUser_WebPlatform_ReturnsUnauthenticated()
     {
         // Arrange — user ID that does not exist in the database
         var deletedUserId = Guid.NewGuid();
@@ -131,6 +131,18 @@ public class AuthServiceTests : DatabaseTestBase
             Assert.That(result.IsAuthenticated, Is.False);
             Assert.That(result.User, Is.Null);
         }
+    }
+
+    [Test]
+    public async Task GetUserDetailsAsync_WithDeletedUser_WebPlatform_ClearsCookies()
+    {
+        // Arrange — user ID that does not exist in the database
+        var deletedUserId = Guid.NewGuid();
+        var claims = BuildClaims(deletedUserId, "ghost", "ghost@example.com", "Ghost", "User");
+        var httpContext = BuildHttpContext("web");
+
+        // Act
+        _ = await _authService.GetUserDetailsAsync(claims, httpContext, httpContext.Request);
 
         // Verify cookie-deletion Set-Cookie headers were written
         var setCookieHeaders = httpContext.Response.Headers.SetCookie.ToArray();

@@ -131,7 +131,23 @@ describe("useLogin", () => {
   });
 
   describe("handleNext (step 0)", () => {
-    it("calls startLoginMutation.mutate with identifier and password when validation passes", async () => {
+    it("calls startLoginMutation.mutate when validation passes", async () => {
+      // Arrange
+      const { result } = renderHook(() => useLogin(mockNavigate, mockAxios));
+      mockGetValues.mockImplementation((field: string) => {
+        if (field === "identifier") return "testuser";
+        if (field === "password") return "Test1234!";
+        return "";
+      });
+
+      // Act
+      await act(async () => result.current.handleNext());
+
+      // Assert
+      expect(capturedMutates[0]).toHaveBeenCalled();
+    });
+
+    it("passes identifier and password to startLoginMutation.mutate", async () => {
       // Arrange
       const { result } = renderHook(() => useLogin(mockNavigate, mockAxios));
       mockGetValues.mockImplementation((field: string) => {
@@ -176,7 +192,7 @@ describe("useLogin", () => {
   });
 
   describe("startLoginMutation callbacks", () => {
-    it("onSuccess advances to step 1 and stores otpData", () => {
+    it("onSuccess advances to step 1", () => {
       // Arrange
       const { result } = renderHook(() => useLogin(mockNavigate, mockAxios));
 
@@ -185,6 +201,16 @@ describe("useLogin", () => {
 
       // Assert
       expect(result.current.step).toBe(1);
+    });
+
+    it("onSuccess stores otpData", () => {
+      // Arrange
+      const { result } = renderHook(() => useLogin(mockNavigate, mockAxios));
+
+      // Act
+      act(() => capturedMutations[0].onSuccess(mockStartLoginResponse));
+
+      // Assert
       expect(result.current.otpData).toEqual({
         email: "user@example.com",
         otpExpiresAt: "2026-03-09T12:00:00.000Z",
@@ -234,7 +260,7 @@ describe("useLogin", () => {
   });
 
   describe("completeLoginMutation callbacks", () => {
-    it("onSuccess invalidates user query and navigates to /", async () => {
+    it("onSuccess invalidates user query", async () => {
       // Arrange
       mockInvalidateQueries.mockResolvedValue(undefined);
       renderHook(() => useLogin(mockNavigate, mockAxios));
@@ -246,6 +272,17 @@ describe("useLogin", () => {
       expect(mockInvalidateQueries).toHaveBeenCalledWith(
         expect.objectContaining({ queryKey: ["userDetails"] }),
       );
+    });
+
+    it("onSuccess navigates to /", async () => {
+      // Arrange
+      mockInvalidateQueries.mockResolvedValue(undefined);
+      renderHook(() => useLogin(mockNavigate, mockAxios));
+
+      // Act
+      await act(async () => capturedMutations[1].onSuccess(mockAuthResult));
+
+      // Assert
       expect(mockNavigate).toHaveBeenCalledWith("/");
     });
 

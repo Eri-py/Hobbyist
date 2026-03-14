@@ -67,7 +67,7 @@ public class JwtServiceTests : DatabaseTestBase
     #region CreateAccessToken Tests
 
     [Test]
-    public void CreateAccessToken_WithValidUser_ReturnsValidJwtTokenWithCorrectExpiration()
+    public void CreateAccessToken_WithValidUser_ReturnsTokenValueAndExpiration()
     {
         // Act
         var result = _jwtService.CreateAccessToken(
@@ -87,8 +87,20 @@ public class JwtServiceTests : DatabaseTestBase
                     .Seconds
             );
         }
+    }
 
-        // Verify the token contains all expected claims
+    [Test]
+    public void CreateAccessToken_WithValidUser_IncludesExpectedClaims()
+    {
+        // Act
+        var result = _jwtService.CreateAccessToken(
+            _testUser,
+            TokenConfig.AccessTokenValidForMinutes
+        );
+
+        // Assert
+        Assert.That(result.Value, Is.Not.Null.And.Not.Empty);
+
         var tokenHandler = new JwtSecurityTokenHandler();
         var jwtToken = tokenHandler.ReadJwtToken(result.Value);
 

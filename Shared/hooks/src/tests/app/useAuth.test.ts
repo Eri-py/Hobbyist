@@ -50,7 +50,7 @@ describe("useAuth", () => {
   });
 
   describe("when called inside an AuthContext.Provider", () => {
-    it("returns the authenticated context value", () => {
+    it("returns isAuthenticated true for authenticated context", () => {
       // Arrange
       const wrapper = ({ children }: { children: ReactNode }) =>
         createElement(AuthContext.Provider, { value: authenticatedValue }, children);
@@ -60,10 +60,21 @@ describe("useAuth", () => {
 
       // Assert
       expect(result.current.isAuthenticated).toBe(true);
+    });
+
+    it("returns the authenticated user from context", () => {
+      // Arrange
+      const wrapper = ({ children }: { children: ReactNode }) =>
+        createElement(AuthContext.Provider, { value: authenticatedValue }, children);
+
+      // Act
+      const { result } = renderHook(() => useAuth(), { wrapper });
+
+      // Assert
       expect(result.current.user).toEqual(mockUser);
     });
 
-    it("returns the unauthenticated context value", () => {
+    it("returns isAuthenticated false for unauthenticated context", () => {
       // Arrange
       const wrapper = ({ children }: { children: ReactNode }) =>
         createElement(AuthContext.Provider, { value: unauthenticatedValue }, children);
@@ -73,6 +84,17 @@ describe("useAuth", () => {
 
       // Assert
       expect(result.current.isAuthenticated).toBe(false);
+    });
+
+    it("returns null user for unauthenticated context", () => {
+      // Arrange
+      const wrapper = ({ children }: { children: ReactNode }) =>
+        createElement(AuthContext.Provider, { value: unauthenticatedValue }, children);
+
+      // Act
+      const { result } = renderHook(() => useAuth(), { wrapper });
+
+      // Assert
       expect(result.current.user).toBeNull();
     });
   });
@@ -81,7 +103,7 @@ describe("useAuth", () => {
 describe("useAuthProvider", () => {
   const mockAxios = { get: vi.fn() } as any;
 
-  it("returns isPending true and default empty value while the query is loading", () => {
+  it("returns isPending true while the query is loading", () => {
     // Arrange
     mockUseQuery.mockReturnValue({ data: undefined, isPending: true } as any);
 
@@ -90,8 +112,42 @@ describe("useAuthProvider", () => {
 
     // Assert
     expect(result.current.isPending).toBe(true);
+  });
+
+  it("returns isAuthenticated false while the query is loading", () => {
+    // Arrange
+    mockUseQuery.mockReturnValue({ data: undefined, isPending: true } as any);
+
+    // Act
+    const { result } = renderHook(() => useAuthProvider(mockAxios));
+
+    // Assert
     expect(result.current.value.isAuthenticated).toBe(false);
+  });
+
+  it("returns null user while the query is loading", () => {
+    // Arrange
+    mockUseQuery.mockReturnValue({ data: undefined, isPending: true } as any);
+
+    // Act
+    const { result } = renderHook(() => useAuthProvider(mockAxios));
+
+    // Assert
     expect(result.current.value.user).toBeNull();
+  });
+
+  it("returns isPending false when query response has loaded", () => {
+    // Arrange
+    mockUseQuery.mockReturnValue({
+      data: { data: { isAuthenticated: true, user: mockUser } },
+      isPending: false,
+    } as any);
+
+    // Act
+    const { result } = renderHook(() => useAuthProvider(mockAxios));
+
+    // Assert
+    expect(result.current.isPending).toBe(false);
   });
 
   it("returns the authenticated value from the query response", () => {
@@ -105,7 +161,6 @@ describe("useAuthProvider", () => {
     const { result } = renderHook(() => useAuthProvider(mockAxios));
 
     // Assert
-    expect(result.current.isPending).toBe(false);
     expect(result.current.value.isAuthenticated).toBe(true);
     expect(result.current.value.user).toEqual(mockUser);
   });

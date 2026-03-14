@@ -184,7 +184,7 @@ describe("useSignUp", () => {
   });
 
   describe("startSignUpMutation callbacks", () => {
-    it("onSuccess advances to step 1 and stores otpExpiresAt", () => {
+    it("onSuccess advances to step 1", () => {
       // Arrange
       const { result } = renderHook(() => useSignUp(mockNavigate, mockAxios));
 
@@ -193,6 +193,16 @@ describe("useSignUp", () => {
 
       // Assert
       expect(result.current.step).toBe(1);
+    });
+
+    it("onSuccess stores otpExpiresAt", () => {
+      // Arrange
+      const { result } = renderHook(() => useSignUp(mockNavigate, mockAxios));
+
+      // Act
+      act(() => capturedMutations[0].onSuccess(mockStartSignUpResponse));
+
+      // Assert
       expect(result.current.otpExpiresAt).toEqual(new Date("2026-03-09T12:00:00.000Z"));
     });
 
@@ -235,7 +245,7 @@ describe("useSignUp", () => {
   });
 
   describe("verifyOtpMutation callbacks", () => {
-    it("onSuccess advances to step 2 and stores popular interests", () => {
+    it("onSuccess advances to step 2", () => {
       // Arrange
       const { result } = renderHook(() => useSignUp(mockNavigate, mockAxios));
       act(() => capturedMutations[0].onSuccess(mockStartSignUpResponse));
@@ -246,6 +256,18 @@ describe("useSignUp", () => {
 
       // Assert
       expect(result.current.step).toBe(2);
+    });
+
+    it("onSuccess stores popular interests", () => {
+      // Arrange
+      const { result } = renderHook(() => useSignUp(mockNavigate, mockAxios));
+      act(() => capturedMutations[0].onSuccess(mockStartSignUpResponse));
+      const verifyOtpResponse = { data: { popularInterests: ["cards", "coins"] } };
+
+      // Act
+      act(() => capturedMutations[1].onSuccess(verifyOtpResponse));
+
+      // Assert
       expect(result.current.popularInterests).toEqual(["cards", "coins"]);
     });
 
@@ -364,7 +386,7 @@ describe("useSignUp", () => {
   });
 
   describe("completeSignUpMutation callbacks", () => {
-    it("onSuccess invalidates user query and navigates to /", async () => {
+    it("onSuccess invalidates user query", async () => {
       // Arrange
       mockInvalidateQueries.mockResolvedValue(undefined);
       renderHook(() => useSignUp(mockNavigate, mockAxios));
@@ -376,6 +398,17 @@ describe("useSignUp", () => {
       expect(mockInvalidateQueries).toHaveBeenCalledWith(
         expect.objectContaining({ queryKey: ["userDetails"] }),
       );
+    });
+
+    it("onSuccess navigates to /", async () => {
+      // Arrange
+      mockInvalidateQueries.mockResolvedValue(undefined);
+      renderHook(() => useSignUp(mockNavigate, mockAxios));
+
+      // Act
+      await act(async () => capturedMutations[2].onSuccess(mockAuthResult));
+
+      // Assert
       expect(mockNavigate).toHaveBeenCalledWith("/");
     });
 

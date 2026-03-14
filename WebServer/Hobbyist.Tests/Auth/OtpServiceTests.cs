@@ -99,7 +99,7 @@ public class OtpServiceTests
     #region SendOtpAsync Tests
 
     [Test]
-    public async Task SendOtpAsync_SendsEmailWithSixCharacterAlphanumericOtp()
+    public async Task SendOtpAsync_GeneratesSixCharacterOtp()
     {
         // Arrange
         _mockEmailService
@@ -122,6 +122,31 @@ public class OtpServiceTests
         // Assert
         Assert.That(capturedOtp, Is.Not.Null);
         Assert.That(capturedOtp, Has.Length.EqualTo(6));
+    }
+
+    [Test]
+    public async Task SendOtpAsync_GeneratesUppercaseAlphanumericOtp()
+    {
+        // Arrange
+        _mockEmailService
+            .Setup(x =>
+                x.SendOtpEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())
+            )
+            .ReturnsAsync(Result.NoContent());
+
+        string? capturedOtp = null;
+        _mockEmailService
+            .Setup(x =>
+                x.SendOtpEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())
+            )
+            .Callback<string, string, string>((email, otp, validFor) => capturedOtp = otp)
+            .ReturnsAsync(Result.NoContent());
+
+        // Act
+        await _otpService.SendOtpAsync(TestEmail, TestPurpose);
+
+        // Assert
+        Assert.That(capturedOtp, Is.Not.Null);
         Assert.That(capturedOtp, Does.Match(@"^[A-Z0-9]{6}$"));
     }
 

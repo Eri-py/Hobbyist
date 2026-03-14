@@ -178,7 +178,6 @@ export function useSignUp(
   // Handle form submission
   const onSubmit = (formData: SignUpFormSchemaTypes) => {
     clearServerError();
-    console.log(Object.entries(formData));
     completeSignUpMutation.mutate({
       username: formData.username,
       email: formData.email,
