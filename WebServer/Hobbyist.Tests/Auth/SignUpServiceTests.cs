@@ -414,7 +414,7 @@ public class SignUpServiceTests : DatabaseTestBase
     #region CompleteSignUpAsync Tests
 
     [Test]
-    public async Task CompleteSignUpAsync_WithVerifiedEmail_CreatesUserAndReturnsTokens()
+    public async Task CompleteSignUpAsync_WithVerifiedEmail_ReturnsTokens()
     {
         // Arrange
         var request = new CompleteSignUpRequest
@@ -425,6 +425,7 @@ public class SignUpServiceTests : DatabaseTestBase
             Firstname = "John",
             Lastname = "Doe",
             DateOfBirth = "1990-01-01",
+            Interests = ["Coins", "Stamps"],
         };
 
         var accessToken = "access_token";
@@ -498,6 +499,64 @@ public class SignUpServiceTests : DatabaseTestBase
     }
 
     [Test]
+    public async Task CompleteSignUpAsync_WithVerifiedEmail_StoresInterestsInLowercase()
+    {
+        // Arrange
+        var request = new CompleteSignUpRequest
+        {
+            Username = "newuser",
+            Email = "newuser@example.com",
+            Password = "Password123!",
+            Firstname = "John",
+            Lastname = "Doe",
+            DateOfBirth = "1990-01-01",
+            Interests = ["Coins", "Stamps"],
+        };
+
+        _otpServiceMock
+            .Setup(x => x.IsVerified(It.IsAny<string>(), It.IsAny<string>()))
+            .Returns(true);
+
+        _tokenServiceMock
+            .Setup(x => x.CreateRefreshToken(It.IsAny<int>()))
+            .Returns(
+                new TokenDetails
+                {
+                    Value = "refresh_token",
+                    ExpiresAt = DateTime.UtcNow.AddDays(TokenConfig.RefreshTokenValidForDays),
+                }
+            );
+
+        _tokenServiceMock
+            .Setup(x => x.CreateAccessToken(It.IsAny<UserEntity>(), It.IsAny<int>()))
+            .Returns(
+                new TokenDetails
+                {
+                    Value = "access_token",
+                    ExpiresAt = DateTime.UtcNow.AddMinutes(TokenConfig.AccessTokenValidForMinutes),
+                }
+            );
+
+        _tokenServiceMock.Setup(x => x.HashToken(It.IsAny<string>())).Returns("hashed_token");
+
+        // Act
+        var result = await _signUpService.CompleteSignUpAsync(request);
+
+        // Assert
+        Assert.That(result.IsSuccess, Is.True);
+
+        var createdUserWithHobbies = await Context
+            .Users.Include(u => u.Hobbies)
+            .FirstOrDefaultAsync(u => u.Email == request.Email);
+
+        Assert.That(createdUserWithHobbies, Is.Not.Null);
+        Assert.That(
+            createdUserWithHobbies.Hobbies.Select(h => h.Name),
+            Is.EquivalentTo(request.Interests.Select(i => i.ToLowerInvariant()))
+        );
+    }
+
+    [Test]
     public async Task CompleteSignUpAsync_WithoutVerifiedEmail_ReturnsBadRequest()
     {
         // Arrange
@@ -509,6 +568,7 @@ public class SignUpServiceTests : DatabaseTestBase
             Firstname = "John",
             Lastname = "Doe",
             DateOfBirth = "1990-01-01",
+            Interests = ["Coins"],
         };
 
         _otpServiceMock
@@ -565,6 +625,7 @@ public class SignUpServiceTests : DatabaseTestBase
             Firstname = "John",
             Lastname = "Doe",
             DateOfBirth = "1990-01-01",
+            Interests = ["Coins"],
         };
 
         _otpServiceMock
@@ -605,6 +666,7 @@ public class SignUpServiceTests : DatabaseTestBase
             Firstname = "John",
             Lastname = "Doe",
             DateOfBirth = "1990-01-01",
+            Interests = ["Coins"],
         };
         var lowercaseEmail = request.Email.ToLower();
 

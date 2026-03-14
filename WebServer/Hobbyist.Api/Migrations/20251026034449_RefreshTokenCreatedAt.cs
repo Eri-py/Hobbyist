@@ -16,15 +16,14 @@ namespace Hobbyist.Api.Migrations
                 table: "RefreshTokens",
                 type: "timestamp with time zone",
                 nullable: false,
-                defaultValue: new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified));
+                defaultValue: new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
+            );
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
-                name: "CreatedAt",
-                table: "RefreshTokens");
+            migrationBuilder.DropColumn(name: "CreatedAt", table: "RefreshTokens");
         }
     }
 }

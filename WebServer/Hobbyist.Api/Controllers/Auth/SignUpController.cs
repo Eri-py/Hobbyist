@@ -20,10 +20,39 @@ namespace Hobbyist.Api.Controllers.Auth
         }
 
         [HttpPost("verify-otp")]
-        public IActionResult VerifySignUpOtp([FromBody] VerifyOtpRequest request)
+        public ActionResult<VerifyOtpResponse> VerifySignUpOtp([FromBody] VerifyOtpRequest request)
         {
             var result = signUpService.VerifyOtp(request);
-            return result.ToActionResult();
+            if (!result.IsSuccess)
+            {
+                return Result<VerifyOtpResponse>.FromError(result).ToActionResult();
+            }
+
+            // TODO: Implement real popular interest calls
+            return new VerifyOtpResponse
+            {
+                PopularInterests =
+                [
+                    "Trading Cards",
+                    "Vinyl Records",
+                    "Coins",
+                    "Stamps",
+                    "Comics",
+                    "Figures",
+                    "Ceramics",
+                    "Art Prints",
+                    "Vintage Toys",
+                    "Watches",
+                    "Jewellery",
+                    "Books",
+                    "Cameras",
+                    "Video Games",
+                    "Rare Plants",
+                    "Minerals",
+                    "Sneakers",
+                    "Antique Maps",
+                ],
+            };
         }
 
         [HttpPost("resend-otp")]

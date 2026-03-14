@@ -4,6 +4,43 @@
  */
 
 export interface paths {
+    "/api/feature-flags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["FeatureFlagsResponse"];
+                        "application/json": components["schemas"]["FeatureFlagsResponse"];
+                        "text/json": components["schemas"]["FeatureFlagsResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/Auth/get-user-details": {
         parameters: {
             query?: never;
@@ -72,43 +109,6 @@ export interface paths {
                 };
             };
         };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/feature-flags": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "text/plain": components["schemas"]["FeatureFlagsResponse"];
-                        "application/json": components["schemas"]["FeatureFlagsResponse"];
-                        "text/json": components["schemas"]["FeatureFlagsResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -316,7 +316,11 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "text/plain": components["schemas"]["VerifyOtpResponse"];
+                        "application/json": components["schemas"]["VerifyOtpResponse"];
+                        "text/json": components["schemas"]["VerifyOtpResponse"];
+                    };
                 };
             };
         };
@@ -435,6 +439,7 @@ export interface components {
             firstname: string;
             lastname: string;
             dateOfBirth: string;
+            interests: string[];
         };
         FeatureFlagsResponse: {
             flags: {
@@ -474,6 +479,9 @@ export interface components {
         VerifyOtpRequest: {
             email: string;
             otp: string;
+        };
+        VerifyOtpResponse: {
+            popularInterests: string[];
         };
     };
     responses: never;

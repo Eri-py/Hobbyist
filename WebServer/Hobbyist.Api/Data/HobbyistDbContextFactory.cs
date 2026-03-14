@@ -1,3 +1,4 @@
+using Hobbyist.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
@@ -7,7 +8,24 @@ public class HobbyistDbContextFactory : IDesignTimeDbContextFactory<HobbyistDbCo
 {
     public HobbyistDbContext CreateDbContext(string[] args)
     {
-        var options = new DbContextOptionsBuilder<HobbyistDbContext>().UseNpgsql().Options;
+        var config = new ConfigurationBuilder()
+            .SetBasePath(Directory.GetCurrentDirectory())
+            .AddJsonFile("appsettings.json", optional: true)
+            .AddJsonFile("appsettings.Development.json", optional: true)
+            .AddEnvironmentVariables()
+            .Build();
+
+        var raw =
+            config.GetConnectionString("DefaultConnection")
+            ?? "Host=localhost;Port=5432;Database=hobbyist;Username=postgres;Password=postgres;";
+
+        var connectionString = DatabaseConnectionString.Normalize(raw);
+
+        Console.WriteLine(connectionString);
+
+        var options = new DbContextOptionsBuilder<HobbyistDbContext>()
+            .UseNpgsql(connectionString)
+            .Options;
 
         return new HobbyistDbContext(options);
     }

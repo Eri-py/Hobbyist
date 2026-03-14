@@ -10,6 +10,7 @@ import { OtpStep } from "@/components/auth/OtpStep/OtpStep";
 import { useLogin } from "@hobbyist/hooks";
 import { axiosInstance } from "@/api/axiosInstance";
 import { FormHeader } from "@/components/auth/FormHeader";
+import { FormContainer } from "@/components/auth/FormContainer";
 
 export const Route = createFileRoute("/_auth/login")({
   component: Login,
@@ -21,7 +22,6 @@ function Login() {
   const {
     methods,
     step,
-    setStep,
     otpData,
     serverErrorMessage,
     handleNext,
@@ -34,16 +34,7 @@ function Login() {
   } = useLogin((path) => navigate({ to: path }), axiosInstance);
 
   return (
-    <Stack
-      paddingBlock={2}
-      paddingInline={1}
-      gap={2}
-      sx={{
-        maxWidth: 500,
-        height: "fit-content",
-        backgroundColor: theme.palette.background.default,
-      }}
-    >
+    <FormContainer step={step}>
       {serverErrorMessage && (
         <Alert severity="error" sx={{ color: theme.palette.text.primary, fontSize: 16 }}>
           {serverErrorMessage}
@@ -52,7 +43,7 @@ function Login() {
 
       <FormProvider {...methods}>
         <form onSubmit={methods.handleSubmit(onSubmit)} onKeyDown={onEnter}>
-          <Stack gap={2} paddingInline={2}>
+          <Stack gap={2}>
             <FormHeader
               header={loginHeaderConfig[step].header}
               subtext={loginHeaderConfig[step].subtext}
@@ -67,13 +58,12 @@ function Login() {
                 email={otpData.email}
                 intitialOtpExpiresAt={new Date(otpData.otpExpiresAt)}
                 handleNext={handleNext}
-                handleBack={() => setStep(0)}
                 isPending={isCompleting}
               />
             )}
           </Stack>
         </form>
       </FormProvider>
-    </Stack>
+    </FormContainer>
   );
 }

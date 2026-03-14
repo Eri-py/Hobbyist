@@ -17,7 +17,7 @@ export function PasswordStep({ handleNext }: PasswordProps) {
   const password: string = useDebounce(watch("password") || "");
 
   return (
-    <Stack gap={1.5}>
+    <Stack flex={1} gap={1.5}>
       <FormTextField
         type="password"
         label="Password"

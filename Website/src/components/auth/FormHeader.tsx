@@ -22,9 +22,8 @@ export function FormHeader({ header, subtext, activeStep, totalSteps }: FormHead
           {subtext}
         </Typography>
       </Stack>
-      <Stack alignItems="center" gap={0.5}>
-        <CircularProgressBar totalSteps={totalSteps} activeStep={activeStep} />
-      </Stack>
+
+      <CircularProgressBar totalSteps={totalSteps} activeStep={activeStep} />
     </Stack>
   );
 }

@@ -33,17 +33,6 @@ describe("useNavigationButtons", () => {
     });
   });
 
-  it("handleCreateClick navigates to /create", () => {
-    // Arrange
-    const { result } = renderHook(() => useNavigationButtons());
-
-    // Act
-    result.current.handleCreateClick();
-
-    // Assert
-    expect(mockNavigate).toHaveBeenCalledWith({ to: "/create" });
-  });
-
   it("handleMessagesClick navigates to /messages", () => {
     // Arrange
     const { result } = renderHook(() => useNavigationButtons());

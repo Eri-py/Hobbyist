@@ -9,9 +9,11 @@ import { OtpStep } from "@/components/auth/OtpStep/OtpStep";
 import { PasswordStep } from "@/components/auth/sign-up/PasswordStep";
 import { PersonalDetails } from "@/components/auth/sign-up/PersonalDetailsStep";
 import { UsernameAndEmailStep } from "@/components/auth/sign-up/UsernameAndEmailStep";
+import { InterestsStep } from "@/components/auth/sign-up/InterestsStep";
 import { useSignUp } from "@hobbyist/hooks";
 import { axiosInstance } from "@/api/axiosInstance";
 import { FormHeader } from "@/components/auth/FormHeader";
+import { FormContainer } from "@/components/auth/FormContainer";
 
 export const Route = createFileRoute("/_auth/sign-up")({
   component: SignUp,
@@ -20,10 +22,10 @@ export const Route = createFileRoute("/_auth/sign-up")({
 function SignUp() {
   const theme = useTheme();
   const navigate = useNavigate();
+
   const {
     methods,
     step,
-    setStep,
     otpExpiresAt,
     serverErrorMessage,
     handleNext,
@@ -32,21 +34,13 @@ function SignUp() {
     isStarting,
     isVerifying,
     isCompleting,
+    popularInterests,
     signUpHeaderConfig,
     SIGNUP_TOTAL_STEPS,
   } = useSignUp((path) => navigate({ to: path }), axiosInstance);
 
   return (
-    <Stack
-      paddingBlock={2}
-      paddingInline={1}
-      gap={2}
-      sx={{
-        maxWidth: 500,
-        height: "fit-content",
-        backgroundColor: theme.palette.background.default,
-      }}
-    >
+    <FormContainer step={step}>
       {serverErrorMessage && (
         <Alert severity="error" sx={{ color: theme.palette.text.primary, fontSize: 16 }}>
           {serverErrorMessage}
@@ -55,7 +49,7 @@ function SignUp() {
 
       <FormProvider {...methods}>
         <form onSubmit={methods.handleSubmit(onSubmit)} onKeyDown={onEnter}>
-          <Stack gap={2} paddingInline={2}>
+          <Stack gap={2}>
             <FormHeader
               header={signUpHeaderConfig[step].header}
               subtext={signUpHeaderConfig[step].subtext}
@@ -70,15 +64,17 @@ function SignUp() {
                 email={methods.getValues("email")}
                 intitialOtpExpiresAt={otpExpiresAt}
                 handleNext={handleNext}
-                handleBack={() => setStep(0)}
                 isPending={isVerifying}
               />
             )}
             {step === 2 && <PasswordStep handleNext={handleNext} />}
-            {step === 3 && <PersonalDetails isPending={isCompleting} />}
+            {step === 3 && <PersonalDetails handleNext={handleNext} />}
+            {step === 4 && (
+              <InterestsStep popularInterests={popularInterests} isPending={isCompleting} />
+            )}
           </Stack>
         </form>
       </FormProvider>
-    </Stack>
+    </FormContainer>
   );
 }

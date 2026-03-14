@@ -12,6 +12,7 @@ import { USER_DETAILS_QUERY_KEY } from "../app/useAuth";
 // DTOs
 type StartSignUpRequest = components["schemas"]["StartSignUpRequest"];
 type VerifyOtpRequest = components["schemas"]["VerifyOtpRequest"];
+type VerifyOtpResponse = components["schemas"]["VerifyOtpResponse"];
 type CompleteSignUpRequest = components["schemas"]["CompleteSignUpRequest"];
 type StartSignUpResponse = components["schemas"]["OtpResponse"];
 type AuthResult = components["schemas"]["AuthResult"];
@@ -22,6 +23,7 @@ const signUpSteps: Record<number, (keyof SignUpFormSchemaTypes)[]> = {
   1: ["otp"],
   2: ["password", "confirmPassword"],
   3: ["firstname", "lastname", "dateOfBirth"],
+  4: ["interests"],
 };
 
 type HeaderConfig = Record<
@@ -40,7 +42,7 @@ export const signUpHeaderConfig: HeaderConfig = {
   },
   1: {
     header: "Verify email",
-    subtext: "Enter the 6 digit code sent to your email",
+    subtext: "Enter the code sent to your email",
   },
   2: {
     header: "Create password",
@@ -50,9 +52,13 @@ export const signUpHeaderConfig: HeaderConfig = {
     header: "Personal details",
     subtext: "Tell us a bit about yourself",
   },
+  4: {
+    header: "What do you collect?",
+    subtext: "Pick your interests so we can personalise your experience",
+  },
 };
 
-export const SIGNUP_TOTAL_STEPS = 4;
+const SIGNUP_TOTAL_STEPS = 5;
 
 export function useSignUp(
   navigate: (path: string) => void,
@@ -62,6 +68,7 @@ export function useSignUp(
   const { serverErrorMessage, handleServerError, clearServerError } = useServerError();
   const [step, setStep] = useState<number>(0);
   const [otpExpiresAt, setOtpExpiresAt] = useState<Date | null>(null);
+  const [popularInterests, setPopularInterests] = useState<string[]>([]);
   const queryClient = useQueryClient();
 
   // API functions
@@ -70,7 +77,7 @@ export function useSignUp(
   };
 
   const verifyOtpApi = (data: VerifyOtpRequest) => {
-    return axiosInstance.post("sign-up/verify-otp", data);
+    return axiosInstance.post<VerifyOtpResponse>("sign-up/verify-otp", data);
   };
 
   const completeSignUpApi = (data: CompleteSignUpRequest) => {
@@ -81,6 +88,9 @@ export function useSignUp(
   const methods = useForm<SignUpFormSchemaTypes>({
     mode: "onChange",
     resolver: zodResolver(SignUpFormSchema),
+    defaultValues: {
+      interests: [],
+    },
   });
 
   const startSignUpMutation = useMutation({
@@ -94,7 +104,10 @@ export function useSignUp(
 
   const verifyOtpMutation = useMutation({
     mutationFn: (data: VerifyOtpRequest) => verifyOtpApi(data),
-    onSuccess: () => setStep(2),
+    onSuccess: (response) => {
+      setPopularInterests(response.data.popularInterests);
+      setStep(2);
+    },
     onError: (error: ServerError) => handleServerError(error),
   });
 
@@ -143,6 +156,10 @@ export function useSignUp(
           setStep(3);
           break;
         }
+        case 3: {
+          setStep(4);
+          break;
+        }
       }
     }
   };
@@ -152,7 +169,7 @@ export function useSignUp(
     if (e.key === "Enter") {
       e.preventDefault();
 
-      if (step < 3) {
+      if (step < 4) {
         handleNext();
       }
     }
@@ -161,6 +178,7 @@ export function useSignUp(
   // Handle form submission
   const onSubmit = (formData: SignUpFormSchemaTypes) => {
     clearServerError();
+    console.log(Object.entries(formData));
     completeSignUpMutation.mutate({
       username: formData.username,
       email: formData.email,
@@ -168,6 +186,7 @@ export function useSignUp(
       firstname: formData.firstname,
       lastname: formData.lastname,
       dateOfBirth: formData.dateOfBirth,
+      interests: formData.interests,
     });
   };
 
@@ -179,6 +198,7 @@ export function useSignUp(
     step,
     setStep,
     otpExpiresAt,
+    popularInterests,
 
     // Header config
     signUpHeaderConfig,

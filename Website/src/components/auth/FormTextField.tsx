@@ -58,12 +58,18 @@ export function FormTextField({
   return (
     <TextField
       {...props}
+      fullWidth
       variant="outlined"
       type={isPasswordField ? (isPasswordVisible ? "text" : "password") : type}
       label={label}
       error={!!get(errors, fieldValue)}
       helperText={get(errors, fieldValue)?.message}
       autoComplete={autoComplete}
+      sx={{
+        ".MuiFormHelperText-root": {
+          textWrap: "wrap",
+        },
+      }}
       slotProps={{
         input: {
           startAdornment: startIcon ?? "",

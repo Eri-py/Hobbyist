@@ -64,7 +64,7 @@ vi.mock("../../shared/useServerError", () => ({
   }),
 }));
 
-import { useSignUp, signUpHeaderConfig, SIGNUP_TOTAL_STEPS } from "../../auth/useSignUp";
+import { useSignUp, signUpHeaderConfig } from "../../auth/useSignUp";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -103,15 +103,17 @@ describe("useSignUp", () => {
   });
 
   describe("exports", () => {
-    it("exports signUpHeaderConfig with correct headers for all 4 steps", () => {
+    it("exports signUpHeaderConfig with correct headers for all 5 steps", () => {
       expect(signUpHeaderConfig[0].header).toBe("Sign up");
       expect(signUpHeaderConfig[1].header).toBe("Verify email");
       expect(signUpHeaderConfig[2].header).toBe("Create password");
       expect(signUpHeaderConfig[3].header).toBe("Personal details");
+      expect(signUpHeaderConfig[4].header).toBe("What do you collect?");
     });
 
-    it("exports SIGNUP_TOTAL_STEPS as 4", () => {
-      expect(SIGNUP_TOTAL_STEPS).toBe(4);
+    it("exposes SIGNUP_TOTAL_STEPS as 5", () => {
+      const { result } = renderHook(() => useSignUp(mockNavigate, mockAxios));
+      expect(result.current.SIGNUP_TOTAL_STEPS).toBe(5);
     });
   });
 
@@ -233,16 +235,18 @@ describe("useSignUp", () => {
   });
 
   describe("verifyOtpMutation callbacks", () => {
-    it("onSuccess advances to step 2", () => {
+    it("onSuccess advances to step 2 and stores popular interests", () => {
       // Arrange
       const { result } = renderHook(() => useSignUp(mockNavigate, mockAxios));
       act(() => capturedMutations[0].onSuccess(mockStartSignUpResponse));
+      const verifyOtpResponse = { data: { popularInterests: ["cards", "coins"] } };
 
       // Act
-      act(() => capturedMutations[1].onSuccess({}));
+      act(() => capturedMutations[1].onSuccess(verifyOtpResponse));
 
       // Assert
       expect(result.current.step).toBe(2);
+      expect(result.current.popularInterests).toEqual(["cards", "coins"]);
     });
 
     it("onError calls handleServerError", () => {
@@ -264,7 +268,7 @@ describe("useSignUp", () => {
       const { result } = renderHook(() => useSignUp(mockNavigate, mockAxios));
       // Advance to step 2
       act(() => capturedMutations[0].onSuccess(mockStartSignUpResponse));
-      act(() => capturedMutations[1].onSuccess({}));
+      act(() => capturedMutations[1].onSuccess({ data: { popularInterests: [] } }));
       expect(result.current.step).toBe(2);
 
       mockGetValues.mockImplementation((field: string) => {
@@ -284,7 +288,7 @@ describe("useSignUp", () => {
       // Arrange
       const { result } = renderHook(() => useSignUp(mockNavigate, mockAxios));
       act(() => capturedMutations[0].onSuccess(mockStartSignUpResponse));
-      act(() => capturedMutations[1].onSuccess({}));
+      act(() => capturedMutations[1].onSuccess({ data: { popularInterests: [] } }));
       expect(result.current.step).toBe(2);
 
       mockGetValues.mockImplementation((field: string) => {
@@ -318,6 +322,7 @@ describe("useSignUp", () => {
         firstname: "Test",
         lastname: "User",
         dateOfBirth: "1990-01-01",
+        interests: ["cards", "coins"],
       };
 
       // Act
@@ -331,6 +336,7 @@ describe("useSignUp", () => {
         firstname: "Test",
         lastname: "User",
         dateOfBirth: "1990-01-01",
+        interests: ["cards", "coins"],
       });
     });
 
@@ -346,6 +352,7 @@ describe("useSignUp", () => {
         firstname: "Test",
         lastname: "User",
         dateOfBirth: "1990-01-01",
+        interests: ["cards", "coins"],
       };
 
       // Act
@@ -413,11 +420,11 @@ describe("useSignUp", () => {
       expect(mockTrigger).toHaveBeenCalled();
     });
 
-    it("does not trigger handleNext when Enter is pressed on step 3 (final step)", async () => {
+    it("does not trigger handleNext when Enter is pressed on step 4 (final step)", async () => {
       // Arrange
       const { result } = renderHook(() => useSignUp(mockNavigate, mockAxios));
-      act(() => result.current.setStep(3));
-      expect(result.current.step).toBe(3);
+      act(() => result.current.setStep(4));
+      expect(result.current.step).toBe(4);
 
       const event = { key: "Enter", preventDefault: vi.fn() } as any;
       mockTrigger.mockClear();

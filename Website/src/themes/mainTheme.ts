@@ -88,6 +88,13 @@ export const mainTheme = (isDarkMode: boolean) =>
           },
         },
       },
+      MuiChip: {
+        styleOverrides: {
+          root: {
+            color: isDarkMode ? "white" : "black",
+          },
+        },
+      },
     },
     typography: {
       fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
