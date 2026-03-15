@@ -20,7 +20,11 @@ public class OtpService(ICache cache, IEmailService emailService, ILogger<OtpSer
         return new OtpDetails { Value = token, ExpiresAt = expiresAt };
     }
 
-    public async Task<Result<OtpResponse>> SendOtpAsync(string email, string purpose)
+    public async Task<Result<OtpResponse>> SendOtpAsync(
+        string email,
+        string purpose,
+        CancellationToken ct
+    )
     {
         // Enforce per-email rate limit
         var rateLimitResult = CheckSendRateLimit(email, purpose);
@@ -39,7 +43,8 @@ public class OtpService(ICache cache, IEmailService emailService, ILogger<OtpSer
         var emailResult = await emailService.SendOtpEmailAsync(
             to: email,
             otp: otpDetails.Value,
-            otpValidFor: $"{OtpConfig.OtpValidForMinutes} minutes"
+            otpValidFor: $"{OtpConfig.OtpValidForMinutes} minutes",
+            ct: ct
         );
 
         // Return error if email sending fails

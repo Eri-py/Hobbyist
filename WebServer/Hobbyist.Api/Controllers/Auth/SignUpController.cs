@@ -12,10 +12,11 @@ namespace Hobbyist.Api.Controllers.Auth
     {
         [HttpPost("start")]
         public async Task<ActionResult<OtpResponse>> StartSignUp(
-            [FromBody] StartSignUpRequest request
+            [FromBody] StartSignUpRequest request,
+            CancellationToken ct
         )
         {
-            var result = await signUpService.StartSignUpAsync(request);
+            var result = await signUpService.StartSignUpAsync(request, ct);
             return result.ToActionResult();
         }
 
@@ -56,18 +57,22 @@ namespace Hobbyist.Api.Controllers.Auth
         }
 
         [HttpPost("resend-otp")]
-        public async Task<ActionResult<OtpResponse>> ResendOtp([FromBody] ResendOtpRequest request)
+        public async Task<ActionResult<OtpResponse>> ResendOtp(
+            [FromBody] ResendOtpRequest request,
+            CancellationToken ct
+        )
         {
-            var result = await signUpService.ResendOtpAsync(request);
+            var result = await signUpService.ResendOtpAsync(request, ct);
             return result.ToActionResult();
         }
 
         [HttpPost("complete")]
         public async Task<ActionResult<AuthResult>> CompleteSignUp(
-            [FromBody] CompleteSignUpRequest request
+            [FromBody] CompleteSignUpRequest request,
+            CancellationToken ct
         )
         {
-            var result = await signUpService.CompleteSignUpAsync(request);
+            var result = await signUpService.CompleteSignUpAsync(request, ct);
             if (!result.IsSuccess)
             {
                 return Result<AuthResult>.FromError(result).ToActionResult();

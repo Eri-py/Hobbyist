@@ -70,15 +70,18 @@ public class JwtService(
     public string HashToken(string token) =>
         Convert.ToBase64String(SHA256.HashData(Encoding.UTF8.GetBytes(token)));
 
-    public async Task<Result<AuthResult>> VerifyRefreshTokenAsync(string refreshToken)
+    public async Task<Result<AuthResult>> VerifyRefreshTokenAsync(
+        string refreshToken,
+        CancellationToken ct
+    )
     {
-        using var transaction = await context.Database.BeginTransactionAsync();
+        using var transaction = await context.Database.BeginTransactionAsync(ct);
         try
         {
             // Find token by hash and include user data
             var token = await context
                 .RefreshTokens.Include(t => t.User)
-                .FirstOrDefaultAsync(t => t.TokenHash == HashToken(refreshToken));
+                .FirstOrDefaultAsync(t => t.TokenHash == HashToken(refreshToken), ct);
 
             // Check if token is non-existent or expired
             if (token is null || token.TokenExpiresAt < DateTime.UtcNow)
@@ -101,8 +104,8 @@ public class JwtService(
             token.TokenHash = HashToken(newRefreshToken.Value);
             token.TokenExpiresAt = newRefreshToken.ExpiresAt;
 
-            await context.SaveChangesAsync();
-            await transaction.CommitAsync();
+            await context.SaveChangesAsync(ct);
+            await transaction.CommitAsync(ct);
 
             return Result<AuthResult>.Success(
                 new()
@@ -116,7 +119,7 @@ public class JwtService(
         }
         catch (Exception ex)
         {
-            await transaction.RollbackAsync();
+            await transaction.RollbackAsync(ct);
             logger.LogError(ex, "Transaction failed during refresh token rotation");
             return Result<AuthResult>.InternalServerError(ErrorMessages.UnexpectedError);
         }

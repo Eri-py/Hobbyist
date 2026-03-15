@@ -8,7 +8,12 @@ namespace Hobbyist.Api.Services.EmailServices;
 public class ResendEmailService(IConfiguration configuration, ILogger<ResendEmailService> logger)
     : IEmailService
 {
-    public async Task<Result> SendEmailAsync(string to, string subject, string body)
+    public async Task<Result> SendEmailAsync(
+        string to,
+        string subject,
+        string body,
+        CancellationToken ct
+    )
     {
         try
         {
@@ -26,10 +31,15 @@ public class ResendEmailService(IConfiguration configuration, ILogger<ResendEmai
             message.Body = bodyBuilder.ToMessageBody();
 
             using var client = new SmtpClient();
-            await client.ConnectAsync("smtp.resend.com", 2465, SecureSocketOptions.SslOnConnect);
-            await client.AuthenticateAsync("resend", configuration["Resend:ApiKey"]);
-            await client.SendAsync(message);
-            await client.DisconnectAsync(true);
+            await client.ConnectAsync(
+                "smtp.resend.com",
+                2465,
+                SecureSocketOptions.SslOnConnect,
+                ct
+            );
+            await client.AuthenticateAsync("resend", configuration["Resend:ApiKey"], ct);
+            await client.SendAsync(message, ct);
+            await client.DisconnectAsync(true, ct);
 
             return Result.NoContent();
         }
@@ -45,7 +55,12 @@ public class ResendEmailService(IConfiguration configuration, ILogger<ResendEmai
         }
     }
 
-    public async Task<Result> SendOtpEmailAsync(string to, string otp, string otpValidFor)
+    public async Task<Result> SendOtpEmailAsync(
+        string to,
+        string otp,
+        string otpValidFor,
+        CancellationToken ct
+    )
     {
         var templatePath = Path.Combine(
             Directory.GetCurrentDirectory(),
@@ -54,10 +69,10 @@ public class ResendEmailService(IConfiguration configuration, ILogger<ResendEmai
             "EmailTemplates",
             "VerificationEmailTemplate.html"
         );
-        var htmlTemplate = await File.ReadAllTextAsync(templatePath);
+        var htmlTemplate = await File.ReadAllTextAsync(templatePath, ct);
 
         var htmlBody = htmlTemplate.Replace("{{Otp}}", otp).Replace("{{OtpValidFor}}", otpValidFor);
 
-        return await SendEmailAsync(to, "Verify Your Email Address", htmlBody);
+        return await SendEmailAsync(to, "Verify Your Email Address", htmlBody, ct);
     }
 }

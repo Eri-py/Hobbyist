@@ -35,7 +35,10 @@ public interface ITokenService
     /// </summary>
     /// <param name="refreshToken">The refresh token to verify</param>
     /// <returns><see cref="Result{T}"/> where T is <see cref="AuthResult"/></returns>
-    public Task<Result<AuthResult>> VerifyRefreshTokenAsync(string refreshToken);
+    public Task<Result<AuthResult>> VerifyRefreshTokenAsync(
+        string refreshToken,
+        CancellationToken ct
+    );
 
     /// <summary>
     /// Creates a secure hash of the token for storage.

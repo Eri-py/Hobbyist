@@ -16,7 +16,8 @@ public interface IAuthService
     Task<GetUserResponse> GetUserDetailsAsync(
         ClaimsPrincipal user,
         HttpContext httpContext,
-        HttpRequest request
+        HttpRequest request,
+        CancellationToken ct
     );
 
     /// <summary>
@@ -24,5 +25,5 @@ public interface IAuthService
     /// </summary>
     /// <param name="request">The request used for platform validation and token lookup</param>
     /// <returns><see cref="Result{T}"/> where T is <see cref="AuthResult"/></returns>
-    Task<Result<AuthResult>> RefreshTokenAsync(HttpRequest request);
+    Task<Result<AuthResult>> RefreshTokenAsync(HttpRequest request, CancellationToken ct);
 }

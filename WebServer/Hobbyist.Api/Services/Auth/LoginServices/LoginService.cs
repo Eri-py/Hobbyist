@@ -16,15 +16,19 @@ public class LoginService(
     ILogger<LoginService> logger
 ) : ILoginService
 {
-    public async Task<Result<StartLoginResponse>> StartLoginAsync(StartLoginRequest request)
+    public async Task<Result<StartLoginResponse>> StartLoginAsync(
+        StartLoginRequest request,
+        CancellationToken ct
+    )
     {
         // Normalize identifier for case-insensitive lookup
         var identifier = request.Identifier.ToLower();
         var password = request.Password;
 
         // Find user by username or email
-        var user = await context.Users.FirstOrDefaultAsync(u =>
-            u.Username == identifier || u.Email == identifier
+        var user = await context.Users.FirstOrDefaultAsync(
+            u => u.Username == identifier || u.Email == identifier,
+            ct
         );
         if (user is null)
         {
@@ -46,7 +50,7 @@ public class LoginService(
         }
 
         // Send OTP for email verification
-        var otpResult = await otpService.SendOtpAsync(user.Email!, LoginConfig.LoginPurpose);
+        var otpResult = await otpService.SendOtpAsync(user.Email!, LoginConfig.LoginPurpose, ct);
         if (!otpResult.IsSuccess)
         {
             return Result<StartLoginResponse>.FromError(otpResult);
@@ -60,15 +64,19 @@ public class LoginService(
         return Result<StartLoginResponse>.Success(response);
     }
 
-    public async Task<Result<AuthResult>> CompleteLoginAsync(CompleteLoginRequest request)
+    public async Task<Result<AuthResult>> CompleteLoginAsync(
+        CompleteLoginRequest request,
+        CancellationToken ct
+    )
     {
         // Normalize identifier and get OTP
         var identifier = request.Identifier.ToLower();
         var otp = request.Otp;
 
         // Find user by username or email
-        var user = await context.Users.FirstOrDefaultAsync(u =>
-            u.Email == identifier || u.Username == identifier
+        var user = await context.Users.FirstOrDefaultAsync(
+            u => u.Email == identifier || u.Username == identifier,
+            ct
         );
 
         if (user is null)
@@ -82,7 +90,7 @@ public class LoginService(
         }
 
         // Use transaction for atomic token creation
-        using var transaction = await context.Database.BeginTransactionAsync();
+        using var transaction = await context.Database.BeginTransactionAsync(ct);
         try
         {
             // Create refresh token and store in database
@@ -99,8 +107,8 @@ public class LoginService(
             user.RefreshTokens.Add(refreshTokenEntry);
 
             // Save changes and commit transaction
-            await context.SaveChangesAsync();
-            await transaction.CommitAsync();
+            await context.SaveChangesAsync(ct);
+            await transaction.CommitAsync(ct);
 
             var accessTokenDetails = tokenService.CreateAccessToken(
                 user,
@@ -118,7 +126,7 @@ public class LoginService(
         }
         catch (Exception ex)
         {
-            await transaction.RollbackAsync();
+            await transaction.RollbackAsync(ct);
             logger.LogError(
                 ex,
                 "Transaction failed during login completion for {Email}",
@@ -128,17 +136,20 @@ public class LoginService(
         }
     }
 
-    public async Task<Result<OtpResponse>> ResendOtpAsync(ResendOtpRequest request)
+    public async Task<Result<OtpResponse>> ResendOtpAsync(
+        ResendOtpRequest request,
+        CancellationToken ct
+    )
     {
         // Normalize email and find user
         var email = request.Email.ToLower();
-        var user = await context.Users.FirstOrDefaultAsync(u => u.Email == email);
+        var user = await context.Users.FirstOrDefaultAsync(u => u.Email == email, ct);
 
         if (user is null)
             return Result<OtpResponse>.NotFound(ErrorMessages.UserNotFound);
 
         // Resend OTP to user's email
-        var otpResult = await otpService.SendOtpAsync(user.Email!, LoginConfig.LoginPurpose);
+        var otpResult = await otpService.SendOtpAsync(user.Email!, LoginConfig.LoginPurpose, ct);
         return otpResult;
     }
 }

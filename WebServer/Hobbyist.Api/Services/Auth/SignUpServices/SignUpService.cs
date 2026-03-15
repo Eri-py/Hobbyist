@@ -16,14 +16,17 @@ public class SignUpService(
     ILogger<SignUpService> logger
 ) : ISignUpService
 {
-    public async Task<Result<OtpResponse>> StartSignUpAsync(StartSignUpRequest request)
+    public async Task<Result<OtpResponse>> StartSignUpAsync(
+        StartSignUpRequest request,
+        CancellationToken ct
+    )
     {
         // Normalize input for consistent database queries
         var username = request.Username.ToLower();
         var email = request.Email.ToLower();
 
         // Check for existing user conflicts
-        var (exists, errorMessage) = await CheckExistingUserAsync(username, email);
+        var (exists, errorMessage) = await CheckExistingUserAsync(username, email, ct);
         if (exists)
         {
             logger.LogWarning(
@@ -36,7 +39,7 @@ public class SignUpService(
         }
 
         // Send OTP for email verification
-        return await otpService.SendOtpAsync(email, SignUpConfig.SignUpPurpose);
+        return await otpService.SendOtpAsync(email, SignUpConfig.SignUpPurpose, ct);
     }
 
     public Result VerifyOtp(VerifyOtpRequest request)
@@ -48,15 +51,21 @@ public class SignUpService(
         return otpService.VerifyOtp(email, otp, SignUpConfig.SignUpPurpose);
     }
 
-    public async Task<Result<OtpResponse>> ResendOtpAsync(ResendOtpRequest request)
+    public async Task<Result<OtpResponse>> ResendOtpAsync(
+        ResendOtpRequest request,
+        CancellationToken ct
+    )
     {
         // Normalize email and resend OTP
         var email = request.Email.ToLower();
 
-        return await otpService.SendOtpAsync(email, SignUpConfig.SignUpPurpose);
+        return await otpService.SendOtpAsync(email, SignUpConfig.SignUpPurpose, ct);
     }
 
-    public async Task<Result<AuthResult>> CompleteSignUpAsync(CompleteSignUpRequest request)
+    public async Task<Result<AuthResult>> CompleteSignUpAsync(
+        CompleteSignUpRequest request,
+        CancellationToken ct
+    )
     {
         // Normalize input
         var email = request.Email.ToLower();
@@ -73,7 +82,7 @@ public class SignUpService(
         }
 
         // Final check for existing user
-        var (exists, errorMessage) = await CheckExistingUserAsync(username, email);
+        var (exists, errorMessage) = await CheckExistingUserAsync(username, email, ct);
         if (exists)
         {
             otpService.ClearVerification(email, SignUpConfig.SignUpPurpose);
@@ -85,7 +94,7 @@ public class SignUpService(
         var passwordHash = hasher.HashPassword(null!, request.Password);
 
         // Use transaction for atomic operation
-        using var transaction = await context.Database.BeginTransactionAsync();
+        using var transaction = await context.Database.BeginTransactionAsync(ct);
         try
         {
             // Create user entity
@@ -103,7 +112,7 @@ public class SignUpService(
 
             var existingHobbies = await context
                 .Hobbies.Where(h => normalizedInterests.Contains(h.Name.ToLower()))
-                .ToListAsync();
+                .ToListAsync(ct);
 
             // Link user to hobbies that already exist in the database.
             foreach (var hobby in existingHobbies)
@@ -141,8 +150,8 @@ public class SignUpService(
             user.RefreshTokens.Add(refreshTokenEntry);
 
             // Save all changes to database
-            await context.SaveChangesAsync();
-            await transaction.CommitAsync();
+            await context.SaveChangesAsync(ct);
+            await transaction.CommitAsync(ct);
 
             otpService.ClearVerification(email, SignUpConfig.SignUpPurpose);
 
@@ -165,7 +174,7 @@ public class SignUpService(
         }
         catch (Exception ex)
         {
-            await transaction.RollbackAsync();
+            await transaction.RollbackAsync(ct);
             logger.LogError(ex, "Transaction failed during sign-up completion for {Email}", email);
             return Result<AuthResult>.InternalServerError(ErrorMessages.UnexpectedError);
         }
@@ -173,11 +182,13 @@ public class SignUpService(
 
     private async Task<(bool Exists, string ErrorMessage)> CheckExistingUserAsync(
         string username,
-        string email
+        string email,
+        CancellationToken ct
     )
     {
-        var existingUser = await context.Users.FirstOrDefaultAsync(u =>
-            u.Username == username || u.Email == email
+        var existingUser = await context.Users.FirstOrDefaultAsync(
+            u => u.Username == username || u.Email == email,
+            ct
         );
 
         if (existingUser == null)

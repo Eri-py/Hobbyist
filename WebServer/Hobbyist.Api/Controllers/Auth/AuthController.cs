@@ -13,16 +13,16 @@ namespace Hobbyist.Api.Controllers.Auth
     {
         [HttpGet("get-user-details")]
         [Authorize]
-        public async Task<ActionResult<GetUserResponse>> GetUserDetails()
+        public async Task<ActionResult<GetUserResponse>> GetUserDetails(CancellationToken ct)
         {
-            var response = await authService.GetUserDetailsAsync(User, HttpContext, Request);
+            var response = await authService.GetUserDetailsAsync(User, HttpContext, Request, ct);
             return Ok(response);
         }
 
         [HttpPost("refresh-token")]
-        public async Task<ActionResult<AuthResult>> RefreshToken()
+        public async Task<ActionResult<AuthResult>> RefreshToken(CancellationToken ct)
         {
-            var result = await authService.RefreshTokenAsync(Request);
+            var result = await authService.RefreshTokenAsync(Request, ct);
             if (!result.IsSuccess)
             {
                 return Result<AuthResult>.FromError(result).ToActionResult();
