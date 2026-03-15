@@ -1,6 +1,7 @@
 ﻿using Hobbyist.Api.Dtos;
 using Hobbyist.Api.Extensions;
 using Hobbyist.Api.Services.Auth.SignUpServices;
+using Hobbyist.Api.Services.Recommendation.Onboarding;
 using Hobbyist.Common;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,7 +9,10 @@ namespace Hobbyist.Api.Controllers.Auth
 {
     [Route("api/sign-up")]
     [ApiController]
-    public class SignUpController(ISignUpService signUpService) : ControllerBase
+    public class SignUpController(
+        ISignUpService signUpService,
+        IOnboardingRecommendationService onboardingRecommendationService
+    ) : ControllerBase
     {
         [HttpPost("start")]
         public async Task<ActionResult<OtpResponse>> StartSignUp(
@@ -21,7 +25,10 @@ namespace Hobbyist.Api.Controllers.Auth
         }
 
         [HttpPost("verify-otp")]
-        public ActionResult<VerifyOtpResponse> VerifySignUpOtp([FromBody] VerifyOtpRequest request)
+        public async Task<ActionResult<VerifyOtpResponse>> VerifySignUpOtp(
+            [FromBody] VerifyOtpRequest request,
+            CancellationToken ct
+        )
         {
             var result = signUpService.VerifyOtp(request);
             if (!result.IsSuccess)
@@ -29,31 +36,11 @@ namespace Hobbyist.Api.Controllers.Auth
                 return Result<VerifyOtpResponse>.FromError(result).ToActionResult();
             }
 
-            // TODO: Implement real popular interest calls
-            return new VerifyOtpResponse
-            {
-                PopularInterests =
-                [
-                    "Trading Cards",
-                    "Vinyl Records",
-                    "Coins",
-                    "Stamps",
-                    "Comics",
-                    "Figures",
-                    "Ceramics",
-                    "Art Prints",
-                    "Vintage Toys",
-                    "Watches",
-                    "Jewellery",
-                    "Books",
-                    "Cameras",
-                    "Video Games",
-                    "Rare Plants",
-                    "Minerals",
-                    "Sneakers",
-                    "Antique Maps",
-                ],
-            };
+            var popularInterests = await onboardingRecommendationService.GetPopularInterestsAsync(
+                ct
+            );
+
+            return new VerifyOtpResponse { PopularInterests = popularInterests };
         }
 
         [HttpPost("resend-otp")]
