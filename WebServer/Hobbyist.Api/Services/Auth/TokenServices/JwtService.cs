@@ -17,7 +17,7 @@ public class JwtService(
     ILogger<JwtService> logger
 ) : ITokenService
 {
-    public TokenDetails CreateAccessToken(UserEntity user, int tokenValidForMinutes)
+    public AccessTokenDetails CreateAccessToken(UserEntity user, int tokenValidForMinutes)
     {
         // Create claims for the JWT token
         var claims = new List<Claim>
@@ -43,14 +43,14 @@ public class JwtService(
             signingCredentials: creds
         );
 
-        return new TokenDetails
+        return new AccessTokenDetails
         {
             Value = new JwtSecurityTokenHandler().WriteToken(tokenDescriptor),
             ExpiresAt = expiresAt,
         };
     }
 
-    public TokenDetails CreateRefreshToken(int tokenValidForDays)
+    private static (string Value, DateTime ExpiresAt) GenerateRefreshToken(int tokenValidForDays)
     {
         // Generate cryptographically secure random refresh token
         const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -60,63 +60,81 @@ public class JwtService(
             token.Append(chars[CryptoRandom.NextInt() % chars.Length]);
         }
 
-        return new TokenDetails
-        {
-            Value = token.ToString(),
-            ExpiresAt = DateTime.UtcNow.AddDays(tokenValidForDays),
-        };
+        return (token.ToString(), DateTime.UtcNow.AddDays(tokenValidForDays));
     }
 
     public string HashToken(string token) =>
         Convert.ToBase64String(SHA256.HashData(Encoding.UTF8.GetBytes(token)));
 
-    public async Task<Result<AuthResult>> VerifyRefreshTokenAsync(string refreshToken)
+    public RefreshTokenDetails CreateRefreshToken(Guid userId)
     {
-        using var transaction = await context.Database.BeginTransactionAsync();
+        var refreshTokenDetails = GenerateRefreshToken(TokenConfig.RefreshTokenValidForDays);
+        var refreshTokenEntry = new RefreshTokenEntity
+        {
+            TokenHash = HashToken(refreshTokenDetails.Value),
+            TokenExpiresAt = refreshTokenDetails.ExpiresAt,
+            UserId = userId,
+            CreatedAt = DateTime.UtcNow,
+        };
+
+        return new RefreshTokenDetails
+        {
+            Value = refreshTokenDetails.Value,
+            ExpiresAt = refreshTokenDetails.ExpiresAt,
+            Entry = refreshTokenEntry,
+        };
+    }
+
+    public async Task<Result<AuthResult>> RotateRefreshTokenAsync(
+        string refreshToken,
+        CancellationToken ct
+    )
+    {
+        using var transaction = await context.Database.BeginTransactionAsync(ct);
         try
         {
-            // Find token by hash and include user data
-            var token = await context
+            var tokenEntry = await context
                 .RefreshTokens.Include(t => t.User)
-                .FirstOrDefaultAsync(t => t.TokenHash == HashToken(refreshToken));
+                .FirstOrDefaultAsync(t => t.TokenHash == HashToken(refreshToken), ct);
 
-            // Check if token is non-existent or expired
-            if (token is null || token.TokenExpiresAt < DateTime.UtcNow)
+            if (
+                tokenEntry is null
+                || tokenEntry.User is null
+                || tokenEntry.TokenExpiresAt < DateTime.UtcNow
+            )
             {
                 logger.LogWarning(
                     "Refresh token validation failed: {Reason}",
-                    token is null ? "not found" : "expired"
+                    tokenEntry is null || tokenEntry.User is null ? "not found" : "expired"
                 );
                 return Result<AuthResult>.Unauthorized(ErrorMessages.InvalidRefreshToken);
             }
 
-            // Generate new tokens
-            var newRefreshToken = CreateRefreshToken(TokenConfig.RefreshTokenValidForDays);
+            var nextRefreshToken = CreateRefreshToken(tokenEntry.UserId);
             var accessToken = CreateAccessToken(
-                token.User!,
+                tokenEntry.User,
                 TokenConfig.AccessTokenValidForMinutes
             );
 
-            // Update refresh token with new values (token rotation)
-            token.TokenHash = HashToken(newRefreshToken.Value);
-            token.TokenExpiresAt = newRefreshToken.ExpiresAt;
+            tokenEntry.TokenHash = nextRefreshToken.Entry.TokenHash;
+            tokenEntry.TokenExpiresAt = nextRefreshToken.ExpiresAt;
 
-            await context.SaveChangesAsync();
-            await transaction.CommitAsync();
+            await context.SaveChangesAsync(ct);
+            await transaction.CommitAsync(ct);
 
             return Result<AuthResult>.Success(
-                new()
+                new AuthResult
                 {
                     AccessToken = accessToken.Value,
-                    RefreshToken = newRefreshToken.Value,
+                    RefreshToken = nextRefreshToken.Value,
                     AccessTokenExpiresAt = accessToken.ExpiresAt,
-                    RefreshTokenExpiresAt = newRefreshToken.ExpiresAt,
+                    RefreshTokenExpiresAt = nextRefreshToken.ExpiresAt,
                 }
             );
         }
         catch (Exception ex)
         {
-            await transaction.RollbackAsync();
+            await transaction.RollbackAsync(ct);
             logger.LogError(ex, "Transaction failed during refresh token rotation");
             return Result<AuthResult>.InternalServerError(ErrorMessages.UnexpectedError);
         }

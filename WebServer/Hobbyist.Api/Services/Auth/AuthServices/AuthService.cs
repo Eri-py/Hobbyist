@@ -17,7 +17,8 @@ public class AuthService(
     public async Task<GetUserResponse> GetUserDetailsAsync(
         ClaimsPrincipal user,
         HttpContext httpContext,
-        HttpRequest request
+        HttpRequest request,
+        CancellationToken ct
     )
     {
         var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -28,7 +29,7 @@ public class AuthService(
             return new GetUserResponse { IsAuthenticated = false, User = null };
         }
 
-        var userDto = await GetUserDtoAsync(userGuid, user);
+        var userDto = await GetUserDtoAsync(userGuid, user, ct);
         if (userDto == null)
         {
             // Token was valid but the account no longer exists
@@ -49,7 +50,7 @@ public class AuthService(
         return new GetUserResponse { IsAuthenticated = true, User = userDto };
     }
 
-    public Task<Result<AuthResult>> RefreshTokenAsync(HttpRequest request)
+    public Task<Result<AuthResult>> RefreshTokenAsync(HttpRequest request, CancellationToken ct)
     {
         // Get refresh token from cookie for web or refreshToken header for mobile
         var platform = request.GetPlatform();
@@ -71,13 +72,17 @@ public class AuthService(
             );
         }
 
-        return tokenService.VerifyRefreshTokenAsync(refreshToken);
+        return tokenService.RotateRefreshTokenAsync(refreshToken, ct);
     }
 
-    private async Task<UserDto?> GetUserDtoAsync(Guid userGuid, ClaimsPrincipal user)
+    private async Task<UserDto?> GetUserDtoAsync(
+        Guid userGuid,
+        ClaimsPrincipal user,
+        CancellationToken ct
+    )
     {
         // Verify user still exists in database
-        var userExists = await context.Users.AnyAsync(u => u.Id == userGuid);
+        var userExists = await context.Users.AnyAsync(u => u.Id == userGuid, ct);
         if (!userExists)
         {
             return null;

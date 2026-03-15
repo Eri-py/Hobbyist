@@ -1,4 +1,4 @@
-﻿using Hobbyist.Api.Services.Auth.OtpServices;
+using Hobbyist.Api.Services.Auth.OtpServices;
 using Hobbyist.Api.Services.CacheServices;
 using Hobbyist.Api.Services.EmailServices;
 using Hobbyist.Common;
@@ -104,20 +104,32 @@ public class OtpServiceTests
         // Arrange
         _mockEmailService
             .Setup(x =>
-                x.SendOtpEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())
+                x.SendOtpEmailAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()
+                )
             )
             .ReturnsAsync(Result.NoContent());
 
         string? capturedOtp = null;
         _mockEmailService
             .Setup(x =>
-                x.SendOtpEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())
+                x.SendOtpEmailAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()
+                )
             )
-            .Callback<string, string, string>((email, otp, validFor) => capturedOtp = otp)
+            .Callback<string, string, string, CancellationToken>(
+                (email, otp, validFor, _) => capturedOtp = otp
+            )
             .ReturnsAsync(Result.NoContent());
 
         // Act
-        await _otpService.SendOtpAsync(TestEmail, TestPurpose);
+        await _otpService.SendOtpAsync(TestEmail, TestPurpose, CancellationToken.None);
 
         // Assert
         Assert.That(capturedOtp, Is.Not.Null);
@@ -130,20 +142,32 @@ public class OtpServiceTests
         // Arrange
         _mockEmailService
             .Setup(x =>
-                x.SendOtpEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())
+                x.SendOtpEmailAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()
+                )
             )
             .ReturnsAsync(Result.NoContent());
 
         string? capturedOtp = null;
         _mockEmailService
             .Setup(x =>
-                x.SendOtpEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())
+                x.SendOtpEmailAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()
+                )
             )
-            .Callback<string, string, string>((email, otp, validFor) => capturedOtp = otp)
+            .Callback<string, string, string, CancellationToken>(
+                (email, otp, validFor, _) => capturedOtp = otp
+            )
             .ReturnsAsync(Result.NoContent());
 
         // Act
-        await _otpService.SendOtpAsync(TestEmail, TestPurpose);
+        await _otpService.SendOtpAsync(TestEmail, TestPurpose, CancellationToken.None);
 
         // Assert
         Assert.That(capturedOtp, Is.Not.Null);
@@ -156,16 +180,27 @@ public class OtpServiceTests
         // Arrange
         _mockEmailService
             .Setup(x =>
-                x.SendOtpEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())
+                x.SendOtpEmailAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()
+                )
             )
             .ReturnsAsync(Result.NoContent());
 
         // Act
-        await _otpService.SendOtpAsync(TestEmail, TestPurpose);
+        await _otpService.SendOtpAsync(TestEmail, TestPurpose, CancellationToken.None);
 
         // Assert
         _mockEmailService.Verify(
-            x => x.SendOtpEmailAsync(TestEmail, It.IsAny<string>(), It.IsAny<string>()),
+            x =>
+                x.SendOtpEmailAsync(
+                    TestEmail,
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()
+                ),
             Times.Once
         );
     }
@@ -176,12 +211,17 @@ public class OtpServiceTests
         // Arrange
         _mockEmailService
             .Setup(x =>
-                x.SendOtpEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())
+                x.SendOtpEmailAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()
+                )
             )
             .ReturnsAsync(Result.NoContent());
 
         // Act
-        await _otpService.SendOtpAsync(TestEmail, TestPurpose);
+        await _otpService.SendOtpAsync(TestEmail, TestPurpose, CancellationToken.None);
 
         // Assert
         _mockEmailService.Verify(
@@ -189,7 +229,8 @@ public class OtpServiceTests
                 x.SendOtpEmailAsync(
                     It.IsAny<string>(),
                     It.IsAny<string>(),
-                    $"{OtpConfig.OtpValidForMinutes} minutes"
+                    $"{OtpConfig.OtpValidForMinutes} minutes",
+                    It.IsAny<CancellationToken>()
                 ),
             Times.Once
         );
@@ -201,7 +242,12 @@ public class OtpServiceTests
         // Arrange
         _mockEmailService
             .Setup(x =>
-                x.SendOtpEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())
+                x.SendOtpEmailAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()
+                )
             )
             .ReturnsAsync(Result.NoContent());
 
@@ -221,7 +267,7 @@ public class OtpServiceTests
             );
 
         // Act
-        await _otpService.SendOtpAsync(TestEmail, TestPurpose);
+        await _otpService.SendOtpAsync(TestEmail, TestPurpose, CancellationToken.None);
 
         // Assert
         var expectedKey = $"otp_{TestPurpose}_{TestEmail}";
@@ -239,7 +285,12 @@ public class OtpServiceTests
         // Arrange
         _mockEmailService
             .Setup(x =>
-                x.SendOtpEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())
+                x.SendOtpEmailAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()
+                )
             )
             .ReturnsAsync(Result.NoContent());
 
@@ -250,7 +301,7 @@ public class OtpServiceTests
             .Callback<string, string, TimeSpan>((key, value, exp) => capturedExpiration = exp);
 
         // Act
-        await _otpService.SendOtpAsync(TestEmail, TestPurpose);
+        await _otpService.SendOtpAsync(TestEmail, TestPurpose, CancellationToken.None);
 
         // Assert
         Assert.That(capturedExpiration, Is.Not.Null);
@@ -266,12 +317,17 @@ public class OtpServiceTests
         // Arrange
         _mockEmailService
             .Setup(x =>
-                x.SendOtpEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())
+                x.SendOtpEmailAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()
+                )
             )
             .ReturnsAsync(Result.NoContent());
 
         // Act
-        var result = await _otpService.SendOtpAsync(TestEmail, TestPurpose);
+        var result = await _otpService.SendOtpAsync(TestEmail, TestPurpose, CancellationToken.None);
 
         // Assert
         using (Assert.EnterMultipleScope())
@@ -292,12 +348,17 @@ public class OtpServiceTests
         // Arrange
         _mockEmailService
             .Setup(x =>
-                x.SendOtpEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())
+                x.SendOtpEmailAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()
+                )
             )
             .ReturnsAsync(Result.InternalServerError(ErrorMessages.UnexpectedError));
 
         // Act
-        var result = await _otpService.SendOtpAsync(TestEmail, TestPurpose);
+        var result = await _otpService.SendOtpAsync(TestEmail, TestPurpose, CancellationToken.None);
 
         // Assert
         using (Assert.EnterMultipleScope())
@@ -314,12 +375,17 @@ public class OtpServiceTests
         // Arrange
         _mockEmailService
             .Setup(x =>
-                x.SendOtpEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())
+                x.SendOtpEmailAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()
+                )
             )
             .ReturnsAsync(Result.InternalServerError(ErrorMessages.UnexpectedError));
 
         // Act
-        await _otpService.SendOtpAsync(TestEmail, TestPurpose);
+        await _otpService.SendOtpAsync(TestEmail, TestPurpose, CancellationToken.None);
 
         // Assert
         _mockCache.Verify(
@@ -343,7 +409,7 @@ public class OtpServiceTests
             .Returns(true);
 
         // Act
-        var result = await _otpService.SendOtpAsync(TestEmail, TestPurpose);
+        var result = await _otpService.SendOtpAsync(TestEmail, TestPurpose, CancellationToken.None);
 
         // Assert
         using (Assert.EnterMultipleScope())
@@ -369,11 +435,17 @@ public class OtpServiceTests
             .Returns(true);
 
         // Act
-        await _otpService.SendOtpAsync(TestEmail, TestPurpose);
+        await _otpService.SendOtpAsync(TestEmail, TestPurpose, CancellationToken.None);
 
         // Assert
         _mockEmailService.Verify(
-            x => x.SendOtpEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()),
+            x =>
+                x.SendOtpEmailAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()
+                ),
             Times.Never
         );
     }
@@ -384,12 +456,17 @@ public class OtpServiceTests
         // Arrange
         _mockEmailService
             .Setup(x =>
-                x.SendOtpEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())
+                x.SendOtpEmailAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()
+                )
             )
             .ReturnsAsync(Result.InternalServerError(ErrorMessages.UnexpectedError));
 
         // Act
-        await _otpService.SendOtpAsync(TestEmail, TestPurpose);
+        await _otpService.SendOtpAsync(TestEmail, TestPurpose, CancellationToken.None);
 
         // Assert — Set should never be called with an OtpRateLimitEntry
         _mockCache.Verify(
@@ -404,12 +481,17 @@ public class OtpServiceTests
         // Arrange
         _mockEmailService
             .Setup(x =>
-                x.SendOtpEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())
+                x.SendOtpEmailAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()
+                )
             )
             .ReturnsAsync(Result.NoContent());
 
         // Act
-        await _otpService.SendOtpAsync(TestEmail, TestPurpose);
+        await _otpService.SendOtpAsync(TestEmail, TestPurpose, CancellationToken.None);
 
         // Assert — Set should be called exactly once with an OtpRateLimitEntry
         _mockCache.Verify(

@@ -12,26 +12,31 @@ namespace Hobbyist.Api.Controllers.Auth
     {
         [HttpPost("start")]
         public async Task<ActionResult<StartLoginResponse>> StartLogin(
-            [FromBody] StartLoginRequest request
+            [FromBody] StartLoginRequest request,
+            CancellationToken ct
         )
         {
-            var result = await loginService.StartLoginAsync(request);
+            var result = await loginService.StartLoginAsync(request, ct);
             return result.ToActionResult();
         }
 
         [HttpPost("resend-otp")]
-        public async Task<ActionResult<OtpResponse>> ResendOtp([FromBody] ResendOtpRequest request)
+        public async Task<ActionResult<OtpResponse>> ResendOtp(
+            [FromBody] ResendOtpRequest request,
+            CancellationToken ct
+        )
         {
-            var result = await loginService.ResendOtpAsync(request);
+            var result = await loginService.ResendOtpAsync(request, ct);
             return result.ToActionResult();
         }
 
         [HttpPost("complete")]
         public async Task<ActionResult<AuthResult>> CompleteLogin(
-            [FromBody] CompleteLoginRequest request
+            [FromBody] CompleteLoginRequest request,
+            CancellationToken ct
         )
         {
-            var result = await loginService.CompleteLoginAsync(request);
+            var result = await loginService.CompleteLoginAsync(request, ct);
             if (!result.IsSuccess)
             {
                 return Result<AuthResult>.FromError(result).ToActionResult();

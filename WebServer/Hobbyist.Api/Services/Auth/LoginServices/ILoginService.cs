@@ -10,19 +10,25 @@ public interface ILoginService
     /// </summary>
     /// <param name="request">The login request containing user identifier and password. See <see cref="StartLoginRequest"/></param>
     /// <returns><see cref="Result{T}"/> where T is <see cref="StartLoginResponse"/></returns>
-    public Task<Result<StartLoginResponse>> StartLoginAsync(StartLoginRequest request);
+    public Task<Result<StartLoginResponse>> StartLoginAsync(
+        StartLoginRequest request,
+        CancellationToken ct
+    );
 
     /// <summary>
     /// Completes the login process after OTP verification and returns authentication tokens.
     /// </summary>
     /// <param name="request">The completion request containing identifier and OTP. See <see cref="CompleteLoginRequest"/></param>
     /// <returns><see cref="Result{T}"/> where T is <see cref="AuthResult"/></returns>
-    public Task<Result<AuthResult>> CompleteLoginAsync(CompleteLoginRequest request);
+    public Task<Result<AuthResult>> CompleteLoginAsync(
+        CompleteLoginRequest request,
+        CancellationToken ct
+    );
 
     /// <summary>
     /// Resends OTP to the user's email for login verification.
     /// </summary>
     /// <param name="request">The request containing user's email address. See <see cref="ResendOtpRequest"/></param>
     /// <returns><see cref="Result{T}"/> where T is <see cref="OtpResponse"/></returns>
-    public Task<Result<OtpResponse>> ResendOtpAsync(ResendOtpRequest request);
+    public Task<Result<OtpResponse>> ResendOtpAsync(ResendOtpRequest request, CancellationToken ct);
 }

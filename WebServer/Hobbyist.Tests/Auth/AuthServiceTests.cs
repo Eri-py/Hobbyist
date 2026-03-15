@@ -1,4 +1,4 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using Hobbyist.Api.Data.Entities;
 using Hobbyist.Api.Dtos;
 using Hobbyist.Api.Services.Auth.AuthServices;
@@ -93,7 +93,8 @@ public class AuthServiceTests : DatabaseTestBase
         var result = await _authService.GetUserDetailsAsync(
             claims,
             httpContext,
-            httpContext.Request
+            httpContext.Request,
+            CancellationToken.None
         );
 
         // Assert
@@ -122,7 +123,8 @@ public class AuthServiceTests : DatabaseTestBase
         var result = await _authService.GetUserDetailsAsync(
             claims,
             httpContext,
-            httpContext.Request
+            httpContext.Request,
+            CancellationToken.None
         );
 
         // Assert
@@ -142,7 +144,12 @@ public class AuthServiceTests : DatabaseTestBase
         var httpContext = BuildHttpContext("web");
 
         // Act
-        _ = await _authService.GetUserDetailsAsync(claims, httpContext, httpContext.Request);
+        _ = await _authService.GetUserDetailsAsync(
+            claims,
+            httpContext,
+            httpContext.Request,
+            CancellationToken.None
+        );
 
         // Verify cookie-deletion Set-Cookie headers were written
         var setCookieHeaders = httpContext.Response.Headers.SetCookie.ToArray();
@@ -165,7 +172,8 @@ public class AuthServiceTests : DatabaseTestBase
         var result = await _authService.GetUserDetailsAsync(
             claims,
             httpContext,
-            httpContext.Request
+            httpContext.Request,
+            CancellationToken.None
         );
 
         // Assert
@@ -185,7 +193,8 @@ public class AuthServiceTests : DatabaseTestBase
         var result = await _authService.GetUserDetailsAsync(
             emptyPrincipal,
             httpContext,
-            httpContext.Request
+            httpContext.Request,
+            CancellationToken.None
         );
 
         using (Assert.EnterMultipleScope())
@@ -216,15 +225,21 @@ public class AuthServiceTests : DatabaseTestBase
             }
         );
         _tokenServiceMock
-            .Setup(t => t.VerifyRefreshTokenAsync(refreshToken))
+            .Setup(t => t.RotateRefreshTokenAsync(refreshToken, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
 
         // Act
-        var result = await _authService.RefreshTokenAsync(httpContext.Request);
+        var result = await _authService.RefreshTokenAsync(
+            httpContext.Request,
+            CancellationToken.None
+        );
 
         // Assert
         Assert.That(result.IsSuccess, Is.True);
-        _tokenServiceMock.Verify(t => t.VerifyRefreshTokenAsync(refreshToken), Times.Once);
+        _tokenServiceMock.Verify(
+            t => t.RotateRefreshTokenAsync(refreshToken, It.IsAny<CancellationToken>()),
+            Times.Once
+        );
     }
 
     [Test]
@@ -244,15 +259,21 @@ public class AuthServiceTests : DatabaseTestBase
             }
         );
         _tokenServiceMock
-            .Setup(t => t.VerifyRefreshTokenAsync(refreshToken))
+            .Setup(t => t.RotateRefreshTokenAsync(refreshToken, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResult);
 
         // Act
-        var result = await _authService.RefreshTokenAsync(httpContext.Request);
+        var result = await _authService.RefreshTokenAsync(
+            httpContext.Request,
+            CancellationToken.None
+        );
 
         // Assert
         Assert.That(result.IsSuccess, Is.True);
-        _tokenServiceMock.Verify(t => t.VerifyRefreshTokenAsync(refreshToken), Times.Once);
+        _tokenServiceMock.Verify(
+            t => t.RotateRefreshTokenAsync(refreshToken, It.IsAny<CancellationToken>()),
+            Times.Once
+        );
     }
 
     [Test]
@@ -262,7 +283,10 @@ public class AuthServiceTests : DatabaseTestBase
         var httpContext = BuildHttpContext("web");
 
         // Act
-        var result = await _authService.RefreshTokenAsync(httpContext.Request);
+        var result = await _authService.RefreshTokenAsync(
+            httpContext.Request,
+            CancellationToken.None
+        );
 
         // Assert
         using (Assert.EnterMultipleScope())
@@ -270,7 +294,10 @@ public class AuthServiceTests : DatabaseTestBase
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.ResultType, Is.EqualTo(ResultTypes.BadRequest));
         }
-        _tokenServiceMock.Verify(t => t.VerifyRefreshTokenAsync(It.IsAny<string>()), Times.Never);
+        _tokenServiceMock.Verify(
+            t => t.RotateRefreshTokenAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            Times.Never
+        );
     }
 
     #endregion

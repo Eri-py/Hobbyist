@@ -1,4 +1,4 @@
-﻿using System.IdentityModel.Tokens.Jwt;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Hobbyist.Api.Data.Entities;
 using Hobbyist.Api.Services.Auth.TokenServices;
@@ -69,13 +69,11 @@ public class JwtServiceTests : DatabaseTestBase
     [Test]
     public void CreateAccessToken_WithValidUser_ReturnsTokenValueAndExpiration()
     {
-        // Act
         var result = _jwtService.CreateAccessToken(
             _testUser,
             TokenConfig.AccessTokenValidForMinutes
         );
 
-        // Assert - Basic token properties
         Assert.That(result, Is.Not.Null);
         using (Assert.EnterMultipleScope())
         {
@@ -92,13 +90,11 @@ public class JwtServiceTests : DatabaseTestBase
     [Test]
     public void CreateAccessToken_WithValidUser_IncludesExpectedClaims()
     {
-        // Act
         var result = _jwtService.CreateAccessToken(
             _testUser,
             TokenConfig.AccessTokenValidForMinutes
         );
 
-        // Assert
         Assert.That(result.Value, Is.Not.Null.And.Not.Empty);
 
         var tokenHandler = new JwtSecurityTokenHandler();
@@ -132,7 +128,6 @@ public class JwtServiceTests : DatabaseTestBase
     [Test]
     public void CreateAccessToken_WithDifferentUsers_CreatesDifferentTokens()
     {
-        // Act
         var token1 = _jwtService.CreateAccessToken(
             _testUser,
             TokenConfig.AccessTokenValidForMinutes
@@ -142,7 +137,6 @@ public class JwtServiceTests : DatabaseTestBase
             TokenConfig.AccessTokenValidForMinutes
         );
 
-        // Assert
         Assert.That(token1.Value, Is.Not.EqualTo(token2.Value));
     }
 
@@ -153,13 +147,11 @@ public class JwtServiceTests : DatabaseTestBase
     [Test]
     public void CreateRefreshToken_GeneratesUnique64CharacterTokens()
     {
-        // Act
-        var token1 = _jwtService.CreateRefreshToken(TokenConfig.RefreshTokenValidForDays);
-        var token2 = _jwtService.CreateRefreshToken(TokenConfig.RefreshTokenValidForDays);
+        var token1 = _jwtService.CreateRefreshToken(_testUser.Id);
+        var token2 = _jwtService.CreateRefreshToken(_testUser.Id);
 
         using (Assert.EnterMultipleScope())
         {
-            // Assert
             Assert.That(token1.Value, Has.Length.EqualTo(64));
             Assert.That(token2.Value, Has.Length.EqualTo(64));
         }
@@ -169,10 +161,8 @@ public class JwtServiceTests : DatabaseTestBase
     [Test]
     public void CreateRefreshToken_SetsCorrectExpiration()
     {
-        // Act
-        var result = _jwtService.CreateRefreshToken(TokenConfig.RefreshTokenValidForDays);
+        var result = _jwtService.CreateRefreshToken(_testUser.Id);
 
-        // Assert
         Assert.That(
             result.ExpiresAt,
             Is.EqualTo(DateTime.UtcNow.AddDays(TokenConfig.RefreshTokenValidForDays))
@@ -184,11 +174,17 @@ public class JwtServiceTests : DatabaseTestBase
     [Test]
     public void CreateRefreshToken_ContainsOnlyValidCharacters()
     {
-        // Act
-        var result = _jwtService.CreateRefreshToken(TokenConfig.RefreshTokenValidForDays);
+        var result = _jwtService.CreateRefreshToken(_testUser.Id);
 
-        // Assert
         Assert.That(result.Value, Does.Match(@"^[A-Za-z0-9]{64}$"));
+    }
+
+    [Test]
+    public void CreateRefreshToken_AssignsEntryToRequestedUser()
+    {
+        var result = _jwtService.CreateRefreshToken(_testUser2.Id);
+
+        Assert.That(result.Entry.UserId, Is.EqualTo(_testUser2.Id));
     }
 
     #endregion
@@ -198,40 +194,33 @@ public class JwtServiceTests : DatabaseTestBase
     [Test]
     public void HashToken_ProducesConsistentHashesForSameInput()
     {
-        // Arrange
         var token = "test-refresh-token-1234567890-abcdefghijklmnopqrstuvwxyz012345";
 
-        // Act
         var hash1 = _jwtService.HashToken(token);
         var hash2 = _jwtService.HashToken(token);
 
-        // Assert
         Assert.That(hash1, Is.EqualTo(hash2));
     }
 
     [Test]
     public void HashToken_ProducesDifferentHashesForDifferentInputs()
     {
-        // Arrange
         var token1 = "test-refresh-token-1234567890-abcdefghijklmnopqrstuvwxyz012345";
         var token2 = "different-refresh-token-9876543210-zyxwvutsrqponmlkjihgfedcba";
 
-        // Act
         var hash1 = _jwtService.HashToken(token1);
         var hash2 = _jwtService.HashToken(token2);
 
-        // Assert
         Assert.That(hash1, Is.Not.EqualTo(hash2));
     }
 
     #endregion
 
-    #region VerifyRefreshTokenAsync Tests
+    #region RotateRefreshTokenAsync Tests
 
     [Test]
-    public async Task VerifyRefreshTokenAsync_WithValidToken_ReturnsNewTokens()
+    public async Task RotateRefreshTokenAsync_WithValidToken_ReturnsNewTokens()
     {
-        // Arrange
         var refreshToken = "valid-refresh-token-1234567890-abcdefghijklmnopqrstuvwxyz012345";
         Context.RefreshTokens.Add(
             new RefreshTokenEntity
@@ -245,27 +234,23 @@ public class JwtServiceTests : DatabaseTestBase
         );
         await Context.SaveChangesAsync();
 
-        // Act
-        var result = await _jwtService.VerifyRefreshTokenAsync(refreshToken);
+        var result = await _jwtService.RotateRefreshTokenAsync(
+            refreshToken,
+            CancellationToken.None
+        );
 
         using (Assert.EnterMultipleScope())
         {
-            // Assert
             Assert.That(result.IsSuccess, Is.True);
             Assert.That(result.Content, Is.Not.Null);
-        }
-        using (Assert.EnterMultipleScope())
-        {
-            // Assert
-            Assert.That(result.Content.AccessToken, Is.Not.Null.And.Not.Empty);
+            Assert.That(result.Content!.AccessToken, Is.Not.Null.And.Not.Empty);
             Assert.That(result.Content.RefreshToken, Is.Not.Null.And.Not.Empty);
         }
     }
 
     [Test]
-    public async Task VerifyRefreshTokenAsync_WithValidToken_RotatesRefreshToken()
+    public async Task RotateRefreshTokenAsync_WithValidToken_RotatesRefreshToken()
     {
-        // Arrange
         var originalRefreshToken = "original-refresh-token-1234567890-abcdefghijklmnopqrstuvwxyz";
         var originalHash = _jwtService.HashToken(originalRefreshToken);
 
@@ -281,10 +266,11 @@ public class JwtServiceTests : DatabaseTestBase
         );
         await Context.SaveChangesAsync();
 
-        // Act
-        var result = await _jwtService.VerifyRefreshTokenAsync(originalRefreshToken);
+        var result = await _jwtService.RotateRefreshTokenAsync(
+            originalRefreshToken,
+            CancellationToken.None
+        );
 
-        // Assert
         var oldTokenExists = await Context.RefreshTokens.AnyAsync(rt =>
             rt.TokenHash == originalHash
         );
@@ -300,23 +286,23 @@ public class JwtServiceTests : DatabaseTestBase
     }
 
     [Test]
-    public async Task VerifyRefreshTokenAsync_WithInvalidToken_ReturnsUnauthorized()
+    public async Task RotateRefreshTokenAsync_WithInvalidToken_ReturnsUnauthorized()
     {
-        // Act
-        var result = await _jwtService.VerifyRefreshTokenAsync("invalid-token");
+        var result = await _jwtService.RotateRefreshTokenAsync(
+            "invalid-token",
+            CancellationToken.None
+        );
 
         using (Assert.EnterMultipleScope())
         {
-            // Assert
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.ResultType, Is.EqualTo(ResultTypes.Unauthorized));
         }
     }
 
     [Test]
-    public async Task VerifyRefreshTokenAsync_WithExpiredToken_ReturnsUnauthorized()
+    public async Task RotateRefreshTokenAsync_WithExpiredToken_ReturnsUnauthorized()
     {
-        // Arrange
         var expiredToken = "expired-refresh-token-1234567890-abcdefghijklmnopqrstuvwxyz";
         Context.RefreshTokens.Add(
             new RefreshTokenEntity
@@ -330,21 +316,21 @@ public class JwtServiceTests : DatabaseTestBase
         );
         await Context.SaveChangesAsync();
 
-        // Act
-        var result = await _jwtService.VerifyRefreshTokenAsync(expiredToken);
+        var result = await _jwtService.RotateRefreshTokenAsync(
+            expiredToken,
+            CancellationToken.None
+        );
 
         using (Assert.EnterMultipleScope())
         {
-            // Assert
             Assert.That(result.IsSuccess, Is.False);
             Assert.That(result.ResultType, Is.EqualTo(ResultTypes.Unauthorized));
         }
     }
 
     [Test]
-    public async Task VerifyRefreshTokenAsync_NewTokensHaveCorrectExpiration()
+    public async Task RotateRefreshTokenAsync_NewTokensHaveCorrectExpiration()
     {
-        // Arrange
         var refreshToken = "refresh-token-expiration-test-1234567890-abcdefghijklmnopqrs";
         Context.RefreshTokens.Add(
             new RefreshTokenEntity
@@ -358,10 +344,11 @@ public class JwtServiceTests : DatabaseTestBase
         );
         await Context.SaveChangesAsync();
 
-        // Act
-        var result = await _jwtService.VerifyRefreshTokenAsync(refreshToken);
+        var result = await _jwtService.RotateRefreshTokenAsync(
+            refreshToken,
+            CancellationToken.None
+        );
 
-        // Assert
         Assert.That(result.Content, Is.Not.Null);
         using (Assert.EnterMultipleScope())
         {

@@ -7,7 +7,12 @@ namespace Hobbyist.Api.Services.EmailServices;
 
 public class MailtrapEmailService(IConfiguration configuration) : IEmailService
 {
-    public async Task<Result> SendEmailAsync(string to, string subject, string body)
+    public async Task<Result> SendEmailAsync(
+        string to,
+        string subject,
+        string body,
+        CancellationToken ct
+    )
     {
         try
         {
@@ -28,16 +33,18 @@ public class MailtrapEmailService(IConfiguration configuration) : IEmailService
             await client.ConnectAsync(
                 configuration["Mailtrap:Host"],
                 int.Parse(configuration["Mailtrap:Port"]!),
-                SecureSocketOptions.StartTls
+                SecureSocketOptions.StartTls,
+                ct
             );
 
             await client.AuthenticateAsync(
                 configuration["Mailtrap:Username"],
-                configuration["Mailtrap:Password"]
+                configuration["Mailtrap:Password"],
+                ct
             );
 
-            await client.SendAsync(message);
-            await client.DisconnectAsync(true);
+            await client.SendAsync(message, ct);
+            await client.DisconnectAsync(true, ct);
 
             return Result.NoContent();
         }
@@ -47,7 +54,12 @@ public class MailtrapEmailService(IConfiguration configuration) : IEmailService
         }
     }
 
-    public async Task<Result> SendOtpEmailAsync(string to, string otp, string otpValidFor)
+    public async Task<Result> SendOtpEmailAsync(
+        string to,
+        string otp,
+        string otpValidFor,
+        CancellationToken ct
+    )
     {
         var templatePath = Path.Combine(
             Directory.GetCurrentDirectory(),
@@ -56,11 +68,11 @@ public class MailtrapEmailService(IConfiguration configuration) : IEmailService
             "EmailTemplates",
             "VerificationEmailTemplate.html"
         );
-        var htmlTemplate = await File.ReadAllTextAsync(templatePath);
+        var htmlTemplate = await File.ReadAllTextAsync(templatePath, ct);
 
         var htmlBody = htmlTemplate.Replace("{{Otp}}", otp).Replace("{{OtpValidFor}}", otpValidFor);
 
-        var emailResult = await SendEmailAsync(to, "Verify Your Email Address", htmlBody);
+        var emailResult = await SendEmailAsync(to, "Verify Your Email Address", htmlBody, ct);
         return emailResult;
     }
 }

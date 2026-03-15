@@ -27,7 +27,11 @@ public interface IOtpService
     /// <param name="email">The email address to send OTP to</param>
     /// <param name="purpose">The purpose of the OTP verification</param>
     /// <returns><see cref="Result{T}"/> where T is <see cref="OtpResponse"/></returns>
-    public Task<Result<OtpResponse>> SendOtpAsync(string email, string purpose);
+    public Task<Result<OtpResponse>> SendOtpAsync(
+        string email,
+        string purpose,
+        CancellationToken ct
+    );
 
     /// <summary>
     /// Verifies the provided OTP against the stored value.

@@ -10,7 +10,10 @@ public interface ISignUpService
     /// </summary>
     /// <param name="request">The registration request containing username and email. See <see cref="StartSignUpRequest"/></param>
     /// <returns><see cref="Result{T}"/> where T is <see cref="OtpResponse"/></returns>
-    public Task<Result<OtpResponse>> StartSignUpAsync(StartSignUpRequest request);
+    public Task<Result<OtpResponse>> StartSignUpAsync(
+        StartSignUpRequest request,
+        CancellationToken ct
+    );
 
     /// <summary>
     /// Verifies the provided verification code for email confirmation.
@@ -24,12 +27,15 @@ public interface ISignUpService
     /// </summary>
     /// <param name="request">The email address to resend the code to. See <see cref="ResendOtpRequest"/></param>
     /// <returns><see cref="Result{T}"/> where T is <see cref="OtpResponse"/></returns>
-    public Task<Result<OtpResponse>> ResendOtpAsync(ResendOtpRequest request);
+    public Task<Result<OtpResponse>> ResendOtpAsync(ResendOtpRequest request, CancellationToken ct);
 
     /// <summary>
     /// Completes the user registration process.
     /// </summary>
     /// <param name="request">The complete registration request containing all user details. See <see cref="CompleteSignUpRequest"/></param>
     /// <returns><see cref="Result{T}"/> where T is <see cref="AuthResult"/></returns>
-    public Task<Result<AuthResult>> CompleteSignUpAsync(CompleteSignUpRequest request);
+    public Task<Result<AuthResult>> CompleteSignUpAsync(
+        CompleteSignUpRequest request,
+        CancellationToken ct
+    );
 }
