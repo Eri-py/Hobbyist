@@ -70,10 +70,6 @@ public class SignUpService(
         // Normalize input
         var email = request.Email.ToLower();
         var username = request.Username.ToLower();
-        var normalizedInterests = request
-            .Interests.Where(i => !string.IsNullOrWhiteSpace(i))
-            .Select(i => i.Trim().ToLowerInvariant())
-            .ToHashSet();
 
         // Verify OTP was completed before proceeding
         if (!otpService.IsVerified(email, SignUpConfig.SignUpPurpose))
@@ -110,44 +106,11 @@ public class SignUpService(
             };
             context.Users.Add(user);
 
-            var existingHobbies = await context
-                .Hobbies.Where(h => normalizedInterests.Contains(h.Name.ToLower()))
-                .ToListAsync(ct);
-
-            // Link user to hobbies that already exist in the database.
-            foreach (var hobby in existingHobbies)
-            {
-                user.Hobbies.Add(hobby);
-
-                normalizedInterests.Remove(hobby.Name.ToLower());
-            }
-
-            // Create hobby rows for any interests that do not exist yet.
-            var newHobbies = normalizedInterests.Select(i => new HobbyEntity { Name = i }).ToList();
-
-            if (newHobbies.Count > 0)
-            {
-                context.Hobbies.AddRange(newHobbies);
-            }
-
-            // Link user to the newly created hobbies as part of the same transaction.
-            foreach (var hobby in newHobbies)
-            {
-                user.Hobbies.Add(hobby);
-            }
+            await AttachInterestsAsync(user, request.Interests, ct);
 
             // Generate refresh token
-            var refreshTokenDetails = tokenService.CreateRefreshToken(
-                TokenConfig.RefreshTokenValidForDays
-            );
-            var refreshTokenEntry = new RefreshTokenEntity
-            {
-                TokenHash = tokenService.HashToken(refreshTokenDetails.Value),
-                TokenExpiresAt = refreshTokenDetails.ExpiresAt,
-                UserId = user.Id,
-                CreatedAt = DateTime.UtcNow,
-            };
-            user.RefreshTokens.Add(refreshTokenEntry);
+            var refreshTokenDetails = tokenService.CreateRefreshToken(user.Id);
+            user.RefreshTokens.Add(refreshTokenDetails.Entry);
 
             // Save all changes to database
             await context.SaveChangesAsync(ct);
@@ -203,5 +166,44 @@ public class SignUpService(
         }
 
         return (true, ErrorMessages.EmailTaken);
+    }
+
+    private async Task AttachInterestsAsync(
+        UserEntity user,
+        IEnumerable<string> interests,
+        CancellationToken ct
+    )
+    {
+        var normalizedInterests = interests
+            .Where(i => !string.IsNullOrWhiteSpace(i))
+            .Select(i => i.Trim().ToLowerInvariant())
+            .ToHashSet();
+
+        if (normalizedInterests.Count == 0)
+        {
+            return;
+        }
+
+        var existingHobbies = await context
+            .Hobbies.Where(h => normalizedInterests.Contains(h.Name.ToLower()))
+            .ToListAsync(ct);
+
+        foreach (var hobby in existingHobbies)
+        {
+            user.Hobbies.Add(hobby);
+            normalizedInterests.Remove(hobby.Name.ToLower());
+        }
+
+        var newHobbies = normalizedInterests.Select(i => new HobbyEntity { Name = i }).ToList();
+
+        if (newHobbies.Count > 0)
+        {
+            context.Hobbies.AddRange(newHobbies);
+        }
+
+        foreach (var hobby in newHobbies)
+        {
+            user.Hobbies.Add(hobby);
+        }
     }
 }

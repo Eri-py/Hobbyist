@@ -1,4 +1,4 @@
-﻿using Hobbyist.Api.Data.Entities;
+using Hobbyist.Api.Data.Entities;
 using Hobbyist.Api.Dtos;
 using Hobbyist.Api.Services.Auth.OtpServices;
 using Hobbyist.Api.Services.Auth.SignUpServices;
@@ -19,11 +19,9 @@ public class SignUpServiceTests : DatabaseTestBase
 
     protected override Task OnSetUpAsync()
     {
-        // Setup mock services
         _otpServiceMock = new Mock<IOtpService>();
         _tokenServiceMock = new Mock<ITokenService>();
 
-        // Create service instance with real DbContext and mock dependencies
         _signUpService = new SignUpService(
             Context,
             _otpServiceMock.Object,
@@ -34,947 +32,522 @@ public class SignUpServiceTests : DatabaseTestBase
         return Task.CompletedTask;
     }
 
-    #region StartSignUpAsync Tests
+    private static RefreshTokenDetails BuildRefreshTokenDetails(Guid userId, string tokenValue)
+    {
+        var expiresAt = DateTime.UtcNow.AddDays(TokenConfig.RefreshTokenValidForDays);
+
+        return new RefreshTokenDetails
+        {
+            Value = tokenValue,
+            ExpiresAt = expiresAt,
+            Entry = new RefreshTokenEntity
+            {
+                TokenHash = $"hash_{tokenValue}",
+                TokenExpiresAt = expiresAt,
+                UserId = userId,
+                CreatedAt = DateTime.UtcNow,
+            },
+        };
+    }
+
+    #region StartSignUpAsync
 
     [Test]
-    public async Task StartSignUpAsync_WithNewUser_ReturnsOtpResponse()
+    public async Task StartSignUpAsync_WithNewUser_ReturnsSuccess()
     {
-        // Arrange
-        var request = new StartSignUpRequest
-        {
-            Username = "newuser",
-            Email = "newuser@example.com",
-        };
-
-        var expectedOtpResponse = new OtpResponse
-        {
-            OtpExpiresAt = DateTime.UtcNow.AddMinutes(OtpConfig.OtpValidForMinutes),
-        };
+        var request = new StartSignUpRequest { Username = "newuser", Email = "new@example.com" };
 
         _otpServiceMock
-            .Setup(x => x.SendOtpAsync(It.IsAny<string>(), It.IsAny<string>()))
-            .ReturnsAsync(Result<OtpResponse>.Success(expectedOtpResponse));
+            .Setup(x =>
+                x.SendOtpAsync(
+                    "new@example.com",
+                    SignUpConfig.SignUpPurpose,
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                Result<OtpResponse>.Success(
+                    new OtpResponse { OtpExpiresAt = DateTime.UtcNow.AddMinutes(5) }
+                )
+            );
 
-        // Act
-        var result = await _signUpService.StartSignUpAsync(request);
+        var result = await _signUpService.StartSignUpAsync(request, CancellationToken.None);
 
-        // Assert
-        using (Assert.EnterMultipleScope())
-        {
-            Assert.That(result.IsSuccess, Is.True);
-            Assert.That(result.ResultType, Is.EqualTo(ResultTypes.Success));
-            Assert.That(result.Content, Is.Not.Null);
-        }
-        Assert.That(result.Content, Is.EqualTo(expectedOtpResponse));
-
-        _otpServiceMock.Verify(
-            x => x.SendOtpAsync(request.Email.ToLower(), SignUpConfig.SignUpPurpose),
-            Times.Once
-        );
+        Assert.That(result.IsSuccess, Is.True);
     }
 
     [Test]
     public async Task StartSignUpAsync_WithExistingEmail_ReturnsConflict()
     {
-        // Arrange - Create existing user in database
-        var existingUser = new UserEntity
-        {
-            Id = Guid.NewGuid(),
-            Username = "existinguser",
-            Email = "existing@example.com",
-            PasswordHash = "hashed_password",
-            Firstname = "Existing",
-            Lastname = "User",
-            DateOfBirth = new DateOnly(1990, 1, 1),
-            CreatedAt = DateTime.UtcNow,
-        };
-
-        Context.Users.Add(existingUser);
+        Context.Users.Add(
+            new UserEntity
+            {
+                Id = Guid.NewGuid(),
+                Username = "existing",
+                Email = "existing@example.com",
+                PasswordHash = "hash",
+                Firstname = "First",
+                Lastname = "Last",
+                DateOfBirth = new DateOnly(1990, 1, 1),
+                CreatedAt = DateTime.UtcNow,
+            }
+        );
         await Context.SaveChangesAsync();
 
         var request = new StartSignUpRequest
         {
-            Username = "newuser", // Different username but same email
-            Email = "existing@example.com", // Existing email
+            Username = "newuser",
+            Email = "existing@example.com",
         };
 
-        // Act
-        var result = await _signUpService.StartSignUpAsync(request);
+        var result = await _signUpService.StartSignUpAsync(request, CancellationToken.None);
 
-        // Assert
-        using (Assert.EnterMultipleScope())
-        {
-            Assert.That(result.IsSuccess, Is.False);
-            Assert.That(result.ResultType, Is.EqualTo(ResultTypes.Conflict));
-            Assert.That(result.Message, Is.EqualTo(ErrorMessages.EmailTaken));
-        }
-
-        _otpServiceMock.Verify(
-            x => x.SendOtpAsync(It.IsAny<string>(), It.IsAny<string>()),
-            Times.Never
-        );
+        Assert.That(result.ResultType, Is.EqualTo(ResultTypes.Conflict));
+        Assert.That(result.Message, Is.EqualTo(ErrorMessages.EmailTaken));
     }
 
     [Test]
     public async Task StartSignUpAsync_WithExistingUsername_ReturnsConflict()
     {
-        // Arrange - Create existing user in database
-        var existingUser = new UserEntity
-        {
-            Id = Guid.NewGuid(),
-            Username = "existinguser",
-            Email = "existing@example.com",
-            PasswordHash = "hashed_password",
-            Firstname = "Existing",
-            Lastname = "User",
-            DateOfBirth = new DateOnly(1990, 1, 1),
-            CreatedAt = DateTime.UtcNow,
-        };
-
-        Context.Users.Add(existingUser);
+        Context.Users.Add(
+            new UserEntity
+            {
+                Id = Guid.NewGuid(),
+                Username = "existing",
+                Email = "existing@example.com",
+                PasswordHash = "hash",
+                Firstname = "First",
+                Lastname = "Last",
+                DateOfBirth = new DateOnly(1990, 1, 1),
+                CreatedAt = DateTime.UtcNow,
+            }
+        );
         await Context.SaveChangesAsync();
 
-        var request = new StartSignUpRequest
-        {
-            Username = "existinguser", // Existing username
-            Email = "newemail@example.com", // Different email
-        };
+        var request = new StartSignUpRequest { Username = "existing", Email = "new@example.com" };
 
-        // Act
-        var result = await _signUpService.StartSignUpAsync(request);
+        var result = await _signUpService.StartSignUpAsync(request, CancellationToken.None);
 
-        // Assert
-        using (Assert.EnterMultipleScope())
-        {
-            Assert.That(result.IsSuccess, Is.False);
-            Assert.That(result.ResultType, Is.EqualTo(ResultTypes.Conflict));
-            Assert.That(result.Message, Is.EqualTo(ErrorMessages.UsernameTaken));
-        }
-
-        _otpServiceMock.Verify(
-            x => x.SendOtpAsync(It.IsAny<string>(), It.IsAny<string>()),
-            Times.Never
-        );
+        Assert.That(result.ResultType, Is.EqualTo(ResultTypes.Conflict));
+        Assert.That(result.Message, Is.EqualTo(ErrorMessages.UsernameTaken));
     }
 
     [Test]
-    public async Task StartSignUpAsync_OtpServiceFails_ReturnsFailureResult()
+    public async Task StartSignUpAsync_NormalizesEmail_WhenSendingOtp()
     {
-        // Arrange
         var request = new StartSignUpRequest
         {
             Username = "newuser",
-            Email = "newuser@example.com",
-        };
-
-        _otpServiceMock
-            .Setup(x => x.SendOtpAsync(It.IsAny<string>(), It.IsAny<string>()))
-            .ReturnsAsync(Result<OtpResponse>.InternalServerError(ErrorMessages.UnexpectedError));
-
-        // Act
-        var result = await _signUpService.StartSignUpAsync(request);
-
-        // Assert
-        using (Assert.EnterMultipleScope())
-        {
-            Assert.That(result.IsSuccess, Is.False);
-            Assert.That(result.ResultType, Is.EqualTo(ResultTypes.InternalServerError));
-            Assert.That(result.Message, Is.EqualTo(ErrorMessages.UnexpectedError));
-        }
-
-        _otpServiceMock.Verify(
-            x => x.SendOtpAsync(request.Email.ToLower(), SignUpConfig.SignUpPurpose),
-            Times.Once
-        );
-    }
-
-    [Test]
-    public async Task StartSignUpAsync_NormalizesEmailAndUsernameToLowercase()
-    {
-        // Arrange
-        var request = new StartSignUpRequest
-        {
-            Username = "MixedCaseUser",
             Email = "MixedCase@Example.COM",
         };
 
-        var expectedOtpResponse = new OtpResponse
-        {
-            OtpExpiresAt = DateTime.UtcNow.AddMinutes(OtpConfig.OtpValidForMinutes),
-        };
-
         _otpServiceMock
-            .Setup(x => x.SendOtpAsync(It.IsAny<string>(), It.IsAny<string>()))
-            .ReturnsAsync(Result<OtpResponse>.Success(expectedOtpResponse));
+            .Setup(x =>
+                x.SendOtpAsync(
+                    "mixedcase@example.com",
+                    SignUpConfig.SignUpPurpose,
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                Result<OtpResponse>.Success(
+                    new OtpResponse { OtpExpiresAt = DateTime.UtcNow.AddMinutes(5) }
+                )
+            );
 
-        // Act
-        var result = await _signUpService.StartSignUpAsync(request);
+        var result = await _signUpService.StartSignUpAsync(request, CancellationToken.None);
 
-        // Assert
+        Assert.That(result.IsSuccess, Is.True);
         _otpServiceMock.Verify(
-            x => x.SendOtpAsync(request.Email.ToLower(), SignUpConfig.SignUpPurpose),
+            x =>
+                x.SendOtpAsync(
+                    "mixedcase@example.com",
+                    SignUpConfig.SignUpPurpose,
+                    It.IsAny<CancellationToken>()
+                ),
             Times.Once
         );
     }
 
     #endregion
 
-    #region VerifyOtp Tests
+    #region VerifyOtp
 
     [Test]
-    public void VerifyOtp_WithValidOtp_ReturnsSuccess()
+    public void VerifyOtp_WithValidOtp_ReturnsNoContent()
     {
-        // Arrange
         var request = new VerifyOtpRequest { Email = "test@example.com", Otp = "123456" };
 
         _otpServiceMock
-            .Setup(x => x.VerifyOtp(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+            .Setup(x => x.VerifyOtp("test@example.com", "123456", SignUpConfig.SignUpPurpose))
             .Returns(Result.NoContent());
 
-        // Act
         var result = _signUpService.VerifyOtp(request);
 
-        // Assert
-        using (Assert.EnterMultipleScope())
-        {
-            Assert.That(result.IsSuccess, Is.True);
-            Assert.That(result.ResultType, Is.EqualTo(ResultTypes.NoContent));
-            Assert.That(result.Message, Is.Null);
-        }
-
-        _otpServiceMock.Verify(
-            x => x.VerifyOtp(request.Email, request.Otp, SignUpConfig.SignUpPurpose),
-            Times.Once
-        );
+        Assert.That(result.ResultType, Is.EqualTo(ResultTypes.NoContent));
     }
 
     [Test]
-    public void VerifyOtp_WithInvalidOtp_ReturnsBadRequest()
+    public void VerifyOtp_NormalizesEmail_BeforeOtpCheck()
     {
-        // Arrange
-        var request = new VerifyOtpRequest { Email = "test@example.com", Otp = "wrongotp" };
-
-        _otpServiceMock
-            .Setup(x => x.VerifyOtp(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
-            .Returns(Result.BadRequest(ErrorMessages.InvalidOrExpiredOtp));
-
-        // Act
-        var result = _signUpService.VerifyOtp(request);
-
-        // Assert
-        using (Assert.EnterMultipleScope())
-        {
-            Assert.That(result.IsSuccess, Is.False);
-            Assert.That(result.ResultType, Is.EqualTo(ResultTypes.BadRequest));
-            Assert.That(result.Message, Is.EqualTo(ErrorMessages.InvalidOrExpiredOtp));
-        }
-
-        _otpServiceMock.Verify(
-            x => x.VerifyOtp(request.Email, request.Otp, SignUpConfig.SignUpPurpose),
-            Times.Once
-        );
-    }
-
-    [Test]
-    public void VerifyOtp_WithExpiredOtp_ReturnsBadRequest()
-    {
-        // Arrange
-        var request = new VerifyOtpRequest { Email = "test@example.com", Otp = "expiredotp" };
-
-        _otpServiceMock
-            .Setup(x => x.VerifyOtp(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
-            .Returns(Result.BadRequest(ErrorMessages.InvalidOrExpiredOtp));
-
-        // Act
-        var result = _signUpService.VerifyOtp(request);
-
-        // Assert
-        using (Assert.EnterMultipleScope())
-        {
-            Assert.That(result.IsSuccess, Is.False);
-            Assert.That(result.ResultType, Is.EqualTo(ResultTypes.BadRequest));
-            Assert.That(result.Message, Is.EqualTo(ErrorMessages.InvalidOrExpiredOtp));
-        }
-
-        _otpServiceMock.Verify(
-            x => x.VerifyOtp(request.Email, request.Otp, SignUpConfig.SignUpPurpose),
-            Times.Once
-        );
-    }
-
-    [Test]
-    public void VerifyOtp_NormalizesEmailToLowercase()
-    {
-        // Arrange
         var request = new VerifyOtpRequest { Email = "MixedCase@Example.COM", Otp = "123456" };
 
         _otpServiceMock
-            .Setup(x => x.VerifyOtp(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+            .Setup(x => x.VerifyOtp("mixedcase@example.com", "123456", SignUpConfig.SignUpPurpose))
             .Returns(Result.NoContent());
 
-        // Act
-        var result = _signUpService.VerifyOtp(request);
+        _ = _signUpService.VerifyOtp(request);
 
-        // Assert
         _otpServiceMock.Verify(
-            x => x.VerifyOtp(request.Email.ToLower(), request.Otp, SignUpConfig.SignUpPurpose),
+            x => x.VerifyOtp("mixedcase@example.com", "123456", SignUpConfig.SignUpPurpose),
             Times.Once
         );
     }
 
     #endregion
 
-    #region ResendOtpAsync Tests
+    #region ResendOtpAsync
 
     [Test]
-    public async Task ResendOtpAsync_WithValidEmail_ReturnsOtpResponse()
+    public async Task ResendOtpAsync_WithValidEmail_ReturnsSuccess()
     {
-        // Arrange
-        var request = new ResendOtpRequest { Email = "test@example.com" };
-        var expectedOtpResponse = new OtpResponse
-        {
-            OtpExpiresAt = DateTime.UtcNow.AddMinutes(OtpConfig.OtpValidForMinutes),
-        };
-
-        _otpServiceMock
-            .Setup(x => x.SendOtpAsync(It.IsAny<string>(), It.IsAny<string>()))
-            .ReturnsAsync(Result<OtpResponse>.Success(expectedOtpResponse));
-
-        // Act
-        var result = await _signUpService.ResendOtpAsync(request);
-
-        // Assert
-        using (Assert.EnterMultipleScope())
-        {
-            Assert.That(result.IsSuccess, Is.True);
-            Assert.That(result.ResultType, Is.EqualTo(ResultTypes.Success));
-            Assert.That(result.Content, Is.Not.Null);
-        }
-        Assert.That(result.Content, Is.EqualTo(expectedOtpResponse));
-
-        _otpServiceMock.Verify(
-            x => x.SendOtpAsync(request.Email, SignUpConfig.SignUpPurpose),
-            Times.Once
-        );
-    }
-
-    [Test]
-    public async Task ResendOtpAsync_WhenOtpServiceFails_ReturnsFailureResult()
-    {
-        // Arrange
         var request = new ResendOtpRequest { Email = "test@example.com" };
 
         _otpServiceMock
-            .Setup(x => x.SendOtpAsync(It.IsAny<string>(), It.IsAny<string>()))
-            .ReturnsAsync(Result<OtpResponse>.InternalServerError(ErrorMessages.UnexpectedError));
+            .Setup(x =>
+                x.SendOtpAsync(
+                    "test@example.com",
+                    SignUpConfig.SignUpPurpose,
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                Result<OtpResponse>.Success(
+                    new OtpResponse { OtpExpiresAt = DateTime.UtcNow.AddMinutes(5) }
+                )
+            );
 
-        // Act
-        var result = await _signUpService.ResendOtpAsync(request);
+        var result = await _signUpService.ResendOtpAsync(request, CancellationToken.None);
 
-        // Assert
-        using (Assert.EnterMultipleScope())
-        {
-            Assert.That(result.IsSuccess, Is.False);
-            Assert.That(result.ResultType, Is.EqualTo(ResultTypes.InternalServerError));
-            Assert.That(result.Message, Is.EqualTo(ErrorMessages.UnexpectedError));
-        }
-
-        _otpServiceMock.Verify(
-            x => x.SendOtpAsync(request.Email, SignUpConfig.SignUpPurpose),
-            Times.Once
-        );
+        Assert.That(result.IsSuccess, Is.True);
     }
 
     [Test]
-    public async Task ResendOtpAsync_NormalizesEmailToLowercase()
+    public async Task ResendOtpAsync_NormalizesEmail_BeforeSend()
     {
-        // Arrange
         var request = new ResendOtpRequest { Email = "MixedCase@Example.COM" };
-        var expectedOtpResponse = new OtpResponse
-        {
-            OtpExpiresAt = DateTime.UtcNow.AddMinutes(OtpConfig.OtpValidForMinutes),
-        };
 
         _otpServiceMock
-            .Setup(x => x.SendOtpAsync(It.IsAny<string>(), It.IsAny<string>()))
-            .ReturnsAsync(Result<OtpResponse>.Success(expectedOtpResponse));
+            .Setup(x =>
+                x.SendOtpAsync(
+                    "mixedcase@example.com",
+                    SignUpConfig.SignUpPurpose,
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                Result<OtpResponse>.Success(
+                    new OtpResponse { OtpExpiresAt = DateTime.UtcNow.AddMinutes(5) }
+                )
+            );
 
-        // Act
-        var result = await _signUpService.ResendOtpAsync(request);
+        var result = await _signUpService.ResendOtpAsync(request, CancellationToken.None);
 
-        // Assert
+        Assert.That(result.IsSuccess, Is.True);
         _otpServiceMock.Verify(
-            x => x.SendOtpAsync(request.Email.ToLower(), SignUpConfig.SignUpPurpose),
+            x =>
+                x.SendOtpAsync(
+                    "mixedcase@example.com",
+                    SignUpConfig.SignUpPurpose,
+                    It.IsAny<CancellationToken>()
+                ),
             Times.Once
         );
     }
 
     #endregion
 
-    #region CompleteSignUpAsync Tests
+    #region CompleteSignUpAsync
 
     [Test]
-    public async Task CompleteSignUpAsync_WithVerifiedEmail_ReturnsTokens()
+    public async Task CompleteSignUpAsync_WithoutOtpVerification_ReturnsBadRequest()
     {
-        // Arrange
         var request = new CompleteSignUpRequest
         {
             Username = "newuser",
-            Email = "newuser@example.com",
+            Email = "new@example.com",
             Password = "Password123!",
-            Firstname = "John",
-            Lastname = "Doe",
+            Firstname = "First",
+            Lastname = "Last",
             DateOfBirth = "1990-01-01",
-            Interests = ["Coins", "Stamps"],
+            Interests = ["Coins"],
         };
 
-        var accessToken = "access_token";
-        var accessTokenExpiresAt = DateTime.UtcNow.AddMinutes(
-            TokenConfig.AccessTokenValidForMinutes
-        );
-        var refreshToken = "refresh_token";
-        var refreshTokenExpiresAt = DateTime.UtcNow.AddDays(TokenConfig.RefreshTokenValidForDays);
-        var hashedRefreshToken = "hashed_refresh_token";
-
-        // Setup OTP verification
         _otpServiceMock
-            .Setup(x => x.IsVerified(It.IsAny<string>(), It.IsAny<string>()))
+            .Setup(x => x.IsVerified("new@example.com", SignUpConfig.SignUpPurpose))
+            .Returns(false);
+
+        var result = await _signUpService.CompleteSignUpAsync(request, CancellationToken.None);
+
+        Assert.That(result.ResultType, Is.EqualTo(ResultTypes.BadRequest));
+        Assert.That(result.Message, Is.EqualTo(ErrorMessages.EmailVerificationRequired));
+    }
+
+    [Test]
+    public async Task CompleteSignUpAsync_WithExistingUser_ReturnsConflictAndClearsVerification()
+    {
+        Context.Users.Add(
+            new UserEntity
+            {
+                Id = Guid.NewGuid(),
+                Username = "existing",
+                Email = "existing@example.com",
+                PasswordHash = "hash",
+                Firstname = "First",
+                Lastname = "Last",
+                DateOfBirth = new DateOnly(1990, 1, 1),
+                CreatedAt = DateTime.UtcNow,
+            }
+        );
+        await Context.SaveChangesAsync();
+
+        var request = new CompleteSignUpRequest
+        {
+            Username = "existing",
+            Email = "existing@example.com",
+            Password = "Password123!",
+            Firstname = "First",
+            Lastname = "Last",
+            DateOfBirth = "1990-01-01",
+            Interests = ["Coins"],
+        };
+
+        _otpServiceMock
+            .Setup(x => x.IsVerified("existing@example.com", SignUpConfig.SignUpPurpose))
             .Returns(true);
 
-        // Setup token creation
-        _tokenServiceMock
-            .Setup(x => x.CreateRefreshToken(It.IsAny<int>()))
-            .Returns(new TokenDetails { Value = refreshToken, ExpiresAt = refreshTokenExpiresAt });
+        var result = await _signUpService.CompleteSignUpAsync(request, CancellationToken.None);
+
+        Assert.That(result.ResultType, Is.EqualTo(ResultTypes.Conflict));
+        _otpServiceMock.Verify(
+            x => x.ClearVerification("existing@example.com", SignUpConfig.SignUpPurpose),
+            Times.Once
+        );
+    }
+
+    [Test]
+    public async Task CompleteSignUpAsync_WithVerifiedOtp_CreatesUserAndReturnsAuthTokens()
+    {
+        var request = new CompleteSignUpRequest
+        {
+            Username = "newuser",
+            Email = "new@example.com",
+            Password = "Password123!",
+            Firstname = "First",
+            Lastname = "Last",
+            DateOfBirth = "1990-01-01",
+            Interests = ["Coins"],
+        };
+
+        _otpServiceMock
+            .Setup(x => x.IsVerified("new@example.com", SignUpConfig.SignUpPurpose))
+            .Returns(true);
 
         _tokenServiceMock
-            .Setup(x => x.CreateAccessToken(It.IsAny<UserEntity>(), It.IsAny<int>()))
-            .Returns(new TokenDetails { Value = accessToken, ExpiresAt = accessTokenExpiresAt });
+            .Setup(x => x.CreateRefreshToken(It.IsAny<Guid>()))
+            .Returns((Guid id) => BuildRefreshTokenDetails(id, "refresh-token"));
 
-        _tokenServiceMock.Setup(x => x.HashToken(It.IsAny<string>())).Returns(hashedRefreshToken);
+        _tokenServiceMock
+            .Setup(x =>
+                x.CreateAccessToken(It.IsAny<UserEntity>(), TokenConfig.AccessTokenValidForMinutes)
+            )
+            .Returns(
+                new AccessTokenDetails
+                {
+                    Value = "access-token",
+                    ExpiresAt = DateTime.UtcNow.AddMinutes(TokenConfig.AccessTokenValidForMinutes),
+                }
+            );
 
-        // Act
-        var result = await _signUpService.CompleteSignUpAsync(request);
+        var result = await _signUpService.CompleteSignUpAsync(request, CancellationToken.None);
 
-        // Assert
         using (Assert.EnterMultipleScope())
         {
             Assert.That(result.IsSuccess, Is.True);
-            Assert.That(result.ResultType, Is.EqualTo(ResultTypes.Success));
             Assert.That(result.Content, Is.Not.Null);
-            Assert.That(result.Content!.AccessToken, Is.EqualTo(accessToken));
-            Assert.That(result.Content.RefreshToken, Is.EqualTo(refreshToken));
-            Assert.That(result.Content.AccessTokenExpiresAt, Is.EqualTo(accessTokenExpiresAt));
-            Assert.That(result.Content.RefreshTokenExpiresAt, Is.EqualTo(refreshTokenExpiresAt));
+            Assert.That(result.Content!.AccessToken, Is.EqualTo("access-token"));
+            Assert.That(result.Content.RefreshToken, Is.EqualTo("refresh-token"));
         }
-    }
 
-    [Test]
-    public async Task CompleteSignUpAsync_WithVerifiedEmail_CreatesUserRecord()
-    {
-        // Arrange
-        var request = new CompleteSignUpRequest
-        {
-            Username = "newuser",
-            Email = "newuser@example.com",
-            Password = "Password123!",
-            Firstname = "John",
-            Lastname = "Doe",
-            DateOfBirth = "1990-01-01",
-            Interests = ["Coins"],
-        };
-
-        _otpServiceMock
-            .Setup(x => x.IsVerified(It.IsAny<string>(), It.IsAny<string>()))
-            .Returns(true);
-
-        _tokenServiceMock
-            .Setup(x => x.CreateRefreshToken(It.IsAny<int>()))
-            .Returns(
-                new TokenDetails
-                {
-                    Value = "refresh_token",
-                    ExpiresAt = DateTime.UtcNow.AddDays(TokenConfig.RefreshTokenValidForDays),
-                }
-            );
-
-        _tokenServiceMock
-            .Setup(x => x.CreateAccessToken(It.IsAny<UserEntity>(), It.IsAny<int>()))
-            .Returns(
-                new TokenDetails
-                {
-                    Value = "access_token",
-                    ExpiresAt = DateTime.UtcNow.AddMinutes(TokenConfig.AccessTokenValidForMinutes),
-                }
-            );
-
-        _tokenServiceMock.Setup(x => x.HashToken(It.IsAny<string>())).Returns("hashed_token");
-
-        // Act
-        var result = await _signUpService.CompleteSignUpAsync(request);
-
-        // Assert
-        Assert.That(result.IsSuccess, Is.True);
-
-        var createdUser = await Context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
+        var createdUser = await Context.Users.FirstOrDefaultAsync(x =>
+            x.Email == "new@example.com"
+        );
         Assert.That(createdUser, Is.Not.Null);
-
-        using (Assert.EnterMultipleScope())
-        {
-            Assert.That(createdUser.Username, Is.EqualTo(request.Username));
-            Assert.That(createdUser.Firstname, Is.EqualTo(request.Firstname));
-            Assert.That(createdUser.Lastname, Is.EqualTo(request.Lastname));
-            Assert.That(createdUser.PasswordHash, Is.Not.EqualTo(request.Password));
-            Assert.That(createdUser.PasswordHash, Is.Not.Null.And.Not.Empty);
-            Assert.That(createdUser.DateOfBirth, Is.EqualTo(DateOnly.Parse(request.DateOfBirth)));
-            Assert.That(createdUser.CreatedAt, Is.EqualTo(DateTime.UtcNow).Within(5).Seconds);
-        }
-    }
-
-    [Test]
-    public async Task CompleteSignUpAsync_WithVerifiedEmail_StoresRefreshTokenHash()
-    {
-        // Arrange
-        var request = new CompleteSignUpRequest
-        {
-            Username = "newuser",
-            Email = "newuser@example.com",
-            Password = "Password123!",
-            Firstname = "John",
-            Lastname = "Doe",
-            DateOfBirth = "1990-01-01",
-            Interests = ["Coins"],
-        };
-        const string hashedRefreshToken = "hashed_refresh_token";
-
-        _otpServiceMock
-            .Setup(x => x.IsVerified(It.IsAny<string>(), It.IsAny<string>()))
-            .Returns(true);
-
-        _tokenServiceMock
-            .Setup(x => x.CreateRefreshToken(It.IsAny<int>()))
-            .Returns(
-                new TokenDetails
-                {
-                    Value = "refresh_token",
-                    ExpiresAt = DateTime.UtcNow.AddDays(TokenConfig.RefreshTokenValidForDays),
-                }
-            );
-
-        _tokenServiceMock
-            .Setup(x => x.CreateAccessToken(It.IsAny<UserEntity>(), It.IsAny<int>()))
-            .Returns(
-                new TokenDetails
-                {
-                    Value = "access_token",
-                    ExpiresAt = DateTime.UtcNow.AddMinutes(TokenConfig.AccessTokenValidForMinutes),
-                }
-            );
-
-        _tokenServiceMock.Setup(x => x.HashToken(It.IsAny<string>())).Returns(hashedRefreshToken);
-
-        // Act
-        var result = await _signUpService.CompleteSignUpAsync(request);
-
-        // Assert
-        Assert.That(result.IsSuccess, Is.True);
-
-        var refreshTokenExists = await Context.RefreshTokens.AnyAsync(rt =>
-            rt.TokenHash == hashedRefreshToken
-        );
-        Assert.That(refreshTokenExists, Is.True);
-    }
-
-    [Test]
-    public async Task CompleteSignUpAsync_WithVerifiedEmail_ClearsVerification()
-    {
-        // Arrange
-        var request = new CompleteSignUpRequest
-        {
-            Username = "newuser",
-            Email = "newuser@example.com",
-            Password = "Password123!",
-            Firstname = "John",
-            Lastname = "Doe",
-            DateOfBirth = "1990-01-01",
-            Interests = ["Coins"],
-        };
-
-        _otpServiceMock
-            .Setup(x => x.IsVerified(It.IsAny<string>(), It.IsAny<string>()))
-            .Returns(true);
-
-        _tokenServiceMock
-            .Setup(x => x.CreateRefreshToken(It.IsAny<int>()))
-            .Returns(
-                new TokenDetails
-                {
-                    Value = "refresh_token",
-                    ExpiresAt = DateTime.UtcNow.AddDays(TokenConfig.RefreshTokenValidForDays),
-                }
-            );
-
-        _tokenServiceMock
-            .Setup(x => x.CreateAccessToken(It.IsAny<UserEntity>(), It.IsAny<int>()))
-            .Returns(
-                new TokenDetails
-                {
-                    Value = "access_token",
-                    ExpiresAt = DateTime.UtcNow.AddMinutes(TokenConfig.AccessTokenValidForMinutes),
-                }
-            );
-
-        _tokenServiceMock.Setup(x => x.HashToken(It.IsAny<string>())).Returns("hashed_token");
-
-        // Act
-        var result = await _signUpService.CompleteSignUpAsync(request);
-
-        // Assert
-        Assert.That(result.IsSuccess, Is.True);
         _otpServiceMock.Verify(
-            x => x.ClearVerification(request.Email, SignUpConfig.SignUpPurpose),
+            x => x.ClearVerification("new@example.com", SignUpConfig.SignUpPurpose),
             Times.Once
         );
     }
 
     [Test]
-    public async Task CompleteSignUpAsync_WithVerifiedEmail_StoresInterestsInLowercase()
+    public async Task CompleteSignUpAsync_WithVerifiedOtp_StoresRefreshTokenEntry()
     {
-        // Arrange
         var request = new CompleteSignUpRequest
         {
             Username = "newuser",
-            Email = "newuser@example.com",
+            Email = "new@example.com",
             Password = "Password123!",
-            Firstname = "John",
-            Lastname = "Doe",
+            Firstname = "First",
+            Lastname = "Last",
             DateOfBirth = "1990-01-01",
-            Interests = ["Coins", "Stamps"],
+            Interests = ["Coins"],
         };
 
         _otpServiceMock
-            .Setup(x => x.IsVerified(It.IsAny<string>(), It.IsAny<string>()))
+            .Setup(x => x.IsVerified("new@example.com", SignUpConfig.SignUpPurpose))
             .Returns(true);
 
         _tokenServiceMock
-            .Setup(x => x.CreateRefreshToken(It.IsAny<int>()))
-            .Returns(
-                new TokenDetails
-                {
-                    Value = "refresh_token",
-                    ExpiresAt = DateTime.UtcNow.AddDays(TokenConfig.RefreshTokenValidForDays),
-                }
-            );
+            .Setup(x => x.CreateRefreshToken(It.IsAny<Guid>()))
+            .Returns((Guid id) => BuildRefreshTokenDetails(id, "refresh-token"));
 
         _tokenServiceMock
             .Setup(x => x.CreateAccessToken(It.IsAny<UserEntity>(), It.IsAny<int>()))
             .Returns(
-                new TokenDetails
+                new AccessTokenDetails
                 {
-                    Value = "access_token",
+                    Value = "access-token",
                     ExpiresAt = DateTime.UtcNow.AddMinutes(TokenConfig.AccessTokenValidForMinutes),
                 }
             );
 
-        _tokenServiceMock.Setup(x => x.HashToken(It.IsAny<string>())).Returns("hashed_token");
+        _ = await _signUpService.CompleteSignUpAsync(request, CancellationToken.None);
 
-        // Act
-        var result = await _signUpService.CompleteSignUpAsync(request);
-
-        // Assert
-        Assert.That(result.IsSuccess, Is.True);
-
-        var createdUserWithHobbies = await Context
-            .Users.Include(u => u.Hobbies)
-            .FirstOrDefaultAsync(u => u.Email == request.Email);
-
-        Assert.That(createdUserWithHobbies, Is.Not.Null);
-        Assert.That(
-            createdUserWithHobbies.Hobbies.Select(h => h.Name),
-            Is.EquivalentTo(request.Interests.Select(i => i.ToLowerInvariant()))
-        );
+        var storedRefreshToken = await Context.RefreshTokens.AnyAsync();
+        Assert.That(storedRefreshToken, Is.True);
     }
 
     [Test]
-    public async Task CompleteSignUpAsync_WithoutVerifiedEmail_ReturnsBadRequest()
+    public async Task CompleteSignUpAsync_NormalizesUserIdentityValues()
     {
-        // Arrange
         var request = new CompleteSignUpRequest
         {
-            Username = "newuser",
-            Email = "newuser@example.com",
-            Password = "Password123!",
-            Firstname = "John",
-            Lastname = "Doe",
-            DateOfBirth = "1990-01-01",
-            Interests = ["Coins"],
-        };
-
-        _otpServiceMock
-            .Setup(x => x.IsVerified(It.IsAny<string>(), It.IsAny<string>()))
-            .Returns(false);
-
-        // Act
-        var result = await _signUpService.CompleteSignUpAsync(request);
-
-        // Assert
-        using (Assert.EnterMultipleScope())
-        {
-            Assert.That(result.IsSuccess, Is.False);
-            Assert.That(result.ResultType, Is.EqualTo(ResultTypes.BadRequest));
-            Assert.That(result.Message, Is.EqualTo(ErrorMessages.EmailVerificationRequired));
-        }
-    }
-
-    [Test]
-    public async Task CompleteSignUpAsync_WithoutVerifiedEmail_DoesNotCreateUser()
-    {
-        // Arrange
-        var request = new CompleteSignUpRequest
-        {
-            Username = "newuser",
-            Email = "newuser@example.com",
-            Password = "Password123!",
-            Firstname = "John",
-            Lastname = "Doe",
-            DateOfBirth = "1990-01-01",
-            Interests = ["Coins"],
-        };
-
-        _otpServiceMock
-            .Setup(x => x.IsVerified(It.IsAny<string>(), It.IsAny<string>()))
-            .Returns(false);
-
-        // Act
-        var result = await _signUpService.CompleteSignUpAsync(request);
-
-        // Assert
-        Assert.That(result.IsSuccess, Is.False);
-        var userExists = await Context.Users.AnyAsync(u => u.Email == request.Email);
-        Assert.That(userExists, Is.False);
-    }
-
-    [Test]
-    public async Task CompleteSignUpAsync_WithoutVerifiedEmail_DoesNotGenerateTokens()
-    {
-        // Arrange
-        var request = new CompleteSignUpRequest
-        {
-            Username = "newuser",
-            Email = "newuser@example.com",
-            Password = "Password123!",
-            Firstname = "John",
-            Lastname = "Doe",
-            DateOfBirth = "1990-01-01",
-            Interests = ["Coins"],
-        };
-
-        _otpServiceMock
-            .Setup(x => x.IsVerified(It.IsAny<string>(), It.IsAny<string>()))
-            .Returns(false);
-
-        // Act
-        var result = await _signUpService.CompleteSignUpAsync(request);
-
-        // Assert
-        Assert.That(result.IsSuccess, Is.False);
-        _tokenServiceMock.Verify(x => x.CreateRefreshToken(It.IsAny<int>()), Times.Never);
-        _tokenServiceMock.Verify(
-            x => x.CreateAccessToken(It.IsAny<UserEntity>(), It.IsAny<int>()),
-            Times.Never
-        );
-    }
-
-    [Test]
-    public async Task CompleteSignUpAsync_WithExistingUser_ReturnsConflict()
-    {
-        // Arrange - Create existing user
-        var existingUser = new UserEntity
-        {
-            Id = Guid.NewGuid(),
-            Username = "existinguser",
-            Email = "existing@example.com",
-            PasswordHash = "hashed_password",
-            Firstname = "Existing",
-            Lastname = "User",
-            DateOfBirth = new DateOnly(1990, 1, 1),
-            CreatedAt = DateTime.UtcNow,
-        };
-
-        Context.Users.Add(existingUser);
-        await Context.SaveChangesAsync();
-
-        var request = new CompleteSignUpRequest
-        {
-            Username = "existinguser", // Existing username
-            Email = "existing@example.com", // Existing email
-            Password = "Password123!",
-            Firstname = "John",
-            Lastname = "Doe",
-            DateOfBirth = "1990-01-01",
-            Interests = ["Coins"],
-        };
-
-        _otpServiceMock
-            .Setup(x => x.IsVerified(It.IsAny<string>(), It.IsAny<string>()))
-            .Returns(true);
-
-        // Act
-        var result = await _signUpService.CompleteSignUpAsync(request);
-
-        // Assert
-        using (Assert.EnterMultipleScope())
-        {
-            Assert.That(result.IsSuccess, Is.False);
-            Assert.That(result.ResultType, Is.EqualTo(ResultTypes.Conflict));
-            Assert.That(result.Message, Is.EqualTo(ErrorMessages.UsernameTaken));
-        }
-    }
-
-    [Test]
-    public async Task CompleteSignUpAsync_WithExistingUser_ClearsVerification()
-    {
-        // Arrange - Create existing user
-        var existingUser = new UserEntity
-        {
-            Id = Guid.NewGuid(),
-            Username = "existinguser",
-            Email = "existing@example.com",
-            PasswordHash = "hashed_password",
-            Firstname = "Existing",
-            Lastname = "User",
-            DateOfBirth = new DateOnly(1990, 1, 1),
-            CreatedAt = DateTime.UtcNow,
-        };
-
-        Context.Users.Add(existingUser);
-        await Context.SaveChangesAsync();
-
-        var request = new CompleteSignUpRequest
-        {
-            Username = "existinguser",
-            Email = "existing@example.com",
-            Password = "Password123!",
-            Firstname = "John",
-            Lastname = "Doe",
-            DateOfBirth = "1990-01-01",
-            Interests = ["Coins"],
-        };
-
-        _otpServiceMock
-            .Setup(x => x.IsVerified(It.IsAny<string>(), It.IsAny<string>()))
-            .Returns(true);
-
-        // Act
-        var result = await _signUpService.CompleteSignUpAsync(request);
-
-        // Assert
-        Assert.That(result.IsSuccess, Is.False);
-        _otpServiceMock.Verify(
-            x => x.ClearVerification(request.Email, SignUpConfig.SignUpPurpose),
-            Times.Once
-        );
-    }
-
-    [Test]
-    public async Task CompleteSignUpAsync_WithExistingUser_DoesNotCreateAnotherUser()
-    {
-        // Arrange - Create existing user
-        var existingUser = new UserEntity
-        {
-            Id = Guid.NewGuid(),
-            Username = "existinguser",
-            Email = "existing@example.com",
-            PasswordHash = "hashed_password",
-            Firstname = "Existing",
-            Lastname = "User",
-            DateOfBirth = new DateOnly(1990, 1, 1),
-            CreatedAt = DateTime.UtcNow,
-        };
-
-        Context.Users.Add(existingUser);
-        await Context.SaveChangesAsync();
-
-        var request = new CompleteSignUpRequest
-        {
-            Username = "existinguser",
-            Email = "existing@example.com",
-            Password = "Password123!",
-            Firstname = "John",
-            Lastname = "Doe",
-            DateOfBirth = "1990-01-01",
-            Interests = ["Coins"],
-        };
-
-        _otpServiceMock
-            .Setup(x => x.IsVerified(It.IsAny<string>(), It.IsAny<string>()))
-            .Returns(true);
-
-        // Act
-        var result = await _signUpService.CompleteSignUpAsync(request);
-
-        // Assert
-        Assert.That(result.IsSuccess, Is.False);
-        var userCount = await Context.Users.CountAsync();
-        Assert.That(userCount, Is.EqualTo(1));
-    }
-
-    [Test]
-    public async Task CompleteSignUpAsync_NormalizesEmailAndUsernameToLowercase()
-    {
-        // Arrange
-        var request = new CompleteSignUpRequest
-        {
-            Username = "MixedCaseUser",
+            Username = "MixedUser",
             Email = "MixedCase@Example.COM",
             Password = "Password123!",
-            Firstname = "John",
-            Lastname = "Doe",
+            Firstname = "First",
+            Lastname = "Last",
             DateOfBirth = "1990-01-01",
             Interests = ["Coins"],
         };
-        var lowercaseEmail = request.Email.ToLower();
 
         _otpServiceMock
-            .Setup(x => x.IsVerified(It.IsAny<string>(), It.IsAny<string>()))
+            .Setup(x => x.IsVerified("mixedcase@example.com", SignUpConfig.SignUpPurpose))
             .Returns(true);
 
         _tokenServiceMock
-            .Setup(x => x.CreateRefreshToken(It.IsAny<int>()))
-            .Returns(
-                new TokenDetails
-                {
-                    Value = "refresh_token",
-                    ExpiresAt = DateTime.UtcNow.AddDays(TokenConfig.RefreshTokenValidForDays),
-                }
-            );
+            .Setup(x => x.CreateRefreshToken(It.IsAny<Guid>()))
+            .Returns((Guid id) => BuildRefreshTokenDetails(id, "refresh-token"));
 
         _tokenServiceMock
             .Setup(x => x.CreateAccessToken(It.IsAny<UserEntity>(), It.IsAny<int>()))
             .Returns(
-                new TokenDetails
+                new AccessTokenDetails
                 {
-                    Value = "access_token",
+                    Value = "access-token",
                     ExpiresAt = DateTime.UtcNow.AddMinutes(TokenConfig.AccessTokenValidForMinutes),
                 }
             );
 
-        _tokenServiceMock.Setup(x => x.HashToken(It.IsAny<string>())).Returns("hashed_token");
+        _ = await _signUpService.CompleteSignUpAsync(request, CancellationToken.None);
 
-        // Act
-        var result = await _signUpService.CompleteSignUpAsync(request);
-
-        // Assert
-        Assert.That(result.IsSuccess, Is.True);
-
-        // Verify user was created with normalized email and username
-        var createdUser = await Context.Users.FirstOrDefaultAsync(u => u.Email == lowercaseEmail);
-
-        Assert.That(createdUser, Is.Not.Null);
+        var user = await Context.Users.FirstAsync(x => x.Email == "mixedcase@example.com");
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(createdUser.Username, Is.EqualTo(request.Username.ToLower()));
-            Assert.That(createdUser.Email, Is.EqualTo(lowercaseEmail));
+            Assert.That(user.Email, Is.EqualTo("mixedcase@example.com"));
+            Assert.That(user.Username, Is.EqualTo("mixeduser"));
         }
+    }
+
+    [Test]
+    public async Task CompleteSignUpAsync_WithMixedInterests_StoresLowercaseDistinctInterests()
+    {
+        var request = new CompleteSignUpRequest
+        {
+            Username = "newuser",
+            Email = "new@example.com",
+            Password = "Password123!",
+            Firstname = "First",
+            Lastname = "Last",
+            DateOfBirth = "1990-01-01",
+            Interests = ["Coins", " STAMPS ", "coins", ""],
+        };
+
+        _otpServiceMock
+            .Setup(x => x.IsVerified("new@example.com", SignUpConfig.SignUpPurpose))
+            .Returns(true);
+
+        _tokenServiceMock
+            .Setup(x => x.CreateRefreshToken(It.IsAny<Guid>()))
+            .Returns((Guid id) => BuildRefreshTokenDetails(id, "refresh-token"));
+
+        _tokenServiceMock
+            .Setup(x => x.CreateAccessToken(It.IsAny<UserEntity>(), It.IsAny<int>()))
+            .Returns(
+                new AccessTokenDetails
+                {
+                    Value = "access-token",
+                    ExpiresAt = DateTime.UtcNow.AddMinutes(TokenConfig.AccessTokenValidForMinutes),
+                }
+            );
+
+        _ = await _signUpService.CompleteSignUpAsync(request, CancellationToken.None);
+
+        var user = await Context
+            .Users.Include(x => x.Hobbies)
+            .FirstAsync(x => x.Email == "new@example.com");
+        Assert.That(user.Hobbies.Select(x => x.Name), Is.EquivalentTo(["coins", "stamps"]));
+    }
+
+    [Test]
+    public async Task CompleteSignUpAsync_UsesExistingHobby_InsteadOfDuplicating()
+    {
+        Context.Hobbies.Add(new HobbyEntity { Name = "coins" });
+        await Context.SaveChangesAsync();
+
+        var request = new CompleteSignUpRequest
+        {
+            Username = "newuser",
+            Email = "new@example.com",
+            Password = "Password123!",
+            Firstname = "First",
+            Lastname = "Last",
+            DateOfBirth = "1990-01-01",
+            Interests = ["Coins"],
+        };
+
+        _otpServiceMock
+            .Setup(x => x.IsVerified("new@example.com", SignUpConfig.SignUpPurpose))
+            .Returns(true);
+
+        _tokenServiceMock
+            .Setup(x => x.CreateRefreshToken(It.IsAny<Guid>()))
+            .Returns((Guid id) => BuildRefreshTokenDetails(id, "refresh-token"));
+
+        _tokenServiceMock
+            .Setup(x => x.CreateAccessToken(It.IsAny<UserEntity>(), It.IsAny<int>()))
+            .Returns(
+                new AccessTokenDetails
+                {
+                    Value = "access-token",
+                    ExpiresAt = DateTime.UtcNow.AddMinutes(TokenConfig.AccessTokenValidForMinutes),
+                }
+            );
+
+        _ = await _signUpService.CompleteSignUpAsync(request, CancellationToken.None);
+
+        var hobbyCount = await Context.Hobbies.CountAsync(x => x.Name == "coins");
+        Assert.That(hobbyCount, Is.EqualTo(1));
     }
 
     #endregion

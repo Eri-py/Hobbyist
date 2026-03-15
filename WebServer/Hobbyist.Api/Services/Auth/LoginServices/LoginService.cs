@@ -94,17 +94,8 @@ public class LoginService(
         try
         {
             // Create refresh token and store in database
-            var refreshTokenDetails = tokenService.CreateRefreshToken(
-                TokenConfig.RefreshTokenValidForDays
-            );
-            var refreshTokenEntry = new RefreshTokenEntity
-            {
-                TokenHash = tokenService.HashToken(refreshTokenDetails.Value),
-                TokenExpiresAt = refreshTokenDetails.ExpiresAt,
-                UserId = user.Id,
-                CreatedAt = DateTime.UtcNow,
-            };
-            user.RefreshTokens.Add(refreshTokenEntry);
+            var refreshTokenDetails = tokenService.CreateRefreshToken(user.Id);
+            user.RefreshTokens.Add(refreshTokenDetails.Entry);
 
             // Save changes and commit transaction
             await context.SaveChangesAsync(ct);

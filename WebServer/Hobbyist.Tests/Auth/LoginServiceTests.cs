@@ -1,4 +1,4 @@
-﻿using Hobbyist.Api.Data.Entities;
+using Hobbyist.Api.Data.Entities;
 using Hobbyist.Api.Dtos;
 using Hobbyist.Api.Services.Auth.LoginServices;
 using Hobbyist.Api.Services.Auth.OtpServices;
@@ -46,13 +46,33 @@ public class LoginServiceTests : DatabaseTestBase
     {
         _otpServiceMock = new Mock<IOtpService>();
         _tokenServiceMock = new Mock<ITokenService>();
+
         _loginService = new LoginService(
             Context,
             _otpServiceMock.Object,
             _tokenServiceMock.Object,
             NullLogger<LoginService>.Instance
         );
+
         return Task.CompletedTask;
+    }
+
+    private static RefreshTokenDetails BuildRefreshTokenDetails(Guid userId, string tokenValue)
+    {
+        var expiresAt = DateTime.UtcNow.AddDays(TokenConfig.RefreshTokenValidForDays);
+
+        return new RefreshTokenDetails
+        {
+            Value = tokenValue,
+            ExpiresAt = expiresAt,
+            Entry = new RefreshTokenEntity
+            {
+                TokenHash = $"hash_{tokenValue}",
+                TokenExpiresAt = expiresAt,
+                UserId = userId,
+                CreatedAt = DateTime.UtcNow,
+            },
+        };
     }
 
     #region StartLoginAsync Tests
@@ -60,7 +80,6 @@ public class LoginServiceTests : DatabaseTestBase
     [Test]
     public async Task StartLoginAsync_WithValidEmailAndPassword_ReturnsOtpResponse()
     {
-        // Arrange
         var request = new StartLoginRequest
         {
             Identifier = "test@example.com",
@@ -73,23 +92,23 @@ public class LoginServiceTests : DatabaseTestBase
         };
 
         _otpServiceMock
-            .Setup(x => x.SendOtpAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .Setup(x =>
+                x.SendOtpAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
             .ReturnsAsync(Result<OtpResponse>.Success(expectedOtpResponse));
 
-        // Act
-        var result = await _loginService.StartLoginAsync(request);
+        var result = await _loginService.StartLoginAsync(request, CancellationToken.None);
 
-        // Assert
         using (Assert.EnterMultipleScope())
         {
             Assert.That(result.IsSuccess, Is.True);
             Assert.That(result.ResultType, Is.EqualTo(ResultTypes.Success));
             Assert.That(result.Content, Is.Not.Null);
-        }
-
-        using (Assert.EnterMultipleScope())
-        {
-            Assert.That(result.Content.Email, Is.EqualTo(_testUser.Email));
+            Assert.That(result.Content!.Email, Is.EqualTo(_testUser.Email));
             Assert.That(
                 result.Content.OtpExpiresAt,
                 Is.EqualTo(expectedOtpResponse.OtpExpiresAt.ToString("o"))
@@ -97,7 +116,12 @@ public class LoginServiceTests : DatabaseTestBase
         }
 
         _otpServiceMock.Verify(
-            x => x.SendOtpAsync(_testUser.Email, LoginConfig.LoginPurpose),
+            x =>
+                x.SendOtpAsync(
+                    _testUser.Email,
+                    LoginConfig.LoginPurpose,
+                    It.IsAny<CancellationToken>()
+                ),
             Times.Once
         );
     }
@@ -105,7 +129,6 @@ public class LoginServiceTests : DatabaseTestBase
     [Test]
     public async Task StartLoginAsync_WithValidUsernameAndPassword_ReturnsOtpResponse()
     {
-        // Arrange
         var request = new StartLoginRequest
         {
             Identifier = "testuser",
@@ -118,23 +141,32 @@ public class LoginServiceTests : DatabaseTestBase
         };
 
         _otpServiceMock
-            .Setup(x => x.SendOtpAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .Setup(x =>
+                x.SendOtpAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
             .ReturnsAsync(Result<OtpResponse>.Success(expectedOtpResponse));
 
-        // Act
-        var result = await _loginService.StartLoginAsync(request);
+        var result = await _loginService.StartLoginAsync(request, CancellationToken.None);
 
-        // Assert
         using (Assert.EnterMultipleScope())
         {
             Assert.That(result.IsSuccess, Is.True);
             Assert.That(result.ResultType, Is.EqualTo(ResultTypes.Success));
             Assert.That(result.Content, Is.Not.Null);
+            Assert.That(result.Content!.Email, Is.EqualTo(_testUser.Email));
         }
-        Assert.That(result.Content.Email, Is.EqualTo(_testUser.Email));
 
         _otpServiceMock.Verify(
-            x => x.SendOtpAsync(_testUser.Email, LoginConfig.LoginPurpose),
+            x =>
+                x.SendOtpAsync(
+                    _testUser.Email,
+                    LoginConfig.LoginPurpose,
+                    It.IsAny<CancellationToken>()
+                ),
             Times.Once
         );
     }
@@ -142,17 +174,14 @@ public class LoginServiceTests : DatabaseTestBase
     [Test]
     public async Task StartLoginAsync_WithNonExistentUser_ReturnsNotFound()
     {
-        // Arrange
         var request = new StartLoginRequest
         {
             Identifier = "nonexistent@example.com",
             Password = "any_password",
         };
 
-        // Act
-        var result = await _loginService.StartLoginAsync(request);
+        var result = await _loginService.StartLoginAsync(request, CancellationToken.None);
 
-        // Assert
         using (Assert.EnterMultipleScope())
         {
             Assert.That(result.IsSuccess, Is.False);
@@ -161,7 +190,12 @@ public class LoginServiceTests : DatabaseTestBase
         }
 
         _otpServiceMock.Verify(
-            x => x.SendOtpAsync(It.IsAny<string>(), It.IsAny<string>()),
+            x =>
+                x.SendOtpAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()
+                ),
             Times.Never
         );
     }
@@ -169,17 +203,14 @@ public class LoginServiceTests : DatabaseTestBase
     [Test]
     public async Task StartLoginAsync_WithIncorrectPassword_ReturnsNotFound()
     {
-        // Arrange
         var request = new StartLoginRequest
         {
             Identifier = "test@example.com",
             Password = "WrongPassword123!",
         };
 
-        // Act
-        var result = await _loginService.StartLoginAsync(request);
+        var result = await _loginService.StartLoginAsync(request, CancellationToken.None);
 
-        // Assert
         using (Assert.EnterMultipleScope())
         {
             Assert.That(result.IsSuccess, Is.False);
@@ -188,7 +219,12 @@ public class LoginServiceTests : DatabaseTestBase
         }
 
         _otpServiceMock.Verify(
-            x => x.SendOtpAsync(It.IsAny<string>(), It.IsAny<string>()),
+            x =>
+                x.SendOtpAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()
+                ),
             Times.Never
         );
     }
@@ -196,7 +232,6 @@ public class LoginServiceTests : DatabaseTestBase
     [Test]
     public async Task StartLoginAsync_WhenOtpServiceFails_ReturnsError()
     {
-        // Arrange
         var request = new StartLoginRequest
         {
             Identifier = "test@example.com",
@@ -204,13 +239,17 @@ public class LoginServiceTests : DatabaseTestBase
         };
 
         _otpServiceMock
-            .Setup(x => x.SendOtpAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .Setup(x =>
+                x.SendOtpAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
             .ReturnsAsync(Result<OtpResponse>.BadRequest(ErrorMessages.UnexpectedError));
 
-        // Act
-        var result = await _loginService.StartLoginAsync(request);
+        var result = await _loginService.StartLoginAsync(request, CancellationToken.None);
 
-        // Assert
         using (Assert.EnterMultipleScope())
         {
             Assert.That(result.IsSuccess, Is.False);
@@ -219,7 +258,12 @@ public class LoginServiceTests : DatabaseTestBase
         }
 
         _otpServiceMock.Verify(
-            x => x.SendOtpAsync(_testUser.Email, LoginConfig.LoginPurpose),
+            x =>
+                x.SendOtpAsync(
+                    _testUser.Email,
+                    LoginConfig.LoginPurpose,
+                    It.IsAny<CancellationToken>()
+                ),
             Times.Once
         );
     }
@@ -227,7 +271,6 @@ public class LoginServiceTests : DatabaseTestBase
     [Test]
     public async Task StartLoginAsync_NormalizesIdentifierToLowercase()
     {
-        // Arrange
         var mixedCasePassword = "MixedCasePass123!";
         var hasher = new PasswordHasher<UserEntity>();
         var mixedCasePasswordHash = hasher.HashPassword(null!, mixedCasePassword);
@@ -253,22 +296,33 @@ public class LoginServiceTests : DatabaseTestBase
             Password = mixedCasePassword,
         };
 
-        var expectedOtpResponse = new OtpResponse
-        {
-            OtpExpiresAt = DateTime.UtcNow.AddMinutes(OtpConfig.OtpValidForMinutes),
-        };
-
         _otpServiceMock
-            .Setup(x => x.SendOtpAsync(It.IsAny<string>(), It.IsAny<string>()))
-            .ReturnsAsync(Result<OtpResponse>.Success(expectedOtpResponse));
+            .Setup(x =>
+                x.SendOtpAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                Result<OtpResponse>.Success(
+                    new OtpResponse
+                    {
+                        OtpExpiresAt = DateTime.UtcNow.AddMinutes(OtpConfig.OtpValidForMinutes),
+                    }
+                )
+            );
 
-        // Act
-        var result = await _loginService.StartLoginAsync(request);
+        var result = await _loginService.StartLoginAsync(request, CancellationToken.None);
 
-        // Assert
         Assert.That(result.IsSuccess, Is.True);
         _otpServiceMock.Verify(
-            x => x.SendOtpAsync(mixedCaseUser.Email, LoginConfig.LoginPurpose),
+            x =>
+                x.SendOtpAsync(
+                    mixedCaseUser.Email,
+                    LoginConfig.LoginPurpose,
+                    It.IsAny<CancellationToken>()
+                ),
             Times.Once
         );
     }
@@ -280,7 +334,6 @@ public class LoginServiceTests : DatabaseTestBase
     [Test]
     public async Task CompleteLoginAsync_WithValidEmailAndOtp_ReturnsAuthResult()
     {
-        // Arrange
         var request = new CompleteLoginRequest { Identifier = "test@example.com", Otp = "123456" };
 
         var accessToken = "access_token";
@@ -288,99 +341,78 @@ public class LoginServiceTests : DatabaseTestBase
             TokenConfig.AccessTokenValidForMinutes
         );
         var refreshToken = "refresh_token";
-        var refreshTokenExpiresAt = DateTime.UtcNow.AddDays(TokenConfig.RefreshTokenValidForDays);
+        var refreshTokenDetails = BuildRefreshTokenDetails(_testUser.Id, refreshToken);
 
         _otpServiceMock
             .Setup(x => x.VerifyOtp(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
             .Returns(Result.NoContent());
 
         _tokenServiceMock
-            .Setup(x => x.CreateRefreshToken(It.IsAny<int>()))
-            .Returns(new TokenDetails { Value = refreshToken, ExpiresAt = refreshTokenExpiresAt });
+            .Setup(x => x.CreateRefreshToken(_testUser.Id))
+            .Returns(refreshTokenDetails);
 
         _tokenServiceMock
             .Setup(x => x.CreateAccessToken(It.IsAny<UserEntity>(), It.IsAny<int>()))
-            .Returns(new TokenDetails { Value = accessToken, ExpiresAt = accessTokenExpiresAt });
+            .Returns(
+                new AccessTokenDetails { Value = accessToken, ExpiresAt = accessTokenExpiresAt }
+            );
 
-        _tokenServiceMock
-            .Setup(x => x.HashToken(It.IsAny<string>()))
-            .Returns("hashed_refresh_token");
+        var result = await _loginService.CompleteLoginAsync(request, CancellationToken.None);
 
-        // Act
-        var result = await _loginService.CompleteLoginAsync(request);
-
-        // Assert
         using (Assert.EnterMultipleScope())
         {
             Assert.That(result.IsSuccess, Is.True);
             Assert.That(result.ResultType, Is.EqualTo(ResultTypes.Success));
             Assert.That(result.Content, Is.Not.Null);
-        }
-
-        using (Assert.EnterMultipleScope())
-        {
-            Assert.That(result.Content.AccessToken, Is.EqualTo(accessToken));
+            Assert.That(result.Content!.AccessToken, Is.EqualTo(accessToken));
             Assert.That(result.Content.RefreshToken, Is.EqualTo(refreshToken));
             Assert.That(result.Content.AccessTokenExpiresAt, Is.EqualTo(accessTokenExpiresAt));
-            Assert.That(result.Content.RefreshTokenExpiresAt, Is.EqualTo(refreshTokenExpiresAt));
+            Assert.That(
+                result.Content.RefreshTokenExpiresAt,
+                Is.EqualTo(refreshTokenDetails.ExpiresAt)
+            );
         }
 
         _otpServiceMock.Verify(
             x => x.VerifyOtp(_testUser.Email, request.Otp, LoginConfig.LoginPurpose),
             Times.Once
         );
-        _tokenServiceMock.Verify(
-            x => x.CreateRefreshToken(TokenConfig.RefreshTokenValidForDays),
-            Times.Once
-        );
+        _tokenServiceMock.Verify(x => x.CreateRefreshToken(_testUser.Id), Times.Once);
         _tokenServiceMock.Verify(
             x => x.CreateAccessToken(_testUser, TokenConfig.AccessTokenValidForMinutes),
             Times.Once
         );
-        _tokenServiceMock.Verify(x => x.HashToken(refreshToken), Times.Once);
     }
 
     [Test]
     public async Task CompleteLoginAsync_WithValidEmailAndOtp_StoresRefreshToken()
     {
-        // Arrange
         var request = new CompleteLoginRequest { Identifier = "test@example.com", Otp = "123456" };
+        var refreshTokenDetails = BuildRefreshTokenDetails(_testUser.Id, "refresh_token");
 
         _otpServiceMock
             .Setup(x => x.VerifyOtp(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
             .Returns(Result.NoContent());
 
         _tokenServiceMock
-            .Setup(x => x.CreateRefreshToken(It.IsAny<int>()))
-            .Returns(
-                new TokenDetails
-                {
-                    Value = "refresh_token",
-                    ExpiresAt = DateTime.UtcNow.AddDays(TokenConfig.RefreshTokenValidForDays),
-                }
-            );
+            .Setup(x => x.CreateRefreshToken(_testUser.Id))
+            .Returns(refreshTokenDetails);
 
         _tokenServiceMock
             .Setup(x => x.CreateAccessToken(It.IsAny<UserEntity>(), It.IsAny<int>()))
             .Returns(
-                new TokenDetails
+                new AccessTokenDetails
                 {
                     Value = "access_token",
                     ExpiresAt = DateTime.UtcNow.AddMinutes(TokenConfig.AccessTokenValidForMinutes),
                 }
             );
 
-        _tokenServiceMock
-            .Setup(x => x.HashToken(It.IsAny<string>()))
-            .Returns("hashed_refresh_token");
+        var result = await _loginService.CompleteLoginAsync(request, CancellationToken.None);
 
-        // Act
-        var result = await _loginService.CompleteLoginAsync(request);
-
-        // Assert
         Assert.That(result.IsSuccess, Is.True);
         var refreshTokenExists = await Context.RefreshTokens.AnyAsync(rt =>
-            rt.TokenHash == "hashed_refresh_token" && rt.UserId == _testUser.Id
+            rt.TokenHash == refreshTokenDetails.Entry.TokenHash && rt.UserId == _testUser.Id
         );
         Assert.That(refreshTokenExists, Is.True);
     }
@@ -388,7 +420,6 @@ public class LoginServiceTests : DatabaseTestBase
     [Test]
     public async Task CompleteLoginAsync_WithValidUsernameAndOtp_CreatesTokensAndReturnsAuthResult()
     {
-        // Arrange
         var request = new CompleteLoginRequest { Identifier = "testuser", Otp = "123456" };
 
         var accessToken = "access_token";
@@ -396,32 +427,30 @@ public class LoginServiceTests : DatabaseTestBase
             TokenConfig.AccessTokenValidForMinutes
         );
         var refreshToken = "refresh_token";
-        var refreshTokenExpiresAt = DateTime.UtcNow.AddDays(TokenConfig.RefreshTokenValidForDays);
+        var refreshTokenDetails = BuildRefreshTokenDetails(_testUser.Id, refreshToken);
 
         _otpServiceMock
             .Setup(x => x.VerifyOtp(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
             .Returns(Result.NoContent());
 
         _tokenServiceMock
-            .Setup(x => x.CreateRefreshToken(It.IsAny<int>()))
-            .Returns(new TokenDetails { Value = refreshToken, ExpiresAt = refreshTokenExpiresAt });
+            .Setup(x => x.CreateRefreshToken(_testUser.Id))
+            .Returns(refreshTokenDetails);
 
         _tokenServiceMock
             .Setup(x => x.CreateAccessToken(It.IsAny<UserEntity>(), It.IsAny<int>()))
-            .Returns(new TokenDetails { Value = accessToken, ExpiresAt = accessTokenExpiresAt });
+            .Returns(
+                new AccessTokenDetails { Value = accessToken, ExpiresAt = accessTokenExpiresAt }
+            );
 
-        _tokenServiceMock
-            .Setup(x => x.HashToken(It.IsAny<string>()))
-            .Returns("hashed_refresh_token");
+        var result = await _loginService.CompleteLoginAsync(request, CancellationToken.None);
 
-        // Act
-        var result = await _loginService.CompleteLoginAsync(request);
-
-        // Assert
         using (Assert.EnterMultipleScope())
         {
             Assert.That(result.IsSuccess, Is.True);
             Assert.That(result.Content, Is.Not.Null);
+            Assert.That(result.Content!.AccessToken, Is.EqualTo(accessToken));
+            Assert.That(result.Content.RefreshToken, Is.EqualTo(refreshToken));
         }
 
         _otpServiceMock.Verify(
@@ -433,7 +462,6 @@ public class LoginServiceTests : DatabaseTestBase
     [Test]
     public async Task CompleteLoginAsync_WithInvalidOtp_ReturnsBadRequest()
     {
-        // Arrange
         var request = new CompleteLoginRequest
         {
             Identifier = "test@example.com",
@@ -444,10 +472,8 @@ public class LoginServiceTests : DatabaseTestBase
             .Setup(x => x.VerifyOtp(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
             .Returns(Result.BadRequest(ErrorMessages.InvalidOrExpiredOtp));
 
-        // Act
-        var result = await _loginService.CompleteLoginAsync(request);
+        var result = await _loginService.CompleteLoginAsync(request, CancellationToken.None);
 
-        // Assert
         using (Assert.EnterMultipleScope())
         {
             Assert.That(result.IsSuccess, Is.False);
@@ -455,28 +481,24 @@ public class LoginServiceTests : DatabaseTestBase
             Assert.That(result.Message, Is.EqualTo(ErrorMessages.InvalidOrExpiredOtp));
         }
 
-        _tokenServiceMock.Verify(x => x.CreateRefreshToken(It.IsAny<int>()), Times.Never);
+        _tokenServiceMock.Verify(x => x.CreateRefreshToken(It.IsAny<Guid>()), Times.Never);
         _tokenServiceMock.Verify(
             x => x.CreateAccessToken(It.IsAny<UserEntity>(), It.IsAny<int>()),
             Times.Never
         );
-        _tokenServiceMock.Verify(x => x.HashToken(It.IsAny<string>()), Times.Never);
     }
 
     [Test]
     public async Task CompleteLoginAsync_WithNonExistentUser_ReturnsBadRequest()
     {
-        // Arrange
         var request = new CompleteLoginRequest
         {
             Identifier = "nonexistent@example.com",
             Otp = "123456",
         };
 
-        // Act
-        var result = await _loginService.CompleteLoginAsync(request);
+        var result = await _loginService.CompleteLoginAsync(request, CancellationToken.None);
 
-        // Assert
         using (Assert.EnterMultipleScope())
         {
             Assert.That(result.IsSuccess, Is.False);
@@ -493,7 +515,6 @@ public class LoginServiceTests : DatabaseTestBase
     [Test]
     public async Task CompleteLoginAsync_NormalizesIdentifierToLowercase()
     {
-        // Arrange
         var mixedCaseUser = new UserEntity
         {
             Id = Guid.NewGuid(),
@@ -520,31 +541,21 @@ public class LoginServiceTests : DatabaseTestBase
             .Returns(Result.NoContent());
 
         _tokenServiceMock
-            .Setup(x => x.CreateRefreshToken(It.IsAny<int>()))
-            .Returns(
-                new TokenDetails
-                {
-                    Value = "refresh_token",
-                    ExpiresAt = DateTime.UtcNow.AddDays(TokenConfig.RefreshTokenValidForDays),
-                }
-            );
+            .Setup(x => x.CreateRefreshToken(mixedCaseUser.Id))
+            .Returns(BuildRefreshTokenDetails(mixedCaseUser.Id, "refresh_token"));
 
         _tokenServiceMock
             .Setup(x => x.CreateAccessToken(It.IsAny<UserEntity>(), It.IsAny<int>()))
             .Returns(
-                new TokenDetails
+                new AccessTokenDetails
                 {
                     Value = "access_token",
                     ExpiresAt = DateTime.UtcNow.AddMinutes(TokenConfig.AccessTokenValidForMinutes),
                 }
             );
 
-        _tokenServiceMock.Setup(x => x.HashToken(It.IsAny<string>())).Returns("hashed_token");
+        var result = await _loginService.CompleteLoginAsync(request, CancellationToken.None);
 
-        // Act
-        var result = await _loginService.CompleteLoginAsync(request);
-
-        // Assert
         Assert.That(result.IsSuccess, Is.True);
         _otpServiceMock.Verify(
             x => x.VerifyOtp(mixedCaseUser.Email, request.Otp, LoginConfig.LoginPurpose),

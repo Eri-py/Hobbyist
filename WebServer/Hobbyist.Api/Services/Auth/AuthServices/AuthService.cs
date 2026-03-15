@@ -72,7 +72,7 @@ public class AuthService(
             );
         }
 
-        return tokenService.VerifyRefreshTokenAsync(refreshToken, ct);
+        return tokenService.RotateRefreshTokenAsync(refreshToken, ct);
     }
 
     private async Task<UserDto?> GetUserDtoAsync(

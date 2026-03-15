@@ -53,8 +53,6 @@ public class OtpService(ICache cache, IEmailService emailService, ILogger<OtpSer
             return Result<OtpResponse>.FromError(emailResult);
         }
 
-        Console.WriteLine(otpDetails.Value);
-
         // Increment rate limit counter only after successful send
         IncrementSendRateLimit(email, purpose);
 
