@@ -13,6 +13,11 @@ type TitleFormInputProps = {
   placeholder?: string;
 };
 
+type HobbyFormInputProps = {
+  label?: string;
+  placeholder?: string;
+};
+
 type DescriptionFormInputProps = {
   label?: string;
   placeholder?: string;
@@ -52,6 +57,38 @@ export function TitleFormInput({
         }}
         error={!!titleError}
         helperText={titleError?.message as string | undefined}
+      />
+    </Stack>
+  );
+}
+
+export function HobbyFormInput({
+  label = "Primary hobby",
+  placeholder = "e.g. Pokémon cards",
+}: HobbyFormInputProps) {
+  const {
+    register,
+    formState: { errors },
+  } = useFormContext<CreateFormSchemaTypes>();
+
+  const hobbyError = get(errors, "hobby");
+
+  return (
+    <Stack gap={1}>
+      <Typography variant="subtitle2">{label}</Typography>
+      <TextField
+        {...register("hobby")}
+        variant="outlined"
+        placeholder={placeholder}
+        autoComplete="off"
+        fullWidth
+        sx={{
+          "& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline": {
+            borderColor: "primary.main",
+          },
+        }}
+        error={!!hobbyError}
+        helperText={(hobbyError?.message as string | undefined) ?? "One hobby per post."}
       />
     </Stack>
   );
@@ -143,6 +180,7 @@ export function TradeOptionsFormInput({
           {...register("lookingFor")}
           placeholder={fieldLabel}
           autoComplete="off"
+          focused={isTradable}
           fullWidth
           size="small"
           sx={{

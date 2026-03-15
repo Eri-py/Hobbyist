@@ -157,6 +157,7 @@ describe("useCreate", () => {
       const { result } = renderHook(() => useCreate(), { wrapper: makeWrapper() });
       await setupAtStep1(result);
       act(() => {
+        result.current.methods.setValue("hobby", "Trading Cards");
         result.current.methods.setValue("title", "My Hobby Item");
         result.current.methods.setValue("description", "A detailed description of my item.");
       });
@@ -214,7 +215,12 @@ describe("useCreate", () => {
       // Act
       act(() => {
         result.current.handleSubmit(
-          { title: "My Item", description: "Some description here.", availableForTrade: false },
+          {
+            hobby: "Trading Cards",
+            title: "My Item",
+            description: "Some description here.",
+            availableForTrade: false,
+          },
           [],
           onFilesError,
         );
@@ -235,7 +241,12 @@ describe("useCreate", () => {
       // Act
       act(() => {
         result.current.handleSubmit(
-          { title: "My Item", description: "Some description here.", availableForTrade: false },
+          {
+            hobby: "Trading Cards",
+            title: "My Item",
+            description: "Some description here.",
+            availableForTrade: false,
+          },
           [file],
           onFilesError,
         );
@@ -256,6 +267,7 @@ describe("useCreate", () => {
         act(() => {
           result.current.handleSubmit(
             {
+              hobby: "Trading Cards",
               title: "My Item",
               description: "Some description here.",
               availableForTrade: true,

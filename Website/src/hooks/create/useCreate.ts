@@ -20,7 +20,7 @@ const createPostApi = async (formData: FormData) => {
 // Define which form fields belong to each mobile step
 const mobileStepFields: Record<number, (keyof CreateFormSchemaTypes)[]> = {
   0: [], // Images — handled separately (not a zod field)
-  1: ["title", "description", "availableForTrade", "lookingFor"],
+  1: ["hobby", "title", "description", "availableForTrade", "lookingFor"],
 };
 
 const MOBILE_STEP_COUNT = Object.keys(mobileStepFields).length;
@@ -33,6 +33,7 @@ export function useCreate() {
     mode: "onChange",
     resolver: zodResolver(CreateFormSchema),
     defaultValues: {
+      hobby: "",
       availableForTrade: false,
       lookingFor: "",
     },
@@ -93,6 +94,7 @@ export function useCreate() {
     const formData = new FormData();
 
     formData.append("title", values.title);
+    formData.append("hobby", values.hobby);
     formData.append("description", values.description);
     formData.append("availableForTrade", (values.availableForTrade ?? false).toString());
 
@@ -104,7 +106,7 @@ export function useCreate() {
       formData.append("media", fileMetadata.file);
     });
 
-    // createPostMutation.mutate(formData);
+    createPostMutation.mutate(formData);
   };
 
   return {

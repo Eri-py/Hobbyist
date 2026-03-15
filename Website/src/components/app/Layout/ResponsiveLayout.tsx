@@ -33,7 +33,7 @@ export function ResponsiveLayout() {
           </Stack>
         )}
 
-        <Stack flex={isDesktop ? 3 : 1} overflow="hidden">
+        <Stack flex={isDesktop ? 3 : 1} overflow="hidden" paddingBottom={isDesktop ? 0 : 7}>
           {isDesktop && <DesktopNavbar />}
           <CustomOutlet padding={isDesktop ? 2 : 1} minHeight={isDesktop ? 0 : undefined} />
         </Stack>
