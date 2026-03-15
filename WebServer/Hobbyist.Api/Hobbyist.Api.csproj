@@ -8,7 +8,7 @@
     <PackageReference Include="MailKit" Version="4.15.1" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.13" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.13" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.12">
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.14">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
