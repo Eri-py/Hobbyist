@@ -1,4 +1,4 @@
-import { type ReactElement, type CSSProperties, cloneElement } from "react";
+import { type ReactElement } from "react";
 import { useNavigate } from "@tanstack/react-router";
 
 import AddIcon from "@mui/icons-material/Add";
@@ -6,11 +6,10 @@ import HomeIcon from "@mui/icons-material/Home";
 import ChatIconOulined from "@mui/icons-material/ChatOutlined";
 import EventIcon from "@mui/icons-material/Event";
 import PersonIcon from "@mui/icons-material/Person";
-import { styled, useTheme } from "@mui/material/styles";
+import { styled } from "@mui/material/styles";
 import Badge, { badgeClasses } from "@mui/material/Badge";
-import IconButton from "@mui/material/IconButton";
-import Typography from "@mui/material/Typography";
-import Stack from "@mui/material/Stack";
+import BottomNavigation from "@mui/material/BottomNavigation";
+import BottomNavigationAction from "@mui/material/BottomNavigationAction";
 
 import { useNavigationButtons } from "@/hooks/shared/useNavigationButtons";
 import { useProfile } from "@/hooks/profile/useProfile";
@@ -25,32 +24,18 @@ const NotificationBadge = styled(Badge)`
   }
 `;
 
-const NavButton = styled(IconButton)({
-  display: "flex",
-  flexDirection: "column",
-  padding: "4px 8px",
-  borderRadius: 8,
-});
-
-const LabelText = styled(Typography)(() => ({
-  fontSize: 10,
-  lineHeight: 1.2,
-  marginTop: -4,
-}));
-
 type NavigationItem = {
   label: string;
-  icon: ReactElement<{ style?: CSSProperties }>;
+  icon: ReactElement;
   handleClick: () => void;
   notifications?: number;
 };
 
 export function NavigationButtons() {
-  const theme = useTheme();
   const { handleHomeClick, handleMessagesClick, handleEventsClick } = useNavigationButtons();
   const navigate = useNavigate();
   const { handleProfileClick } = useProfile();
-  const { getActiveTab } = useNavigation();
+  const { activeTab } = useNavigation();
   const flags = useFeatureFlags();
 
   const navigationItems: NavigationItem[] = [
@@ -90,31 +75,29 @@ export function NavigationButtons() {
     },
   ];
 
-  const navigationButtons = navigationItems.map((item) => {
-    const isActive = getActiveTab(item.label);
-    const iconColor = isActive ? theme.palette.primary.light : undefined;
-    const textColor = isActive ? theme.palette.primary.light : theme.palette.text.secondary;
-
-    const coloredIcon = cloneElement(item.icon, {
-      style: { ...item.icon.props.style, color: iconColor, width: 28 },
-    });
-
-    return (
-      <Stack key={item.label} alignItems="center">
-        <NavButton size="small" onClick={item.handleClick}>
-          {coloredIcon}
-          {item.notifications && (
-            <NotificationBadge
-              badgeContent={item.notifications}
-              color="secondary"
-              overlap="circular"
-            />
-          )}
-        </NavButton>
-        <LabelText sx={{ color: textColor }}>{item.label}</LabelText>
-      </Stack>
-    );
-  });
-
-  return <>{navigationButtons}</>;
+  return (
+    <BottomNavigation value={activeTab} showLabels>
+      {navigationItems.map((item) => (
+        <BottomNavigationAction
+          key={item.label}
+          value={item.label}
+          label={item.label}
+          onClick={item.handleClick}
+          icon={
+            item.notifications ? (
+              <NotificationBadge
+                badgeContent={item.notifications}
+                color="secondary"
+                overlap="circular"
+              >
+                {item.icon}
+              </NotificationBadge>
+            ) : (
+              item.icon
+            )
+          }
+        />
+      ))}
+    </BottomNavigation>
+  );
 }

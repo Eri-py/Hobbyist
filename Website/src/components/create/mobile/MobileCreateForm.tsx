@@ -3,15 +3,14 @@ import type { DropzoneRootProps } from "react-dropzone";
 import type { FileWithMetadata } from "@/hooks/create/useMediaUpload";
 
 import Stack from "@mui/material/Stack";
-import Paper from "@mui/material/Paper";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
-import { CreateTips, type CreateTipKey } from "@/components/create/CreateTips";
 import { ActionButtons } from "@/components/create/ActionButtons";
 import { MobileHeader } from "@/components/create/mobile/MobileHeader";
 import {
   DescriptionFormInput,
+  HobbyFormInput,
   TitleFormInput,
   TradeOptionsFormInput,
 } from "@/components/create/FormInputs";
@@ -19,10 +18,7 @@ import { MediaCarousel } from "@/components/create/MediaCarousel";
 import { UploadArea } from "@/components/create/UploadArea";
 import { useMediaCarousel } from "@/hooks/create/useMediaCarousel";
 
-const STEPS = [
-  { label: "Images & Videos", tipKey: "media" as CreateTipKey },
-  { label: "Details", tipKey: "details" as CreateTipKey },
-];
+const STEPS_LABELS = ["Images & Videos", "Details"];
 
 type MobileCreateFormProps = {
   files: FileWithMetadata[];
@@ -46,7 +42,6 @@ export function MobileCreateForm({
   onBack,
 }: MobileCreateFormProps) {
   const { currentIndex, handlePrevious, handleNext, currentFile } = useMediaCarousel(files);
-  const currentStepConfig = STEPS[activeStep];
 
   return (
     <Stack
@@ -59,9 +54,9 @@ export function MobileCreateForm({
     >
       <Stack gap={3} width="100%" minWidth={0}>
         <MobileHeader
-          totalSteps={STEPS.length}
+          totalSteps={STEPS_LABELS.length}
           activeStep={activeStep}
-          stepLabel={currentStepConfig.label}
+          stepLabel={STEPS_LABELS[activeStep]}
           onNext={onNext}
           onBack={onBack}
         />
@@ -90,7 +85,9 @@ export function MobileCreateForm({
           )}
 
           {activeStep === 1 && (
-            <Stack gap={3}>
+            <Stack gap={2}>
+              <HobbyFormInput />
+
               <TitleFormInput />
 
               <DescriptionFormInput rows={7} />
@@ -100,22 +97,10 @@ export function MobileCreateForm({
           )}
         </Stack>
 
-        <ActionButtons isSubmitting={isSubmitting} showPost={activeStep === STEPS.length - 1} />
-
-        <Paper
-          component="footer"
-          sx={{
-            position: "fixed",
-            left: 8,
-            right: 8,
-            bottom: 60,
-            zIndex: 10,
-            p: 2,
-            borderRadius: 2,
-          }}
-        >
-          <CreateTips activeTip={currentStepConfig.tipKey} />
-        </Paper>
+        <ActionButtons
+          isSubmitting={isSubmitting}
+          showPost={activeStep === STEPS_LABELS.length - 1}
+        />
       </Stack>
     </Stack>
   );

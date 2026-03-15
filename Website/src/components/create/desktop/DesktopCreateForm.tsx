@@ -8,6 +8,7 @@ import type { FileWithMetadata } from "@/hooks/create/useMediaUpload";
 import { ActionButtons } from "@/components/create/ActionButtons";
 import {
   DescriptionFormInput,
+  HobbyFormInput,
   TitleFormInput,
   TradeOptionsFormInput,
 } from "@/components/create/FormInputs";
@@ -62,6 +63,8 @@ export function DesktopCreateForm({
           </Stack>
 
           <Stack gap={3} flex={3}>
+            <HobbyFormInput />
+
             <TitleFormInput />
 
             <DescriptionFormInput rows={5} />
