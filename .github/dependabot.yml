@@ -8,6 +8,7 @@ updates:
       interval: "weekly"
     ignore:
       - dependency-name: "zod"
+        versions: ["*"]
 
   # Mobile app
   - package-ecosystem: "npm"
@@ -16,11 +17,19 @@ updates:
       interval: "weekly"
     ignore:
       - dependency-name: "expo"
+        versions: ["*"]
       - dependency-name: "expo-*"
+        versions: ["*"]
       - dependency-name: "@expo/*"
-      - dependency-name: "react-native*"
+        versions: ["*"]
+      - dependency-name: "react-native"
+        versions: ["*"]
+      - dependency-name: "react-native-*"
+        versions: ["*"]
       - dependency-name: "@react-native*/*"
+        versions: ["*"]
       - dependency-name: "@react-navigation/*"
+        versions: ["*"]
 
   # Website
   - package-ecosystem: "npm"
