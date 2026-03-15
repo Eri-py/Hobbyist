@@ -17,7 +17,6 @@ type OtpStepProps = {
   email: string;
   intitialOtpExpiresAt: Date;
   handleNext?: () => void;
-  handleBack: () => void;
   isPending: boolean;
 };
 
@@ -26,14 +25,13 @@ export function OtpStep({
   email,
   intitialOtpExpiresAt,
   handleNext,
-  handleBack,
   isPending,
 }: OtpStepProps) {
   const theme = useTheme();
   const { control } = useFormContext();
   const { endTime, isResendDisabled, handleResend, isResending, serverErrorMessage } = useOtp(
     intitialOtpExpiresAt,
-    axiosInstance
+    axiosInstance,
   );
 
   const onResend = () => {
@@ -53,17 +51,7 @@ export function OtpStep({
         control={control}
         render={({ field: { value, onChange }, formState: { errors } }) => (
           <Stack>
-            <MuiOtpInput
-              value={value || ""}
-              length={6}
-              onChange={onChange}
-              autoFocus
-              TextFieldsProps={{
-                slotProps: {
-                  htmlInput: { inputMode: "numeric", pattern: "[0-9]*" },
-                },
-              }}
-            />
+            <MuiOtpInput value={value || ""} length={6} onChange={onChange} autoFocus />
             {get(errors, "otp")?.message && (
               <FormHelperText error>{get(errors, "otp").message}</FormHelperText>
             )}
@@ -101,10 +89,6 @@ export function OtpStep({
         loading={isPending}
       >
         {mode === "login" ? "Submit" : "Continue"}
-      </Button>
-
-      <Button variant="outlined" type="button" size="large" onClick={handleBack}>
-        Back
       </Button>
     </Stack>
   );

@@ -5,11 +5,6 @@ export function useNavigationButtons() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  // Create button.
-  const handleCreateClick = () => {
-    navigate({ to: "/create" });
-  };
-
   //messages button. Would probably move to its own separate hook to handle notifications.
   const handleMessagesClick = () => {
     navigate({ to: "/messages" });
@@ -37,7 +32,6 @@ export function useNavigationButtons() {
   };
 
   return {
-    handleCreateClick,
     handleMessagesClick,
     handleHomeClick,
     handleTradeClick,

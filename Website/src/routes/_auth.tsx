@@ -3,7 +3,8 @@ import IconButton from "@mui/material/IconButton";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useEffect } from "react";
 
-import { FormContainer } from "@/components/auth/FormContainer";
+import Box from "@mui/material/Box";
+
 import { useDeviceType } from "@/hooks/shared/useDeviceType";
 import { useAuth } from "@hobbyist/hooks";
 
@@ -29,7 +30,15 @@ function AuthLayout() {
   }
 
   return (
-    <FormContainer>
+    <Box
+      sx={{
+        display: "flex",
+        minHeight: "100dvh",
+        alignItems: "center",
+        justifyContent: "center",
+        position: "relative",
+      }}
+    >
       <IconButton
         onClick={() => navigate({ to: "/" })}
         sx={{
@@ -42,6 +51,6 @@ function AuthLayout() {
         <ArrowBackIcon sx={{ fontSize: isDesktop ? 32 : 24 }} />
       </IconButton>
       <Outlet />
-    </FormContainer>
+    </Box>
   );
 }

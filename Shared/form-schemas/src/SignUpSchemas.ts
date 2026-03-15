@@ -22,6 +22,10 @@ const passwordSchema = z
   .min(8, "Password must be at least 8 characters long")
   .max(64, "Password must be no more than 64 characters long");
 
+const interestsSchema = z
+  .array(z.string().trim().min(1).max(50))
+  .min(1, "Select at least one interest");
+
 const nameSchema = (nameType: string) => {
   return z
     .string()
@@ -73,6 +77,7 @@ export const SignUpFormSchema = z.object({
   firstname: nameSchema("Firstname"),
   lastname: nameSchema("Lastname"),
   dateOfBirth: dateOfBirthSchema,
+  interests: interestsSchema,
 });
 
 export type SignUpFormSchemaTypes = z.infer<typeof SignUpFormSchema>;

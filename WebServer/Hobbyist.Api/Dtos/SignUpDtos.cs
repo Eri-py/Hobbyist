@@ -15,6 +15,12 @@ public record class StartSignUpRequest
     public required string Email { get; set; }
 }
 
+public record class VerifyOtpResponse
+{
+    [Required]
+    public required string[] PopularInterests { get; set; }
+}
+
 /// <summary>
 /// Contains complete user profile information including personal details and password.
 /// </summary>
@@ -38,4 +44,7 @@ public record class CompleteSignUpRequest
 
     [Required]
     public required string DateOfBirth { get; set; }
+
+    [Required]
+    public required string[] Interests { get; set; }
 }

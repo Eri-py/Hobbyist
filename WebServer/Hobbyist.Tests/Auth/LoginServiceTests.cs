@@ -278,7 +278,7 @@ public class LoginServiceTests : DatabaseTestBase
     #region CompleteLoginAsync Tests
 
     [Test]
-    public async Task CompleteLoginAsync_WithValidEmailandOtp_CreatesTokensAndReturnsAuthResult()
+    public async Task CompleteLoginAsync_WithValidEmailAndOtp_ReturnsAuthResult()
     {
         // Arrange
         var request = new CompleteLoginRequest { Identifier = "test@example.com", Otp = "123456" };
@@ -325,11 +325,6 @@ public class LoginServiceTests : DatabaseTestBase
             Assert.That(result.Content.RefreshTokenExpiresAt, Is.EqualTo(refreshTokenExpiresAt));
         }
 
-        var refreshTokenExists = await Context.RefreshTokens.AnyAsync(rt =>
-            rt.TokenHash == "hashed_refresh_token" && rt.UserId == _testUser.Id
-        );
-        Assert.That(refreshTokenExists, Is.True);
-
         _otpServiceMock.Verify(
             x => x.VerifyOtp(_testUser.Email, request.Otp, LoginConfig.LoginPurpose),
             Times.Once
@@ -343,6 +338,51 @@ public class LoginServiceTests : DatabaseTestBase
             Times.Once
         );
         _tokenServiceMock.Verify(x => x.HashToken(refreshToken), Times.Once);
+    }
+
+    [Test]
+    public async Task CompleteLoginAsync_WithValidEmailAndOtp_StoresRefreshToken()
+    {
+        // Arrange
+        var request = new CompleteLoginRequest { Identifier = "test@example.com", Otp = "123456" };
+
+        _otpServiceMock
+            .Setup(x => x.VerifyOtp(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+            .Returns(Result.NoContent());
+
+        _tokenServiceMock
+            .Setup(x => x.CreateRefreshToken(It.IsAny<int>()))
+            .Returns(
+                new TokenDetails
+                {
+                    Value = "refresh_token",
+                    ExpiresAt = DateTime.UtcNow.AddDays(TokenConfig.RefreshTokenValidForDays),
+                }
+            );
+
+        _tokenServiceMock
+            .Setup(x => x.CreateAccessToken(It.IsAny<UserEntity>(), It.IsAny<int>()))
+            .Returns(
+                new TokenDetails
+                {
+                    Value = "access_token",
+                    ExpiresAt = DateTime.UtcNow.AddMinutes(TokenConfig.AccessTokenValidForMinutes),
+                }
+            );
+
+        _tokenServiceMock
+            .Setup(x => x.HashToken(It.IsAny<string>()))
+            .Returns("hashed_refresh_token");
+
+        // Act
+        var result = await _loginService.CompleteLoginAsync(request);
+
+        // Assert
+        Assert.That(result.IsSuccess, Is.True);
+        var refreshTokenExists = await Context.RefreshTokens.AnyAsync(rt =>
+            rt.TokenHash == "hashed_refresh_token" && rt.UserId == _testUser.Id
+        );
+        Assert.That(refreshTokenExists, Is.True);
     }
 
     [Test]

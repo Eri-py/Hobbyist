@@ -104,7 +104,6 @@ export function useCreate() {
       formData.append("media", fileMetadata.file);
     });
 
-    console.log([...formData.entries()]);
     // createPostMutation.mutate(formData);
   };
 

@@ -14,4 +14,5 @@ public class UserEntity
 
     // Navigation properties
     public ICollection<RefreshTokenEntity> RefreshTokens { get; set; } = [];
+    public ICollection<HobbyEntity> Hobbies { get; set; } = [];
 }

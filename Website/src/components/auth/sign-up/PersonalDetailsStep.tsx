@@ -8,10 +8,10 @@ import { SegmentedDatePicker } from "@/components/shared/SegmentedDatePicker";
 import { FormTextField } from "../FormTextField";
 
 type PersonalDetailsProps = {
-  isPending: boolean;
+  handleNext: () => void;
 };
 
-export function PersonalDetails({ isPending }: PersonalDetailsProps) {
+export function PersonalDetails({ handleNext }: PersonalDetailsProps) {
   const { control } = useFormContext();
 
   return (
@@ -45,8 +45,8 @@ export function PersonalDetails({ isPending }: PersonalDetailsProps) {
         )}
       />
 
-      <Button type="submit" variant="contained" size="large" loading={isPending}>
-        Submit
+      <Button type="button" variant="contained" size="large" onClick={handleNext}>
+        Continue
       </Button>
     </Stack>
   );
