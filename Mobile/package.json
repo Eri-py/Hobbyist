@@ -55,7 +55,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@tanstack/eslint-plugin-query": "^5.91.4",
+    "@tanstack/eslint-plugin-query": "^5.95.2",
     "baseline-browser-mapping": "^2.10.8",
     "eslint-config-expo": "~55.0.0",
     "eslint-import-resolver-alias": "^1.1.2",
