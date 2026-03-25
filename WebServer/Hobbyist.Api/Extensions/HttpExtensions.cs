@@ -1,9 +1,22 @@
+using System.Security.Claims;
 using Hobbyist.Api.Dtos;
 
 namespace Hobbyist.Api.Extensions;
 
 public static class HttpExtensions
 {
+    public static string GetUserId(this ClaimsPrincipal user)
+    {
+        var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            throw new UnauthorizedAccessException("Missing user id claim.");
+        }
+
+        return userId;
+    }
+
     public static string GetPlatform(this HttpRequest request)
     {
         var platform = request.Headers["Platform"].FirstOrDefault();

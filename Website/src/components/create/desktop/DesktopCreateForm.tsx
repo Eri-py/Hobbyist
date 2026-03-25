@@ -6,12 +6,7 @@ import Typography from "@mui/material/Typography";
 
 import type { FileWithMetadata } from "@/hooks/create/useMediaUpload";
 import { ActionButtons } from "@/components/create/ActionButtons";
-import {
-  DescriptionFormInput,
-  HobbyFormInput,
-  TitleFormInput,
-  TradeOptionsFormInput,
-} from "@/components/create/FormInputs";
+import { FormInput, TradeOptionsFormInput } from "@/components/create/FormInputs";
 import { DesktopMediaPanel } from "@/components/create/desktop/DesktopMediaPanel";
 
 type DesktopCreateFormProps = {
@@ -63,11 +58,38 @@ export function DesktopCreateForm({
           </Stack>
 
           <Stack gap={3} flex={3}>
-            <HobbyFormInput />
+            <FormInput
+              field="hobby"
+              label="Hobby"
+              placeholder="e.g. Pokémon cards"
+              size="small"
+              helperText="One hobby per post."
+            />
 
-            <TitleFormInput />
+            <FormInput
+              field="title"
+              label="Title"
+              placeholder="e.g. Mint Charizard holo, PSA 9"
+              size="small"
+            />
 
-            <DescriptionFormInput rows={5} />
+            <FormInput
+              field="description"
+              label="Description"
+              placeholder="Describe condition, notable details, and what makes this collectible special"
+              multiline
+              rows={5}
+              size="small"
+              slotProps={{
+                htmlInput: {
+                  sx: {
+                    resize: "vertical",
+                    overflow: "auto",
+                    maxHeight: 250,
+                  },
+                },
+              }}
+            />
 
             <TradeOptionsFormInput />
 

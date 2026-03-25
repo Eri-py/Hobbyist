@@ -2,7 +2,7 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 
-namespace Hobbyist.Api.Extensions.ServiceRegistrations;
+namespace Hobbyist.Api.Extensions.ServiceRegistrations.InfrastructureServices;
 
 public static class JwtAuthenticationRegistration
 {

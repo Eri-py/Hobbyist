@@ -1,4 +1,4 @@
-namespace Hobbyist.Api.Extensions.ServiceRegistrations;
+namespace Hobbyist.Api.Extensions.ServiceRegistrations.InfrastructureServices;
 
 public static class CorsRegistration
 {
@@ -22,11 +22,5 @@ public static class CorsRegistration
                     policy.WithOrigins(address).AllowAnyHeader().AllowAnyMethod().AllowCredentials()
             );
         });
-    }
-
-    public static string GetCorsPolicy(this IConfiguration configuration)
-    {
-        return configuration["ClientOrigin:Name"]
-            ?? throw new InvalidOperationException("Missing 'ClientOrigin:Name' configuration.");
     }
 }
