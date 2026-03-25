@@ -1,0 +1,29 @@
+using Hobbyist.Api.Dtos;
+using Hobbyist.Common;
+
+namespace Hobbyist.Api.Services.MediaStorageServices;
+
+public interface IMediaStorageService
+{
+    /// <summary>
+    /// Uploads a media object to storage and returns a reference containing object key and read URL.
+    /// </summary>
+    /// <param name="request">Upload payload and metadata</param>
+    /// <returns><see cref="Result{T}"/> where T is <see cref="UploadMediaResponse"/></returns>
+    Task<Result<UploadMediaResponse>> UploadAsync(UploadMediaRequest request, CancellationToken ct);
+
+    /// <summary>
+    /// Deletes a media object from storage by key.
+    /// </summary>
+    /// <param name="objectKey">Storage object key</param>
+    /// <returns>Operation result</returns>
+    Task<Result> DeleteAsync(string objectKey, CancellationToken ct);
+
+    /// <summary>
+    /// Generates a read URL for a stored media object key.
+    /// </summary>
+    /// <param name="objectKey">Storage object key</param>
+    /// <param name="ttl">Optional URL validity duration for pre-signed URLs</param>
+    /// <returns><see cref="Result{T}"/> where T is the generated URL</returns>
+    Task<Result<string>> GetReadUrlAsync(string objectKey, TimeSpan? ttl, CancellationToken ct);
+}

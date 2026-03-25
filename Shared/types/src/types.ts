@@ -41,6 +41,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/Posts/create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/x-www-form-urlencoded": {
+                        Hobby?: string;
+                        Title?: string;
+                        Description?: string;
+                        AvailableForTrade?: boolean;
+                        LookingFor?: string;
+                        Media?: components["schemas"]["IFormFile"][];
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["CreatePostResponse"];
+                        "application/json": components["schemas"]["CreatePostResponse"];
+                        "text/json": components["schemas"]["CreatePostResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/Auth/get-user-details": {
         parameters: {
             query?: never;
@@ -441,6 +489,19 @@ export interface components {
             dateOfBirth: string;
             interests: string[];
         };
+        CreatePostResponse: {
+            /** Format: uuid */
+            postId: string;
+            userId: string;
+            hobby: string;
+            title: string;
+            description: string;
+            availableForTrade: boolean;
+            lookingFor?: string | null;
+            media: components["schemas"]["PostMediaReference"][];
+            /** Format: date-time */
+            createdAt: string;
+        };
         FeatureFlagsResponse: {
             flags: {
                 [key: string]: boolean;
@@ -450,9 +511,18 @@ export interface components {
             isAuthenticated: boolean;
             user?: components["schemas"]["UserDto"];
         };
+        /** Format: binary */
+        IFormFile: string;
         OtpResponse: {
             /** Format: date-time */
             otpExpiresAt: string;
+        };
+        PostMediaReference: {
+            objectKey: string;
+            url: string;
+            contentType: string;
+            /** Format: int64 */
+            sizeBytes: number;
         };
         ResendOtpRequest: {
             email: string;

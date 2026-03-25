@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { FormProvider } from "react-hook-form";
 import { useMemo } from "react";
+import type { KeyboardEvent } from "react";
 
 import Stack from "@mui/material/Stack";
 
@@ -60,10 +61,17 @@ function CreatePage() {
     clearServerError();
   };
 
+  const preventEnterSubmit = (event: KeyboardEvent<HTMLFormElement>) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+    }
+  };
+
   return (
     <FormProvider {...methods}>
       <form
         onSubmit={methods.handleSubmit((data) => handleSubmit(data, files, addError))}
+        onKeyDown={preventEnterSubmit}
         style={{ display: "flex", flex: 1 }}
       >
         <Stack gap={3} flex={1}>

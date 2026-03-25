@@ -1,6 +1,9 @@
+using Hobbyist.Api.Extensions;
 using Hobbyist.Api.Extensions.ServiceRegistrations;
+using Hobbyist.Api.Extensions.ServiceRegistrations.InfrastructureServices;
 using Hobbyist.Api.Middleware;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.FeatureManagement;
 using Scalar.AspNetCore;
 using Serilog;
 
@@ -22,7 +25,12 @@ builder
         reloadOnChange: true
     );
 
-builder.Services.AddApplicationServices(builder.Configuration, builder.Environment);
+builder.Services.AddControllers();
+builder.Services.AddOpenApi();
+builder.Services.AddFeatureManagement();
+
+builder.Services.AddDomainServices();
+builder.Services.AddInfrastructureServices(builder.Configuration, builder.Environment);
 
 var app = builder.Build();
 

@@ -1,4 +1,6 @@
-using System.Security.Claims;
+using Hobbyist.Api.Dtos;
+using Hobbyist.Api.Extensions;
+using Hobbyist.Api.Services.PostServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -6,42 +8,18 @@ namespace Hobbyist.Api.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class PostsController : ControllerBase
+public class PostsController(IPostService postService) : ControllerBase
 {
     [HttpPost("create")]
     [Authorize]
-    public ActionResult Create(
-        [FromForm] string hobby,
-        [FromForm] string title,
-        [FromForm] string description,
-        [FromForm] bool availableForTrade,
-        [FromForm] string? lookingFor,
-        [FromForm] IFormFile[] media
+    public async Task<ActionResult<CreatePostResponse>> CreateAsync(
+        [FromForm] CreatePostRequest request,
+        CancellationToken ct
     )
     {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "unknown";
-        var username = User.Identity?.Name ?? "unknown";
+        var userId = User.GetUserId();
 
-        Console.WriteLine("[CreatePost] ------------------------------");
-        Console.WriteLine($"UserId: {userId}");
-        Console.WriteLine($"Username: {username}");
-        Console.WriteLine($"Hobby: {hobby}");
-        Console.WriteLine($"Title: {title}");
-        Console.WriteLine($"Description: {description}");
-        Console.WriteLine($"AvailableForTrade: {availableForTrade}");
-        Console.WriteLine($"LookingFor: {lookingFor ?? "(none)"}");
-        Console.WriteLine($"MediaCount: {media.Length}");
-
-        for (var index = 0; index < media.Length; index++)
-        {
-            var file = media[index];
-            Console.WriteLine(
-                $"Media[{index}] Name={file.FileName}, ContentType={file.ContentType}, Size={file.Length}"
-            );
-        }
-
-        Console.WriteLine("[CreatePost] ------------------------------");
-
-        return Ok(new { message = "Create post payload received." });
+        var result = await postService.CreatePostAsync(request, userId, ct);
+        return result.ToActionResult();
     }
 }

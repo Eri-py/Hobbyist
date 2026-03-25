@@ -8,12 +8,7 @@ import Typography from "@mui/material/Typography";
 
 import { ActionButtons } from "@/components/create/ActionButtons";
 import { MobileHeader } from "@/components/create/mobile/MobileHeader";
-import {
-  DescriptionFormInput,
-  HobbyFormInput,
-  TitleFormInput,
-  TradeOptionsFormInput,
-} from "@/components/create/FormInputs";
+import { FormInput, TradeOptionsFormInput } from "@/components/create/FormInputs";
 import { MediaCarousel } from "@/components/create/MediaCarousel";
 import { UploadArea } from "@/components/create/UploadArea";
 import { useMediaCarousel } from "@/hooks/create/useMediaCarousel";
@@ -86,11 +81,38 @@ export function MobileCreateForm({
 
           {activeStep === 1 && (
             <Stack gap={2}>
-              <HobbyFormInput />
+              <FormInput
+                field="hobby"
+                label="Hobby"
+                placeholder="e.g. Pokémon cards"
+                size="small"
+                helperText="One hobby per post."
+              />
 
-              <TitleFormInput />
+              <FormInput
+                field="title"
+                label="Title"
+                placeholder="e.g. Mint Charizard holo, PSA 9"
+                size="small"
+              />
 
-              <DescriptionFormInput rows={7} />
+              <FormInput
+                field="description"
+                label="Description"
+                placeholder="Describe condition, notable details, and what makes this collectible special"
+                multiline
+                rows={7}
+                size="small"
+                slotProps={{
+                  htmlInput: {
+                    sx: {
+                      resize: "vertical",
+                      overflow: "auto",
+                      maxHeight: 250,
+                    },
+                  },
+                }}
+              />
 
               <TradeOptionsFormInput />
             </Stack>

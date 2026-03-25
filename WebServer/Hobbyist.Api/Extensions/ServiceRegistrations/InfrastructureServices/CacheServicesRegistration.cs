@@ -1,6 +1,6 @@
 using Hobbyist.Api.Services.CacheServices;
 
-namespace Hobbyist.Api.Extensions.ServiceRegistrations;
+namespace Hobbyist.Api.Extensions.ServiceRegistrations.InfrastructureServices;
 
 public static class CacheServicesRegistration
 {
