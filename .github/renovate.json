@@ -1,0 +1,37 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "labels": ["dependencies"],
+  "dependencyDashboard": true,
+  "prConcurrentLimit": 10,
+  "schedule": ["at any time"],
+  "rangeStrategy": "bump",
+  "ignoreDeps": ["zod"],
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["at any time"]
+  },
+  "packageRules": [
+    {
+      "description": "Disable Expo/React Native ecosystem updates in Mobile package",
+      "matchManagers": ["npm"],
+      "matchFileNames": ["Mobile/package.json"],
+      "matchPackageNames": [
+        "react-native",
+        "expo{/,}**",
+        "@expo/{/,}**",
+        "react-native{/,}**",
+        "@react-native/{/,}**",
+        "@react-navigation/{/,}**"
+      ],
+      "enabled": false
+    },
+    {
+      "description": "Auto-merge non-major updates for Website and Server only",
+      "matchFileNames": ["Website/package.json", "Server/package.json"],
+      "matchUpdateTypes": ["minor", "patch", "digest"],
+      "automerge": true,
+      "automergeType": "pr"
+    }
+  ]
+}
