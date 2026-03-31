@@ -8,9 +8,15 @@ overrides:
   react: 19.2.0
   react-dom: 19.2.0
   zod: 3.25.76
+<<<<<<< renovate/tar-7.x
   tar: ">=7.5.13"
   seroval: ">=1.4.1"
   undici: ">=7.24.0"
+=======
+  tar: '>=7.5.11'
+  seroval: '>=1.4.1'
+  undici: '>=7.24.6'
+>>>>>>> main
   minimatch: 10.2.3
   rollup: ">=4.59.0"
   flatted: ">=3.4.0"
@@ -9285,12 +9291,18 @@ packages:
         integrity: sha512-AsuCzffGHJybSaRrmr5eHr81mwJU3kjw6M+uprWvCXiNeN9SOGwQ3Jn8jb8m3Z6izVgknn1R0FTCEAP2QrLY/w==,
       }
 
+<<<<<<< renovate/tar-7.x
   undici@7.24.3:
     resolution:
       {
         integrity: sha512-eJdUmK/Wrx2d+mnWWmwwLRyA7OQCkLap60sk3dOK4ViZR7DKwwptwuIvFBg2HaiP9ESaEdhtpSymQPvytpmkCA==,
       }
     engines: { node: ">=20.18.1" }
+=======
+  undici@7.24.6:
+    resolution: {integrity: sha512-Xi4agocCbRzt0yYMZGMA6ApD7gvtUFaxm4ZmeacWI4cZxaF6C+8I8QfofC20NAePiB/IcvZmzkJ7XPa471AEtA==}
+    engines: {node: '>=20.18.1'}
+>>>>>>> main
 
   unicode-canonical-property-names-ecmascript@2.0.1:
     resolution:
@@ -14639,7 +14651,7 @@ snapshots:
       saxes: 6.0.0
       symbol-tree: 3.2.4
       tough-cookie: 6.0.1
-      undici: 7.24.3
+      undici: 7.24.6
       w3c-xmlserializer: 5.0.0
       webidl-conversions: 8.0.1
       whatwg-mimetype: 5.0.0
@@ -16153,7 +16165,7 @@ snapshots:
 
   undici-types@7.18.2: {}
 
-  undici@7.24.3: {}
+  undici@7.24.6: {}
 
   unicode-canonical-property-names-ecmascript@2.0.1: {}
 
