@@ -4,12 +4,12 @@
   "labels": ["dependencies"],
   "dependencyDashboard": true,
   "prConcurrentLimit": 10,
-  "schedule": ["at any time"],
+  "schedule": ["before 6am on monday"],
   "rangeStrategy": "bump",
   "ignoreDeps": ["zod"],
   "lockFileMaintenance": {
     "enabled": true,
-    "schedule": ["at any time"]
+    "schedule": ["before 6am on monday"]
   },
   "packageRules": [
     {
@@ -27,9 +27,9 @@
       "enabled": false
     },
     {
-      "description": "Auto-merge non-major updates for Website and Server only",
-      "matchFileNames": ["Website/package.json", "Server/package.json"],
-      "matchUpdateTypes": ["minor", "patch", "digest"],
+      "description": "Auto-merge all non-major npm and NuGet updates",
+      "matchManagers": ["npm", "nuget"],
+      "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
       "automerge": true,
       "automergeType": "pr"
     }
