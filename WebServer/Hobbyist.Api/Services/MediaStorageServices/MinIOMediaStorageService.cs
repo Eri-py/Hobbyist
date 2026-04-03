@@ -1,10 +1,9 @@
-using System;
 using Hobbyist.Api.Dtos;
 using Hobbyist.Common;
 
 namespace Hobbyist.Api.Services.MediaStorageServices;
 
-public class MediaStorageService : IMediaStorageService
+public class MinIOMediaStorageService : IMediaStorageService
 {
     public Task<Result> DeleteAsync(string objectKey, CancellationToken ct)
     {

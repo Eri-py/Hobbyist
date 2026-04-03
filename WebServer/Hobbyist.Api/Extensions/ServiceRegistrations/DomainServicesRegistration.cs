@@ -19,7 +19,6 @@ public static class DomainServicesRegistration
         services.AddScoped<ITokenService, JwtService>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IOnboardingRecommendationService, OnboardingRecommendationService>();
-        services.AddScoped<IMediaStorageService, MediaStorageService>();
         services.AddScoped<IPostService, PostService>();
     }
 }
