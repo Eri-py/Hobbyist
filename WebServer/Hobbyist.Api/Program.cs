@@ -53,7 +53,7 @@ var forwardedHeadersOptions = new ForwardedHeadersOptions
 
 // Railway's proxy is not loopback, so clear the default restrictions so
 // forwarded headers from the edge proxy are honored.
-forwardedHeadersOptions.KnownNetworks.Clear();
+forwardedHeadersOptions.KnownIPNetworks.Clear();
 forwardedHeadersOptions.KnownProxies.Clear();
 
 app.UseForwardedHeaders(forwardedHeadersOptions);
