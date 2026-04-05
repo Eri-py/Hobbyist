@@ -4,7 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Hobbyist.Api.Data;
 using Hobbyist.Api.Data.Entities;
-using Hobbyist.Api.Dtos;
+using Hobbyist.Api.Dtos.Auth;
 using Hobbyist.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -32,14 +32,14 @@ public class JwtService(
         // Generate signing credentials and set expiration
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Secret"]!));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-        var expiresAt = DateTime.UtcNow.AddMinutes(tokenValidForMinutes);
+        var expiresAt = DateTimeOffset.UtcNow.AddMinutes(tokenValidForMinutes);
 
         // Create and write JWT token
         var tokenDescriptor = new JwtSecurityToken(
             issuer: configuration["Jwt:Issuer"],
             audience: configuration["Jwt:Audience"],
             claims: claims,
-            expires: expiresAt,
+            expires: expiresAt.UtcDateTime,
             signingCredentials: creds
         );
 
@@ -50,7 +50,9 @@ public class JwtService(
         };
     }
 
-    private static (string Value, DateTime ExpiresAt) GenerateRefreshToken(int tokenValidForDays)
+    private static (string Value, DateTimeOffset ExpiresAt) GenerateRefreshToken(
+        int tokenValidForDays
+    )
     {
         // Generate cryptographically secure random refresh token
         const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -60,7 +62,7 @@ public class JwtService(
             token.Append(chars[CryptoRandom.NextInt() % chars.Length]);
         }
 
-        return (token.ToString(), DateTime.UtcNow.AddDays(tokenValidForDays));
+        return (token.ToString(), DateTimeOffset.UtcNow.AddDays(tokenValidForDays));
     }
 
     public string HashToken(string token) =>
@@ -74,7 +76,7 @@ public class JwtService(
             TokenHash = HashToken(refreshTokenDetails.Value),
             TokenExpiresAt = refreshTokenDetails.ExpiresAt,
             UserId = userId,
-            CreatedAt = DateTime.UtcNow,
+            CreatedAt = DateTimeOffset.UtcNow,
         };
 
         return new RefreshTokenDetails
@@ -100,7 +102,7 @@ public class JwtService(
             if (
                 tokenEntry is null
                 || tokenEntry.User is null
-                || tokenEntry.TokenExpiresAt < DateTime.UtcNow
+                || tokenEntry.TokenExpiresAt < DateTimeOffset.UtcNow
             )
             {
                 logger.LogWarning(

@@ -34,7 +34,7 @@ namespace Hobbyist.Api.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Hobbies");
+                    b.ToTable("Hobbies", (string)null);
 
                     b.HasData(
                         new
@@ -152,7 +152,7 @@ namespace Hobbyist.Api.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("RefreshTokens");
+                    b.ToTable("RefreshTokens", (string)null);
                 });
 
             modelBuilder.Entity("Hobbyist.Api.Data.Entities.UserEntity", b =>
@@ -195,7 +195,7 @@ namespace Hobbyist.Api.Migrations
                     b.HasIndex("Username")
                         .IsUnique();
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("UserHobbies", b =>
@@ -210,7 +210,7 @@ namespace Hobbyist.Api.Migrations
 
                     b.HasIndex("UsersId");
 
-                    b.ToTable("UserHobbies");
+                    b.ToTable("UserHobbies", (string)null);
                 });
 
             modelBuilder.Entity("Hobbyist.Api.Data.Entities.RefreshTokenEntity", b =>

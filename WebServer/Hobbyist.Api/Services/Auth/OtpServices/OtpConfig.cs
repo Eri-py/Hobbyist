@@ -28,4 +28,4 @@ public static class OtpConfig
     public const int OtpRateLimitWindowMinutes = 10;
 }
 
-public record OtpRateLimitEntry(int Count, DateTime WindowExpiry);
+public record OtpRateLimitEntry(int Count, DateTimeOffset WindowExpiry);

@@ -1,6 +1,6 @@
 ﻿using Hobbyist.Api.Data;
 using Hobbyist.Api.Data.Entities;
-using Hobbyist.Api.Dtos;
+using Hobbyist.Api.Dtos.Auth;
 using Hobbyist.Api.Services.Auth.OtpServices;
 using Hobbyist.Api.Services.Auth.TokenServices;
 using Hobbyist.Common;
@@ -102,7 +102,7 @@ public class SignUpService(
                 Firstname = request.Firstname,
                 Lastname = request.Lastname,
                 DateOfBirth = DateOnly.Parse(request.DateOfBirth),
-                CreatedAt = DateTime.UtcNow,
+                CreatedAt = DateTimeOffset.UtcNow,
             };
             context.Users.Add(user);
 

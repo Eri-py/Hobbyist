@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Hobbyist.Api.Dtos;
+namespace Hobbyist.Api.Dtos.Auth;
 
 /// <summary>
 /// Request to verify email address using OTP code during sign-up.
@@ -32,5 +32,5 @@ public record class ResendOtpRequest
 public record OtpResponse
 {
     [Required]
-    public required DateTime OtpExpiresAt { get; set; }
+    public required DateTimeOffset OtpExpiresAt { get; set; }
 }

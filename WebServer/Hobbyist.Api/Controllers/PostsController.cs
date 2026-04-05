@@ -1,6 +1,6 @@
-using Hobbyist.Api.Dtos;
+using Hobbyist.Api.Dtos.Posts;
 using Hobbyist.Api.Extensions;
-using Hobbyist.Api.Services.PostServices;
+using Hobbyist.Api.Services.PostServices.CreatePostServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,7 +8,7 @@ namespace Hobbyist.Api.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class PostsController(IPostService postService) : ControllerBase
+public class PostsController(ICreatePostService createPostService) : ControllerBase
 {
     [HttpPost("create")]
     [Authorize]
@@ -19,7 +19,7 @@ public class PostsController(IPostService postService) : ControllerBase
     {
         var userId = User.GetUserId();
 
-        var result = await postService.CreatePostAsync(request, userId, ct);
+        var result = await createPostService.CreatePostAsync(request, userId, ct);
         return result.ToActionResult();
     }
 }

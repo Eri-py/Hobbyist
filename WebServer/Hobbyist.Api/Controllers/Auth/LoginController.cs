@@ -1,4 +1,4 @@
-﻿using Hobbyist.Api.Dtos;
+﻿using Hobbyist.Api.Dtos.Auth;
 using Hobbyist.Api.Extensions;
 using Hobbyist.Api.Services.Auth.LoginServices;
 using Hobbyist.Common;

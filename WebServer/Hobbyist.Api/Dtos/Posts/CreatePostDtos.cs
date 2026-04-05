@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Hobbyist.Api.Dtos;
+namespace Hobbyist.Api.Dtos.Posts;
 
 public record class CreatePostRequest
 {
@@ -23,20 +23,6 @@ public record class CreatePostRequest
 
     [Required]
     public required IFormFile[] Media { get; set; }
-}
-
-public record class PostMediaReference
-{
-    [Required]
-    public required string ObjectKey { get; set; }
-
-    [Required]
-    public required string Url { get; set; }
-
-    [Required]
-    public required string ContentType { get; set; }
-
-    public required long SizeBytes { get; set; }
 }
 
 public record class CreatePostResponse
@@ -66,24 +52,7 @@ public record class CreatePostResponse
     public required DateTimeOffset CreatedAt { get; set; }
 }
 
-public record class UploadMediaRequest
-{
-    [Required]
-    public required Stream Content { get; set; }
-
-    [Required]
-    public required string ObjectKey { get; set; }
-
-    [Required]
-    public required string FileName { get; set; }
-
-    [Required]
-    public required string ContentType { get; set; }
-
-    public required long ContentLength { get; set; }
-}
-
-public record class UploadMediaResponse
+public record class PostMediaReference
 {
     [Required]
     public required string ObjectKey { get; set; }
