@@ -1,6 +1,7 @@
 ﻿using Hobbyist.Api.Data;
 using Hobbyist.Api.Data.Entities;
 using Hobbyist.Api.Dtos.Auth;
+using Hobbyist.Api.Extensions;
 using Hobbyist.Api.Services.Auth.OtpServices;
 using Hobbyist.Api.Services.Auth.TokenServices;
 using Hobbyist.Common;
@@ -30,9 +31,9 @@ public class SignUpService(
         if (exists)
         {
             logger.LogWarning(
-                "Sign-up conflict for username '{Username}' / email '{Email}': {Error}",
+                "Sign-up conflict for username '{Username}' / email hash '{EmailHash}': {Error}",
                 username,
-                email,
+                logger.Hash(email),
                 errorMessage
             );
             return Result<OtpResponse>.Conflict(errorMessage);
@@ -138,7 +139,11 @@ public class SignUpService(
         catch (Exception ex)
         {
             await transaction.RollbackAsync(ct);
-            logger.LogError(ex, "Transaction failed during sign-up completion for {Email}", email);
+            logger.LogError(
+                ex,
+                "Transaction failed during sign-up completion for email hash '{EmailHash}'",
+                logger.Hash(email)
+            );
             return Result<AuthResult>.InternalServerError(ErrorMessages.UnexpectedError);
         }
     }

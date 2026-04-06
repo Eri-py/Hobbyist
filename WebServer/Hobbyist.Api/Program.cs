@@ -1,6 +1,5 @@
 using Hobbyist.Api.Extensions;
 using Hobbyist.Api.Extensions.ServiceRegistrations;
-using Hobbyist.Api.Extensions.ServiceRegistrations.InfrastructureServices;
 using Hobbyist.Api.Middleware;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.FeatureManagement;
@@ -56,6 +55,7 @@ var forwardedHeadersOptions = new ForwardedHeadersOptions
 forwardedHeadersOptions.KnownIPNetworks.Clear();
 forwardedHeadersOptions.KnownProxies.Clear();
 
+app.UseLogHasher();
 app.UseForwardedHeaders(forwardedHeadersOptions);
 app.UseCors(builder.Configuration.GetCorsPolicy());
 app.UseMiddleware<ExceptionHandlingMiddleware>();

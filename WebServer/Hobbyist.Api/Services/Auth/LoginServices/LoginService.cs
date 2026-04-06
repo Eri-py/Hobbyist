@@ -1,6 +1,7 @@
 ﻿using Hobbyist.Api.Data;
 using Hobbyist.Api.Data.Entities;
 using Hobbyist.Api.Dtos.Auth;
+using Hobbyist.Api.Extensions;
 using Hobbyist.Api.Services.Auth.OtpServices;
 using Hobbyist.Api.Services.Auth.TokenServices;
 using Hobbyist.Common;
@@ -32,7 +33,10 @@ public class LoginService(
         );
         if (user is null)
         {
-            logger.LogWarning("Login attempt with unknown identifier '{Identifier}'", identifier);
+            logger.LogWarning(
+                "Login attempt with unknown identifier hash '{IdentifierHash}'",
+                logger.Hash(identifier)
+            );
             return Result<StartLoginResponse>.NotFound(ErrorMessages.InvalidLoginCredentials);
         }
 
@@ -45,7 +49,10 @@ public class LoginService(
 
         if (verifyPasswordResult == PasswordVerificationResult.Failed)
         {
-            logger.LogWarning("Invalid password attempt for {Email}", user.Email);
+            logger.LogWarning(
+                "Invalid password attempt for email hash '{EmailHash}'",
+                logger.Hash(user.Email)
+            );
             return Result<StartLoginResponse>.NotFound(ErrorMessages.InvalidLoginCredentials);
         }
 
@@ -120,8 +127,8 @@ public class LoginService(
             await transaction.RollbackAsync(ct);
             logger.LogError(
                 ex,
-                "Transaction failed during login completion for {Email}",
-                user?.Email
+                "Transaction failed during login completion for email hash '{EmailHash}'",
+                logger.Hash(user?.Email)
             );
             return Result<AuthResult>.InternalServerError(ErrorMessages.UnexpectedError);
         }

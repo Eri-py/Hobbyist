@@ -1,0 +1,24 @@
+using Hobbyist.Api.Services.LoggingHashServices;
+
+namespace Hobbyist.Api.Extensions;
+
+public static class LoggerExtensions
+{
+    private static ILogHasher? _configuredHasher;
+
+    public static void ConfigureHasher(ILogHasher hasher)
+    {
+        ArgumentNullException.ThrowIfNull(hasher);
+        _configuredHasher = hasher;
+    }
+
+    public static string Hash(this ILogger _, string? value)
+    {
+        if (_configuredHasher is null)
+            throw new InvalidOperationException(
+                "Logger hasher is not configured. Call LoggerExtensions.ConfigureHasher(...) at startup."
+            );
+
+        return _configuredHasher.Hash(value);
+    }
+}

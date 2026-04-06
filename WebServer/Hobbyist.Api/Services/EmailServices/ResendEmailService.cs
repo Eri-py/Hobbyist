@@ -1,3 +1,4 @@
+using Hobbyist.Api.Extensions;
 using Hobbyist.Common;
 using MailKit.Net.Smtp;
 using MailKit.Security;
@@ -15,6 +16,8 @@ public class ResendEmailService(IConfiguration configuration, ILogger<ResendEmai
         CancellationToken ct
     )
     {
+        var normalizedTo = to.Trim().ToLowerInvariant();
+
         try
         {
             var message = new MimeMessage();
@@ -24,7 +27,7 @@ public class ResendEmailService(IConfiguration configuration, ILogger<ResendEmai
                     configuration["Resend:FromAddress"]!
                 )
             );
-            message.To.Add(MailboxAddress.Parse(to));
+            message.To.Add(MailboxAddress.Parse(normalizedTo));
             message.Subject = subject;
 
             var bodyBuilder = new BodyBuilder { HtmlBody = body };
@@ -48,7 +51,7 @@ public class ResendEmailService(IConfiguration configuration, ILogger<ResendEmai
             logger.LogError(
                 ex,
                 "Failed to send email to {To} with subject '{Subject}'",
-                to,
+                logger.Hash(normalizedTo),
                 subject
             );
             return Result.InternalServerError("An unexpected error has occured");
