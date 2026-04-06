@@ -14,8 +14,6 @@ public class CreatePostService(
     ILogger<CreatePostService> logger
 ) : ICreatePostService
 {
-    private static readonly TimeSpan ReadUrlTtl = TimeSpan.FromMinutes(15);
-
     public async Task<Result<CreatePostResponse>> CreatePostAsync(
         CreatePostRequest request,
         string userId,
@@ -31,71 +29,93 @@ public class CreatePostService(
         if (!Guid.TryParse(userId, out var userGuid))
             return Result<CreatePostResponse>.BadRequest("Invalid user identifier.");
 
+        // Generate server-owned identifiers/timestamps once so all writes stay consistent.
         var postId = Guid.NewGuid();
         var createdAt = DateTimeOffset.UtcNow;
 
-        var mediaStoreResult = await StorePostMediaAsync(request.Media, userId, postId, ct);
+        // Keep uploaded keys for compensation if DB persistence fails later.
+        var uploadedObjectKeys = new List<string>(request.Media.Length);
+        var mediaStoreResult = await StorePostMediaAsync(
+            request.Media,
+            userId,
+            postId,
+            uploadedObjectKeys,
+            ct
+        );
         if (!mediaStoreResult.IsSuccess)
             return Result<CreatePostResponse>.FromError(mediaStoreResult);
 
-        var mediaReferences = mediaStoreResult.Content!;
-
+        // Persist post metadata only after media is safely stored.
         var postStoreResult = await StorePostDetailsAsync(request, userGuid, postId, createdAt, ct);
         if (!postStoreResult.IsSuccess)
         {
-            await CleanupUploadedMediaAsync(
-                mediaReferences.Select(reference => reference.ObjectKey),
-                ct
-            );
+            // Best-effort rollback to avoid orphaned media objects.
+            await CleanupUploadedMediaAsync(uploadedObjectKeys, ct);
             return Result<CreatePostResponse>.FromError(postStoreResult);
         }
 
-        return Result<CreatePostResponse>.Success(
-            new CreatePostResponse
-            {
-                PostId = postId,
-                UserId = userId,
-                Hobby = request.Hobby,
-                Title = request.Title,
-                Description = request.Description,
-                AvailableForTrade = request.AvailableForTrade,
-                LookingFor = request.LookingFor,
-                Media = mediaReferences,
-                CreatedAt = createdAt,
-            }
-        );
+        return Result<CreatePostResponse>.Success(new CreatePostResponse { PostId = postId });
     }
 
-    public async Task<Result<List<PostMediaReference>>> StorePostMediaAsync(
+    public async Task<Result> StorePostMediaAsync(
         IFormFile[] media,
         string userId,
         Guid postId,
+        ICollection<string> uploadedObjectKeys,
         CancellationToken ct
     )
     {
-        var uploadedObjectKeys = new List<string>(media.Length);
-        var mediaReferences = new List<PostMediaReference>(media.Length);
-
-        foreach (var file in media)
+        for (var i = 0; i < media.Length; i++)
         {
-            var mediaReferenceResult = await UploadAndBuildMediaReferenceAsync(
-                file,
+            var file = media[i];
+            var objectKey = mediaStorageService.BuildObjectKey(
                 userId,
                 postId,
+                i + 1,
+                file.FileName
+            );
+
+            await using var contentStream = file.OpenReadStream();
+            var uploadResult = await mediaStorageService.UploadAsync(
+                new UploadMediaRequest
+                {
+                    Content = contentStream,
+                    ObjectKey = objectKey,
+                    FileName = file.FileName,
+                    ContentType = file.ContentType,
+                    ContentLength = file.Length,
+                },
                 ct
             );
-            if (!mediaReferenceResult.IsSuccess)
+            if (!uploadResult.IsSuccess)
             {
+                // Upload failed mid-batch: cleanup anything that was already uploaded.
                 await CleanupUploadedMediaAsync(uploadedObjectKeys, ct);
-                return Result<List<PostMediaReference>>.FromError(mediaReferenceResult);
+                return uploadResult.ResultType switch
+                {
+                    ResultTypes.BadRequest => Result.BadRequest(
+                        uploadResult.Message ?? string.Empty
+                    ),
+                    ResultTypes.Unauthorized => Result.Unauthorized(
+                        uploadResult.Message ?? string.Empty
+                    ),
+                    ResultTypes.NotFound => Result.NotFound(uploadResult.Message ?? string.Empty),
+                    ResultTypes.Conflict => Result.Conflict(uploadResult.Message ?? string.Empty),
+                    ResultTypes.TooManyRequests => Result.TooManyRequests(
+                        uploadResult.Message ?? string.Empty
+                    ),
+                    _ => Result.InternalServerError(
+                        uploadResult.Message ?? ErrorMessages.UnexpectedError
+                    ),
+                };
             }
 
-            var mediaReference = mediaReferenceResult.Content!;
-            uploadedObjectKeys.Add(mediaReference.ObjectKey);
-            mediaReferences.Add(mediaReference);
+            var uploadedMedia = uploadResult.Content!;
+            // Track immediately so rollback includes this file if URL generation fails.
+            uploadedObjectKeys.Add(uploadedMedia.ObjectKey);
         }
 
-        return Result<List<PostMediaReference>>.Success(mediaReferences);
+        return Result.NoContent();
     }
 
     public async Task<Result> StorePostDetailsAsync(
@@ -140,57 +160,12 @@ public class CreatePostService(
         return Result.NoContent();
     }
 
-    private async Task<Result<PostMediaReference>> UploadAndBuildMediaReferenceAsync(
-        IFormFile file,
-        string userId,
-        Guid postId,
-        CancellationToken ct
-    )
-    {
-        var objectKey = mediaStorageService.BuildObjectKey(userId, postId, file.FileName);
-
-        await using var contentStream = file.OpenReadStream();
-        var uploadResult = await mediaStorageService.UploadAsync(
-            new UploadMediaRequest
-            {
-                Content = contentStream,
-                ObjectKey = objectKey,
-                FileName = file.FileName,
-                ContentType = file.ContentType,
-                ContentLength = file.Length,
-            },
-            ct
-        );
-
-        if (!uploadResult.IsSuccess)
-            return Result<PostMediaReference>.FromError(uploadResult);
-
-        var uploadedMedia = uploadResult.Content!;
-        var readUrlResult = await mediaStorageService.GetReadUrlAsync(
-            uploadedMedia.ObjectKey,
-            ReadUrlTtl,
-            ct
-        );
-
-        if (!readUrlResult.IsSuccess)
-            return Result<PostMediaReference>.FromError(readUrlResult);
-
-        return Result<PostMediaReference>.Success(
-            new PostMediaReference
-            {
-                ObjectKey = uploadedMedia.ObjectKey,
-                Url = readUrlResult.Content!,
-                ContentType = uploadedMedia.ContentType,
-                SizeBytes = uploadedMedia.SizeBytes,
-            }
-        );
-    }
-
     private async Task CleanupUploadedMediaAsync(
         IEnumerable<string> objectKeys,
         CancellationToken ct
     )
     {
+        // Cleanup is best-effort: log and continue so one delete failure does not block others.
         foreach (var objectKey in objectKeys)
         {
             try

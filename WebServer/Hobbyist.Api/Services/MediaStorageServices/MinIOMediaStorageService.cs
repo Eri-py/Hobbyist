@@ -142,10 +142,16 @@ public class MinIOMediaStorageService(
         }
     }
 
-    public string BuildObjectKey(string userId, Guid postId, string fileName)
+    public string BuildObjectKey(string userId, Guid postId, int mediaIndex, string fileName)
     {
+        if (mediaIndex <= 0)
+            throw new ArgumentOutOfRangeException(
+                nameof(mediaIndex),
+                "Media index must be greater than zero."
+            );
+
         var extension = Path.GetExtension(fileName);
         var safeExtension = string.IsNullOrWhiteSpace(extension) ? string.Empty : extension;
-        return $"posts/{userId}/{postId:N}/{Guid.NewGuid():N}{safeExtension}";
+        return $"{userId}/{postId:N}/{mediaIndex:D3}{safeExtension}";
     }
 }

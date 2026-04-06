@@ -1,5 +1,5 @@
 using Hobbyist.Api.Data.Entities;
-using Hobbyist.Api.Dtos;
+using Hobbyist.Api.Dtos.Auth;
 using Hobbyist.Api.Services.Auth.OtpServices;
 using Hobbyist.Api.Services.Auth.SignUpServices;
 using Hobbyist.Api.Services.Auth.TokenServices;

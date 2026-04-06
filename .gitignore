@@ -13,6 +13,10 @@ certs/
 *.sln.docstates
 *.userprefs
 
+# Agent workspace context files
+.github/AGENTS.md
+.github/CODEBASE_CONTEXT.md
+
 # ============================================
 # NODE.JS / VITE
 # ============================================

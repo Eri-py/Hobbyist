@@ -23,20 +23,21 @@ public interface ICreatePostService
     );
 
     /// <summary>
-    /// Uploads all media files for a post and produces post-facing media references
-    /// (object key, read URL, content type, and size).
+    /// Uploads all media files for a post while collecting uploaded object keys for rollback.
     /// </summary>
     /// <param name="media">Files attached to the create-post request.</param>
     /// <param name="userId">Owner user identifier used to scope storage keys.</param>
     /// <param name="postId">Post identifier used to group media under one post path.</param>
+    /// <param name="uploadedObjectKeys">Mutable collection receiving uploaded storage object keys.</param>
     /// <param name="ct">Cancellation token for cooperative cancellation.</param>
     /// <returns>
-    /// Success with media references for all files, or an error result if any upload/URL step fails.
+    /// <see cref="Result.NoContent"/> when all uploads succeed, or an error result if any upload fails.
     /// </returns>
-    Task<Result<List<PostMediaReference>>> StorePostMediaAsync(
+    Task<Result> StorePostMediaAsync(
         IFormFile[] media,
         string userId,
         Guid postId,
+        ICollection<string> uploadedObjectKeys,
         CancellationToken ct
     );
 

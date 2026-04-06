@@ -54,13 +54,13 @@ public class OtpServiceTests
     [Test]
     public void CreateOtp_SetsCorrectExpirationTime()
     {
-        // Act
         var result = _otpService.CreateOtp(OtpConfig.OtpValidForMinutes);
 
         // Assert
         Assert.That(
             result.ExpiresAt,
-            Is.EqualTo(DateTime.UtcNow.AddMinutes(OtpConfig.OtpValidForMinutes)).Within(5).Seconds
+            Is.EqualTo(DateTimeOffset.UtcNow.AddMinutes(OtpConfig.OtpValidForMinutes))
+                .Within(TimeSpan.FromSeconds(5))
         );
     }
 
@@ -315,6 +315,7 @@ public class OtpServiceTests
     public async Task SendOtpAsync_ReturnsSuccessWithExpirationTime()
     {
         // Arrange
+        var expected = DateTimeOffset.UtcNow.AddMinutes(OtpConfig.OtpValidForMinutes);
         _mockEmailService
             .Setup(x =>
                 x.SendOtpEmailAsync(
@@ -336,10 +337,8 @@ public class OtpServiceTests
             Assert.That(result.ResultType, Is.EqualTo(ResultTypes.Success));
             Assert.That(result.Content, Is.Not.Null);
         }
-        Assert.That(
-            result.Content!.OtpExpiresAt,
-            Is.EqualTo(DateTime.UtcNow.AddMinutes(OtpConfig.OtpValidForMinutes)).Within(5).Seconds
-        );
+        var delta = (result.Content!.OtpExpiresAt - expected).Duration();
+        Assert.That(delta, Is.LessThanOrEqualTo(TimeSpan.FromSeconds(5)));
     }
 
     [Test]

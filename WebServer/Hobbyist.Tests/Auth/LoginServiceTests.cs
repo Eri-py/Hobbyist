@@ -1,5 +1,5 @@
 using Hobbyist.Api.Data.Entities;
-using Hobbyist.Api.Dtos;
+using Hobbyist.Api.Dtos.Auth;
 using Hobbyist.Api.Services.Auth.LoginServices;
 using Hobbyist.Api.Services.Auth.OtpServices;
 using Hobbyist.Api.Services.Auth.TokenServices;
@@ -337,7 +337,7 @@ public class LoginServiceTests : DatabaseTestBase
         var request = new CompleteLoginRequest { Identifier = "test@example.com", Otp = "123456" };
 
         var accessToken = "access_token";
-        var accessTokenExpiresAt = DateTime.UtcNow.AddMinutes(
+        var accessTokenExpiresAt = DateTimeOffset.UtcNow.AddMinutes(
             TokenConfig.AccessTokenValidForMinutes
         );
         var refreshToken = "refresh_token";

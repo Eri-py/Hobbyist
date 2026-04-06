@@ -30,5 +30,5 @@ public interface IMediaStorageService
     /// <summary>
     /// Builds an object key for storing a post media file.
     /// </summary>
-    string BuildObjectKey(string userId, Guid postId, string fileName);
+    string BuildObjectKey(string userId, Guid postId, int mediaIndex, string fileName);
 }

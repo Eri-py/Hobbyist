@@ -3,8 +3,7 @@ using Hobbyist.Api.Services.Auth.LoginServices;
 using Hobbyist.Api.Services.Auth.OtpServices;
 using Hobbyist.Api.Services.Auth.SignUpServices;
 using Hobbyist.Api.Services.Auth.TokenServices;
-using Hobbyist.Api.Services.MediaStorageServices;
-using Hobbyist.Api.Services.PostServices;
+using Hobbyist.Api.Services.PostServices.CreatePostServices;
 using Hobbyist.Api.Services.Recommendation.Onboarding;
 
 namespace Hobbyist.Api.Extensions.ServiceRegistrations;

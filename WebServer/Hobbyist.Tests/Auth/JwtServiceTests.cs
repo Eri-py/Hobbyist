@@ -80,7 +80,7 @@ public class JwtServiceTests : DatabaseTestBase
             Assert.That(result.Value, Is.Not.Null.And.Not.Empty);
             Assert.That(
                 result.ExpiresAt,
-                Is.EqualTo(DateTime.UtcNow.AddMinutes(TokenConfig.AccessTokenValidForMinutes))
+                Is.EqualTo(DateTimeOffset.UtcNow.AddMinutes(TokenConfig.AccessTokenValidForMinutes))
                     .Within(5)
                     .Seconds
             );
@@ -165,7 +165,7 @@ public class JwtServiceTests : DatabaseTestBase
 
         Assert.That(
             result.ExpiresAt,
-            Is.EqualTo(DateTime.UtcNow.AddDays(TokenConfig.RefreshTokenValidForDays))
+            Is.EqualTo(DateTimeOffset.UtcNow.AddDays(TokenConfig.RefreshTokenValidForDays))
                 .Within(5)
                 .Seconds
         );
@@ -354,13 +354,13 @@ public class JwtServiceTests : DatabaseTestBase
         {
             Assert.That(
                 result.Content.AccessTokenExpiresAt,
-                Is.EqualTo(DateTime.UtcNow.AddMinutes(TokenConfig.AccessTokenValidForMinutes))
+                Is.EqualTo(DateTimeOffset.UtcNow.AddMinutes(TokenConfig.AccessTokenValidForMinutes))
                     .Within(5)
                     .Seconds
             );
             Assert.That(
                 result.Content.RefreshTokenExpiresAt,
-                Is.EqualTo(DateTime.UtcNow.AddDays(TokenConfig.RefreshTokenValidForDays))
+                Is.EqualTo(DateTimeOffset.UtcNow.AddDays(TokenConfig.RefreshTokenValidForDays))
                     .Within(5)
                     .Seconds
             );
