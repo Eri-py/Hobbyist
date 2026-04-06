@@ -10,6 +10,7 @@ public class HobbyistDbContext(DbContextOptions<HobbyistDbContext> options) : Db
     public DbSet<UserEntity> Users { get; set; }
     public DbSet<RefreshTokenEntity> RefreshTokens { get; set; }
     public DbSet<HobbyEntity> Hobbies { get; set; }
+    public DbSet<PostEntity> Posts { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -25,5 +26,12 @@ public class HobbyistDbContext(DbContextOptions<HobbyistDbContext> options) : Db
             .HasMany(u => u.Hobbies)
             .WithMany(h => h.Users)
             .UsingEntity("UserHobbies");
+
+        builder
+            .Entity<UserEntity>()
+            .HasMany(u => u.Posts)
+            .WithOne(p => p.User)
+            .HasForeignKey(p => p.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

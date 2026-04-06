@@ -10,9 +10,10 @@ public class UserEntity
     public required string Firstname { get; set; }
     public required string Lastname { get; set; }
     public required DateOnly DateOfBirth { get; set; }
-    public required DateTime CreatedAt { get; set; }
+    public required DateTimeOffset CreatedAt { get; set; }
 
     // Navigation properties
     public ICollection<RefreshTokenEntity> RefreshTokens { get; set; } = [];
     public ICollection<HobbyEntity> Hobbies { get; set; } = [];
+    public ICollection<PostEntity> Posts { get; set; } = [];
 }

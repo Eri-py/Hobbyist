@@ -1,4 +1,6 @@
-namespace Hobbyist.Api.Extensions.ServiceRegistrations.InfrastructureServices;
+using Hobbyist.Api.Extensions.ServiceRegistrations.InfrastructureServices;
+
+namespace Hobbyist.Api.Extensions.ServiceRegistrations;
 
 public static class InfrastructureServicesRegistration
 {
@@ -14,5 +16,6 @@ public static class InfrastructureServicesRegistration
         services.AddEmailServices(environment);
         services.AddJwtAuthentication(configuration);
         services.AddAppCors(configuration);
+        services.AddMediaStorage(environment);
     }
 }

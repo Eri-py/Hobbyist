@@ -1,6 +1,6 @@
 ﻿using System.Security.Claims;
 using Hobbyist.Api.Data;
-using Hobbyist.Api.Dtos;
+using Hobbyist.Api.Dtos.Auth;
 using Hobbyist.Api.Extensions;
 using Hobbyist.Api.Services.Auth.TokenServices;
 using Hobbyist.Common;

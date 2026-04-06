@@ -1,5 +1,5 @@
 ﻿using Hobbyist.Api.Data.Entities;
-using Hobbyist.Api.Dtos;
+using Hobbyist.Api.Dtos.Auth;
 using Hobbyist.Common;
 
 namespace Hobbyist.Api.Services.Auth.TokenServices;
@@ -10,13 +10,13 @@ namespace Hobbyist.Api.Services.Auth.TokenServices;
 public record AccessTokenDetails
 {
     public required string Value { get; set; }
-    public required DateTime ExpiresAt { get; set; }
+    public required DateTimeOffset ExpiresAt { get; set; }
 }
 
 public record RefreshTokenDetails
 {
     public required string Value { get; set; }
-    public required DateTime ExpiresAt { get; set; }
+    public required DateTimeOffset ExpiresAt { get; set; }
     public required RefreshTokenEntity Entry { get; set; }
 }
 

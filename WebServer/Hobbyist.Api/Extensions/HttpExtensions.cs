@@ -1,5 +1,5 @@
 using System.Security.Claims;
-using Hobbyist.Api.Dtos;
+using Hobbyist.Api.Dtos.Auth;
 
 namespace Hobbyist.Api.Extensions;
 
@@ -55,7 +55,10 @@ public static class HttpExtensions
         );
     }
 
-    private static CookieOptions CreateAuthCookieOptions(string path, DateTime? expires = null) =>
+    private static CookieOptions CreateAuthCookieOptions(
+        string path,
+        DateTimeOffset? expires = null
+    ) =>
         new()
         {
             Path = path,

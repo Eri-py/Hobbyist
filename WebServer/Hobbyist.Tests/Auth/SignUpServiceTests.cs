@@ -1,8 +1,10 @@
 using Hobbyist.Api.Data.Entities;
-using Hobbyist.Api.Dtos;
+using Hobbyist.Api.Dtos.Auth;
+using Hobbyist.Api.Extensions;
 using Hobbyist.Api.Services.Auth.OtpServices;
 using Hobbyist.Api.Services.Auth.SignUpServices;
 using Hobbyist.Api.Services.Auth.TokenServices;
+using Hobbyist.Api.Services.LoggingHashServices;
 using Hobbyist.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -16,11 +18,15 @@ public class SignUpServiceTests : DatabaseTestBase
     private SignUpService _signUpService = null!;
     private Mock<IOtpService> _otpServiceMock = null!;
     private Mock<ITokenService> _tokenServiceMock = null!;
+    private Mock<ILogHasher> _logHasherMock = null!;
 
     protected override Task OnSetUpAsync()
     {
         _otpServiceMock = new Mock<IOtpService>();
         _tokenServiceMock = new Mock<ITokenService>();
+        _logHasherMock = new Mock<ILogHasher>();
+        _logHasherMock.Setup(x => x.Hash(It.IsAny<string?>())).Returns("hashed");
+        LoggerExtensions.ConfigureHasher(_logHasherMock.Object);
 
         _signUpService = new SignUpService(
             Context,

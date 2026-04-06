@@ -1,4 +1,4 @@
-﻿using Hobbyist.Api.Dtos;
+﻿using Hobbyist.Api.Dtos.Auth;
 using Hobbyist.Api.Services.CacheServices;
 using Hobbyist.Api.Services.EmailServices;
 using Hobbyist.Common;
@@ -15,7 +15,7 @@ public class OtpService(ICache cache, IEmailService emailService, ILogger<OtpSer
         var token = new string(
             [.. Enumerable.Range(0, 6).Select(_ => chars[CryptoRandom.NextInt() % chars.Length])]
         );
-        var expiresAt = DateTime.UtcNow.AddMinutes(otpValidForMinutes);
+        var expiresAt = DateTimeOffset.UtcNow.AddMinutes(otpValidForMinutes);
 
         return new OtpDetails { Value = token, ExpiresAt = expiresAt };
     }
@@ -131,12 +131,13 @@ public class OtpService(ICache cache, IEmailService emailService, ILogger<OtpSer
 
         // Anchor window on first request for fixed window.
         var windowExpiry =
-            entry?.WindowExpiry ?? DateTime.UtcNow.AddMinutes(OtpConfig.OtpRateLimitWindowMinutes);
+            entry?.WindowExpiry
+            ?? DateTimeOffset.UtcNow.AddMinutes(OtpConfig.OtpRateLimitWindowMinutes);
 
         cache.Set(
             rateLimitKey,
             new OtpRateLimitEntry(Count: (entry?.Count ?? 0) + 1, WindowExpiry: windowExpiry),
-            windowExpiry - DateTime.UtcNow
+            windowExpiry - DateTimeOffset.UtcNow
         );
     }
 

@@ -1,4 +1,4 @@
-﻿using Hobbyist.Api.Dtos;
+﻿using Hobbyist.Api.Dtos.Auth;
 using Hobbyist.Common;
 
 namespace Hobbyist.Api.Services.Auth.OtpServices;
@@ -9,7 +9,7 @@ namespace Hobbyist.Api.Services.Auth.OtpServices;
 public record OtpDetails
 {
     public required string Value { get; set; }
-    public required DateTime ExpiresAt { get; set; }
+    public required DateTimeOffset ExpiresAt { get; set; }
 }
 
 public interface IOtpService

@@ -1,3 +1,4 @@
+using Hobbyist.Api.Extensions;
 using Hobbyist.Common;
 using MailKit.Net.Smtp;
 using MailKit.Security;
@@ -5,7 +6,10 @@ using MimeKit;
 
 namespace Hobbyist.Api.Services.EmailServices;
 
-public class MailtrapEmailService(IConfiguration configuration) : IEmailService
+public class MailtrapEmailService(
+    IConfiguration configuration,
+    ILogger<MailtrapEmailService> logger
+) : IEmailService
 {
     public async Task<Result> SendEmailAsync(
         string to,
@@ -14,6 +18,8 @@ public class MailtrapEmailService(IConfiguration configuration) : IEmailService
         CancellationToken ct
     )
     {
+        var normalizedTo = to.Trim().ToLowerInvariant();
+
         try
         {
             var message = new MimeMessage();
@@ -23,7 +29,7 @@ public class MailtrapEmailService(IConfiguration configuration) : IEmailService
                     configuration["Mailtrap:FromAddress"]!
                 )
             );
-            message.To.Add(MailboxAddress.Parse(to));
+            message.To.Add(MailboxAddress.Parse(normalizedTo));
             message.Subject = subject;
 
             var bodyBuilder = new BodyBuilder { HtmlBody = body };
@@ -48,8 +54,14 @@ public class MailtrapEmailService(IConfiguration configuration) : IEmailService
 
             return Result.NoContent();
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            logger.LogError(
+                ex,
+                "Failed to send email to {To} with subject '{Subject}'",
+                logger.Hash(normalizedTo),
+                subject
+            );
             return Result.InternalServerError("An unexpected error has occured");
         }
     }

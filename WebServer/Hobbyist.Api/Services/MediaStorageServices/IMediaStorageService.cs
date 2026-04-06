@@ -6,7 +6,7 @@ namespace Hobbyist.Api.Services.MediaStorageServices;
 public interface IMediaStorageService
 {
     /// <summary>
-    /// Uploads a media object to storage and returns a reference containing object key and read URL.
+    /// Uploads a media object to storage and returns persisted object metadata.
     /// </summary>
     /// <param name="request">Upload payload and metadata</param>
     /// <returns><see cref="Result{T}"/> where T is <see cref="UploadMediaResponse"/></returns>
@@ -26,4 +26,9 @@ public interface IMediaStorageService
     /// <param name="ttl">Optional URL validity duration for pre-signed URLs</param>
     /// <returns><see cref="Result{T}"/> where T is the generated URL</returns>
     Task<Result<string>> GetReadUrlAsync(string objectKey, TimeSpan? ttl, CancellationToken ct);
+
+    /// <summary>
+    /// Builds an object key for storing a post media file.
+    /// </summary>
+    string BuildObjectKey(string userId, Guid postId, int mediaIndex, string fileName);
 }

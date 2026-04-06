@@ -1,8 +1,10 @@
 using Hobbyist.Api.Data.Entities;
-using Hobbyist.Api.Dtos;
+using Hobbyist.Api.Dtos.Auth;
+using Hobbyist.Api.Extensions;
 using Hobbyist.Api.Services.Auth.LoginServices;
 using Hobbyist.Api.Services.Auth.OtpServices;
 using Hobbyist.Api.Services.Auth.TokenServices;
+using Hobbyist.Api.Services.LoggingHashServices;
 using Hobbyist.Common;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -17,6 +19,7 @@ public class LoginServiceTests : DatabaseTestBase
     private LoginService _loginService = null!;
     private Mock<IOtpService> _otpServiceMock = null!;
     private Mock<ITokenService> _tokenServiceMock = null!;
+    private Mock<ILogHasher> _logHasherMock = null!;
     private UserEntity _testUser = null!;
     private readonly string _correctPassword = "CorrectPassword123!";
     private string _hashedCorrectPassword = null!;
@@ -46,6 +49,9 @@ public class LoginServiceTests : DatabaseTestBase
     {
         _otpServiceMock = new Mock<IOtpService>();
         _tokenServiceMock = new Mock<ITokenService>();
+        _logHasherMock = new Mock<ILogHasher>();
+        _logHasherMock.Setup(x => x.Hash(It.IsAny<string?>())).Returns("hashed");
+        LoggerExtensions.ConfigureHasher(_logHasherMock.Object);
 
         _loginService = new LoginService(
             Context,
@@ -337,7 +343,7 @@ public class LoginServiceTests : DatabaseTestBase
         var request = new CompleteLoginRequest { Identifier = "test@example.com", Otp = "123456" };
 
         var accessToken = "access_token";
-        var accessTokenExpiresAt = DateTime.UtcNow.AddMinutes(
+        var accessTokenExpiresAt = DateTimeOffset.UtcNow.AddMinutes(
             TokenConfig.AccessTokenValidForMinutes
         );
         var refreshToken = "refresh_token";

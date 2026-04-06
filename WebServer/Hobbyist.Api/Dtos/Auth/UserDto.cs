@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Hobbyist.Api.Dtos;
+namespace Hobbyist.Api.Dtos.Auth;
 
 /// <summary>
 /// Defines a transferable user. Stores non-sensitive information like the username, and name of user.
