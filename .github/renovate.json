@@ -4,12 +4,10 @@
   "labels": ["dependencies"],
   "dependencyDashboard": true,
   "prConcurrentLimit": 10,
-  "schedule": ["before 6am on monday"],
   "rangeStrategy": "bump",
   "ignoreDeps": ["zod"],
   "lockFileMaintenance": {
-    "enabled": true,
-    "schedule": ["before 6am on monday"]
+    "enabled": true
   },
   "packageRules": [
     {
