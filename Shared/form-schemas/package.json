@@ -12,7 +12,11 @@
     "typecheck": "tsc --noEmit",
     "clean": "rimraf node_modules"
   },
-  "dependencies": {
+  "peerDependencies": {
+    "date-fns": "^4.0.0",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
     "date-fns": "^4.1.0",
     "zod": "^4.3.6"
   }
