@@ -13,6 +13,8 @@
     "reset-project": "node ./scripts/reset-project.js"
   },
   "dependencies": {
+    "@expo/dom-webview": "^55.0.5",
+    "@expo/metro-runtime": "~55.0.9",
     "@expo/vector-icons": "^15.1.1",
     "@hobbyist/hooks": "workspace:*",
     "@hobbyist/types": "workspace:*",
