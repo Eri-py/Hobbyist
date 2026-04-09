@@ -1,0 +1,23 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "packageRules": [
+    {
+      "matchPackageNames": [
+        "zod",
+        "react-native",
+        "expo",
+        "expo-*",
+        "@expo/*",
+        "@react-native/*",
+        "@react-navigation/*",
+        "react-native-*"
+      ],
+      "enabled": false
+    },
+    {
+      "matchUpdateTypes": ["minor", "patch", "pin", "digest", "lockFileMaintenance"],
+      "automerge": true
+    }
+  ]
+}
