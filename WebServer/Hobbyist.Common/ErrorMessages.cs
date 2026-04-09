@@ -35,6 +35,12 @@ public static class ErrorMessages
     public const string TooManyOtpRequests =
         "Too many verification code requests. Please wait before trying again.";
 
+    /// <summary>
+    /// Message shown when too many OTP verification attempts have been made.
+    /// </summary>
+    public const string TooManyOtpVerificationAttempts =
+        "Too many incorrect verification attempts. Please request a new code.";
+
     #endregion
 
     #region Conflict Errors
