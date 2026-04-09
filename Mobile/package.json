@@ -18,7 +18,7 @@
     "@hobbyist/hooks": "workspace:*",
     "@hobbyist/types": "workspace:*",
     "@hookform/resolvers": "^5.2.2",
-    "@react-native-community/datetimepicker": "8.6.0",
+    "@react-native-community/datetimepicker": "9.1.0",
     "@react-native-picker/picker": "2.11.4",
     "@react-navigation/bottom-tabs": "^7.10.1",
     "@react-navigation/drawer": "^7.7.2",
