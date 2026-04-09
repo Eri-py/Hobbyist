@@ -9,8 +9,7 @@
     "lint": "expo lint",
     "lint:fix": "expo lint --fix",
     "typecheck": "tsc --noEmit",
-    "clean": "rimraf node_modules .expo dist",
-    "reset-project": "node ./scripts/reset-project.js"
+    "clean": "rimraf node_modules .expo dist"
   },
   "dependencies": {
     "@expo/dom-webview": "^55.0.5",

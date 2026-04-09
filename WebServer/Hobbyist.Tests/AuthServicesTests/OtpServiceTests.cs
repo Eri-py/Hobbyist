@@ -66,7 +66,7 @@ public class OtpServiceTests
     public void CreateOtp_ReturnsSixDigitOtp()
     {
         // Act
-        var result = _otpService.CreateOtp(OtpConfig.OtpValidForMinutes);
+        var result = _otpService.CreateOtp(OtpConfig.OtpLifetimeMinutes);
 
         // Assert
         Assert.That(result.Value, Has.Length.EqualTo(6));
@@ -80,12 +80,12 @@ public class OtpServiceTests
     [Test]
     public void CreateOtp_SetsCorrectExpirationTime()
     {
-        var result = _otpService.CreateOtp(OtpConfig.OtpValidForMinutes);
+        var result = _otpService.CreateOtp(OtpConfig.OtpLifetimeMinutes);
 
         // Assert
         Assert.That(
             result.ExpiresAt,
-            Is.EqualTo(DateTimeOffset.UtcNow.AddMinutes(OtpConfig.OtpValidForMinutes))
+            Is.EqualTo(DateTimeOffset.UtcNow.AddMinutes(OtpConfig.OtpLifetimeMinutes))
                 .Within(TimeSpan.FromSeconds(5))
         );
     }
@@ -94,9 +94,9 @@ public class OtpServiceTests
     public void CreateOtp_GeneratesDifferentOtpsOnSuccessiveCalls()
     {
         // Act
-        var otp1 = _otpService.CreateOtp(OtpConfig.OtpValidForMinutes);
-        var otp2 = _otpService.CreateOtp(OtpConfig.OtpValidForMinutes);
-        var otp3 = _otpService.CreateOtp(OtpConfig.OtpValidForMinutes);
+        var otp1 = _otpService.CreateOtp(OtpConfig.OtpLifetimeMinutes);
+        var otp2 = _otpService.CreateOtp(OtpConfig.OtpLifetimeMinutes);
+        var otp3 = _otpService.CreateOtp(OtpConfig.OtpLifetimeMinutes);
 
         // Assert
         var otps = new[] { otp1.Value, otp2.Value, otp3.Value };
@@ -107,7 +107,7 @@ public class OtpServiceTests
     public void CreateOtp_AllCharactersAreDigits()
     {
         // Act
-        var result = _otpService.CreateOtp(OtpConfig.OtpValidForMinutes);
+        var result = _otpService.CreateOtp(OtpConfig.OtpLifetimeMinutes);
 
         // Assert
         foreach (var ch in result.Value)
@@ -251,7 +251,7 @@ public class OtpServiceTests
                 x.SendOtpEmailAsync(
                     It.IsAny<string>(),
                     It.IsAny<string>(),
-                    $"{OtpConfig.OtpValidForMinutes} minutes",
+                    $"{OtpConfig.OtpLifetimeMinutes} minutes",
                     It.IsAny<CancellationToken>()
                 ),
             Times.Once
@@ -329,7 +329,7 @@ public class OtpServiceTests
         Assert.That(capturedExpiration, Is.Not.Null);
         Assert.That(
             capturedExpiration!.Value.TotalMinutes,
-            Is.EqualTo(OtpConfig.OtpValidForMinutes).Within(0.1)
+            Is.EqualTo(OtpConfig.OtpLifetimeMinutes).Within(0.1)
         );
     }
 
@@ -337,7 +337,7 @@ public class OtpServiceTests
     public async Task SendOtpAsync_ReturnsSuccessWithExpirationTime()
     {
         // Arrange
-        var expected = DateTimeOffset.UtcNow.AddMinutes(OtpConfig.OtpValidForMinutes);
+        var expected = DateTimeOffset.UtcNow.AddMinutes(OtpConfig.OtpLifetimeMinutes);
         _mockEmailService
             .Setup(x =>
                 x.SendOtpEmailAsync(
@@ -424,7 +424,7 @@ public class OtpServiceTests
                 x.CheckLimit(
                     $"otp_send_{TestPurpose}",
                     HashEmail(TestEmail),
-                    OtpConfig.OtpMaxSendsPerWindow,
+                    OtpConfig.OtpMaxSendRequestsPerWindow,
                     ErrorMessages.TooManyOtpRequests
                 )
             )
@@ -451,7 +451,7 @@ public class OtpServiceTests
                 x.CheckLimit(
                     $"otp_send_{TestPurpose}",
                     HashEmail(TestEmail),
-                    OtpConfig.OtpMaxSendsPerWindow,
+                    OtpConfig.OtpMaxSendRequestsPerWindow,
                     ErrorMessages.TooManyOtpRequests
                 )
             )
@@ -468,6 +468,74 @@ public class OtpServiceTests
                     It.IsAny<string>(),
                     It.IsAny<string>(),
                     It.IsAny<CancellationToken>()
+                ),
+            Times.Never
+        );
+    }
+
+    [Test]
+    public async Task SendOtpAsync_WhenVerificationRateLimitExceeded_ReturnsTooManyRequests()
+    {
+        // Arrange
+        _mockRateLimiter
+            .Setup(x =>
+                x.CheckLimit(
+                    $"otp_verify_{TestPurpose}",
+                    HashEmail(TestEmail),
+                    OtpConfig.OtpMaxFailedVerificationAttempts,
+                    ErrorMessages.TooManyOtpVerificationAttempts
+                )
+            )
+            .Returns(Result.TooManyRequests(ErrorMessages.TooManyOtpVerificationAttempts));
+
+        // Act
+        var result = await _otpService.SendOtpAsync(TestEmail, TestPurpose, CancellationToken.None);
+
+        // Assert
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.ResultType, Is.EqualTo(ResultTypes.TooManyRequests));
+            Assert.That(result.Message, Is.EqualTo(ErrorMessages.TooManyOtpVerificationAttempts));
+        }
+    }
+
+    [Test]
+    public async Task SendOtpAsync_WhenVerificationRateLimitExceeded_DoesNotSendEmailOrIncrement()
+    {
+        // Arrange
+        _mockRateLimiter
+            .Setup(x =>
+                x.CheckLimit(
+                    $"otp_verify_{TestPurpose}",
+                    HashEmail(TestEmail),
+                    OtpConfig.OtpMaxFailedVerificationAttempts,
+                    ErrorMessages.TooManyOtpVerificationAttempts
+                )
+            )
+            .Returns(Result.TooManyRequests(ErrorMessages.TooManyOtpVerificationAttempts));
+
+        // Act
+        await _otpService.SendOtpAsync(TestEmail, TestPurpose, CancellationToken.None);
+
+        // Assert
+        _mockEmailService.Verify(
+            x =>
+                x.SendOtpEmailAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Never
+        );
+
+        _mockRateLimiter.Verify(
+            x =>
+                x.Increment(
+                    $"otp_send_{TestPurpose}",
+                    HashEmail(TestEmail),
+                    TimeSpan.FromMinutes(OtpConfig.OtpSendRateLimitWindowMinutes)
                 ),
             Times.Never
         );
@@ -520,7 +588,7 @@ public class OtpServiceTests
                 x.Increment(
                     $"otp_send_{TestPurpose}",
                     HashEmail(TestEmail),
-                    TimeSpan.FromMinutes(OtpConfig.OtpRateLimitWindowMinutes)
+                    TimeSpan.FromMinutes(OtpConfig.OtpSendRateLimitWindowMinutes)
                 ),
             Times.Once
         );
@@ -560,7 +628,7 @@ public class OtpServiceTests
                 x.CheckLimit(
                     $"otp_verify_{TestPurpose}",
                     HashEmail(TestEmail),
-                    OtpConfig.OtpMaxVerificationAttempts,
+                    OtpConfig.OtpMaxFailedVerificationAttempts,
                     ErrorMessages.TooManyOtpVerificationAttempts
                 )
             )
@@ -695,7 +763,7 @@ public class OtpServiceTests
                 x.Increment(
                     $"otp_verify_{TestPurpose}",
                     HashEmail(TestEmail),
-                    TimeSpan.FromMinutes(OtpConfig.OtpVerificationAttemptWindowMinutes)
+                    TimeSpan.FromMinutes(OtpConfig.OtpVerifyRateLimitWindowMinutes)
                 ),
             Times.Once
         );

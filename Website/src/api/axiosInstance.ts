@@ -26,7 +26,7 @@ const processQueue = (error: unknown = null) => {
 };
 
 const getNewAccessToken = () => {
-  return axiosInstance.post("auth/refresh-token");
+  return axiosInstance.post("auth-session/refresh-token");
 };
 
 type CustomAxiosRequestConfig = { _retry?: boolean } & InternalAxiosRequestConfig;
@@ -39,7 +39,7 @@ axiosInstance.interceptors.response.use(undefined, async (error: AxiosError) => 
   }
 
   // Never try to refresh when the refresh endpoint itself fails
-  if (originalRequest.url?.includes("auth/refresh-token")) {
+  if (originalRequest.url?.includes("auth-session/refresh-token")) {
     return Promise.reject(error);
   }
 

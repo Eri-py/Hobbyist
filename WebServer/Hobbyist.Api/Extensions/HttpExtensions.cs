@@ -35,7 +35,7 @@ public static class HttpExtensions
 
         httpContext.Response.Cookies.Delete(
             "__Secure-refreshToken",
-            CreateAuthCookieOptions("/api/auth/refresh-token")
+            CreateAuthCookieOptions("/api/auth-session/refresh-token")
         );
     }
 
@@ -43,7 +43,7 @@ public static class HttpExtensions
     {
         var accessTokenOptions = CreateAuthCookieOptions("/api", tokens.AccessTokenExpiresAt);
         var refreshTokenOptions = CreateAuthCookieOptions(
-            "/api/auth/refresh-token",
+            "/api/auth-session/refresh-token",
             tokens.RefreshTokenExpiresAt
         );
 

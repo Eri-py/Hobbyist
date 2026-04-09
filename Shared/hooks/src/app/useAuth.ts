@@ -21,7 +21,7 @@ export const USER_DETAILS_QUERY_KEY = ["userDetails"] as const;
 export function useAuthProvider(axiosInstance: AxiosInstance) {
   const { data, isPending } = useQuery({
     queryKey: USER_DETAILS_QUERY_KEY,
-    queryFn: () => axiosInstance.get<GetUserResponse>("auth/get-user-details"),
+    queryFn: () => axiosInstance.get<GetUserResponse>("auth-session/get-user-details"),
     refetchOnWindowFocus: false,
     staleTime: 15 * 60 * 1000,
     retry: 1,

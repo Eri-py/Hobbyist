@@ -7,10 +7,14 @@ import { useServerError, type ServerError } from "@hobbyist/hooks";
 import { axiosInstance } from "@/api/axiosInstance";
 import type { FileWithMetadata } from "@/hooks/create/useMediaUpload";
 import { CreateFormSchema, type CreateFormSchemaTypes } from "@hobbyist/form-schemas";
+import type { components } from "@hobbyist/types";
+
+// DTOs
+type CreatePostResponse = components["schemas"]["CreatePostResponse"];
 
 // API function
 const createPostApi = async (formData: FormData) => {
-  return axiosInstance.post("posts/create", formData, {
+  return axiosInstance.post<CreatePostResponse>("posts/create", formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
 };
@@ -41,7 +45,10 @@ export function useCreate() {
 
   const createPostMutation = useMutation({
     mutationFn: (formData: FormData) => createPostApi(formData),
-    onSuccess: () => {},
+    onSuccess: (response) => {
+      const postId = response.data.postId;
+      console.log(postId);
+    },
     onError: (error: ServerError) => handleServerError(error),
   });
 

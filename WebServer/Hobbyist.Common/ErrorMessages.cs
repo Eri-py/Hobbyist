@@ -39,7 +39,7 @@ public static class ErrorMessages
     /// Message shown when too many OTP verification attempts have been made.
     /// </summary>
     public const string TooManyOtpVerificationAttempts =
-        "Too many incorrect verification attempts. Please request a new code.";
+        "Too many incorrect verification attempts. Please try again later.";
 
     #endregion
 
