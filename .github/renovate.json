@@ -2,7 +2,7 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended"],
   "labels": ["dependencies"],
-  "prHourlyLimit": 3,
+  "dependencyDashboard": true,
   "rangeStrategy": "bump",
   "ignoreDeps": ["zod"],
   "lockFileMaintenance": {
