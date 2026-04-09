@@ -1,6 +1,8 @@
+using Hobbyist.Api.Extensions;
 using Hobbyist.Api.Services.Auth.OtpServices;
 using Hobbyist.Api.Services.CacheServices;
 using Hobbyist.Api.Services.EmailServices;
+using Hobbyist.Api.Services.LoggingHashServices;
 using Hobbyist.Common;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
@@ -17,16 +19,25 @@ public class OtpServiceTests
 {
     private Mock<ICache> _mockCache = null!;
     private Mock<IEmailService> _mockEmailService = null!;
+    private Mock<ILogHasher> _logHasherMock = null!;
     private OtpService _otpService = null!;
 
     private const string TestEmail = "test@example.com";
     private const string TestPurpose = "test_purpose";
+
+    private static string HashEmail(string email) => $"hashed_{email}";
 
     [SetUp]
     public void SetUp()
     {
         _mockCache = new Mock<ICache>();
         _mockEmailService = new Mock<IEmailService>();
+        _logHasherMock = new Mock<ILogHasher>();
+        _logHasherMock
+            .Setup(x => x.Hash(It.IsAny<string?>()))
+            .Returns((string? value) => $"hashed_{value}");
+        LoggerExtensions.ConfigureHasher(_logHasherMock.Object);
+
         _otpService = new OtpService(
             _mockCache.Object,
             _mockEmailService.Object,
@@ -37,7 +48,7 @@ public class OtpServiceTests
     #region CreateOtp Tests
 
     [Test]
-    public void CreateOtp_ReturnsSixCharacterOtp()
+    public void CreateOtp_ReturnsSixDigitOtp()
     {
         // Act
         var result = _otpService.CreateOtp(OtpConfig.OtpValidForMinutes);
@@ -46,8 +57,8 @@ public class OtpServiceTests
         Assert.That(result.Value, Has.Length.EqualTo(6));
         Assert.That(
             result.Value,
-            Does.Match(@"^[A-Z0-9]{6}$"),
-            "OTP should be exactly 6 uppercase alphanumeric characters"
+            Does.Match(@"^[0-9]{6}$"),
+            "OTP should be exactly 6 numeric digits"
         );
     }
 
@@ -78,7 +89,7 @@ public class OtpServiceTests
     }
 
     [Test]
-    public void CreateOtp_AllCharactersAreUppercaseAlphanumeric()
+    public void CreateOtp_AllCharactersAreDigits()
     {
         // Act
         var result = _otpService.CreateOtp(OtpConfig.OtpValidForMinutes);
@@ -86,11 +97,7 @@ public class OtpServiceTests
         // Assert
         foreach (var ch in result.Value)
         {
-            Assert.That(
-                char.IsUpper(ch) || char.IsDigit(ch),
-                Is.True,
-                $"Character '{ch}' should be an uppercase letter or digit"
-            );
+            Assert.That(char.IsDigit(ch), Is.True, $"Character '{ch}' should be a digit");
         }
     }
 
@@ -99,7 +106,7 @@ public class OtpServiceTests
     #region SendOtpAsync Tests
 
     [Test]
-    public async Task SendOtpAsync_GeneratesSixCharacterOtp()
+    public async Task SendOtpAsync_GeneratesSixDigitOtp()
     {
         // Arrange
         _mockEmailService
@@ -137,7 +144,7 @@ public class OtpServiceTests
     }
 
     [Test]
-    public async Task SendOtpAsync_GeneratesUppercaseAlphanumericOtp()
+    public async Task SendOtpAsync_GeneratesNumericOtp()
     {
         // Arrange
         _mockEmailService
@@ -171,7 +178,7 @@ public class OtpServiceTests
 
         // Assert
         Assert.That(capturedOtp, Is.Not.Null);
-        Assert.That(capturedOtp, Does.Match(@"^[A-Z0-9]{6}$"));
+        Assert.That(capturedOtp, Does.Match(@"^[0-9]{6}$"));
     }
 
     [Test]
@@ -270,7 +277,7 @@ public class OtpServiceTests
         await _otpService.SendOtpAsync(TestEmail, TestPurpose, CancellationToken.None);
 
         // Assert
-        var expectedKey = $"otp_{TestPurpose}_{TestEmail}";
+        var expectedKey = $"otp_{TestPurpose}_{HashEmail(TestEmail)}";
         using (Assert.EnterMultipleScope())
         {
             Assert.That(capturedKey, Is.EqualTo(expectedKey));
@@ -403,7 +410,10 @@ public class OtpServiceTests
         );
         _mockCache
             .Setup(x =>
-                x.TryGetValue($"ratelimit_otp_{TestPurpose}_{TestEmail}", out rateLimitEntry)
+                x.TryGetValue(
+                    $"ratelimit_otp_{TestPurpose}_{HashEmail(TestEmail)}",
+                    out rateLimitEntry
+                )
             )
             .Returns(true);
 
@@ -429,7 +439,10 @@ public class OtpServiceTests
         );
         _mockCache
             .Setup(x =>
-                x.TryGetValue($"ratelimit_otp_{TestPurpose}_{TestEmail}", out rateLimitEntry)
+                x.TryGetValue(
+                    $"ratelimit_otp_{TestPurpose}_{HashEmail(TestEmail)}",
+                    out rateLimitEntry
+                )
             )
             .Returns(true);
 
@@ -496,7 +509,7 @@ public class OtpServiceTests
         _mockCache.Verify(
             x =>
                 x.Set(
-                    $"ratelimit_otp_{TestPurpose}_{TestEmail}",
+                    $"ratelimit_otp_{TestPurpose}_{HashEmail(TestEmail)}",
                     It.IsAny<OtpRateLimitEntry>(),
                     It.IsAny<TimeSpan>()
                 ),
@@ -515,7 +528,7 @@ public class OtpServiceTests
         var expectedOtp = "AB12CD";
         string? outValue = expectedOtp;
         _mockCache
-            .Setup(x => x.TryGetValue($"otp_{TestPurpose}_{TestEmail}", out outValue))
+            .Setup(x => x.TryGetValue($"otp_{TestPurpose}_{HashEmail(TestEmail)}", out outValue))
             .Returns(true);
 
         // Act
@@ -536,14 +549,14 @@ public class OtpServiceTests
         var expectedOtp = "AB12CD";
         string? outValue = expectedOtp;
         _mockCache
-            .Setup(x => x.TryGetValue($"otp_{TestPurpose}_{TestEmail}", out outValue))
+            .Setup(x => x.TryGetValue($"otp_{TestPurpose}_{HashEmail(TestEmail)}", out outValue))
             .Returns(true);
 
         // Act
         _otpService.VerifyOtp(TestEmail, expectedOtp, TestPurpose);
 
         // Assert
-        _mockCache.Verify(x => x.Remove($"otp_{TestPurpose}_{TestEmail}"), Times.Once);
+        _mockCache.Verify(x => x.Remove($"otp_{TestPurpose}_{HashEmail(TestEmail)}"), Times.Once);
     }
 
     [Test]
@@ -553,7 +566,7 @@ public class OtpServiceTests
         var expectedOtp = "AB12CD";
         string? outValue = expectedOtp;
         _mockCache
-            .Setup(x => x.TryGetValue($"otp_{TestPurpose}_{TestEmail}", out outValue))
+            .Setup(x => x.TryGetValue($"otp_{TestPurpose}_{HashEmail(TestEmail)}", out outValue))
             .Returns(true);
 
         string? verifiedKey = null;
@@ -577,7 +590,7 @@ public class OtpServiceTests
         // Assert
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(verifiedKey, Is.EqualTo($"verified_{TestPurpose}_{TestEmail}"));
+            Assert.That(verifiedKey, Is.EqualTo($"verified_{TestPurpose}_{HashEmail(TestEmail)}"));
             Assert.That(verifiedValue, Is.True);
             Assert.That(verifiedExpiration, Is.EqualTo(TimeSpan.FromMinutes(15)));
         }
@@ -589,7 +602,7 @@ public class OtpServiceTests
         // Arrange
         string? outValue = "AB12CD";
         _mockCache
-            .Setup(x => x.TryGetValue($"otp_{TestPurpose}_{TestEmail}", out outValue))
+            .Setup(x => x.TryGetValue($"otp_{TestPurpose}_{HashEmail(TestEmail)}", out outValue))
             .Returns(true);
 
         // Act
@@ -610,7 +623,7 @@ public class OtpServiceTests
         // Arrange
         string? outValue = null;
         _mockCache
-            .Setup(x => x.TryGetValue($"otp_{TestPurpose}_{TestEmail}", out outValue))
+            .Setup(x => x.TryGetValue($"otp_{TestPurpose}_{HashEmail(TestEmail)}", out outValue))
             .Returns(false);
 
         // Act
@@ -631,7 +644,7 @@ public class OtpServiceTests
         // Arrange
         string? outValue = "AB12CD";
         _mockCache
-            .Setup(x => x.TryGetValue($"otp_{TestPurpose}_{TestEmail}", out outValue))
+            .Setup(x => x.TryGetValue($"otp_{TestPurpose}_{HashEmail(TestEmail)}", out outValue))
             .Returns(true);
 
         // Act
@@ -650,7 +663,7 @@ public class OtpServiceTests
         // Arrange
         string? outValue = "AB12CD";
         _mockCache
-            .Setup(x => x.TryGetValue($"otp_{TestPurpose}_{TestEmail}", out outValue))
+            .Setup(x => x.TryGetValue($"otp_{TestPurpose}_{HashEmail(TestEmail)}", out outValue))
             .Returns(true);
 
         // Act
@@ -670,7 +683,9 @@ public class OtpServiceTests
         // Arrange
         bool? outValue = true;
         _mockCache
-            .Setup(x => x.TryGetValue($"verified_{TestPurpose}_{TestEmail}", out outValue))
+            .Setup(x =>
+                x.TryGetValue($"verified_{TestPurpose}_{HashEmail(TestEmail)}", out outValue)
+            )
             .Returns(true);
 
         // Act
@@ -686,7 +701,9 @@ public class OtpServiceTests
         // Arrange
         bool? outValue = false;
         _mockCache
-            .Setup(x => x.TryGetValue($"verified_{TestPurpose}_{TestEmail}", out outValue))
+            .Setup(x =>
+                x.TryGetValue($"verified_{TestPurpose}_{HashEmail(TestEmail)}", out outValue)
+            )
             .Returns(false);
 
         // Act
@@ -702,7 +719,9 @@ public class OtpServiceTests
         // Arrange
         bool? outValue = true;
         _mockCache
-            .Setup(x => x.TryGetValue($"verified_{TestPurpose}_{TestEmail}", out outValue))
+            .Setup(x =>
+                x.TryGetValue($"verified_{TestPurpose}_{HashEmail(TestEmail)}", out outValue)
+            )
             .Returns(true);
 
         // Act
@@ -710,7 +729,7 @@ public class OtpServiceTests
 
         // Assert
         _mockCache.Verify(
-            x => x.TryGetValue($"verified_{TestPurpose}_{TestEmail}", out outValue),
+            x => x.TryGetValue($"verified_{TestPurpose}_{HashEmail(TestEmail)}", out outValue),
             Times.Once
         );
     }
@@ -726,7 +745,10 @@ public class OtpServiceTests
         _otpService.ClearVerification(TestEmail, TestPurpose);
 
         // Assert
-        _mockCache.Verify(x => x.Remove($"verified_{TestPurpose}_{TestEmail}"), Times.Once);
+        _mockCache.Verify(
+            x => x.Remove($"verified_{TestPurpose}_{HashEmail(TestEmail)}"),
+            Times.Once
+        );
     }
 
     [Test]
@@ -740,7 +762,10 @@ public class OtpServiceTests
         _otpService.ClearVerification(customEmail, customPurpose);
 
         // Assert
-        _mockCache.Verify(x => x.Remove($"verified_{customPurpose}_{customEmail}"), Times.Once);
+        _mockCache.Verify(
+            x => x.Remove($"verified_{customPurpose}_{HashEmail(customEmail)}"),
+            Times.Once
+        );
     }
 
     #endregion

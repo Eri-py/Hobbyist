@@ -33,8 +33,8 @@
     "typecheck": "pnpm --recursive typecheck",
     "test": "pnpm --recursive test",
     "generate-types": "pnpm --filter @hobbyist/types generate-types",
-    "generate-feature-flags": "node scripts/generate-feature-flags.js",
-    "clean": "node scripts/clean.js",
+    "generate-feature-flags": "node Scripts/generate-feature-flags.js",
+    "clean": "node Scripts/clean.js",
     "reset": "pnpm clean && pnpm install"
   },
   "devDependencies": {

@@ -15,4 +15,10 @@ public static class CryptoRandom
         crng.Value!.GetBytes(bytes.Value!);
         return BitConverter.ToInt32(bytes.Value!, 0) & int.MaxValue;
     }
+
+    public static int NextInt(int maxExclusive)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxExclusive);
+        return RandomNumberGenerator.GetInt32(maxExclusive);
+    }
 }

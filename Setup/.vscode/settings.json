@@ -1,7 +1,7 @@
 {
-  "dotnet.defaultSolution": "ApiServer/Hobbyist.sln",
+  "dotnet.defaultSolution": "WebServer/Hobbyist.sln",
   "editor.formatOnSave": true,
-  "typescript.preferences.autoImportSpecifierExcludeRegexes": ["^@mui/[^/]+$"],
+  "js/ts.preferences.autoImportSpecifierExcludeRegexes": ["^@mui/[^/]+$"],
   "[csharp]": {
     "editor.defaultFormatter": "csharpier.csharpier-vscode"
   },
@@ -9,7 +9,7 @@
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "material-icon-theme.folders.associations": {
-    "ApiServer": "api",
+    "WebServer": "server",
     "MLServer": "server",
     "Setup": "config",
     "features": "content"
@@ -21,14 +21,15 @@
     "**/.DS_Store": true,
     "**/Thumbs.db": true,
     "**/node_modules": true,
-    "**/tsconfig.json": true,
-    "**/tsconfig.*.json": true,
     "**/eslint.*": true,
-    "**/package-lock.json": true,
     "**/package.json": false,
-    "**/vite.config.ts": true,
+    "**/vite.config.ts": false,
     "**/vite-env.d.ts": true,
     "**/.tanstack": true,
-    "**/routeTree.gen.ts": true
+    "**/routeTree.gen.ts": true,
+    "**/dist": true,
+    "**/.expo": true,
+    "**/expo-env.d.ts": true,
+    "**/app.json": false
   }
 }

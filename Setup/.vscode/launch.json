@@ -13,6 +13,7 @@
         "ASPNETCORE_ENVIRONMENT": "Development",
         "DOTNET_WATCH_SUPPRESS_EMOJIS": "1"
       },
+      "preLaunchTask": "dotnet: clean",
       "serverReadyAction": {
         "action": "openExternally",
         "pattern": "\\bNow listening on:\\s+https?://.*:(\\d+)",
