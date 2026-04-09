@@ -69,30 +69,50 @@ function ProfilePage() {
 
   return (
     <Stack
-      padding={2}
-      gap={3}
-      flex={1}
-      maxWidth={1000}
-      width="100%"
-      sx={{ marginX: { md: "auto" } }}
-    >
+      sx={{
+        padding: 2,
+        gap: 3,
+        flex: 1,
+        maxWidth: 1000,
+        width: "100%",
+        marginX: { md: "auto" }
+      }}>
       {/* This is the profile picture and profile info */}
-      <Stack direction="row" gap={3} alignSelf="flex-start">
+      <Stack
+        direction="row"
+        sx={{
+          gap: 3,
+          alignSelf: "flex-start"
+        }}>
         <Avatar sx={{ width: 75, height: 75 }} />
         <Stack>
-          <Typography fontWeight={500} fontSize={18}>
+          <Typography
+            sx={{
+              fontWeight: 500,
+              fontSize: 18
+            }}>
             {username}
           </Typography>
-          <Stack direction="row" gap={3}>
+          <Stack direction="row" sx={{
+            gap: 3
+          }}>
             <Stack>
               <Typography>0</Typography>
-              <Typography color="text.secondary" fontWeight={200}>
+              <Typography
+                sx={{
+                  color: "text.secondary",
+                  fontWeight: 200
+                }}>
                 posts
               </Typography>
             </Stack>
             <Stack>
               <Rating name="read-only" value={2} readOnly />
-              <Typography color="text.secondary" fontWeight={200}>
+              <Typography
+                sx={{
+                  color: "text.secondary",
+                  fontWeight: 200
+                }}>
                 rating
               </Typography>
             </Stack>
@@ -100,8 +120,19 @@ function ProfilePage() {
         </Stack>
       </Stack>
       {/* This is the button group below */}
-      <Stack direction="row" alignSelf="center" width="100%" maxWidth={800}>
-        <Stack direction="row" width="100%" gap={1}>
+      <Stack
+        direction="row"
+        sx={{
+          alignSelf: "center",
+          width: "100%",
+          maxWidth: 800
+        }}>
+        <Stack
+          direction="row"
+          sx={{
+            width: "100%",
+            gap: 1
+          }}>
           <Button variant="contained" sx={{ flex: 1 }}>
             Edit Profile
           </Button>
@@ -127,13 +158,26 @@ function ProfilePage() {
         ))}
       </Tabs>
       {/* This renders the users posts and what not */}
-      <Stack flex={1} alignItems="center" justifyContent="center">
-        <Stack alignItems="center">
+      <Stack
+        sx={{
+          flex: 1,
+          alignItems: "center",
+          justifyContent: "center"
+        }}>
+        <Stack sx={{
+          alignItems: "center"
+        }}>
           <CameraAltOutlinedIcon sx={{ fontSize: { xs: 78, md: 128 } }} />
-          <Typography fontWeight={600} fontSize={30}>
+          <Typography
+            sx={{
+              fontWeight: 600,
+              fontSize: 30
+            }}>
             {navigationItems[activeTab].label}
           </Typography>
-          <Typography fontSize={{ xs: 15, md: 18 }}>
+          <Typography sx={{
+            fontSize: { xs: 15, md: 18 }
+          }}>
             {activeTab === 0 && "When you post, they will appear on your profile."}
             {activeTab === 1 && "Your bookmarked content will appear here."}
             {activeTab === 2 && "Your favorite content will appear here."}

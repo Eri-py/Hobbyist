@@ -52,7 +52,6 @@ export function CircularProgressBar({
           style={{ transition: "stroke-dashoffset 0.4s ease" }}
         />
       </svg>
-
       {/* Step number overlay */}
       <Box
         sx={{
@@ -65,9 +64,11 @@ export function CircularProgressBar({
       >
         <Typography
           variant="caption"
-          fontWeight={700}
-          sx={{ color: theme.palette.primary.light, lineHeight: 1 }}
-        >
+          sx={{
+            fontWeight: 700,
+            color: theme.palette.primary.light,
+            lineHeight: 1
+          }}>
           {displayStep}
         </Typography>
       </Box>

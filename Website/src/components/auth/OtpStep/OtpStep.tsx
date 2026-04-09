@@ -1,7 +1,6 @@
 import { Controller, get, useFormContext } from "react-hook-form";
 
 import { useTheme } from "@mui/material/styles";
-import { MuiOtpInput } from "mui-one-time-password-input";
 import Button from "@mui/material/Button";
 import FormHelperText from "@mui/material/FormHelperText";
 import Stack from "@mui/material/Stack";
@@ -10,6 +9,7 @@ import Link from "@mui/material/Link";
 
 import { useOtp } from "@hobbyist/hooks";
 import { axiosInstance } from "@/api/axiosInstance";
+import { OtpInput } from "./OtpInput";
 import { OtpCountdown } from "./OtpCountdown";
 
 type OtpStepProps = {
@@ -39,30 +39,43 @@ export function OtpStep({
   };
 
   return (
-    <Stack gap={1.5}>
+    <Stack
+      sx={{
+        gap: 1.5,
+      }}
+    >
       {serverErrorMessage && (
-        <Typography color="error" textAlign="center" fontSize={14}>
+        <Typography
+          color="error"
+          sx={{
+            textAlign: "center",
+            fontSize: 14,
+          }}
+        >
           {serverErrorMessage}
         </Typography>
       )}
-
       <Controller
         name="otp"
         control={control}
         render={({ field: { value, onChange }, formState: { errors } }) => (
           <Stack>
-            <MuiOtpInput value={value || ""} length={6} onChange={onChange} autoFocus />
+            <OtpInput value={value || ""} length={6} onChange={onChange} autoFocus />
             {get(errors, "otp")?.message && (
               <FormHelperText error>{get(errors, "otp").message}</FormHelperText>
             )}
           </Stack>
         )}
       />
-
       <OtpCountdown expiresAt={new Date(endTime)} />
-
       {!isResendDisabled && (
-        <Typography fontSize={15} color={theme.palette.text.secondary} alignSelf="center">
+        <Typography
+          color={theme.palette.text.secondary}
+          sx={{
+            fontSize: 15,
+            alignSelf: "center",
+          }}
+        >
           Didn't get the Code?{" "}
           <Link
             component="button"
@@ -80,7 +93,6 @@ export function OtpStep({
           </Link>
         </Typography>
       )}
-
       <Button
         type={mode === "login" ? "submit" : "button"}
         size="large"

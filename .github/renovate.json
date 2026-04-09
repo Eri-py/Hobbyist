@@ -8,14 +8,17 @@
   "packageRules": [
     {
       "matchPackageNames": [
-        "zod",
-        "react-native",
-        "expo",
-        "expo-*",
         "@expo/*",
+        "@react-native-/*",
         "@react-native/*",
         "@react-navigation/*",
-        "react-native-*"
+        "expo",
+        "expo-*",
+        "react",
+        "react-dom",
+        "react-native",
+        "react-native-*",
+        "zod"
       ],
       "enabled": false
     },

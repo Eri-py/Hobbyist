@@ -90,7 +90,11 @@ function CreatePage() {
         onKeyDown={preventEnterSubmit}
         style={{ display: "flex", flex: 1 }}
       >
-        <Stack gap={3} flex={1}>
+        <Stack
+          sx={{
+            gap: 3,
+            flex: 1
+          }}>
           {isDesktop ? (
             <DesktopCreateForm
               files={files}

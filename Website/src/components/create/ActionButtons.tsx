@@ -10,7 +10,13 @@ type ActionButtonsProps = {
 
 export function ActionButtons({ isSubmitting, showPost = true }: ActionButtonsProps) {
   return (
-    <Stack direction="row" gap={2} alignSelf="flex-end" justifyContent="flex-end">
+    <Stack
+      direction="row"
+      sx={{
+        gap: 2,
+        alignSelf: "flex-end",
+        justifyContent: "flex-end"
+      }}>
       <Button
         variant="text"
         type="button"
@@ -26,7 +32,6 @@ export function ActionButtons({ isSubmitting, showPost = true }: ActionButtonsPr
       >
         Save Draft
       </Button>
-
       {showPost && (
         <Button
           variant="text"

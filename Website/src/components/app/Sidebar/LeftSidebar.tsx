@@ -24,14 +24,15 @@ export function LeftSidebar() {
 
   return (
     <Stack
-      width="100%"
-      height="100%"
-      position="relative"
-      justifyContent="space-between"
-      borderRight={`1px solid ${alpha(theme.palette.divider, 0.25)}`}
-      paddingInline={isSidebarOpen ? 1.5 : 1}
-      paddingBlock={1.5}
-    >
+      sx={{
+        width: "100%",
+        height: "100%",
+        position: "relative",
+        justifyContent: "space-between",
+        borderRight: `1px solid ${alpha(theme.palette.divider, 0.25)}`,
+        paddingInline: isSidebarOpen ? 1.5 : 1,
+        paddingBlock: 1.5
+      }}>
       <Tooltip title="" placement="right">
         <IconButton
           size="small"
@@ -55,8 +56,11 @@ export function LeftSidebar() {
           <MenuIcon sx={{ fontSize: 20 }} />
         </IconButton>
       </Tooltip>
-
-      <Stack gap={2} alignItems={isSidebarOpen ? undefined : "center"}>
+      <Stack
+        sx={{
+          gap: 2,
+          alignItems: isSidebarOpen ? undefined : "center"
+        }}>
         {isAuthenticated && (
           <ProfileInfo isSidebarOpen={isSidebarOpen} username={username} location={location} />
         )}
@@ -66,17 +70,28 @@ export function LeftSidebar() {
           <NavigationButtons />
         </List>
       </Stack>
-
-      <Stack component="footer" paddingBottom={2}>
+      <Stack component="footer" sx={{
+        paddingBottom: 2
+      }}>
         {isSidebarOpen ? (
-          <Stack direction="row" alignItems="center" justifyContent="space-between" px={1.25}>
-            <Typography variant="body2" fontWeight={300}>
+          <Stack
+            direction="row"
+            sx={{
+              alignItems: "center",
+              justifyContent: "space-between",
+              px: 1.25
+            }}>
+            <Typography variant="body2" sx={{
+              fontWeight: 300
+            }}>
               Toggle theme
             </Typography>
             <ThemeSwitch checked={mode === "dark"} onChange={toggleTheme} />
           </Stack>
         ) : (
-          <Stack alignItems="center">
+          <Stack sx={{
+            alignItems: "center"
+          }}>
             <ThemeSwitch checked={mode === "dark"} onChange={toggleTheme} />
           </Stack>
         )}

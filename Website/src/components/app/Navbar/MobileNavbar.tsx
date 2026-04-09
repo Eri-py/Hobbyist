@@ -17,17 +17,23 @@ export function MobileNavbar() {
         }}
       >
         {/* Left Slot */}
-        <Stack direction="row" alignItems="center">
+        <Stack direction="row" sx={{
+          alignItems: "center"
+        }}>
           {leftSlot}
         </Stack>
 
         {/* Center Slot */}
-        <Stack direction="row" alignItems="center">
+        <Stack direction="row" sx={{
+          alignItems: "center"
+        }}>
           {centerSlot}
         </Stack>
 
         {/* Right Slot */}
-        <Stack direction="row" alignItems="center">
+        <Stack direction="row" sx={{
+          alignItems: "center"
+        }}>
           {rightSlot}
         </Stack>
       </Toolbar>

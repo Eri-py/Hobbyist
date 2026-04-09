@@ -50,7 +50,9 @@ export function SegmentedDatePicker({ value, onChange, error }: SegmentedDatePic
 
   return (
     <Stack>
-      <Stack direction="row" gap={1.5}>
+      <Stack direction="row" sx={{
+        gap: 1.5
+      }}>
         <TextField
           type="text"
           variant="outlined"

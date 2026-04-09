@@ -15,23 +15,25 @@ export function UploadArea({ getRootProps, isDragActive }: UploadAreaProps) {
       {...getRootProps()}
       component="button"
       type="button"
-      flex={1}
-      alignItems="center"
-      justifyContent="center"
-      border="2px dashed"
-      borderColor="divider"
-      borderRadius={2}
-      bgcolor="transparent"
       sx={{
+        flex: 1,
+        alignItems: "center",
+        justifyContent: "center",
+        border: "2px dashed",
+        borderColor: "divider",
+        borderRadius: 2,
+        bgcolor: "transparent",
         cursor: "pointer",
         transition: "all 0.2s ease",
+
         "&:hover": {
           borderColor: "primary.main",
-        },
-      }}
-    >
+        }
+      }}>
       <CloudUploadOutlinedIcon sx={{ fontSize: 48, color: "text.secondary" }} />
-      <Typography variant="body1" color="text.secondary">
+      <Typography variant="body1" sx={{
+        color: "text.secondary"
+      }}>
         {isDragActive ? "Drop media here" : "Drag and Drop or upload media"}
       </Typography>
     </Stack>

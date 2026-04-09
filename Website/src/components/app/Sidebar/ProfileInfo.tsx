@@ -13,28 +13,51 @@ type ProfileInfoProps = {
 
 export function ProfileInfo({ isSidebarOpen, username, location }: ProfileInfoProps) {
   return (
-    <Stack direction="row" alignItems="center" gap={1}>
+    <Stack
+      direction="row"
+      sx={{
+        alignItems: "center",
+        gap: 1
+      }}>
       <Avatar sx={{ width: 60, height: 60 }}>
         <AccountCircleIcon fontSize="large" />
       </Avatar>
-
       {isSidebarOpen && (
         <Stack>
-          <Typography fontSize={18} fontWeight={600} noWrap>
+          <Typography
+            noWrap
+            sx={{
+              fontSize: 18,
+              fontWeight: 600
+            }}>
             {username}
           </Typography>
 
           {location ? (
-            <Stack direction="row" alignItems="center" gap={0.5}>
+            <Stack
+              direction="row"
+              sx={{
+                alignItems: "center",
+                gap: 0.5
+              }}>
               <LocationOnIcon sx={{ fontSize: 14, color: "text.secondary" }} />
-              <Typography variant="caption" color="text.secondary" noWrap>
+              <Typography variant="caption" noWrap sx={{
+                color: "text.secondary"
+              }}>
                 {location}
               </Typography>
             </Stack>
           ) : (
-            <Stack direction="row" alignItems="center" gap={0.5}>
+            <Stack
+              direction="row"
+              sx={{
+                alignItems: "center",
+                gap: 0.5
+              }}>
               <LocationOffIcon sx={{ fontSize: 14, color: "text.secondary" }} />
-              <Typography variant="caption" color="text.secondary" noWrap>
+              <Typography variant="caption" noWrap sx={{
+                color: "text.secondary"
+              }}>
                 No location set
               </Typography>
             </Stack>

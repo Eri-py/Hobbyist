@@ -32,15 +32,23 @@ export function OtpCountdown({ expiresAt }: OtpCountdownProps) {
 
   if (isExpired) {
     return (
-      <Typography fontSize={15} color={theme.palette.error.main} textAlign="center">
-        Code expired
-      </Typography>
+      <Typography
+        color={theme.palette.error.main}
+        sx={{
+          fontSize: 15,
+          textAlign: "center"
+        }}>Code expired
+              </Typography>
     );
   }
 
   return (
-    <Typography fontSize={15} color={theme.palette.text.secondary} textAlign="center">
-      Code expires in{" "}
+    <Typography
+      color={theme.palette.text.secondary}
+      sx={{
+        fontSize: 15,
+        textAlign: "center"
+      }}>Code expires in{" "}
       <b>
         {zeroPad(minutes)}:{zeroPad(seconds)}
       </b>

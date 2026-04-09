@@ -49,7 +49,9 @@ export function DesktopMediaPanel({
     }
   };
   return (
-    <Stack gap={2}>
+    <Stack sx={{
+      gap: 2
+    }}>
       <Box sx={{ width: "100%", aspectRatio: "5 / 4", minHeight: 0, display: "flex" }}>
         {files.length > 0 ? (
           <MediaCarousel
@@ -66,7 +68,6 @@ export function DesktopMediaPanel({
           <UploadArea getRootProps={getRootProps} isDragActive={isDragActive} />
         )}
       </Box>
-
       {files.length > 1 && (
         <SortableMediaStrip
           files={files}
@@ -76,8 +77,13 @@ export function DesktopMediaPanel({
           thumbnailSize={110}
         />
       )}
-
-      <Typography variant="body2" color="text.secondary" textAlign="center" px={2}>
+      <Typography
+        variant="body2"
+        sx={{
+          color: "text.secondary",
+          textAlign: "center",
+          px: 2
+        }}>
         {files.length > 1
           ? "Click and hold an image or video above, then drag it to rearrange the order of your media."
           : "We recommend using high quality .jpg files less than 20 MB or .mp4 files less than 200 MB."}
