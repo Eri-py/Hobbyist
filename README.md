@@ -2,7 +2,7 @@
 
 A full-stack monorepo for hobbyists to connect, trade, and share interests.
 
-**Stack:** React Native (Expo) · React + Vite · .NET 9 · PostgreSQL · Redis · Tailscale (required)
+**Stack:** React Native (Expo) · React + Vite · .NET 10 · PostgreSQL · Redis · MinIO · Tailscale (required)
 
 ## Tech Stack
 
@@ -11,9 +11,10 @@ A full-stack monorepo for hobbyists to connect, trade, and share interests.
 | Mobile     | React Native 19, Expo, React Navigation, React Native Paper                                                                                                                                                                                          |
 | Web        | React 19, TypeScript, Vite, Material-UI, TanStack Router                                                                                                                                                                                             |
 | Shared     | TanStack Query, React Hook Form, Zod, Axios                                                                                                                                                                                                          |
-| Backend    | .NET Core 9, Entity Framework Core, JWT Auth                                                                                                                                                                                                         |
+| Backend    | .NET 10, Entity Framework Core, JWT Auth                                                                                                                                                                                                             |
 | Database   | PostgreSQL (Docker)                                                                                                                                                                                                                                  |
 | Cache      | Redis (Docker)                                                                                                                                                                                                                                       |
+| Media      | MinIO (S3-compatible, Docker)                                                                                                                                                                                                                        |
 | Networking | [Tailscale](https://tailscale.com/download) — stable HTTPS across all devices regardless of network/IP. Without it, any device not on the same WiFi as the server machine, or where the server's IP has changed, won't be able to reach the servers. |
 
 ## Structure
@@ -27,7 +28,11 @@ A full-stack monorepo for hobbyists to connect, trade, and share interests.
 
 ## Prerequisites
 
-- Node.js 24+, [pnpm](https://pnpm.io/installation) 10+, .NET SDK 9+, [Docker](https://docs.docker.com/get-docker/), [Tailscale](https://tailscale.com/download) (required)
+- Node.js 24+
+- [pnpm](https://pnpm.io/installation) 10+
+- .NET SDK 10+
+- [Docker Desktop](https://docs.docker.com/get-docker/) (recommended for local infra)
+- [Tailscale](https://tailscale.com/download) (required)
 
 ## Setup
 
@@ -39,7 +44,7 @@ cd Hobbyist
 pnpm exec node Scripts/copy-configs.js
 ```
 
-This copies all config templates from `Setup/` to their target locations, including `appsettings.Development.json` and `featureflags.Development.json` (gitignored — edit them locally).
+This copies all setup templates from `Setup/` into runtime locations.
 
 Templates are grouped by target app to keep Setup maintainable:
 
@@ -47,7 +52,59 @@ Templates are grouped by target app to keep Setup maintainable:
 - `Setup/Website/`
 - `Setup/Mobile/`
 
-### 2. Tailscale & HTTPS cert
+### 2. Install dependencies
+
+```bash
+pnpm install
+```
+
+### 3. Start local infrastructure (Docker Compose)
+
+> **IMPORTANT:** **Use your own existing Postgres, Redis, and MinIO instances if you already have them.** Start the provided compose template only if you do not already have local services.
+
+```bash
+docker compose -f Setup/WebServer/docker-compose.yml --profile all up -d
+```
+
+If you use the compose defaults, these are the local credentials:
+
+- Postgres: `postgres` / `Password123.` (DB: `hobbyistdb`, Port: `5432`)
+- Redis: no password by default (Port: `6379`)
+- MinIO: `minioadmin` / `Password123.` (API: `9000`, Console: `9001`)
+
+> **TIP:** **Optional overrides:** Create `Setup/WebServer/.env` only if you want to override defaults. Replace only the variables you need:
+
+> - `POSTGRES_USER`
+> - `POSTGRES_PASSWORD`
+> - `POSTGRES_DB`
+> - `POSTGRES_PORT`
+> - `REDIS_PORT`
+> - `MINIO_ROOT_USER`
+> - `MINIO_ROOT_PASSWORD`
+> - `MINIO_API_PORT`
+> - `MINIO_CONSOLE_PORT`
+
+Profile-specific startup (optional):
+
+```bash
+docker compose -f Setup/WebServer/docker-compose.yml --profile db up -d
+docker compose -f Setup/WebServer/docker-compose.yml --profile cache up -d
+docker compose -f Setup/WebServer/docker-compose.yml --profile storage up -d
+```
+
+Useful commands:
+
+```bash
+docker compose -f Setup/WebServer/docker-compose.yml down
+docker compose -f Setup/WebServer/docker-compose.yml logs -f
+```
+
+> **RECOMMENDED:** After running the compose startup command above, open Docker Desktop and go to Containers.
+>
+> - Start or stop the compose stack, or individual containers, from the UI.
+> - View container status, mapped ports, logs, and other runtime details without using the terminal.
+
+### 4. Tailscale & HTTPS cert
 
 Find your MagicDNS hostname in the Tailscale app (e.g. `{your-machine.tail123456.ts.net}`), then in an elevated PowerShell:
 
@@ -58,7 +115,7 @@ tailscale cert {your-machine.tail123456.ts.net}
 
 > Cert expires every 90 days — re-run to renew.
 
-### 3. Configure env files
+### 5. Configure copied runtime files
 
 **`Website/.env.development`**
 
@@ -88,86 +145,60 @@ Use the Tailscale IP/hostname of the **host machine running Expo/Metro** (your l
 
 **`WebServer/Hobbyist.Api/appsettings.Development.json`**
 
-```json
-{
-  "ConnectionStrings": {
-    "DefaultConnection": "Host=localhost;Database=hobbyist;Username=postgres;Password={your_password}"
-  },
-  "ClientOrigin": { "Address": "https://{your-machine.tail123456.ts.net}:3000" },
-  "Kestrel": {
-    "Endpoints": {
-      "Https": {
-        "Url": "https://{your-machine.tail123456.ts.net}:7000",
-        "Certificate": {
-          "Path": "../../certs/{your-machine.tail123456.ts.net}.crt",
-          "KeyPath": "../../certs/{your-machine.tail123456.ts.net}.key"
-        }
-      }
-    }
-  }
-}
-```
+> **IMPORTANT:** Ensure these values match your local environment:
+>
+> - `ClientOrigin:Address`
+> - `Kestrel:Endpoints:Https:Url`
+> - certificate paths under `Kestrel:Endpoints:Https:Certificate`
+> - `ConnectionStrings:DefaultConnection`
+> - `ConnectionStrings:Redis`
+> - `MediaStorage` section
+> - `Jwt` and `Security` secrets
+>
+> If you use the provided compose defaults, `MediaStorage` should point to MinIO on port `9000`.
 
-### 4. Install dependencies
+### 6. Create MinIO bucket (one-time)
 
-```bash
-pnpm install
-```
+The setup compose file does not auto-create buckets.
 
-### 5. Database
+1. Open MinIO console at `http://localhost:9001`
+2. Sign in with `MINIO_ROOT_USER` / `MINIO_ROOT_PASSWORD`
+3. Create bucket: `hobbyist-posts`
+
+### 7. Apply database migrations
 
 ```bash
-# Start Postgres
-docker run --name hobbyist-postgres -e POSTGRES_PASSWORD={your_password} -e POSTGRES_DB=hobbyist -p 5432:5432 -d postgres:latest
-
-# Apply migrations
 cd WebServer/Hobbyist.Api
 dotnet ef database update
 ```
 
-> First time: `dotnet tool install --global dotnet-ef`
+> First time only: `dotnet tool install --global dotnet-ef`
 
-### 6. Redis
+### 8. Feature flags (dev overrides)
 
-```bash
-docker run --name hobbyist-redis -p 6379:6379 -d redis:latest
-```
+`featureflags.Development.json` is gitignored and copied for you by `copy-configs.js`.
 
-Then add the connection string to `WebServer/Hobbyist.Api/appsettings.Development.json`:
-
-```json
-{
-  "ConnectionStrings": {
-    "Redis": "localhost:6379"
-  }
-}
-```
-
-### 7. Feature flags (dev overrides)
-
-`featureflags.Development.json` is gitignored — each developer controls their own flags locally. It's created for you by `copy-configs.js` in step 1 (all flags enabled by default). When you add a new flag:
+When adding a new flag:
 
 1. Add it to `featureflags.json` (set `false`)
-2. Run `pnpm generate-feature-flags` — regenerates `Services/FeatureFlags.cs` and `Shared/types/src/featureFlags.ts`
-3. Run `pnpm generate-types` — regenerates the TypeScript types from the OpenAPI schema
-4. Add it to your local `featureflags.Development.json`
+2. Run `pnpm generate-feature-flags` to regenerate `Services/FeatureFlags.cs` and `Shared/types/src/featureFlags.ts`
+3. Run `pnpm generate-types` to regenerate API-derived TypeScript types
+4. Add the new flag to your local `featureflags.Development.json`
 
 ## Ports
 
-| Service    | Port |
-| ---------- | ---- |
-| API        | 7000 |
-| Website    | 3000 |
-| PostgreSQL | 5432 |
-| Redis      | 6379 |
+| Service       | Port |
+| ------------- | ---- |
+| API           | 7000 |
+| Website       | 3000 |
+| PostgreSQL    | 5432 |
+| Redis         | 6379 |
+| MinIO API     | 9000 |
+| MinIO Console | 9001 |
 
 ## Running
 
-> Alternatively, copy the `.vscode` folder from `Setup/` to the root and use the VS Code debugger to start the backend. If you do, update `uriFormat` in `.vscode/launch.json` with your Tailscale hostname:
->
-> ```jsonc
->  "uriFormat": "https://{your-machine-name.tail123456.ts.net}:%s/scalar/v1",
-> ```
+> Optionally copy `Setup/.vscode` into repo root and use the VS Code debugger to start backend with the provided launch profile.
 
 ```bash
 # Backend (from WebServer/Hobbyist.Api/)
@@ -186,22 +217,24 @@ pnpm run dev
 pnpm typecheck                # Type check all projects
 pnpm lint                     # Lint
 pnpm build                    # Production build
-pnpm generate-types           # Generate TS types from OpenAPI (requires backend running)
-pnpm generate-feature-flags   # Regenerate FeatureFlags.cs + featureFlags.ts from featureflags.json
+pnpm test                     # Run tests
+pnpm generate-types           # Generate TS types from OpenAPI (backend must be running)
+pnpm generate-feature-flags   # Regenerate FeatureFlags.cs + featureFlags.ts
 pnpm clean                    # Remove node_modules and build artifacts
 pnpm reset                    # Clean + reinstall
 ```
 
 ## API Docs
 
-`https://{your-machine.tail123456.ts.net}:7000/scalar/v1` (requires backend running)
+`https://{your-machine.tail123456.ts.net}:7000/scalar/v1` (backend must be running)
 
 ## Troubleshooting
 
-- **DB errors** — check Docker is running (`docker ps`) and the connection string matches
-- **Redis errors** — check Docker is running (`docker ps`) and Redis connection string is set in `appsettings.Development.json`
-- **Migration issues** — delete `Migrations/`, re-run `dotnet ef migrations add InitialCreate && dotnet ef database update`
-- **SSL errors** — verify cert exists in `certs/` and hasn't expired
-- **Mobile can't connect** — confirm Tailscale is running on both machine and device
-- **Type errors after API changes** — run `pnpm generate-types`
-- **Shared package not found** — run `pnpm install`
+- **DB errors**: verify Postgres is running and your `DefaultConnection` matches
+- **Redis errors**: verify Redis is running and your `ConnectionStrings:Redis` is correct
+- **MinIO errors**: verify MinIO is running, credentials match, and `hobbyist-posts` bucket exists
+- **Migration issues**: run `dotnet ef database update` again after checking connection string
+- **SSL errors**: verify cert exists in `certs/` and is not expired
+- **Mobile connectivity issues**: confirm Tailscale is active on both machine and device
+- **Type errors after API changes**: run `pnpm generate-types`
+- **Shared package missing**: run `pnpm install`
