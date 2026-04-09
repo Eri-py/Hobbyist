@@ -54,3 +54,70 @@ jobs:
 
             - name: Ensure generated files are up to date
               run: git diff --exit-code -- WebServer/Hobbyist.Api/Services/FeatureFlags.cs Shared/types/src/featureFlags.ts
+
+            - name: Validate docker compose file
+              run: docker compose -f Setup/WebServer/docker-compose.yml config --quiet
+
+            - name: Smoke test docker compose startup
+              run: |
+                  docker compose -f Setup/WebServer/docker-compose.yml down -v --remove-orphans || true
+                  docker compose -f Setup/WebServer/docker-compose.yml --profile all up -d
+
+            - name: Validate compose services and ports
+              run: |
+                  compose() {
+                    docker compose -f Setup/WebServer/docker-compose.yml "$@"
+                  }
+
+                  wait_for() {
+                    local name="$1"
+                    local check_fn="$2"
+                    local log_service="$3"
+
+                    for i in {1..45}; do
+                      if "$check_fn"; then
+                        return 0
+                      fi
+
+                      if [ "$i" -eq 45 ]; then
+                        echo "$name timed out"
+                        compose ps
+                        compose logs --no-color "$log_service"
+                        exit 1
+                      fi
+
+                      sleep 2
+                    done
+                  }
+
+                  check_postgres() {
+                    compose exec -T postgres pg_isready -U postgres -d hobbyistdb >/dev/null
+                  }
+
+                  check_redis() {
+                    compose exec -T redis redis-cli ping | grep -q PONG
+                  }
+
+                  check_minio() {
+                    curl --fail --silent --show-error http://localhost:9000/minio/health/live >/dev/null
+                  }
+
+                  wait_for "Postgres readiness check" check_postgres postgres
+                  wait_for "Redis readiness check" check_redis redis
+                  wait_for "MinIO readiness check" check_minio minio
+
+                  # Validate expected host port mappings after services are ready.
+                  compose port postgres 5432 | grep -q '5432$'
+                  compose port redis 6379 | grep -q '6379$'
+                  compose port minio 9000 | grep -q '9000$'
+                  compose port minio 9001 | grep -q '9001$'
+
+            - name: Dump compose diagnostics on failure
+              if: failure()
+              run: |
+                  docker compose -f Setup/WebServer/docker-compose.yml ps
+                  docker compose -f Setup/WebServer/docker-compose.yml logs --no-color
+
+            - name: Tear down docker compose stack
+              if: always()
+              run: docker compose -f Setup/WebServer/docker-compose.yml down -v
