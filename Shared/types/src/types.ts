@@ -89,7 +89,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/Auth/get-user-details": {
+    "/api/auth-session/get-user-details": {
         parameters: {
             query?: never;
             header?: never;
@@ -126,7 +126,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/Auth/refresh-token": {
+    "/api/auth-session/refresh-token": {
         parameters: {
             query?: never;
             header?: never;
@@ -492,15 +492,6 @@ export interface components {
         CreatePostResponse: {
             /** Format: uuid */
             postId: string;
-            userId: string;
-            hobby: string;
-            title: string;
-            description: string;
-            availableForTrade: boolean;
-            lookingFor?: string | null;
-            media: components["schemas"]["PostMediaReference"][];
-            /** Format: date-time */
-            createdAt: string;
         };
         FeatureFlagsResponse: {
             flags: {
@@ -516,13 +507,6 @@ export interface components {
         OtpResponse: {
             /** Format: date-time */
             otpExpiresAt: string;
-        };
-        PostMediaReference: {
-            objectKey: string;
-            url: string;
-            contentType: string;
-            /** Format: int64 */
-            sizeBytes: number;
         };
         ResendOtpRequest: {
             email: string;

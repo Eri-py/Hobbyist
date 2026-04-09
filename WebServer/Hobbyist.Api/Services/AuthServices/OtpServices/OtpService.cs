@@ -30,13 +30,26 @@ public class OtpService(
     )
     {
         var emailHash = logger.Hash(email);
+        var verifyRateLimitScope = GetOtpVerifyRateLimitScope(purpose);
         var rateLimitScope = GetOtpSendRateLimitScope(purpose);
+
+        // If verification attempts are currently locked out, do not send another OTP.
+        var verifyRateLimitResult = rateLimiter.CheckLimit(
+            verifyRateLimitScope,
+            emailHash,
+            OtpConfig.OtpMaxFailedVerificationAttempts,
+            ErrorMessages.TooManyOtpVerificationAttempts
+        );
+        if (!verifyRateLimitResult.IsSuccess)
+        {
+            return Result<OtpResponse>.FromError(verifyRateLimitResult);
+        }
 
         // Enforce per-email rate limit
         var rateLimitResult = rateLimiter.CheckLimit(
             rateLimitScope,
             emailHash,
-            OtpConfig.OtpMaxSendsPerWindow,
+            OtpConfig.OtpMaxSendRequestsPerWindow,
             ErrorMessages.TooManyOtpRequests
         );
         if (!rateLimitResult.IsSuccess)
@@ -48,13 +61,13 @@ public class OtpService(
         var cacheKey = GetOtpCacheKey(emailHash, purpose);
 
         // Create OTP with configured validity
-        var otpDetails = CreateOtp(OtpConfig.OtpValidForMinutes);
+        var otpDetails = CreateOtp(OtpConfig.OtpLifetimeMinutes);
 
         // Send OTP via email service
         var emailResult = await emailService.SendOtpEmailAsync(
             to: email,
             otp: otpDetails.Value,
-            otpValidFor: $"{OtpConfig.OtpValidForMinutes} minutes",
+            otpValidFor: $"{OtpConfig.OtpLifetimeMinutes} minutes",
             ct: ct
         );
 
@@ -68,11 +81,11 @@ public class OtpService(
         rateLimiter.Increment(
             rateLimitScope,
             emailHash,
-            TimeSpan.FromMinutes(OtpConfig.OtpRateLimitWindowMinutes)
+            TimeSpan.FromMinutes(OtpConfig.OtpSendRateLimitWindowMinutes)
         );
 
         // Store OTP in cache with expiration
-        cache.Set(cacheKey, otpDetails.Value, TimeSpan.FromMinutes(OtpConfig.OtpValidForMinutes));
+        cache.Set(cacheKey, otpDetails.Value, TimeSpan.FromMinutes(OtpConfig.OtpLifetimeMinutes));
 
         return Result<OtpResponse>.Success(new OtpResponse { OtpExpiresAt = otpDetails.ExpiresAt });
     }
@@ -82,10 +95,11 @@ public class OtpService(
         var emailHash = logger.Hash(email);
         var rateLimitScope = GetOtpVerifyRateLimitScope(purpose);
 
+        // Enforce failed-attempt verification rate limit.
         var rateLimitResult = rateLimiter.CheckLimit(
             rateLimitScope,
             emailHash,
-            OtpConfig.OtpMaxVerificationAttempts,
+            OtpConfig.OtpMaxFailedVerificationAttempts,
             ErrorMessages.TooManyOtpVerificationAttempts
         );
         if (!rateLimitResult.IsSuccess)
@@ -93,9 +107,10 @@ public class OtpService(
             return rateLimitResult;
         }
 
-        // Get cache key and retrieve stored OTP
+        // Get cache key and retrieve stored OTP.
         var cacheKey = GetOtpCacheKey(emailHash, purpose);
 
+        // Missing OTP means it was never issued or has already expired.
         if (!cache.TryGetValue<string>(cacheKey, out var cachedOtp))
         {
             logger.LogWarning(
@@ -106,12 +121,13 @@ public class OtpService(
             return Result.BadRequest(ErrorMessages.InvalidOrExpiredOtp);
         }
 
+        // For incorrect OTP, increment failed-attempt counter and reject.
         if (!string.Equals(cachedOtp, otp, StringComparison.OrdinalIgnoreCase))
         {
             rateLimiter.Increment(
                 rateLimitScope,
                 emailHash,
-                TimeSpan.FromMinutes(OtpConfig.OtpVerificationAttemptWindowMinutes)
+                TimeSpan.FromMinutes(OtpConfig.OtpVerifyRateLimitWindowMinutes)
             );
 
             logger.LogWarning(
@@ -123,13 +139,14 @@ public class OtpService(
         }
         else
         {
+            // Successful verification clears failed-attempt tracking.
             rateLimiter.Reset(rateLimitScope, emailHash);
 
-            // Mark email as verified for the specified purpose
+            // Mark email as verified for the specified purpose.
             var verifiedKey = GetVerifiedCacheKey(emailHash, purpose);
             cache.Set(verifiedKey, true, TimeSpan.FromMinutes(15));
 
-            // Remove OTP from cache after successful verification
+            // Remove OTP from cache after successful verification.
             cache.Remove(cacheKey);
             return Result.NoContent();
         }

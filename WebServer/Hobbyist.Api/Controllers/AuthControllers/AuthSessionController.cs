@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Hobbyist.Api.Controllers.AuthControllers
 {
-    [Route("api/[controller]")]
+    [Route("api/auth-session")]
     [ApiController]
     public class AuthSessionController(IAuthSessionService authService) : ControllerBase
     {

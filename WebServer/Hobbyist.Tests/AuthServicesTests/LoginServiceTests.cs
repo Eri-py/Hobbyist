@@ -94,7 +94,7 @@ public class LoginServiceTests : DatabaseTestBase
 
         var expectedOtpResponse = new OtpResponse
         {
-            OtpExpiresAt = DateTime.UtcNow.AddMinutes(OtpConfig.OtpValidForMinutes),
+            OtpExpiresAt = DateTime.UtcNow.AddMinutes(OtpConfig.OtpLifetimeMinutes),
         };
 
         _otpServiceMock
@@ -143,7 +143,7 @@ public class LoginServiceTests : DatabaseTestBase
 
         var expectedOtpResponse = new OtpResponse
         {
-            OtpExpiresAt = DateTime.UtcNow.AddMinutes(OtpConfig.OtpValidForMinutes),
+            OtpExpiresAt = DateTime.UtcNow.AddMinutes(OtpConfig.OtpLifetimeMinutes),
         };
 
         _otpServiceMock
@@ -314,7 +314,7 @@ public class LoginServiceTests : DatabaseTestBase
                 Result<OtpResponse>.Success(
                     new OtpResponse
                     {
-                        OtpExpiresAt = DateTime.UtcNow.AddMinutes(OtpConfig.OtpValidForMinutes),
+                        OtpExpiresAt = DateTime.UtcNow.AddMinutes(OtpConfig.OtpLifetimeMinutes),
                     }
                 )
             );
