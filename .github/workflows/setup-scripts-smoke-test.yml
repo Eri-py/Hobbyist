@@ -1,0 +1,56 @@
+name: Setup Scripts Smoke Test
+permissions:
+    contents: read
+
+on:
+    push:
+        branches: ["main"]
+        paths:
+            - "Scripts/**"
+            - "Setup/**"
+            - "package.json"
+            - ".github/workflows/setup-scripts-smoke-test.yml"
+    pull_request:
+        branches: ["main"]
+        paths:
+            - "Scripts/**"
+            - "Setup/**"
+            - "package.json"
+            - ".github/workflows/setup-scripts-smoke-test.yml"
+
+jobs:
+    scripts-smoke:
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Setup pnpm
+              uses: pnpm/action-setup@v4
+              with:
+                  version: 10.33.0
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 25.x
+                  cache: "pnpm"
+
+            - name: Smoke test setup copy command
+              run: pnpm exec node Scripts/copy-configs.js
+
+            - name: Validate copied files exist
+              run: |
+                  test -f WebServer/Hobbyist.Api/appsettings.Development.json
+                  test -f WebServer/Hobbyist.Api/featureflags.Development.json
+                  test -f Website/.env.development
+                  test -f Mobile/.env.development
+
+            - name: Smoke test clean script command
+              run: pnpm clean
+
+            - name: Smoke test feature flag generation command
+              run: pnpm generate-feature-flags
+
+            - name: Ensure generated files are up to date
+              run: git diff --exit-code -- WebServer/Hobbyist.Api/Services/FeatureFlags.cs Shared/types/src/featureFlags.ts

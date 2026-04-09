@@ -1,9 +1,4 @@
 # ============================================
-# TAILSCALE CERTS
-# ============================================
-certs/
-
-# ============================================
 # EDITOR & IDE
 # ============================================
 .vscode/
@@ -16,6 +11,7 @@ certs/
 # Agent workspace context files
 .github/AGENTS.md
 .github/CODEBASE_CONTEXT.md
+TODOs.md
 
 # ============================================
 # NODE.JS / VITE
@@ -77,6 +73,9 @@ TestResult.xml
 .env.*
 .env.local
 .env.*.local
+# Keep committed setup templates for onboarding.
+!Setup/Mobile/.env.development
+!Setup/Website/.env.development
 
 # App settings (keep template, ignore environment-specific)
 appsettings.Development.json
@@ -84,13 +83,16 @@ appsettings.Production.json
 appsettings.Staging.json
 appsettings.*.json
 !appsettings.json
-!appsettings.*.Example.json
+# Keep committed setup template used by Scripts/copy-configs.js.
+!Setup/WebServer/appsettings.Development.json
 
 # Feature flags (dev overrides are personal — don't commit)
 featureflags.Development.json
+# Keep committed setup template used by Scripts/copy-configs.js.
+!Setup/WebServer/featureflags.Development.json
 
 #Cerificates
-cert/
+certs/
 
 # ============================================
 # OPERATING SYSTEM

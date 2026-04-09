@@ -41,6 +41,12 @@ pnpm exec node Scripts/copy-configs.js
 
 This copies all config templates from `Setup/` to their target locations, including `appsettings.Development.json` and `featureflags.Development.json` (gitignored — edit them locally).
 
+Templates are grouped by target app to keep Setup maintainable:
+
+- `Setup/WebServer/`
+- `Setup/Website/`
+- `Setup/Mobile/`
+
 ### 2. Tailscale & HTTPS cert
 
 Find your MagicDNS hostname in the Tailscale app (e.g. `{your-machine.tail123456.ts.net}`), then in an elevated PowerShell:

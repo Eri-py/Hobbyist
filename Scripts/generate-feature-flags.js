@@ -2,7 +2,7 @@
 //   - Services/FeatureFlags.cs         (C# constants for the backend)
 //   - Shared/types/src/featureFlags.ts (TS constants for the frontend)
 //
-// Usage:  node scripts/generate-feature-flags.js
+// Usage:  node Scripts/generate-feature-flags.js
 //         pnpm generate-feature-flags
 
 import { readFileSync, writeFileSync } from "fs";
@@ -13,17 +13,15 @@ const jsonPath = join(root, "WebServer", "Hobbyist.Api", "featureflags.json");
 const csOutputPath = join(root, "WebServer", "Hobbyist.Api", "Services", "FeatureFlags.cs");
 const tsOutputPath = join(root, "Shared", "types", "src", "featureFlags.ts");
 
-const json = JSON.parse(readFileSync(jsonPath, "utf-8"));
-const flags = Object.keys(json.FeatureManagement ?? {});
-
-if (flags.length === 0) {
-  console.warn("No flags found in FeatureManagement — output files will be empty.");
+function readFeatureFlags() {
+  const json = JSON.parse(readFileSync(jsonPath, "utf-8"));
+  return Object.keys(json.FeatureManagement ?? {});
 }
 
-// --- C# ---
-const csLines = flags.map((name) => `    public const string ${name} = "${name}";`);
+function generateCSharpFeatureFlags(flags) {
+  const csLines = flags.map((name) => `    public const string ${name} = "${name}";`);
 
-const csContent = `// AUTO-GENERATED — do not edit manually.
+  const csContent = `// AUTO-GENERATED — do not edit manually.
 // Regenerate by running: pnpm generate-feature-flags
 // Source of truth: WebServer/Hobbyist.Api/featureflags.json
 
@@ -37,13 +35,14 @@ ${csLines.join("\n")}
 }
 `;
 
-writeFileSync(csOutputPath, csContent, "utf-8");
-console.log(`Generated ${csOutputPath} with ${flags.length} flag(s): ${flags.join(", ")}`);
+  writeFileSync(csOutputPath, csContent, "utf-8");
+  console.log(`Generated ${csOutputPath} with ${flags.length} flag(s): ${flags.join(", ")}`);
+}
 
-// --- TypeScript ---
-const tsLines = flags.map((name) => `  ${name}: "${name}",`);
+function generateTypeScriptFeatureFlags(flags) {
+  const tsLines = flags.map((name) => `  ${name}: "${name}",`);
 
-const tsContent = `// AUTO-GENERATED — do not edit manually.
+  const tsContent = `// AUTO-GENERATED — do not edit manually.
 // Regenerate by running: pnpm generate-feature-flags
 // Source of truth: WebServer/Hobbyist.Api/featureflags.json
 
@@ -54,5 +53,19 @@ ${tsLines.join("\n")}
 export type FeatureFlag = (typeof FeatureFlags)[keyof typeof FeatureFlags];
 `;
 
-writeFileSync(tsOutputPath, tsContent, "utf-8");
-console.log(`Generated ${tsOutputPath} with ${flags.length} flag(s): ${flags.join(", ")}`);
+  writeFileSync(tsOutputPath, tsContent, "utf-8");
+  console.log(`Generated ${tsOutputPath} with ${flags.length} flag(s): ${flags.join(", ")}`);
+}
+
+function main() {
+  const flags = readFeatureFlags();
+
+  if (flags.length === 0) {
+    console.warn("No flags found in FeatureManagement — output files will be empty.");
+  }
+
+  generateCSharpFeatureFlags(flags);
+  generateTypeScriptFeatureFlags(flags);
+}
+
+main();

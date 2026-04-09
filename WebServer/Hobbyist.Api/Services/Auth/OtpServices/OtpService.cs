@@ -1,4 +1,5 @@
 ﻿using Hobbyist.Api.Dtos.Auth;
+using Hobbyist.Api.Extensions;
 using Hobbyist.Api.Services.CacheServices;
 using Hobbyist.Api.Services.EmailServices;
 using Hobbyist.Common;
@@ -75,7 +76,7 @@ public class OtpService(ICache cache, IEmailService emailService, ILogger<OtpSer
         {
             logger.LogWarning(
                 "OTP verification failed for {Email} (purpose: '{Purpose}')",
-                email,
+                logger.Hash(email),
                 purpose
             );
             return Result.BadRequest(ErrorMessages.InvalidOrExpiredOtp);
@@ -115,7 +116,7 @@ public class OtpService(ICache cache, IEmailService emailService, ILogger<OtpSer
         {
             logger.LogWarning(
                 "OTP send rate limit exceeded for {Email} (purpose: '{Purpose}')",
-                email,
+                logger.Hash(email),
                 purpose
             );
             return Result.TooManyRequests(ErrorMessages.TooManyOtpRequests);

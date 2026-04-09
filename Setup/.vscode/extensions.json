@@ -5,6 +5,7 @@
     "ms-mssql.mssql",
     "dbaeumer.vscode-eslint",
     "burkeholland.simple-react-snippets",
-    "esbenp.prettier-vscode"
+    "esbenp.prettier-vscode",
+    "expo.vscode-expo-tools"
   ]
 }

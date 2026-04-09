@@ -6,15 +6,15 @@ import { KeyboardProvider } from "react-native-keyboard-controller";
 import { ThemeProvider } from "@/providers/shared/ThemeProvider";
 import { AuthProvider } from "@/providers/app/AuthProvider";
 
-export default function RootLayout() {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: 1,
-      },
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
     },
-  });
+  },
+});
 
+export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
