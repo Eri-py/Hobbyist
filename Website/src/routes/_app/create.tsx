@@ -1,6 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { FormProvider } from "react-hook-form";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import type { KeyboardEvent } from "react";
 
 import Stack from "@mui/material/Stack";
@@ -11,6 +11,7 @@ import { ErrorStack } from "@/components/shared/ErrorStack";
 import { useCreate } from "@/hooks/create/useCreate";
 import { DesktopCreateForm } from "@/components/create/desktop/DesktopCreateForm";
 import { MobileCreateForm } from "@/components/create/mobile/MobileCreateForm";
+import { useAuth } from "@hobbyist/hooks";
 
 const SERVER_ERROR_ID = "create-server-error";
 
@@ -19,7 +20,17 @@ export const Route = createFileRoute("/_app/create")({
 });
 
 function CreatePage() {
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const { isDesktop } = useDeviceType();
+
+  // Redirect unauthenticated users away from create page.
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate({ to: "/" });
+    }
+  }, [isAuthenticated, navigate]);
+
   const {
     files,
     getRootProps,
@@ -66,6 +77,11 @@ function CreatePage() {
       event.preventDefault();
     }
   };
+
+  // Don't render the form if user is unauthenticated
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <FormProvider {...methods}>
