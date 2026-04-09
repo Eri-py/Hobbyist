@@ -13,16 +13,30 @@ type FormHeaderProps = {
 
 export function FormHeader({ header, subtext, activeStep, totalSteps }: FormHeaderProps) {
   return (
-    <Stack direction="row" justifyContent="space-between" alignItems="center">
+    <Stack
+      direction="row"
+      sx={{
+        justifyContent: "space-between",
+        alignItems: "center"
+      }}>
       <Stack>
-        <Typography fontWeight={500} fontSize={24} color="textPrimary">
+        <Typography
+          color="textPrimary"
+          sx={{
+            fontWeight: 500,
+            fontSize: 24
+          }}>
           {header}
         </Typography>
-        <Typography fontWeight={200} fontSize={15} color="textSecondary">
+        <Typography
+          color="textSecondary"
+          sx={{
+            fontWeight: 200,
+            fontSize: 15
+          }}>
           {subtext}
         </Typography>
       </Stack>
-
       <CircularProgressBar totalSteps={totalSteps} activeStep={activeStep} />
     </Stack>
   );

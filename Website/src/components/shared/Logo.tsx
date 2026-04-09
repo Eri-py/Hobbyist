@@ -33,9 +33,19 @@ type LogoWithNameProps = {
 export function LogoWithName({ size, align, color }: LogoWithNameProps) {
   const logoWithName = (iconSize: string, textSize: number, color?: string) => {
     return (
-      <Stack direction="row" alignSelf={align ?? "unset"} gap={0.5}>
+      <Stack
+        direction="row"
+        sx={{
+          alignSelf: align ?? "unset",
+          gap: 0.5
+        }}>
         <Logo width={iconSize} color={color} />
-        <Typography color={color ?? "primary"} fontSize={textSize} fontWeight={700}>
+        <Typography
+          color={color ?? "primary"}
+          sx={{
+            fontSize: textSize,
+            fontWeight: 700
+          }}>
           Hobbyist
         </Typography>
       </Stack>

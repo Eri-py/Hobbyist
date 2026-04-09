@@ -18,17 +18,17 @@ function HomePage() {
   return (
     <Stack>
       <Stack
-        flex={1}
-        gap={isDesktop ? 3 : 0}
-        alignItems="center"
-        overflow="auto"
-        padding={isDesktop ? 1 : 0}
-      >
+        sx={{
+          flex: 1,
+          gap: isDesktop ? 3 : 0,
+          alignItems: "center",
+          overflow: "auto",
+          padding: isDesktop ? 1 : 0
+        }}>
         {mockPosts.map((post: Post) => (
           <PostTile key={post.id} post={post} />
         ))}
       </Stack>
-
       {!isAuthenticated && <LoginSnackbar />}
     </Stack>
   );

@@ -25,8 +25,15 @@ export function InterestsStep({ popularInterests, isPending }: InterestsStepProp
   } = useInterestsStep(popularInterests);
 
   return (
-    <Stack gap={2}>
-      <Stack direction="row" flexWrap="wrap" gap={0.75}>
+    <Stack sx={{
+      gap: 2
+    }}>
+      <Stack
+        direction="row"
+        sx={{
+          flexWrap: "wrap",
+          gap: 0.75
+        }}>
         {popularInterests.map((name) => {
           const selected = interests.includes(name);
           return (
@@ -42,8 +49,9 @@ export function InterestsStep({ popularInterests, isPending }: InterestsStepProp
           );
         })}
       </Stack>
-
-      <Stack direction="row" gap={1}>
+      <Stack direction="row" sx={{
+        gap: 1
+      }}>
         <TextField
           size="small"
           fullWidth
@@ -57,9 +65,13 @@ export function InterestsStep({ popularInterests, isPending }: InterestsStepProp
           + Add
         </Button>
       </Stack>
-
       {customInterests.length > 0 && (
-        <Stack direction="row" flexWrap="wrap" gap={0.75}>
+        <Stack
+          direction="row"
+          sx={{
+            flexWrap: "wrap",
+            gap: 0.75
+          }}>
           {customInterests.map((name) => (
             <Chip
               key={name}
@@ -71,13 +83,13 @@ export function InterestsStep({ popularInterests, isPending }: InterestsStepProp
           ))}
         </Stack>
       )}
-
       {interestsError && (
-        <Typography color="error" fontSize={13}>
+        <Typography color="error" sx={{
+          fontSize: 13
+        }}>
           {interestsError}
         </Typography>
       )}
-
       <Button type="submit" variant="contained" size="large" loading={isPending}>
         Complete Sign Up
       </Button>

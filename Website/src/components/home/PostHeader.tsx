@@ -18,22 +18,39 @@ export function PostHeader({ userName, userAvatar, timestamp, title }: PostHeade
   };
 
   return (
-    <Stack gap={1}>
-      <Stack direction="row" alignItems="center" gap={1.5}>
+    <Stack sx={{
+      gap: 1
+    }}>
+      <Stack
+        direction="row"
+        sx={{
+          alignItems: "center",
+          gap: 1.5
+        }}>
         <Avatar src={userAvatar} sx={{ bgcolor: "primary.main" }}>
           {getInitials(userName)}
         </Avatar>
-        <Stack flex={1}>
-          <Typography variant="body1" fontWeight="600">
+        <Stack sx={{
+          flex: 1
+        }}>
+          <Typography variant="body1" sx={{
+            fontWeight: "600"
+          }}>
             {userName}
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             {timestamp}
           </Typography>
         </Stack>
       </Stack>
-
-      <Typography variant="h6" fontWeight="700" sx={{ lineHeight: 1.2 }}>
+      <Typography
+        variant="h6"
+        sx={{
+          fontWeight: "700",
+          lineHeight: 1.2
+        }}>
         {title}
       </Typography>
     </Stack>

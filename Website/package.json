@@ -27,7 +27,6 @@
     "@tanstack/react-router": "^1.168.10",
     "axios": "^1.13.6",
     "date-fns": "^4.1.0",
-    "mui-one-time-password-input": "^6.0.0",
     "react": "19.2.5",
     "react-dom": "19.2.5",
     "react-dropzone": "^15.0.0",

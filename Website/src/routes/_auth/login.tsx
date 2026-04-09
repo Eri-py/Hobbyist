@@ -40,10 +40,11 @@ function Login() {
           {serverErrorMessage}
         </Alert>
       )}
-
       <FormProvider {...methods}>
         <form onSubmit={methods.handleSubmit(onSubmit)} onKeyDown={onEnter}>
-          <Stack gap={2}>
+          <Stack sx={{
+            gap: 2
+          }}>
             <FormHeader
               header={loginHeaderConfig[step].header}
               subtext={loginHeaderConfig[step].subtext}

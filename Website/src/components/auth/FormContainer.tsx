@@ -12,13 +12,14 @@ export function FormContainer({ children, step }: FormContainerProps) {
   const isDesktop = useDeviceType();
   return (
     <Stack
-      padding={1.5}
-      gap={2}
-      flex={1}
-      maxWidth={step === 4 ? 600 : !isDesktop ? "100%" : 500}
-      height="fit-content"
-      bgcolor={theme.palette.background.default}
-    >
+      sx={{
+        padding: 1.5,
+        gap: 2,
+        flex: 1,
+        maxWidth: step === 4 ? 600 : !isDesktop ? "100%" : 500,
+        height: "fit-content",
+        bgcolor: theme.palette.background.default
+      }}>
       {children}
     </Stack>
   );

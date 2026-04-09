@@ -28,14 +28,15 @@ export function AuthFooter({ mode }: AuthFooterProps) {
   const currentContent = footerContent[mode];
 
   return (
-    <Stack gap={0.5}>
+    <Stack sx={{
+      gap: 0.5
+    }}>
       <Typography
-        alignSelf="center"
         sx={{
+          alignSelf: "center",
           color: theme.palette.text.primary,
-          fontSize: 15,
-        }}
-      >
+          fontSize: 15
+        }}>
         {currentContent.question}{" "}
         <Link
           component="button"

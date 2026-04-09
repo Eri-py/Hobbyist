@@ -41,13 +41,21 @@ export function PasswordRequirements({ password }: PasswordRequirementsTypes) {
         const met = req.test(password);
 
         return (
-          <Stack direction="row" gap={0.25} alignItems="center" marginLeft={1}>
+          <Stack
+            direction="row"
+            sx={{
+              gap: 0.25,
+              alignItems: "center",
+              marginLeft: 1
+            }}>
             {met ? (
               <CheckIcon fontSize="small" sx={{ color: theme.palette.success.main }} />
             ) : (
               <CloseIcon fontSize="small" sx={{ color: theme.palette.error.main }} />
             )}
-            <Typography color="textSecondary" fontSize={15}>
+            <Typography color="textSecondary" sx={{
+              fontSize: 15
+            }}>
               {req.message}
             </Typography>
           </Stack>
@@ -57,8 +65,12 @@ export function PasswordRequirements({ password }: PasswordRequirementsTypes) {
   );
 
   return (
-    <Stack gap={1}>
-      <Typography color="textSecondary" fontSize={14}>
+    <Stack sx={{
+      gap: 1
+    }}>
+      <Typography color="textSecondary" sx={{
+        fontSize: 14
+      }}>
         Passwords must contain:
       </Typography>
       {requirements}

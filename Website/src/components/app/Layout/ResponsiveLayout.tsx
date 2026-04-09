@@ -20,31 +20,44 @@ export function ResponsiveLayout() {
   return (
     <Stack sx={{ height: "100dvh", overflow: "hidden" }}>
       {!isDesktop && <MobileNavbar />}
-
-      <Stack flex={1} direction={isDesktop ? "row" : "column"} overflow="hidden">
+      <Stack
+        direction={isDesktop ? "row" : "column"}
+        sx={{
+          flex: 1,
+          overflow: "hidden"
+        }}>
         {isDesktop && (
           <Stack
-            flex={1}
-            maxWidth={isSidebarOpen ? 340 : 96}
-            overflow="visible"
-            sx={{ transition: "width 180ms ease" }}
-          >
+            sx={{
+              flex: 1,
+              maxWidth: isSidebarOpen ? 340 : 96,
+              overflow: "visible",
+              transition: "width 180ms ease"
+            }}>
             <LeftSidebar />
           </Stack>
         )}
 
-        <Stack flex={isDesktop ? 3 : 1} overflow="hidden" paddingBottom={isDesktop ? 0 : 7}>
+        <Stack
+          sx={{
+            flex: isDesktop ? 3 : 1,
+            overflow: "hidden",
+            paddingBottom: isDesktop ? 0 : 7
+          }}>
           {isDesktop && <DesktopNavbar />}
           <CustomOutlet padding={isDesktop ? 2 : 1} minHeight={isDesktop ? 0 : undefined} />
         </Stack>
 
         {isDesktop && isAuthenticated && flags[FeatureFlags.RightSidebar] && (
-          <Stack flex={1} maxWidth={340}>
+          <Stack
+            sx={{
+              flex: 1,
+              maxWidth: 340
+            }}>
             <RightSidebar />
           </Stack>
         )}
       </Stack>
-
       {!isDesktop && <BottomNavbar />}
     </Stack>
   );

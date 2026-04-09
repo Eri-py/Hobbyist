@@ -11,18 +11,18 @@ export function CustomOutlet({ padding, minHeight }: CustomOutletProps) {
   return (
     <Stack
       component="main"
-      flex={1}
-      minHeight={minHeight}
-      overflow="auto"
-      padding={padding}
       sx={{
+        flex: 1,
+        minHeight: minHeight,
+        overflow: "auto",
+        padding: padding,
         scrollbarWidth: "none",
         msOverflowStyle: "none",
+
         "&::-webkit-scrollbar": {
           display: "none",
-        },
-      }}
-    >
+        }
+      }}>
       <Outlet />
     </Stack>
   );

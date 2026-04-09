@@ -36,7 +36,9 @@ export function DesktopNavbar() {
         }}
       >
         {/* Left: Logo */}
-        <Stack direction="row" alignItems="center">
+        <Stack direction="row" sx={{
+          alignItems: "center"
+        }}>
           <Button
             variant="text"
             disableRipple
@@ -70,7 +72,9 @@ export function DesktopNavbar() {
 
         {/* Right: Auth or Create Button */}
         {isAuthenticated ? (
-          <Stack direction="row" alignItems="center">
+          <Stack direction="row" sx={{
+            alignItems: "center"
+          }}>
             <Button
               variant="text"
               startIcon={<AddIcon />}
@@ -87,7 +91,12 @@ export function DesktopNavbar() {
             </Button>
           </Stack>
         ) : (
-          <Stack direction="row" alignItems="center" gap={1.5}>
+          <Stack
+            direction="row"
+            sx={{
+              alignItems: "center",
+              gap: 1.5
+            }}>
             <AuthButton onClick={() => navigate({ to: "/login" })} variant="text">
               Login
             </AuthButton>

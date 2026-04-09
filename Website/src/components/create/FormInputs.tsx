@@ -65,7 +65,9 @@ export function FormInput({
       : baseInputSx;
 
   return (
-    <Stack gap={1}>
+    <Stack sx={{
+      gap: 1
+    }}>
       {label && <Typography variant="subtitle2">{label}</Typography>}
       <TextField
         {...register(field)}
@@ -97,9 +99,10 @@ export function TradeOptionsFormInput({
   const isTradable = watch("availableForTrade") ?? false;
 
   return (
-    <Stack gap={1}>
+    <Stack sx={{
+      gap: 1
+    }}>
       <Typography variant="subtitle2">{heading}</Typography>
-
       <FormControlLabel
         control={
           <Checkbox
@@ -117,7 +120,6 @@ export function TradeOptionsFormInput({
         }
         label={toggleLabel}
       />
-
       <FormInput
         field="lookingFor"
         placeholder={fieldLabel}

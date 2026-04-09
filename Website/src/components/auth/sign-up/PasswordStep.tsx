@@ -17,7 +17,11 @@ export function PasswordStep({ handleNext }: PasswordProps) {
   const password: string = useDebounce(watch("password") || "");
 
   return (
-    <Stack flex={1} gap={1.5}>
+    <Stack
+      sx={{
+        flex: 1,
+        gap: 1.5
+      }}>
       <FormTextField
         type="password"
         label="Password"
@@ -26,9 +30,7 @@ export function PasswordStep({ handleNext }: PasswordProps) {
         autoComplete="new-password"
         autoFocus
       />
-
       <PasswordRequirements password={password} />
-
       <FormTextField
         type="password"
         label="Confirm Password"
@@ -36,7 +38,6 @@ export function PasswordStep({ handleNext }: PasswordProps) {
         startIcon={<LockIcon />}
         autoComplete="new-password"
       />
-
       <Button type="button" variant="contained" size="large" onClick={handleNext}>
         Continue
       </Button>

@@ -40,14 +40,20 @@ export function MobileCreateForm({
 
   return (
     <Stack
-      width="100%"
-      maxWidth={1500}
       direction="column"
-      marginX="auto"
-      paddingBottom={18}
-      alignItems="flex-start"
-    >
-      <Stack gap={3} width="100%" minWidth={0}>
+      sx={{
+        width: "100%",
+        maxWidth: 1500,
+        marginX: "auto",
+        paddingBottom: 18,
+        alignItems: "flex-start"
+      }}>
+      <Stack
+        sx={{
+          gap: 3,
+          width: "100%",
+          minWidth: 0
+        }}>
         <MobileHeader
           totalSteps={STEPS_LABELS.length}
           activeStep={activeStep}
@@ -55,9 +61,13 @@ export function MobileCreateForm({
           onNext={onNext}
           onBack={onBack}
         />
-        <Stack gap={3}>
+        <Stack sx={{
+          gap: 3
+        }}>
           {activeStep === 0 && (
-            <Stack gap={1}>
+            <Stack sx={{
+              gap: 1
+            }}>
               <Typography variant="subtitle2">Images and videos</Typography>
 
               <Box sx={{ width: "100%", aspectRatio: "8 / 7", minHeight: 250, display: "flex" }}>
@@ -80,7 +90,9 @@ export function MobileCreateForm({
           )}
 
           {activeStep === 1 && (
-            <Stack gap={2}>
+            <Stack sx={{
+              gap: 2
+            }}>
               <FormInput
                 field="hobby"
                 label="Hobby"

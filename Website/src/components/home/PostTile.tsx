@@ -65,12 +65,13 @@ export function PostTile({ post }: { post: Post }) {
 
   return (
     <Stack
-      width="100%"
-      maxWidth={{ sm: 650 }}
-      padding={2}
-      gap={1.5}
-      sx={{ aspectRatio: { xs: 7 / 9, sm: 9 / 8 } }}
-    >
+      sx={{
+        width: "100%",
+        maxWidth: { sm: 650 },
+        padding: 2,
+        gap: 1.5,
+        aspectRatio: { xs: 7 / 9, sm: 9 / 8 }
+      }}>
       {content}
     </Stack>
   );

@@ -14,7 +14,9 @@ type UsernameAndPasswordProps = {
 
 export function UsernameAndPassword({ handleNext, isPending }: UsernameAndPasswordProps) {
   return (
-    <Stack gap={2}>
+    <Stack sx={{
+      gap: 2
+    }}>
       <FormTextField
         type="text"
         label="Username or Email"
@@ -23,7 +25,6 @@ export function UsernameAndPassword({ handleNext, isPending }: UsernameAndPasswo
         autoComplete="email"
         autoFocus
       />
-
       <FormTextField
         type="password"
         label="Password"
@@ -31,7 +32,6 @@ export function UsernameAndPassword({ handleNext, isPending }: UsernameAndPasswo
         startIcon={<LockIcon />}
         autoComplete="off"
       />
-
       <Button
         variant="contained"
         size="large"
@@ -41,9 +41,7 @@ export function UsernameAndPassword({ handleNext, isPending }: UsernameAndPasswo
       >
         Continue
       </Button>
-
       <OAuthButtons mode="login" />
-
       <AuthFooter mode="login" />
     </Stack>
   );

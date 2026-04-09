@@ -7,14 +7,13 @@ type PostImageProps = {
 export function PostImage({ imageUrl }: PostImageProps) {
   return (
     <Stack
-      flex={1}
       sx={{
+        flex: 1,
         backgroundImage: `url(${imageUrl})`,
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",
-        borderRadius: 1,
-      }}
-    />
+        borderRadius: 1
+      }} />
   );
 }

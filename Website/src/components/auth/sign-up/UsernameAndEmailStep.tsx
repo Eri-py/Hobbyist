@@ -14,7 +14,9 @@ type UsernameAndEmailStepProps = {
 
 export function UsernameAndEmailStep({ handleNext, isPending }: UsernameAndEmailStepProps) {
   return (
-    <Stack gap={2}>
+    <Stack sx={{
+      gap: 2
+    }}>
       <FormTextField
         type="text"
         label="Username"
@@ -23,7 +25,6 @@ export function UsernameAndEmailStep({ handleNext, isPending }: UsernameAndEmail
         autoComplete="off"
         autoFocus
       />
-
       <FormTextField
         type="email"
         label="Email"
@@ -31,7 +32,6 @@ export function UsernameAndEmailStep({ handleNext, isPending }: UsernameAndEmail
         startIcon={<EmailOutlinedIcon />}
         autoComplete="email"
       />
-
       <Button
         variant="contained"
         size="large"
@@ -41,9 +41,7 @@ export function UsernameAndEmailStep({ handleNext, isPending }: UsernameAndEmail
       >
         Continue
       </Button>
-
       <OAuthButtons mode="sign-up" />
-
       <AuthFooter mode="sign-up" />
     </Stack>
   );

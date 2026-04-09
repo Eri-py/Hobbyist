@@ -145,7 +145,12 @@ export function SortableMediaStrip({
             scrollbarColor: (theme) => `${theme.palette.divider} transparent`,
           }}
         >
-          <Stack direction="row" gap={1} sx={{ display: "inline-flex" }}>
+          <Stack
+            direction="row"
+            sx={{
+              gap: 1,
+              display: "inline-flex"
+            }}>
             {files.map((file) => (
               <SortableThumbnail
                 key={file.id}

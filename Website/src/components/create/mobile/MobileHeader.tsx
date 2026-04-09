@@ -24,24 +24,43 @@ export function MobileHeader({
   const displayStep = activeStep + 1;
 
   return (
-    <Stack direction="row" alignItems="center" justifyContent="space-between">
-      <Stack direction="row" alignItems="center" gap={1.5}>
+    <Stack
+      direction="row"
+      sx={{
+        alignItems: "center",
+        justifyContent: "space-between"
+      }}>
+      <Stack
+        direction="row"
+        sx={{
+          alignItems: "center",
+          gap: 1.5
+        }}>
         <CircularProgressBar totalSteps={totalSteps} activeStep={activeStep} />
 
-        <Stack gap={0.25}>
+        <Stack sx={{
+          gap: 0.25
+        }}>
           <Typography
             variant="caption"
-            color="text.secondary"
-            sx={{ textTransform: "uppercase", letterSpacing: "0.06em", lineHeight: 1.2 }}
-          >
+            sx={{
+              color: "text.secondary",
+              textTransform: "uppercase",
+              letterSpacing: "0.06em",
+              lineHeight: 1.2
+            }}>
             Step {displayStep} of {totalSteps}
           </Typography>
-          <Typography variant="body2" fontWeight={600} sx={{ lineHeight: 1.3 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              fontWeight: 600,
+              lineHeight: 1.3
+            }}>
             {stepLabel}
           </Typography>
         </Stack>
       </Stack>
-
       {activeStep === 0 ? (
         <Button
           variant="text"

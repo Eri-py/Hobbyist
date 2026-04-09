@@ -2,7 +2,7 @@ import { Controller, get, useFormContext } from "react-hook-form";
 
 import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
-import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
+import PersonOutlineIcon from "@mui/icons-material/PersonOutlined";
 
 import { SegmentedDatePicker } from "@/components/shared/SegmentedDatePicker";
 import { FormTextField } from "../FormTextField";
@@ -15,7 +15,9 @@ export function PersonalDetails({ handleNext }: PersonalDetailsProps) {
   const { control } = useFormContext();
 
   return (
-    <Stack gap={1.5}>
+    <Stack sx={{
+      gap: 1.5
+    }}>
       <FormTextField
         type="text"
         label="Firstname"
@@ -24,7 +26,6 @@ export function PersonalDetails({ handleNext }: PersonalDetailsProps) {
         autoComplete="given-name"
         autoFocus
       />
-
       <FormTextField
         type="text"
         label="Lastname"
@@ -32,7 +33,6 @@ export function PersonalDetails({ handleNext }: PersonalDetailsProps) {
         startIcon={<PersonOutlineIcon />}
         autoComplete="family-name"
       />
-
       <Controller
         name="dateOfBirth"
         control={control}
@@ -44,7 +44,6 @@ export function PersonalDetails({ handleNext }: PersonalDetailsProps) {
           />
         )}
       />
-
       <Button type="button" variant="contained" size="large" onClick={handleNext}>
         Continue
       </Button>

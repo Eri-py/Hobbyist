@@ -5,12 +5,12 @@ export function RightSidebar() {
   const theme = useTheme();
   return (
     <Stack
-      height="100%"
-      p={2}
-      gap={2}
-      borderLeft={`1px solid ${alpha(theme.palette.divider, 0.25)}`}
-    >
-      This is empty for now
-    </Stack>
+      sx={{
+        height: "100%",
+        p: 2,
+        gap: 2,
+        borderLeft: `1px solid ${alpha(theme.palette.divider, 0.25)}`
+      }}>This is empty for now
+          </Stack>
   );
 }

@@ -20,7 +20,9 @@ export function OAuthButtons({ mode }: OAuthButtonGroupTypes) {
   if (!flags[FeatureFlags.OAuthButtons]) return null;
 
   return (
-    <Stack gap={1.5}>
+    <Stack sx={{
+      gap: 1.5
+    }}>
       <Box sx={{ display: "flex", alignItems: "center" }}>
         <Divider sx={{ flexGrow: 1 }} />
         <Typography
@@ -35,14 +37,12 @@ export function OAuthButtons({ mode }: OAuthButtonGroupTypes) {
         </Typography>
         <Divider sx={{ flexGrow: 1 }} />
       </Box>
-
       <Button variant="outlined" size="large" type="button" sx={{ gap: 1 }}>
         <GoogleIcon width="1.5rem" />
         <Typography color="textPrimary">
           {mode === "login" ? "Login with Google" : "Sign up with Google"}
         </Typography>
       </Button>
-
       <Divider sx={{ borderColor: theme.palette.divider }} />
     </Stack>
   );

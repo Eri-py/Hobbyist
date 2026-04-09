@@ -121,7 +121,6 @@ export function VideoPlayer({ src, onRemove, showRemoveButton = false }: VideoPl
         onPlay={() => setIsPlaying(true)}
         onClick={togglePlayPause}
       />
-
       {showRemoveButton && onRemove && (
         <OverlayIconButton
           onClick={handleRemove}
@@ -136,7 +135,6 @@ export function VideoPlayer({ src, onRemove, showRemoveButton = false }: VideoPl
           <CloseIcon sx={{ color: "white" }} />
         </OverlayIconButton>
       )}
-
       {showControls && (
         <OverlayIconButton
           onClick={togglePlayPause}
@@ -159,24 +157,22 @@ export function VideoPlayer({ src, onRemove, showRemoveButton = false }: VideoPl
           )}
         </OverlayIconButton>
       )}
-
       {showControls && (
         <Stack
           direction="row"
-          alignItems="center"
-          position="absolute"
-          bottom={0}
-          left={0}
-          right={0}
-          padding={1}
-          justifyContent="space-between"
           sx={{
+            alignItems: "center",
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            padding: 1,
+            justifyContent: "space-between",
             background: "linear-gradient(transparent, rgba(0,0,0,0.6))",
             transition: "opacity 0.3s ease",
             opacity: showControls ? 1 : 0,
-            zIndex: 10,
-          }}
-        >
+            zIndex: 10
+          }}>
           <OverlayIconButton onClick={toggleMute} sx={{ padding: 1 }}>
             {isMuted ? (
               <VolumeOffIcon fontSize="small" sx={{ color: "white" }} />
@@ -185,7 +181,12 @@ export function VideoPlayer({ src, onRemove, showRemoveButton = false }: VideoPl
             )}
           </OverlayIconButton>
 
-          <Typography color="white" fontFamily="monospace" fontSize={14}>
+          <Typography
+            color="white"
+            sx={{
+              fontFamily: "monospace",
+              fontSize: 14
+            }}>
             {formatTime(currentTime)} / {formatTime(duration)}
           </Typography>
         </Stack>
