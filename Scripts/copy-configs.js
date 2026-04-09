@@ -13,6 +13,11 @@ function copyTemplateFile(from, to) {
     return;
   }
 
+  if (existsSync(to)) {
+    console.log(`Template not copied, file already exists: ${to}`);
+    return;
+  }
+
   mkdirSync(dirname(to), { recursive: true });
   copyFileSync(from, to);
   console.log(`Copied ${from} -> ${to}`);
