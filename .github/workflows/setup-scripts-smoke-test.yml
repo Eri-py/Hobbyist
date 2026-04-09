@@ -34,7 +34,6 @@ jobs:
               uses: actions/setup-node@v6
               with:
                   node-version: 25.x
-                  cache: "pnpm"
 
             - name: Smoke test setup copy command
               run: pnpm exec node Scripts/copy-configs.js
