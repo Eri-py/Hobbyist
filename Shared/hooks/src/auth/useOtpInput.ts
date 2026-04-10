@@ -2,6 +2,11 @@ import { createRef, useCallback, useEffect, useMemo, useRef } from "react";
 
 type ValidateChar = (character: string, index: number) => boolean;
 
+type OtpFocusableInput = {
+  focus: () => void;
+  select?: () => void;
+};
+
 type UseOtpInputParams = {
   value?: string;
   length?: number;
@@ -11,8 +16,12 @@ type UseOtpInputParams = {
   onBlur?: (value: string, isCompleted: boolean) => void;
 };
 
-type InputFocusEvent = React.FocusEvent<HTMLInputElement | HTMLTextAreaElement, Element>;
-type InputChangeEvent = React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>;
+type OtpInputKeyDownParams = {
+  key: string;
+  currentValue: string;
+  selectionStart?: number | null;
+  selectionEnd?: number | null;
+};
 
 const KEYBOARD_KEY = {
   left: "ArrowLeft",
@@ -24,7 +33,7 @@ const KEYBOARD_KEY = {
 
 const defaultValidateChar: ValidateChar = () => true;
 
-export function useOtpInput({
+export function useOtpInput<TInput extends OtpFocusableInput = OtpFocusableInput>({
   value = "",
   length = 4,
   onChange,
@@ -34,10 +43,7 @@ export function useOtpInput({
 }: UseOtpInputParams) {
   const initialValue = useRef(value);
 
-  const inputRefs = useMemo(
-    () => Array.from({ length }, () => createRef<HTMLInputElement>()),
-    [length],
-  );
+  const inputRefs = useMemo(() => Array.from({ length }, () => createRef<TInput>()), [length]);
 
   const characters = useMemo(
     () => Array.from({ length }, (_, index) => value[index] || ""),
@@ -84,16 +90,35 @@ export function useOtpInput({
 
   const focusInputByIndex = useCallback(
     (index: number) => {
+      if (index < 0 || index >= length) {
+        return;
+      }
+
       inputRefs[index]?.current?.focus();
     },
-    [inputRefs],
+    [inputRefs, length],
   );
 
   const selectInputByIndex = useCallback(
     (index: number) => {
-      inputRefs[index]?.current?.select();
+      if (index < 0 || index >= length) {
+        return;
+      }
+
+      const target = inputRefs[index]?.current;
+
+      if (!target) {
+        return;
+      }
+
+      if (typeof target.select === "function") {
+        target.select();
+        return;
+      }
+
+      target.focus();
     },
-    [inputRefs],
+    [inputRefs, length],
   );
 
   const moveToNextInput = useCallback(
@@ -112,9 +137,7 @@ export function useOtpInput({
   );
 
   const handleInputChange = useCallback(
-    (index: number, event: InputChangeEvent) => {
-      const inputValue = event.target.value;
-
+    (index: number, inputValue: string) => {
       if (index === 0 && inputValue.length > 1) {
         const { finalValue, isCompleted } = getCompletionState(inputValue);
         onChange?.(finalValue);
@@ -123,7 +146,10 @@ export function useOtpInput({
           onComplete?.(finalValue);
         }
 
-        selectInputByIndex(finalValue.length - 1);
+        if (finalValue.length > 0) {
+          selectInputByIndex(finalValue.length - 1);
+        }
+
         return;
       }
 
@@ -165,22 +191,16 @@ export function useOtpInput({
   );
 
   const handleInputKeyDown = useCallback(
-    (index: number, event: React.KeyboardEvent<HTMLDivElement>) => {
-      const inputElement = event.target as HTMLInputElement;
-      const startPos = inputElement.selectionStart;
-      const endPos = inputElement.selectionEnd;
-      const isCaretBeforeChar = startPos === 0 && endPos === 0;
+    (index: number, params: OtpInputKeyDownParams) => {
+      const { key, currentValue, selectionStart = null, selectionEnd = null } = params;
+      const isCaretBeforeChar = selectionStart === 0 && selectionEnd === 0;
 
-      if (inputElement.value === event.key) {
-        event.preventDefault();
+      if (currentValue === key) {
         moveToNextInput(index);
-      } else if (event.key === KEYBOARD_KEY.backspace) {
-        if (!inputElement.value) {
-          event.preventDefault();
+      } else if (key === KEYBOARD_KEY.backspace) {
+        if (!currentValue) {
           selectInputByIndex(index - 1);
         } else if (isCaretBeforeChar) {
-          event.preventDefault();
-
           const nextValue = replaceValueAtIndex(index, "");
           onChange?.(nextValue);
 
@@ -188,17 +208,13 @@ export function useOtpInput({
             selectInputByIndex(index - 1);
           }
         }
-      } else if (event.key === KEYBOARD_KEY.left) {
-        event.preventDefault();
+      } else if (key === KEYBOARD_KEY.left) {
         selectInputByIndex(index - 1);
-      } else if (event.key === KEYBOARD_KEY.right) {
-        event.preventDefault();
+      } else if (key === KEYBOARD_KEY.right) {
         selectInputByIndex(index + 1);
-      } else if (event.key === KEYBOARD_KEY.home) {
-        event.preventDefault();
+      } else if (key === KEYBOARD_KEY.home) {
         selectInputByIndex(0);
-      } else if (event.key === KEYBOARD_KEY.end) {
-        event.preventDefault();
+      } else if (key === KEYBOARD_KEY.end) {
         selectInputByIndex(length - 1);
       }
     },
@@ -206,8 +222,7 @@ export function useOtpInput({
   );
 
   const handleInputPaste = useCallback(
-    (index: number, event: React.ClipboardEvent<HTMLDivElement>) => {
-      const content = event.clipboardData.getData("text/plain");
+    (index: number, content: string) => {
       const contentCharacters = content.split("");
       const firstEmptyIndex = characters.findIndex((character) => character === "");
       const startIndex = firstEmptyIndex === -1 ? index : Math.min(firstEmptyIndex, index);
@@ -230,7 +245,7 @@ export function useOtpInput({
         onComplete?.(finalValue);
         selectInputByIndex(length - 1);
       } else {
-        selectInputByIndex(nextValue.length);
+        selectInputByIndex(Math.max(0, nextValue.length));
       }
     },
     [
@@ -244,15 +259,17 @@ export function useOtpInput({
     ],
   );
 
-  const handleInputFocus = useCallback((event: InputFocusEvent) => {
-    event.preventDefault();
-    event.target.select();
-  }, []);
+  const handleInputFocus = useCallback(
+    (index: number) => {
+      selectInputByIndex(index);
+    },
+    [selectInputByIndex],
+  );
 
   const handleInputBlur = useCallback(
-    (event: InputFocusEvent) => {
+    (relatedTarget: unknown) => {
       const anInputIsFocused = inputRefs.some(({ current }) => {
-        return current === event.relatedTarget;
+        return current === relatedTarget;
       });
 
       if (!anInputIsFocused) {

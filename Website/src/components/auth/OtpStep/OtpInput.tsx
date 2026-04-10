@@ -3,7 +3,7 @@ import type { BoxProps } from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import type { TextFieldProps } from "@mui/material/TextField";
 
-import { useOtpInput } from "@/hooks/auth/useOtpInput";
+import { useOtpInput } from "@hobbyist/hooks";
 
 type OtpTextFieldProps = Omit<
   TextFieldProps,
@@ -42,7 +42,7 @@ export function OtpInput({
     handleInputPaste,
     handleInputFocus,
     handleInputBlur,
-  } = useOtpInput({
+  } = useOtpInput<HTMLInputElement>({
     value,
     length,
     onChange,
@@ -87,23 +87,31 @@ export function OtpInput({
             inputRef={inputRefs[index]}
             onPaste={(event) => {
               event.preventDefault();
-              handleInputPaste(index, event);
+              handleInputPaste(index, event.clipboardData.getData("text/plain"));
               onPaste?.(event);
             }}
             onFocus={(event) => {
-              handleInputFocus(event);
+              handleInputFocus(index);
               onFocus?.(event);
             }}
             onChange={(event) => {
-              handleInputChange(index, event);
+              handleInputChange(index, event.target.value);
             }}
             onKeyDown={(event) => {
-              handleInputKeyDown(index, event);
+              const inputElement = event.target as HTMLInputElement;
+
+              handleInputKeyDown(index, {
+                key: event.key,
+                currentValue: inputElement.value,
+                selectionStart: inputElement.selectionStart,
+                selectionEnd: inputElement.selectionEnd,
+              });
+
               onKeyDown?.(event);
             }}
             onBlur={(event) => {
               onTextFieldBlur?.(event);
-              handleInputBlur(event);
+              handleInputBlur(event.relatedTarget);
             }}
             sx={
               Array.isArray(sx)

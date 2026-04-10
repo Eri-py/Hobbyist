@@ -128,18 +128,23 @@ VITE_API_BASE_URL=https://{your-machine.tail123456.ts.net}:7000/api
 
 ```
 EXPO_PUBLIC_API_BASE_URL=https://{your-machine.tail123456.ts.net}:7000/api
+REACT_NATIVE_PACKAGER_HOSTNAME={your-host-device-tailscale-ip} # optional
 ```
 
-Set packager host env var before running mobile dev.
-Use the Tailscale IP/hostname of the **host machine running Expo/Metro** (your laptop/PC), not the host device Tailscale IP.
-
-```powershell
-$env:REACT_NATIVE_PACKAGER_HOSTNAME="{your-host-device-tailscale-ip}"; pnpm --filter mobile dev
-```
+Mobile default dev command (no host pinning):
 
 ```bash
-REACT_NATIVE_PACKAGER_HOSTNAME={your-host-device-tailscale-ip} pnpm --filter mobile dev
+pnpm --filter mobile dev
 ```
+
+Optional: start mobile with host pinning from `Mobile/.env.development`:
+
+```bash
+pnpm --filter mobile dev:host
+```
+
+The optional script reads `REACT_NATIVE_PACKAGER_HOSTNAME` from `Mobile/.env.development` and sets it before running Expo.
+If your network already allows direct device-to-device communication, you can skip this and use the default `dev` script.
 
 Type generation now reads your existing `Website/.env.development` (`VITE_API_BASE_URL`) or
 `Mobile/.env.development` (`EXPO_PUBLIC_API_BASE_URL`) automatically.

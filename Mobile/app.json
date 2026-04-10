@@ -20,9 +20,6 @@
       "predictiveBackGestureEnabled": false,
       "package": "com.hobbyist"
     },
-    "web": {
-      "output": "static"
-    },
     "plugins": [
       "expo-router",
       [
@@ -42,16 +39,6 @@
       "expo-secure-store",
       "expo-web-browser",
       "expo-image"
-    ],
-    "experiments": {
-      "typedRoutes": true,
-      "reactCompiler": true
-    },
-    "extra": {
-      "router": {},
-      "eas": {
-        "projectId": "74057e90-3af2-4fc9-aed9-9c4b7fa4a98b"
-      }
-    }
+    ]
   }
 }
