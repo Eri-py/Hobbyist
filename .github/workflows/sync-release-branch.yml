@@ -1,0 +1,49 @@
+name: Sync Release Branch
+permissions:
+    contents: write
+
+on:
+    schedule:
+        # Every Monday at 09:00 UTC
+        - cron: "0 9 * * 1"
+    workflow_dispatch:
+
+concurrency:
+    group: sync-release-branch
+    cancel-in-progress: false
+
+jobs:
+    sync-release:
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v6
+              with:
+                  ref: main
+                  fetch-depth: 0
+
+            - name: Configure git identity
+              run: |
+                  git config user.name "github-actions[bot]"
+                  git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+            - name: Sync main into release
+              run: |
+                  set -euo pipefail
+
+                  git fetch origin main
+
+                  if git ls-remote --exit-code --heads origin release > /dev/null; then
+                    git fetch origin release
+                    git checkout -B release origin/release
+                  else
+                    git checkout -B release origin/main
+                  fi
+
+                  git merge --no-ff --no-edit origin/main || {
+                    echo "Merge conflict while syncing main into release."
+                    echo "Manual resolution is required."
+                    exit 1
+                  }
+
+                  git push origin release
