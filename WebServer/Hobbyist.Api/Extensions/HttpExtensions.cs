@@ -19,11 +19,16 @@ public static class HttpExtensions
 
     public static string GetPlatform(this HttpRequest request)
     {
-        var platform = request.Headers["Platform"].FirstOrDefault();
+        var platform = request.Headers["Platform"].FirstOrDefault()?.Trim().ToLowerInvariant();
 
         if (string.IsNullOrEmpty(platform))
         {
             throw new BadHttpRequestException("Platform header is required");
+        }
+
+        if (platform is not ("mobile" or "web"))
+        {
+            throw new BadHttpRequestException("Platform header must be either 'mobile' or 'web'");
         }
 
         return platform;

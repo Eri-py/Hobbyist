@@ -1,4 +1,5 @@
 using Hobbyist.Api.Services.CacheServices;
+using Hobbyist.Common;
 
 namespace Hobbyist.Api.Extensions.ServiceRegistrations.InfrastructureServices;
 
@@ -15,18 +16,7 @@ public static class CacheServicesRegistration
                 "Missing 'ConnectionStrings:Redis' configuration."
             );
 
-        string redisConnectionString;
-        if (raw.StartsWith("redis://") || raw.StartsWith("rediss://"))
-        {
-            var uri = new Uri(raw);
-            var password = uri.UserInfo.Split(':')[1];
-            var isSsl = raw.StartsWith("rediss://");
-            redisConnectionString = $"{uri.Host}:{uri.Port},password={password},ssl={isSsl}";
-        }
-        else
-        {
-            redisConnectionString = raw;
-        }
+        var redisConnectionString = NormalizeConnectionString.NormalizeRedis(raw);
 
         services.AddStackExchangeRedisCache(options =>
         {

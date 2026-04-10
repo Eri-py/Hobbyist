@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useMutation } from "@tanstack/react-query";
 import type { AxiosInstance } from "axios";
 
@@ -13,23 +13,34 @@ export function useOtp(initialOtpExpiresAt: Date, axiosInstance: AxiosInstance) 
   const { serverErrorMessage, handleServerError, clearServerError } = useServerError();
   const [endTime, setEndTime] = useState<number>(initialOtpExpiresAt.getTime());
   const [isResendDisabled, setIsResendDisabled] = useState<boolean>(true);
+  const resendTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // API function
   const resendOtpApi = (data: ResendOtpRequest, endpoint: string) => {
     return axiosInstance.post<ResendOtpResponse>(endpoint, data);
   };
 
-  // Enable resend button after 1/5th of the initial OTP duration
+  // Keep a single active resend timer and always clear stale timers.
   useEffect(() => {
-    const enableResendTimer = setTimeout(
+    if (resendTimerRef.current) {
+      clearTimeout(resendTimerRef.current);
+    }
+
+    resendTimerRef.current = setTimeout(
       () => {
         setIsResendDisabled(false);
+        resendTimerRef.current = null;
       },
-      (initialOtpExpiresAt.getTime() - Date.now()) / 5,
+      Math.max(0, (endTime - Date.now()) / 5),
     );
 
-    return () => clearTimeout(enableResendTimer);
-  }, [initialOtpExpiresAt]);
+    return () => {
+      if (resendTimerRef.current) {
+        clearTimeout(resendTimerRef.current);
+        resendTimerRef.current = null;
+      }
+    };
+  }, [endTime]);
 
   const resendOtpMutation = useMutation({
     mutationFn: ({ data, mode }: { data: ResendOtpRequest; mode: "login" | "signup" }) => {
@@ -40,18 +51,13 @@ export function useOtp(initialOtpExpiresAt: Date, axiosInstance: AxiosInstance) 
       const newOtpExpiresAt = new Date(response.data.otpExpiresAt);
       const newEndTime = newOtpExpiresAt.getTime();
 
+      if (resendTimerRef.current) {
+        clearTimeout(resendTimerRef.current);
+        resendTimerRef.current = null;
+      }
+
       setEndTime(newEndTime);
       setIsResendDisabled(true);
-
-      // Re-enable resend button after 1/5th of the new OTP duration with cleanup
-      const enableResendTimer = setTimeout(
-        () => {
-          setIsResendDisabled(false);
-        },
-        (newEndTime - Date.now()) / 5,
-      );
-
-      return () => clearTimeout(enableResendTimer);
     },
     onError: (error: ServerError) => handleServerError(error),
   });

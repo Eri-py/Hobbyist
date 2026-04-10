@@ -644,6 +644,7 @@ public class OtpServiceTests
             Assert.That(result.ResultType, Is.EqualTo(ResultTypes.TooManyRequests));
             Assert.That(result.Message, Is.EqualTo(ErrorMessages.TooManyOtpVerificationAttempts));
         }
+        _mockCache.Verify(x => x.Remove($"otp_{TestPurpose}_{HashEmail(TestEmail)}"), Times.Once);
         _mockRateLimiter.Verify(
             x => x.Increment(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<TimeSpan>()),
             Times.Never

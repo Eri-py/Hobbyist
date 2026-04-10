@@ -39,11 +39,11 @@ jobs:
               run: pnpm test
 
             - name: Build Website
-              run: pnpm build:web
+              run: pnpm --dir Website build
               env:
                   CI: true
 
             - name: Build Mobile
-              run: pnpm build:mobile
+              run: pnpm --dir Mobile build
               env:
                   CI: true

@@ -4,7 +4,7 @@
   "private": true,
   "main": "expo-router/entry",
   "scripts": {
-    "dev": "set REACT_NATIVE_PACKAGER_HOSTNAME=100.85.42.14 && expo start",
+    "dev": "expo start",
     "build": "expo export",
     "lint": "expo lint",
     "lint:fix": "expo lint --fix",

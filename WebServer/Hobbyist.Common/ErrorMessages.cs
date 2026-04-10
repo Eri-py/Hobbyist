@@ -20,6 +20,16 @@ public static class ErrorMessages
     public const string EmailVerificationRequired = "Email verification required";
 
     /// <summary>
+    /// Message shown when date of birth does not match expected format.
+    /// </summary>
+    public const string InvalidDateOfBirth = "Invalid date of birth. Use format yyyy-MM-dd.";
+
+    /// <summary>
+    /// Message shown when a user does not meet the minimum age requirement.
+    /// </summary>
+    public const string MinimumAgeRequired = "You must be at least {0} years old to sign up.";
+
+    /// <summary>
     /// Message shown when an OTP is invalid or has expired.
     /// </summary>
     public const string InvalidOrExpiredOtp = "Invalid or expired verification code";

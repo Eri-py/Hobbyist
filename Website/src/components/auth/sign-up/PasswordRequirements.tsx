@@ -42,6 +42,7 @@ export function PasswordRequirements({ password }: PasswordRequirementsTypes) {
 
         return (
           <Stack
+            key={req.message}
             direction="row"
             sx={{
               gap: 0.25,

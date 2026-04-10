@@ -14,7 +14,7 @@ public static class DatabaseRegistration
                 "Missing 'ConnectionStrings:DefaultConnection' configuration."
             );
 
-        return DatabaseConnectionString.Normalize(raw);
+        return NormalizeConnectionString.NormalizePostgres(raw);
     }
 
     public static void AddDatabases(this IServiceCollection services, IConfiguration configs)

@@ -1,4 +1,5 @@
-﻿using Hobbyist.Api.Data;
+﻿using System.Globalization;
+using Hobbyist.Api.Data;
 using Hobbyist.Api.Data.Entities;
 using Hobbyist.Api.Dtos.Auth;
 using Hobbyist.Api.Extensions;
@@ -86,6 +87,17 @@ public class SignUpService(
             return Result<AuthResult>.Conflict(errorMessage);
         }
 
+        if (
+            !TryValidateDateOfBirth(
+                request.DateOfBirth,
+                out var dateOfBirth,
+                out var validationError
+            )
+        )
+        {
+            return Result<AuthResult>.BadRequest(validationError!);
+        }
+
         // Hash password securely
         var hasher = new PasswordHasher<UserEntity>();
         var passwordHash = hasher.HashPassword(null!, request.Password);
@@ -102,7 +114,7 @@ public class SignUpService(
                 PasswordHash = passwordHash,
                 Firstname = request.Firstname,
                 Lastname = request.Lastname,
-                DateOfBirth = DateOnly.Parse(request.DateOfBirth),
+                DateOfBirth = dateOfBirth,
                 CreatedAt = DateTimeOffset.UtcNow,
             };
             context.Users.Add(user);
@@ -210,5 +222,41 @@ public class SignUpService(
         {
             user.Hobbies.Add(hobby);
         }
+    }
+
+    private static bool TryValidateDateOfBirth(
+        string rawDateOfBirth,
+        out DateOnly dateOfBirth,
+        out string? validationError
+    )
+    {
+        if (
+            !DateOnly.TryParseExact(
+                rawDateOfBirth,
+                "yyyy-MM-dd",
+                CultureInfo.InvariantCulture,
+                DateTimeStyles.None,
+                out dateOfBirth
+            )
+        )
+        {
+            validationError = ErrorMessages.InvalidDateOfBirth;
+            return false;
+        }
+
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var latestAllowedDateOfBirth = today.AddYears(-SignUpConfig.MinimumAgeYears);
+        if (dateOfBirth > latestAllowedDateOfBirth)
+        {
+            validationError = string.Format(
+                CultureInfo.InvariantCulture,
+                ErrorMessages.MinimumAgeRequired,
+                SignUpConfig.MinimumAgeYears
+            );
+            return false;
+        }
+
+        validationError = null;
+        return true;
     }
 }

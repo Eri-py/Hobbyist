@@ -220,6 +220,30 @@ describe("useOtp", () => {
       expect(result.current.isResendDisabled).toBe(true);
       vi.useRealTimers();
     });
+
+    it("clears previous resend timer when a new OTP is issued", () => {
+      // Arrange
+      vi.useFakeTimers();
+      const now = Date.now();
+      const expiresAt = new Date(now + FIVE_MINUTES_MS);
+      const { result } = renderHook(() => useOtp(expiresAt, mockAxios));
+
+      // Advance halfway to the initial 1/5 timer and trigger a successful resend.
+      act(() => vi.advanceTimersByTime(30_000));
+      const newExpiry = new Date(Date.now() + FIVE_MINUTES_MS);
+      act(() =>
+        capturedMutations[0].onSuccess({ data: { otpExpiresAt: newExpiry.toISOString() } }),
+      );
+
+      // If the original timer was not cleared, resend would be enabled after 60s total.
+      act(() => vi.advanceTimersByTime(31_000));
+      expect(result.current.isResendDisabled).toBe(true);
+
+      // It should only enable at the new timer boundary.
+      act(() => vi.advanceTimersByTime(29_000));
+      expect(result.current.isResendDisabled).toBe(false);
+      vi.useRealTimers();
+    });
   });
 
   describe("onError", () => {
