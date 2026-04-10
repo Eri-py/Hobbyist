@@ -22,6 +22,7 @@ import { Route as AppCreateRouteImport } from './routes/_app/create'
 import { Route as AppProfileIndexRouteImport } from './routes/_app/profile/index'
 import { Route as AppProfileUsernameIndexRouteImport } from './routes/_app/profile/$username/index'
 import { Route as AppProfileUsernameSettingsRouteImport } from './routes/_app/profile/$username/settings'
+import { Route as AppProfileUsernamePostIdRouteImport } from './routes/_app/profile/$username/$postId'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/_auth',
@@ -87,6 +88,12 @@ const AppProfileUsernameSettingsRoute =
     path: '/profile/$username/settings',
     getParentRoute: () => AppRoute,
   } as any)
+const AppProfileUsernamePostIdRoute =
+  AppProfileUsernamePostIdRouteImport.update({
+    id: '/profile/$username/$postId',
+    path: '/profile/$username/$postId',
+    getParentRoute: () => AppRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
@@ -98,6 +105,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof AuthLoginRoute
   '/sign-up': typeof AuthSignUpRoute
   '/profile/': typeof AppProfileIndexRoute
+  '/profile/$username/$postId': typeof AppProfileUsernamePostIdRoute
   '/profile/$username/settings': typeof AppProfileUsernameSettingsRoute
   '/profile/$username/': typeof AppProfileUsernameIndexRoute
 }
@@ -111,6 +119,7 @@ export interface FileRoutesByTo {
   '/login': typeof AuthLoginRoute
   '/sign-up': typeof AuthSignUpRoute
   '/profile': typeof AppProfileIndexRoute
+  '/profile/$username/$postId': typeof AppProfileUsernamePostIdRoute
   '/profile/$username/settings': typeof AppProfileUsernameSettingsRoute
   '/profile/$username': typeof AppProfileUsernameIndexRoute
 }
@@ -127,6 +136,7 @@ export interface FileRoutesById {
   '/_auth/sign-up': typeof AuthSignUpRoute
   '/_app/': typeof AppIndexRoute
   '/_app/profile/': typeof AppProfileIndexRoute
+  '/_app/profile/$username/$postId': typeof AppProfileUsernamePostIdRoute
   '/_app/profile/$username/settings': typeof AppProfileUsernameSettingsRoute
   '/_app/profile/$username/': typeof AppProfileUsernameIndexRoute
 }
@@ -142,6 +152,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/sign-up'
     | '/profile/'
+    | '/profile/$username/$postId'
     | '/profile/$username/settings'
     | '/profile/$username/'
   fileRoutesByTo: FileRoutesByTo
@@ -155,6 +166,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/sign-up'
     | '/profile'
+    | '/profile/$username/$postId'
     | '/profile/$username/settings'
     | '/profile/$username'
   id:
@@ -170,6 +182,7 @@ export interface FileRouteTypes {
     | '/_auth/sign-up'
     | '/_app/'
     | '/_app/profile/'
+    | '/_app/profile/$username/$postId'
     | '/_app/profile/$username/settings'
     | '/_app/profile/$username/'
   fileRoutesById: FileRoutesById
@@ -272,6 +285,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProfileUsernameSettingsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/profile/$username/$postId': {
+      id: '/_app/profile/$username/$postId'
+      path: '/profile/$username/$postId'
+      fullPath: '/profile/$username/$postId'
+      preLoaderRoute: typeof AppProfileUsernamePostIdRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
@@ -283,6 +303,7 @@ interface AppRouteChildren {
   AppTradeRoute: typeof AppTradeRoute
   AppIndexRoute: typeof AppIndexRoute
   AppProfileIndexRoute: typeof AppProfileIndexRoute
+  AppProfileUsernamePostIdRoute: typeof AppProfileUsernamePostIdRoute
   AppProfileUsernameSettingsRoute: typeof AppProfileUsernameSettingsRoute
   AppProfileUsernameIndexRoute: typeof AppProfileUsernameIndexRoute
 }
@@ -295,6 +316,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppTradeRoute: AppTradeRoute,
   AppIndexRoute: AppIndexRoute,
   AppProfileIndexRoute: AppProfileIndexRoute,
+  AppProfileUsernamePostIdRoute: AppProfileUsernamePostIdRoute,
   AppProfileUsernameSettingsRoute: AppProfileUsernameSettingsRoute,
   AppProfileUsernameIndexRoute: AppProfileUsernameIndexRoute,
 }

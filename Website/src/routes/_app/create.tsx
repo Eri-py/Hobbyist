@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { FormProvider } from "react-hook-form";
-import { useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import type { KeyboardEvent } from "react";
 
 import Stack from "@mui/material/Stack";
@@ -21,7 +21,7 @@ export const Route = createFileRoute("/_app/create")({
 
 function CreatePage() {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const { isDesktop } = useDeviceType();
 
   // Redirect unauthenticated users away from create page.
@@ -43,6 +43,18 @@ function CreatePage() {
     addError,
     clearFiles,
   } = useMediaUpload();
+  const handlePostCreated = useCallback(
+    (postId: string) => {
+      if (user?.username) {
+        navigate({ to: `/profile/${user.username}/${postId}` });
+        return;
+      }
+
+      navigate({ to: "/profile" });
+    },
+    [navigate, user],
+  );
+
   const {
     methods,
     serverErrorMessage,
@@ -52,7 +64,7 @@ function CreatePage() {
     handleNext,
     handleBack,
     clearServerError,
-  } = useCreate();
+  } = useCreate(handlePostCreated);
 
   const allErrors = useMemo(() => {
     if (serverErrorMessage) {
@@ -93,8 +105,9 @@ function CreatePage() {
         <Stack
           sx={{
             gap: 3,
-            flex: 1
-          }}>
+            flex: 1,
+          }}
+        >
           {isDesktop ? (
             <DesktopCreateForm
               files={files}
