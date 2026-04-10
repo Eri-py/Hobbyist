@@ -1,7 +1,6 @@
 using Hobbyist.Api.Extensions;
 using Hobbyist.Api.Extensions.ServiceRegistrations;
 using Hobbyist.Api.Middleware;
-using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.FeatureManagement;
 using Scalar.AspNetCore;
 using Serilog;
@@ -39,24 +38,7 @@ if (app.Environment.IsDevelopment())
     app.MapScalarApiReference();
 }
 
-// Railway terminates TLS at the edge and forwards plain HTTP internally.
-// UseForwardedHeaders lets the app see the real client IP and the original
-// HTTPS scheme — which is required for correct URL generation and accurate
-// client IPs in logs.
-var forwardedHeadersOptions = new ForwardedHeadersOptions
-{
-    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto,
-    // Two proxy hops: Cloudflare -> Railway edge -> app.
-    ForwardLimit = 2,
-};
-
-// Railway's proxy is not loopback, so clear the default restrictions so
-// forwarded headers from the edge proxy are honored.
-forwardedHeadersOptions.KnownIPNetworks.Clear();
-forwardedHeadersOptions.KnownProxies.Clear();
-
 app.UseLogHasher();
-app.UseForwardedHeaders(forwardedHeadersOptions);
 app.UseCors(builder.Configuration.GetCorsPolicy());
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseSerilogRequestLogging(opts =>

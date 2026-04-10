@@ -9,7 +9,6 @@
     }
   },
   "scripts": {
-    "generate-types": "openapi-typescript https://eri-windows.tail453415.ts.net:7000/openapi/v1.json -o types.ts",
     "typecheck": "tsc --noEmit",
     "clean": "rimraf node_modules",
     "test": "vitest run",
@@ -30,9 +29,7 @@
     "@tanstack/react-query": "^5.96.2",
     "@testing-library/react": "^16.3.2",
     "axios": "^1.14.0",
-    "cross-env": "^10.1.0",
     "jsdom": "^29.0.0",
-    "openapi-typescript": "^7.13.0",
     "react": "19.2.5",
     "react-hook-form": "^7.71.2",
     "typescript": "~5.9.3",

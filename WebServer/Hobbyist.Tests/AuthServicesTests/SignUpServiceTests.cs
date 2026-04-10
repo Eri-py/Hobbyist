@@ -396,6 +396,90 @@ public class SignUpServiceTests : DatabaseTestBase
     }
 
     [Test]
+    public async Task CompleteSignUpAsync_WithInvalidDateOfBirth_ReturnsBadRequest()
+    {
+        var request = new CompleteSignUpRequest
+        {
+            Username = "newuser",
+            Email = "new@example.com",
+            Password = "Password123!",
+            Firstname = "First",
+            Lastname = "Last",
+            DateOfBirth = "01/31/1990",
+            Interests = ["Coins"],
+        };
+
+        _otpServiceMock
+            .Setup(x => x.IsVerified("new@example.com", SignUpConfig.SignUpPurpose))
+            .Returns(true);
+
+        var result = await _signUpService.CompleteSignUpAsync(request, CancellationToken.None);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.ResultType, Is.EqualTo(ResultTypes.BadRequest));
+            Assert.That(result.Message, Is.EqualTo(ErrorMessages.InvalidDateOfBirth));
+        }
+
+        var createdUser = await Context.Users.FirstOrDefaultAsync(x =>
+            x.Email == "new@example.com"
+        );
+        Assert.That(createdUser, Is.Null);
+        _otpServiceMock.Verify(
+            x => x.ClearVerification("new@example.com", SignUpConfig.SignUpPurpose),
+            Times.Never
+        );
+    }
+
+    [Test]
+    public async Task CompleteSignUpAsync_WithUnderageDateOfBirth_ReturnsBadRequest()
+    {
+        var underageDate = DateOnly
+            .FromDateTime(DateTime.UtcNow)
+            .AddYears(-(SignUpConfig.MinimumAgeYears - 1))
+            .ToString("yyyy-MM-dd");
+
+        var request = new CompleteSignUpRequest
+        {
+            Username = "newuser",
+            Email = "new@example.com",
+            Password = "Password123!",
+            Firstname = "First",
+            Lastname = "Last",
+            DateOfBirth = underageDate,
+            Interests = ["Coins"],
+        };
+
+        _otpServiceMock
+            .Setup(x => x.IsVerified("new@example.com", SignUpConfig.SignUpPurpose))
+            .Returns(true);
+
+        var result = await _signUpService.CompleteSignUpAsync(request, CancellationToken.None);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.ResultType, Is.EqualTo(ResultTypes.BadRequest));
+            Assert.That(
+                result.Message,
+                Is.EqualTo(
+                    string.Format(ErrorMessages.MinimumAgeRequired, SignUpConfig.MinimumAgeYears)
+                )
+            );
+        }
+
+        var createdUser = await Context.Users.FirstOrDefaultAsync(x =>
+            x.Email == "new@example.com"
+        );
+        Assert.That(createdUser, Is.Null);
+        _otpServiceMock.Verify(
+            x => x.ClearVerification("new@example.com", SignUpConfig.SignUpPurpose),
+            Times.Never
+        );
+    }
+
+    [Test]
     public async Task CompleteSignUpAsync_WithVerifiedOtp_StoresRefreshTokenEntry()
     {
         var request = new CompleteSignUpRequest

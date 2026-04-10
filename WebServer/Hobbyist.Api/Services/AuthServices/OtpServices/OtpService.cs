@@ -94,6 +94,7 @@ public class OtpService(
     {
         var emailHash = logger.Hash(email);
         var rateLimitScope = GetOtpVerifyRateLimitScope(purpose);
+        var cacheKey = GetOtpCacheKey(emailHash, purpose);
 
         // Enforce failed-attempt verification rate limit.
         var rateLimitResult = rateLimiter.CheckLimit(
@@ -104,11 +105,9 @@ public class OtpService(
         );
         if (!rateLimitResult.IsSuccess)
         {
+            cache.Remove(cacheKey);
             return rateLimitResult;
         }
-
-        // Get cache key and retrieve stored OTP.
-        var cacheKey = GetOtpCacheKey(emailHash, purpose);
 
         // Missing OTP means it was never issued or has already expired.
         if (!cache.TryGetValue<string>(cacheKey, out var cachedOtp))

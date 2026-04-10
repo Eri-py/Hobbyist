@@ -130,17 +130,40 @@ VITE_API_BASE_URL=https://{your-machine.tail123456.ts.net}:7000/api
 EXPO_PUBLIC_API_BASE_URL=https://{your-machine.tail123456.ts.net}:7000/api
 ```
 
-**`Mobile/package.json`** — update the `dev` script:
+Set packager host env var before running mobile dev.
 Use the Tailscale IP/hostname of the **host machine running Expo/Metro** (your laptop/PC), not the host device Tailscale IP.
 
-```json
-"dev": "set REACT_NATIVE_PACKAGER_HOSTNAME={your-host-device-tailscale-ip} && expo start"
+```powershell
+$env:REACT_NATIVE_PACKAGER_HOSTNAME="{your-host-device-tailscale-ip}"; pnpm --filter mobile dev
 ```
 
-**`Shared/types/package.json`** — update `generate-types`:
+```bash
+REACT_NATIVE_PACKAGER_HOSTNAME={your-host-device-tailscale-ip} pnpm --filter mobile dev
+```
 
-```json
-"generate-types": "cross-env NODE_TLS_REJECT_UNAUTHORIZED=0 openapi-typescript https://{your-machine.tail123456.ts.net}:7000/openapi/v1.json -o src/types.ts"
+Type generation now reads your existing `Website/.env.development` (`VITE_API_BASE_URL`) or
+`Mobile/.env.development` (`EXPO_PUBLIC_API_BASE_URL`) automatically.
+
+Run:
+
+```bash
+pnpm generate-types
+```
+
+If you want to override the endpoint for a one-off run, set `OPENAPI_URL`:
+
+```powershell
+$env:OPENAPI_URL="https://{your-machine.tail123456.ts.net}:7000/openapi/v1.json"; pnpm generate-types
+```
+
+```bash
+OPENAPI_URL=https://{your-machine.tail123456.ts.net}:7000/openapi/v1.json pnpm generate-types
+```
+
+If you must use a self-signed cert temporarily, opt in explicitly:
+
+```powershell
+$env:OPENAPI_INSECURE_TLS="1"; $env:OPENAPI_URL="https://{your-machine.tail123456.ts.net}:7000/openapi/v1.json"; pnpm generate-types
 ```
 
 **`WebServer/Hobbyist.Api/appsettings.Development.json`**

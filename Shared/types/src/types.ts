@@ -500,7 +500,7 @@ export interface components {
         };
         GetUserResponse: {
             isAuthenticated: boolean;
-            user?: components["schemas"]["UserDto"];
+            user?: null | components["schemas"]["UserDto"];
         };
         /** Format: binary */
         IFormFile: string;
@@ -529,7 +529,7 @@ export interface components {
             email: string;
             firstname: string;
             lastname: string;
-        } | null;
+        };
         VerifyOtpRequest: {
             email: string;
             otp: string;

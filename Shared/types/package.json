@@ -9,12 +9,11 @@
     }
   },
   "scripts": {
-    "generate-types": "cross-env NODE_TLS_REJECT_UNAUTHORIZED=0 openapi-typescript https://eri-windows.tail453415.ts.net:7000/openapi/v1.json -o src/types.ts",
+    "generate-types": "node ../../Scripts/generate-openapi-types.js --output src/types.ts",
     "typecheck": "tsc --noEmit",
     "clean": "rimraf node_modules"
   },
   "devDependencies": {
-    "cross-env": "^10.1.0",
     "openapi-typescript": "^7.13.0",
     "typescript": "~5.9.3"
   }

@@ -1,6 +1,7 @@
 import DownloadRoundedIcon from "@mui/icons-material/DownloadRounded";
 import SendRoundedIcon from "@mui/icons-material/SendRounded";
 import Button from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress";
 import Stack from "@mui/material/Stack";
 
 type ActionButtonsProps = {
@@ -15,8 +16,9 @@ export function ActionButtons({ isSubmitting, showPost = true }: ActionButtonsPr
       sx={{
         gap: 2,
         alignSelf: "flex-end",
-        justifyContent: "flex-end"
-      }}>
+        justifyContent: "flex-end",
+      }}
+    >
       <Button
         variant="text"
         type="button"
@@ -38,7 +40,9 @@ export function ActionButtons({ isSubmitting, showPost = true }: ActionButtonsPr
           type="submit"
           disabled={isSubmitting}
           size="large"
-          startIcon={<SendRoundedIcon />}
+          startIcon={
+            isSubmitting ? <CircularProgress size={16} thickness={5} /> : <SendRoundedIcon />
+          }
           sx={{
             fontSize: { md: 17 },
             "& .MuiButton-startIcon .MuiSvgIcon-root": {
@@ -47,7 +51,7 @@ export function ActionButtons({ isSubmitting, showPost = true }: ActionButtonsPr
             },
           }}
         >
-          {isSubmitting ? "Posting..." : "Post"}
+          Post
         </Button>
       )}
     </Stack>
