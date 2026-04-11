@@ -1,8 +1,6 @@
-import React from "react";
 import { View, StyleSheet } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 import { Controller, useFormContext, get } from "react-hook-form";
-import { OtpInput } from "react-native-otp-entry";
 
 import { useOtp } from "@hobbyist/hooks";
 import { ThemedButton } from "@/components/shared/ThemedButton";
@@ -10,6 +8,7 @@ import { OtpCountdown } from "./OtpCountdown";
 import { ErrorMessage } from "@/components/shared/ErrorMessage";
 import { axiosInstance } from "@/api/axiosInstance";
 import { useDeviceType } from "@/hooks/shared/useDeviceType";
+import { OtpInput } from "./OtpInput";
 
 type OtpStepProps = {
   mode: "login" | "signup";
@@ -49,28 +48,14 @@ export function OtpStep({
       <Controller
         name="otp"
         control={control}
-        render={({ field: { onChange }, formState: { errors } }) => (
+        render={({ field: { value, onChange }, formState: { errors } }) => (
           <View>
             <OtpInput
-              numberOfDigits={6}
-              onTextChange={onChange}
-              focusColor={theme.colors.primary}
-              type={isTablet ? "alphanumeric" : "numeric"}
-              theme={{
-                containerStyle: styles.otpContainer,
-                pinCodeContainerStyle: {
-                  ...styles.otpBox,
-                  borderColor: errors.otp ? theme.colors.error : theme.colors.outline,
-                },
-                pinCodeTextStyle: {
-                  ...styles.otpText,
-                  color: theme.colors.onSurface,
-                },
-                focusStickStyle: {
-                  ...styles.focusStick,
-                  backgroundColor: theme.colors.primary,
-                },
-              }}
+              value={value || ""}
+              length={6}
+              onChange={onChange}
+              mode={isTablet ? "alphanumeric" : "numeric"}
+              hasError={Boolean(errors.otp)}
             />
             {get(errors, "otp")?.message && (
               <Text style={[styles.errorMessage, { color: theme.colors.error }]}>
@@ -118,26 +103,6 @@ export function OtpStep({
 const styles = StyleSheet.create({
   container: {
     gap: 12,
-  },
-  otpContainer: {
-    gap: 8,
-  },
-  otpBox: {
-    borderWidth: 1,
-    borderRadius: 10,
-    width: 44,
-    height: 52,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "transparent",
-  },
-  otpText: {
-    fontSize: 18,
-    fontWeight: "400",
-    letterSpacing: 0.5,
-  },
-  focusStick: {
-    backgroundColor: "transparent",
   },
   errorMessage: {
     fontSize: 12,

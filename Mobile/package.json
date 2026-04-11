@@ -5,6 +5,7 @@
   "main": "expo-router/entry",
   "scripts": {
     "dev": "expo start",
+    "dev:host": "node ../Scripts/start-mobile-with-packager-hostname.js",
     "build": "expo export",
     "lint": "expo lint",
     "lint:fix": "expo lint --fix",
@@ -29,6 +30,7 @@
     "date-fns": "^4.1.0",
     "expo": "~55.0.13",
     "expo-constants": "~55.0.13",
+    "expo-dev-client": "~55.0.24",
     "expo-font": "~55.0.6",
     "expo-haptics": "~55.0.14",
     "expo-image": "~55.0.8",
@@ -46,7 +48,6 @@
     "react-native": "0.83.4",
     "react-native-gesture-handler": "~2.30.0",
     "react-native-keyboard-controller": "1.20.7",
-    "react-native-otp-entry": "^1.8.5",
     "react-native-paper": "^5.15.0",
     "react-native-reanimated": "~4.2.1",
     "react-native-safe-area-context": "~5.6.2",

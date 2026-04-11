@@ -29,7 +29,7 @@ const mobileStepFields: Record<number, (keyof CreateFormSchemaTypes)[]> = {
 
 const MOBILE_STEP_COUNT = Object.keys(mobileStepFields).length;
 
-export function useCreate() {
+export function useCreate(onPostCreated: (postId: string) => void) {
   const { serverErrorMessage, handleServerError, clearServerError } = useServerError();
 
   // Initialize form methods
@@ -47,7 +47,7 @@ export function useCreate() {
     mutationFn: (formData: FormData) => createPostApi(formData),
     onSuccess: (response) => {
       const postId = response.data.postId;
-      console.log(postId);
+      onPostCreated(postId);
     },
     onError: (error: ServerError) => handleServerError(error),
   });

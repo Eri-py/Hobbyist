@@ -1,5 +1,5 @@
 import { type ReactNode } from "react";
-import { renderHook, act } from "@testing-library/react";
+import { renderHook, act, waitFor } from "@testing-library/react";
 import { vi, beforeEach, describe, it, expect } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
@@ -20,7 +20,7 @@ vi.mock("@hobbyist/hooks", () => ({
 
 vi.mock("@/api/axiosInstance", () => ({
   axiosInstance: {
-    post: vi.fn().mockResolvedValue({ data: {} }),
+    post: vi.fn().mockResolvedValue({ data: { postId: "11111111-1111-1111-1111-111111111111" } }),
   },
 }));
 
@@ -46,6 +46,8 @@ const makeFile = (name = "photo.jpg"): FileWithMetadata => ({
   preview: "data:image/jpeg;base64,preview",
 });
 
+const noopOnPostCreated = vi.fn();
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
@@ -53,6 +55,7 @@ describe("useCreate", () => {
   beforeEach(() => {
     mockClearServerError.mockReset();
     mockHandleServerError.mockReset();
+    noopOnPostCreated.mockReset();
   });
 
   // -------------------------------------------------------------------------
@@ -61,7 +64,7 @@ describe("useCreate", () => {
   describe("initial state", () => {
     it("starts at step 0", () => {
       // Act
-      const { result } = renderHook(() => useCreate(), { wrapper: makeWrapper() });
+      const { result } = renderHook(() => useCreate(noopOnPostCreated), { wrapper: makeWrapper() });
 
       // Assert
       expect(result.current.activeStep).toBe(0);
@@ -69,7 +72,7 @@ describe("useCreate", () => {
 
     it("exposes form methods, step navigation and submit handler", () => {
       // Act
-      const { result } = renderHook(() => useCreate(), { wrapper: makeWrapper() });
+      const { result } = renderHook(() => useCreate(noopOnPostCreated), { wrapper: makeWrapper() });
 
       // Assert
       expect(result.current.methods).toBeDefined();
@@ -80,7 +83,7 @@ describe("useCreate", () => {
 
     it("isSubmitting starts as false", () => {
       // Act
-      const { result } = renderHook(() => useCreate(), { wrapper: makeWrapper() });
+      const { result } = renderHook(() => useCreate(noopOnPostCreated), { wrapper: makeWrapper() });
 
       // Assert
       expect(result.current.isSubmitting).toBe(false);
@@ -93,7 +96,7 @@ describe("useCreate", () => {
   describe("handleNext at step 0", () => {
     it("calls onFilesError and stays at step 0 when no files are provided", async () => {
       // Arrange
-      const { result } = renderHook(() => useCreate(), { wrapper: makeWrapper() });
+      const { result } = renderHook(() => useCreate(noopOnPostCreated), { wrapper: makeWrapper() });
       const onFilesError = vi.fn();
 
       // Act
@@ -110,7 +113,7 @@ describe("useCreate", () => {
 
     it("advances to step 1 when at least one file is provided", async () => {
       // Arrange
-      const { result } = renderHook(() => useCreate(), { wrapper: makeWrapper() });
+      const { result } = renderHook(() => useCreate(noopOnPostCreated), { wrapper: makeWrapper() });
       const onFilesError = vi.fn();
 
       // Act
@@ -140,7 +143,7 @@ describe("useCreate", () => {
 
     it("does not call clearServerError when form fields are invalid", async () => {
       // Arrange
-      const { result } = renderHook(() => useCreate(), { wrapper: makeWrapper() });
+      const { result } = renderHook(() => useCreate(noopOnPostCreated), { wrapper: makeWrapper() });
       await setupAtStep1(result);
 
       // Act — form is empty, title and description are required
@@ -154,7 +157,7 @@ describe("useCreate", () => {
 
     it("calls clearServerError when all required form fields are valid", async () => {
       // Arrange
-      const { result } = renderHook(() => useCreate(), { wrapper: makeWrapper() });
+      const { result } = renderHook(() => useCreate(noopOnPostCreated), { wrapper: makeWrapper() });
       await setupAtStep1(result);
       act(() => {
         result.current.methods.setValue("hobby", "Trading Cards");
@@ -178,7 +181,7 @@ describe("useCreate", () => {
   describe("handleBack", () => {
     it("does not go below step 0", () => {
       // Arrange
-      const { result } = renderHook(() => useCreate(), { wrapper: makeWrapper() });
+      const { result } = renderHook(() => useCreate(noopOnPostCreated), { wrapper: makeWrapper() });
 
       // Act
       act(() => result.current.handleBack());
@@ -189,7 +192,7 @@ describe("useCreate", () => {
 
     it("moves from step 1 back to step 0", async () => {
       // Arrange
-      const { result } = renderHook(() => useCreate(), { wrapper: makeWrapper() });
+      const { result } = renderHook(() => useCreate(noopOnPostCreated), { wrapper: makeWrapper() });
       await act(async () => {
         await result.current.handleNext([makeFile()], vi.fn());
       });
@@ -209,7 +212,7 @@ describe("useCreate", () => {
   describe("handleSubmit", () => {
     it("calls onFilesError and does not mutate when files array is empty", () => {
       // Arrange
-      const { result } = renderHook(() => useCreate(), { wrapper: makeWrapper() });
+      const { result } = renderHook(() => useCreate(noopOnPostCreated), { wrapper: makeWrapper() });
       const onFilesError = vi.fn();
 
       // Act
@@ -234,7 +237,7 @@ describe("useCreate", () => {
 
     it("calls clearServerError and does not crash when files are present", () => {
       // Arrange
-      const { result } = renderHook(() => useCreate(), { wrapper: makeWrapper() });
+      const { result } = renderHook(() => useCreate(noopOnPostCreated), { wrapper: makeWrapper() });
       const onFilesError = vi.fn();
       const file = makeFile();
 
@@ -259,7 +262,7 @@ describe("useCreate", () => {
 
     it("includes optional lookingFor in the call when provided", () => {
       // Arrange
-      const { result } = renderHook(() => useCreate(), { wrapper: makeWrapper() });
+      const { result } = renderHook(() => useCreate(noopOnPostCreated), { wrapper: makeWrapper() });
       const onFilesError = vi.fn();
 
       // Act / Assert
@@ -278,6 +281,33 @@ describe("useCreate", () => {
           );
         });
       }).not.toThrow();
+    });
+
+    it("calls onPostCreated with the created post id after successful submit", async () => {
+      // Arrange
+      const onPostCreated = vi.fn();
+      const { result } = renderHook(() => useCreate(onPostCreated), { wrapper: makeWrapper() });
+      const onFilesError = vi.fn();
+
+      // Act
+      act(() => {
+        result.current.handleSubmit(
+          {
+            hobby: "Trading Cards",
+            title: "My Item",
+            description: "Some description here.",
+            availableForTrade: true,
+            lookingFor: "Baseball cards",
+          },
+          [makeFile()],
+          onFilesError,
+        );
+      });
+
+      // Assert
+      await waitFor(() => {
+        expect(onPostCreated).toHaveBeenCalledWith("11111111-1111-1111-1111-111111111111");
+      });
     });
   });
 });
