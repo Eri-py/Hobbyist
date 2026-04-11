@@ -19,8 +19,8 @@ import { FeatureFlags } from "@hobbyist/types";
 
 const NotificationBadge = styled(Badge)`
   & .${badgeClasses.badge} {
-    top: -1.5rem;
-    right: -0.75rem;
+    top: 0.25rem;
+    right: 0rem;
   }
 `;
 

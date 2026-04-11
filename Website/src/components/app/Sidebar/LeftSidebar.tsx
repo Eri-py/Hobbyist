@@ -38,8 +38,9 @@ export function LeftSidebar() {
         onClick={toggleSidebar}
         sx={{
           position: "absolute",
+          top: 64,
           right: 0,
-          transform: "translate(50%, 150%)",
+          transform: "translateX(50%)",
           zIndex: 3,
           width: 40,
           height: 40,
