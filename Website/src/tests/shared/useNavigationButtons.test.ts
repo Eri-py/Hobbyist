@@ -77,7 +77,7 @@ describe("useNavigationButtons", () => {
     expect(mockNavigate).toHaveBeenCalledWith({ to: "/events" });
   });
 
-  it("handleSettingsClick navigates to profile settings when user has a username", () => {
+  it("handleSettingsClick navigates to /settings", () => {
     // Arrange
     const { result } = renderHook(() => useNavigationButtons());
 
@@ -85,10 +85,10 @@ describe("useNavigationButtons", () => {
     result.current.handleSettingsClick();
 
     // Assert
-    expect(mockNavigate).toHaveBeenCalledWith({ to: "/profile/testuser/settings" });
+    expect(mockNavigate).toHaveBeenCalledWith({ to: "/settings" });
   });
 
-  it("handleSettingsClick navigates to /profile when user is null", () => {
+  it("handleSettingsClick navigates to /settings when user is null", () => {
     // Arrange
     mockUseAuth.mockReturnValue({ isAuthenticated: false, user: null });
     const { result } = renderHook(() => useNavigationButtons());
@@ -97,10 +97,10 @@ describe("useNavigationButtons", () => {
     result.current.handleSettingsClick();
 
     // Assert
-    expect(mockNavigate).toHaveBeenCalledWith({ to: "/profile" });
+    expect(mockNavigate).toHaveBeenCalledWith({ to: "/settings" });
   });
 
-  it("handleSettingsClick navigates to /profile when user has no username", () => {
+  it("handleSettingsClick navigates to /settings when user has no username", () => {
     // Arrange
     mockUseAuth.mockReturnValue({
       isAuthenticated: true,
@@ -118,6 +118,6 @@ describe("useNavigationButtons", () => {
     result.current.handleSettingsClick();
 
     // Assert
-    expect(mockNavigate).toHaveBeenCalledWith({ to: "/profile" });
+    expect(mockNavigate).toHaveBeenCalledWith({ to: "/settings" });
   });
 });

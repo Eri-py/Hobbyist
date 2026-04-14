@@ -1,6 +1,5 @@
 import { alpha, useTheme } from "@mui/material/styles";
 import Stack from "@mui/material/Stack";
-import List from "@mui/material/List";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import MenuIcon from "@mui/icons-material/Menu";
@@ -67,9 +66,7 @@ export function LeftSidebar() {
         )}
 
         {/* Main sidebar routes */}
-        <List disablePadding>
-          <NavigationButtons />
-        </List>
+        <NavigationButtons />
       </Stack>
       <Stack
         component="footer"

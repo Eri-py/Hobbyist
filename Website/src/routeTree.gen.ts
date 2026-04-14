@@ -15,13 +15,13 @@ import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AuthSignUpRouteImport } from './routes/_auth/sign-up'
 import { Route as AuthLoginRouteImport } from './routes/_auth/login'
 import { Route as AppTradeRouteImport } from './routes/_app/trade'
+import { Route as AppSettingsRouteImport } from './routes/_app/settings'
 import { Route as AppSearchRouteImport } from './routes/_app/search'
 import { Route as AppMessagesRouteImport } from './routes/_app/messages'
 import { Route as AppEventsRouteImport } from './routes/_app/events'
 import { Route as AppCreateRouteImport } from './routes/_app/create'
 import { Route as AppProfileIndexRouteImport } from './routes/_app/profile/index'
 import { Route as AppProfileUsernameIndexRouteImport } from './routes/_app/profile/$username/index'
-import { Route as AppProfileUsernameSettingsRouteImport } from './routes/_app/profile/$username/settings'
 import { Route as AppProfileUsernamePostIdRouteImport } from './routes/_app/profile/$username/$postId'
 
 const AuthRoute = AuthRouteImport.update({
@@ -50,6 +50,11 @@ const AuthLoginRoute = AuthLoginRouteImport.update({
 const AppTradeRoute = AppTradeRouteImport.update({
   id: '/trade',
   path: '/trade',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSettingsRoute = AppSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => AppRoute,
 } as any)
 const AppSearchRoute = AppSearchRouteImport.update({
@@ -82,12 +87,6 @@ const AppProfileUsernameIndexRoute = AppProfileUsernameIndexRouteImport.update({
   path: '/profile/$username/',
   getParentRoute: () => AppRoute,
 } as any)
-const AppProfileUsernameSettingsRoute =
-  AppProfileUsernameSettingsRouteImport.update({
-    id: '/profile/$username/settings',
-    path: '/profile/$username/settings',
-    getParentRoute: () => AppRoute,
-  } as any)
 const AppProfileUsernamePostIdRoute =
   AppProfileUsernamePostIdRouteImport.update({
     id: '/profile/$username/$postId',
@@ -101,12 +100,12 @@ export interface FileRoutesByFullPath {
   '/events': typeof AppEventsRoute
   '/messages': typeof AppMessagesRoute
   '/search': typeof AppSearchRoute
+  '/settings': typeof AppSettingsRoute
   '/trade': typeof AppTradeRoute
   '/login': typeof AuthLoginRoute
   '/sign-up': typeof AuthSignUpRoute
   '/profile/': typeof AppProfileIndexRoute
   '/profile/$username/$postId': typeof AppProfileUsernamePostIdRoute
-  '/profile/$username/settings': typeof AppProfileUsernameSettingsRoute
   '/profile/$username/': typeof AppProfileUsernameIndexRoute
 }
 export interface FileRoutesByTo {
@@ -115,12 +114,12 @@ export interface FileRoutesByTo {
   '/events': typeof AppEventsRoute
   '/messages': typeof AppMessagesRoute
   '/search': typeof AppSearchRoute
+  '/settings': typeof AppSettingsRoute
   '/trade': typeof AppTradeRoute
   '/login': typeof AuthLoginRoute
   '/sign-up': typeof AuthSignUpRoute
   '/profile': typeof AppProfileIndexRoute
   '/profile/$username/$postId': typeof AppProfileUsernamePostIdRoute
-  '/profile/$username/settings': typeof AppProfileUsernameSettingsRoute
   '/profile/$username': typeof AppProfileUsernameIndexRoute
 }
 export interface FileRoutesById {
@@ -131,13 +130,13 @@ export interface FileRoutesById {
   '/_app/events': typeof AppEventsRoute
   '/_app/messages': typeof AppMessagesRoute
   '/_app/search': typeof AppSearchRoute
+  '/_app/settings': typeof AppSettingsRoute
   '/_app/trade': typeof AppTradeRoute
   '/_auth/login': typeof AuthLoginRoute
   '/_auth/sign-up': typeof AuthSignUpRoute
   '/_app/': typeof AppIndexRoute
   '/_app/profile/': typeof AppProfileIndexRoute
   '/_app/profile/$username/$postId': typeof AppProfileUsernamePostIdRoute
-  '/_app/profile/$username/settings': typeof AppProfileUsernameSettingsRoute
   '/_app/profile/$username/': typeof AppProfileUsernameIndexRoute
 }
 export interface FileRouteTypes {
@@ -148,12 +147,12 @@ export interface FileRouteTypes {
     | '/events'
     | '/messages'
     | '/search'
+    | '/settings'
     | '/trade'
     | '/login'
     | '/sign-up'
     | '/profile/'
     | '/profile/$username/$postId'
-    | '/profile/$username/settings'
     | '/profile/$username/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -162,12 +161,12 @@ export interface FileRouteTypes {
     | '/events'
     | '/messages'
     | '/search'
+    | '/settings'
     | '/trade'
     | '/login'
     | '/sign-up'
     | '/profile'
     | '/profile/$username/$postId'
-    | '/profile/$username/settings'
     | '/profile/$username'
   id:
     | '__root__'
@@ -177,13 +176,13 @@ export interface FileRouteTypes {
     | '/_app/events'
     | '/_app/messages'
     | '/_app/search'
+    | '/_app/settings'
     | '/_app/trade'
     | '/_auth/login'
     | '/_auth/sign-up'
     | '/_app/'
     | '/_app/profile/'
     | '/_app/profile/$username/$postId'
-    | '/_app/profile/$username/settings'
     | '/_app/profile/$username/'
   fileRoutesById: FileRoutesById
 }
@@ -236,6 +235,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppTradeRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/settings': {
+      id: '/_app/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AppSettingsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/search': {
       id: '/_app/search'
       path: '/search'
@@ -278,13 +284,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProfileUsernameIndexRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/profile/$username/settings': {
-      id: '/_app/profile/$username/settings'
-      path: '/profile/$username/settings'
-      fullPath: '/profile/$username/settings'
-      preLoaderRoute: typeof AppProfileUsernameSettingsRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/profile/$username/$postId': {
       id: '/_app/profile/$username/$postId'
       path: '/profile/$username/$postId'
@@ -300,11 +299,11 @@ interface AppRouteChildren {
   AppEventsRoute: typeof AppEventsRoute
   AppMessagesRoute: typeof AppMessagesRoute
   AppSearchRoute: typeof AppSearchRoute
+  AppSettingsRoute: typeof AppSettingsRoute
   AppTradeRoute: typeof AppTradeRoute
   AppIndexRoute: typeof AppIndexRoute
   AppProfileIndexRoute: typeof AppProfileIndexRoute
   AppProfileUsernamePostIdRoute: typeof AppProfileUsernamePostIdRoute
-  AppProfileUsernameSettingsRoute: typeof AppProfileUsernameSettingsRoute
   AppProfileUsernameIndexRoute: typeof AppProfileUsernameIndexRoute
 }
 
@@ -313,11 +312,11 @@ const AppRouteChildren: AppRouteChildren = {
   AppEventsRoute: AppEventsRoute,
   AppMessagesRoute: AppMessagesRoute,
   AppSearchRoute: AppSearchRoute,
+  AppSettingsRoute: AppSettingsRoute,
   AppTradeRoute: AppTradeRoute,
   AppIndexRoute: AppIndexRoute,
   AppProfileIndexRoute: AppProfileIndexRoute,
   AppProfileUsernamePostIdRoute: AppProfileUsernamePostIdRoute,
-  AppProfileUsernameSettingsRoute: AppProfileUsernameSettingsRoute,
   AppProfileUsernameIndexRoute: AppProfileUsernameIndexRoute,
 }
 

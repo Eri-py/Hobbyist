@@ -7,7 +7,6 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
 import ListItemIcon from "@mui/material/ListItemIcon";
-import Stack from "@mui/material/Stack";
 import { styled } from "@mui/material/styles";
 
 import { useSidebar } from "@/hooks/app/useSidebar";
@@ -15,16 +14,13 @@ import { useNavigationButtons } from "@/hooks/shared/useNavigationButtons";
 import { useNavigation } from "@/hooks/app/useNavigation";
 import { useAuth, useFeatureFlags } from "@hobbyist/hooks";
 import { FeatureFlags } from "@hobbyist/types";
+import List from "@mui/material/List";
 
 type NavigationItem = {
   label: string;
   icon: ReactElement;
   handleClick: () => void;
 };
-
-const NavigationContainer = styled(Stack)({
-  gap: 8,
-});
 
 const NavItemButton = styled(ListItemButton, {
   shouldForwardProp: (prop) => prop !== "isSidebarOpen",
@@ -99,5 +95,5 @@ export function NavigationButtons() {
     );
   });
 
-  return <NavigationContainer>{navigationButtons}</NavigationContainer>;
+  return <List disablePadding>{navigationButtons}</List>;
 }

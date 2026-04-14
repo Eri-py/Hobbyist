@@ -9,6 +9,7 @@ const ROUTE_TO_TAB_MAP: Record<string, string> = {
   "/create": "Create",
   "/messages": "Messages",
   "/search": "Search",
+  "/settings": "Settings",
 };
 
 export function useNavigation() {
@@ -16,10 +17,6 @@ export function useNavigation() {
   const { user } = useAuth();
 
   const getActiveTabFromPath = (pathname: string): string => {
-    if (user && pathname.startsWith(`/profile/${user.username}/settings`)) {
-      return "Settings";
-    }
-
     // Check if viewing own profile
     if (user && pathname.startsWith(`/profile/${user.username}`)) {
       return "Profile";

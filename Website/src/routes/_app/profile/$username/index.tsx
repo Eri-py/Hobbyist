@@ -1,12 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useCallback, useMemo, useState } from "react";
 
 import Stack from "@mui/material/Stack";
+import IconButton from "@mui/material/IconButton";
+import SettingsIcon from "@mui/icons-material/Settings";
 
 import { useDeviceType } from "@/hooks/shared/useDeviceType";
+import { useMobileHeaderConfig } from "@/hooks/app/useMobileHeader";
+import { useNavigationButtons } from "@/hooks/shared/useNavigationButtons";
 import { useAuth } from "@hobbyist/hooks";
 import { Header } from "@/components/profile/Header";
 import { Details } from "@/components/profile/Details";
-import { ActionButtons } from "@/components/profile/ActionButtons";
+import { ProfileSettingsModal } from "@/components/profile/ProfileSettingsModal";
 
 export const Route = createFileRoute("/_app/profile/$username/")({
   component: UserProfilePage,
@@ -16,7 +21,30 @@ function UserProfilePage() {
   const { username } = Route.useParams();
   const { user } = useAuth();
   const { isDesktop } = useDeviceType();
+  const { handleSettingsClick } = useNavigationButtons();
+  const [isProfileSettingsOpen, setIsProfileSettingsOpen] = useState(false);
   const isOwnProfile = user?.username === username;
+
+  const handleProfileSettingsOpen = useCallback(() => {
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+
+    setIsProfileSettingsOpen(true);
+  }, []);
+
+  const rightMobileHeaderSlot = useMemo(
+    () => (
+      <IconButton onClick={handleSettingsClick} aria-label="Open app settings">
+        <SettingsIcon />
+      </IconButton>
+    ),
+    [handleSettingsClick],
+  );
+
+  useMobileHeaderConfig({
+    right: rightMobileHeaderSlot,
+  });
 
   // Placeholder shape until profile backend data is wired.
   const avatarSize = isDesktop ? 108 : 82;
@@ -65,12 +93,13 @@ function UserProfilePage() {
           >
             <Details
               username={username}
+              isOwnProfile={isOwnProfile}
+              onProfileSettingsClick={handleProfileSettingsOpen}
               bio={profileBio}
               hobbies={hobbyPlaceholders}
               tradeRatingOutOf100={tradeRatingOutOf100}
               tradeReviewCount={tradeReviewCount}
             />
-            <ActionButtons isOwnProfile={isOwnProfile} />
           </Stack>
         </Stack>
       </Stack>
@@ -81,6 +110,11 @@ function UserProfilePage() {
           overflow: "auto",
           border: "1px solid yellow",
         }}
+      />
+
+      <ProfileSettingsModal
+        open={isProfileSettingsOpen}
+        onClose={() => setIsProfileSettingsOpen(false)}
       />
     </Stack>
   );

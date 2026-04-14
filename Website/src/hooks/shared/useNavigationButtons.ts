@@ -1,9 +1,9 @@
+import { useCallback } from "react";
+
 import { useNavigate } from "@tanstack/react-router";
-import { useAuth } from "@hobbyist/hooks";
 
 export function useNavigationButtons() {
   const navigate = useNavigate();
-  const { user } = useAuth();
 
   //messages button. Would probably move to its own separate hook to handle notifications.
   const handleMessagesClick = () => {
@@ -22,14 +22,9 @@ export function useNavigationButtons() {
     navigate({ to: "/events" });
   };
 
-  const handleSettingsClick = () => {
-    if (user?.username) {
-      navigate({ to: `/profile/${user.username}/settings` });
-      return;
-    }
-
-    navigate({ to: "/profile" });
-  };
+  const handleSettingsClick = useCallback(() => {
+    navigate({ to: "/settings" });
+  }, [navigate]);
 
   return {
     handleMessagesClick,

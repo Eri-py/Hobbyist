@@ -81,10 +81,10 @@ describe("useNavigation", () => {
       expect(result.current.activeTab).toBe("Profile");
     });
 
-    it("own settings page resolves to Settings", () => {
+    it("settings page resolves to Settings", () => {
       // Arrange
       mockUseLocation.mockReturnValue({
-        pathname: "/profile/alice/settings",
+        pathname: "/settings",
       } as ReturnType<typeof useLocation>);
 
       // Act
