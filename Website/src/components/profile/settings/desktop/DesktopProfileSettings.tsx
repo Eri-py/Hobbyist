@@ -1,18 +1,18 @@
 import Stack from "@mui/material/Stack";
 import { Sidebar } from "./Sidebar";
-import { useState } from "react";
+import type { ProfileSettingsSectionId } from "@/hooks/profile/settings/useNavigation";
 
 type DesktopProfileSettingsProps = {
   onClose: () => void;
+  activeSection: ProfileSettingsSectionId;
+  onSectionClick: (sectionLabel: ProfileSettingsSectionId) => void;
 };
 
-export function DesktopProfileSettings({ onClose }: DesktopProfileSettingsProps) {
-  const [activeSection, setActiveSection] = useState<string>("identity");
-
-  const onSectionClick = (sectionLabel: string) => {
-    setActiveSection(sectionLabel);
-  };
-
+export function DesktopProfileSettings({
+  onClose,
+  activeSection,
+  onSectionClick,
+}: DesktopProfileSettingsProps) {
   return (
     <Stack direction="row" sx={{ height: "100%" }}>
       <Sidebar onClose={onClose} onSectionClick={onSectionClick} activeSection={activeSection} />

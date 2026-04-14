@@ -5,7 +5,6 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import CloseIcon from "@mui/icons-material/Close";
 import ListItemButton from "@mui/material/ListItemButton";
-import { styled } from "@mui/material/styles";
 import FavoriteBorderOutlinedIcon from "@mui/icons-material/FavoriteBorderOutlined";
 import LinkOutlinedIcon from "@mui/icons-material/LinkOutlined";
 import PaletteOutlinedIcon from "@mui/icons-material/PaletteOutlined";
@@ -13,78 +12,61 @@ import PersonOutlineOutlinedIcon from "@mui/icons-material/PersonOutlineOutlined
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import List from "@mui/material/List";
+import {
+  PROFILE_SETTINGS_SECTIONS,
+  type ProfileSettingsSectionId,
+} from "@/hooks/profile/settings/useNavigation";
 
 type SidebarProps = {
   onClose: () => void;
-  activeSection: string;
-  onSectionClick: (sectionLabel: string) => void;
+  activeSection: ProfileSettingsSectionId;
+  onSectionClick: (sectionLabel: ProfileSettingsSectionId) => void;
 };
 
 type SectionItem = {
+  id: ProfileSettingsSectionId;
   label: string;
   icon: ReactElement;
-  handleClick: () => void;
 };
 
-const SectionItemButton = styled(ListItemButton)({
-  borderRadius: 8,
-  gap: 4,
-  height: 40,
-});
-
-const ExpandedIcon = styled(ListItemIcon)({
-  minWidth: "fit-content",
-});
-
-const ExpandedLabel = styled(ListItemText)({
-  "& .MuiListItemText-primary": {
-    fontSize: 15,
-    fontWeight: 300,
-  },
-});
+const getSectionIcon = (sectionId: ProfileSettingsSectionId): ReactElement => {
+  switch (sectionId) {
+    case "identity":
+      return <PersonOutlineOutlinedIcon />;
+    case "appearance":
+      return <PaletteOutlinedIcon />;
+    case "interests":
+      return <FavoriteBorderOutlinedIcon />;
+    case "social-links":
+      return <LinkOutlinedIcon />;
+  }
+};
 
 export function Sidebar({ onClose, activeSection, onSectionClick }: SidebarProps) {
-  const sectionItems: SectionItem[] = [
-    {
-      label: "Identity",
-      icon: <PersonOutlineOutlinedIcon />,
-      handleClick: () => {
-        onSectionClick("identity");
-      },
-    },
-    {
-      label: "Appearance",
-      icon: <PaletteOutlinedIcon />,
-      handleClick: () => {
-        onSectionClick("appearance");
-      },
-    },
-    {
-      label: "Interests",
-      icon: <FavoriteBorderOutlinedIcon />,
-      handleClick: () => {
-        onSectionClick("interests");
-      },
-    },
-    {
-      label: "Social links",
-      icon: <LinkOutlinedIcon />,
-      handleClick: () => {
-        onSectionClick("social-links");
-      },
-    },
-  ];
+  const sectionItems: SectionItem[] = PROFILE_SETTINGS_SECTIONS.map((section) => ({
+    id: section.id,
+    label: section.label,
+    icon: getSectionIcon(section.id),
+  }));
 
   const sectionButtons = sectionItems.map((item) => {
     return (
-      <SectionItemButton
+      <ListItemButton
         key={item.label}
-        selected={item.label.toLowerCase() === activeSection}
-        onClick={item.handleClick}
+        selected={item.id === activeSection}
+        onClick={() => onSectionClick(item.id)}
+        sx={{ borderRadius: 2, gap: 0.5, height: 40 }}
       >
-        <ExpandedIcon>{item.icon}</ExpandedIcon>
-        <ExpandedLabel primary={item.label} />
-      </SectionItemButton>
+        <ListItemIcon sx={{ minWidth: "fit-content" }}>{item.icon}</ListItemIcon>
+        <ListItemText
+          primary={item.label}
+          slotProps={{
+            primary: {
+              sx: { fontSize: 15, fontWeight: 300 },
+            },
+          }}
+        />
+      </ListItemButton>
     );
   });
 
@@ -93,7 +75,8 @@ export function Sidebar({ onClose, activeSection, onSectionClick }: SidebarProps
       sx={{
         width: "100%",
         maxWidth: 210,
-        borderRight: "1px solid red",
+        gap: 1,
+        border: "1px solid red",
       }}
     >
       <Stack

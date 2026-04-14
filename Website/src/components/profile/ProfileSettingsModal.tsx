@@ -4,6 +4,7 @@ import Modal from "@mui/material/Modal";
 import Slide from "@mui/material/Slide";
 
 import { useDeviceType } from "@/hooks/shared/useDeviceType";
+import { useNavigation } from "@/hooks/profile/settings/useNavigation";
 import { DesktopProfileSettings } from "./settings/desktop/DesktopProfileSettings";
 import { MobileProfileSettings } from "./settings/mobile/MobileProfileSettings";
 
@@ -28,6 +29,7 @@ const mobileContainerStyles = { position: "absolute", inset: 0, bgcolor: "backgr
 
 export function ProfileSettingsModal({ open, onClose }: ProfileSettingsModalProps) {
   const { isDesktop } = useDeviceType();
+  const { activeSection, onSectionClick } = useNavigation();
 
   return (
     <Modal
@@ -39,13 +41,21 @@ export function ProfileSettingsModal({ open, onClose }: ProfileSettingsModalProp
       {isDesktop ? (
         <Fade in={open} timeout={180}>
           <Box sx={desktopContainerStyles}>
-            <DesktopProfileSettings onClose={onClose} />
+            <DesktopProfileSettings
+              onClose={onClose}
+              activeSection={activeSection}
+              onSectionClick={onSectionClick}
+            />
           </Box>
         </Fade>
       ) : (
         <Slide in={open} direction="left" timeout={220}>
           <Box sx={mobileContainerStyles}>
-            <MobileProfileSettings onClose={onClose} />
+            <MobileProfileSettings
+              onClose={onClose}
+              activeSection={activeSection}
+              onSectionClick={onSectionClick}
+            />
           </Box>
         </Slide>
       )}
