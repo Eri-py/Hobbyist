@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCallback, useMemo, useState } from "react";
 
 import Stack from "@mui/material/Stack";
@@ -7,7 +7,6 @@ import SettingsIcon from "@mui/icons-material/Settings";
 
 import { useDeviceType } from "@/hooks/shared/useDeviceType";
 import { useMobileHeaderConfig } from "@/hooks/app/useMobileHeader";
-import { useNavigationButtons } from "@/hooks/shared/useNavigationButtons";
 import { useAuth } from "@hobbyist/hooks";
 import { Header } from "@/components/profile/Header";
 import { Details } from "@/components/profile/Details";
@@ -19,11 +18,15 @@ export const Route = createFileRoute("/_app/profile/$username/")({
 
 function UserProfilePage() {
   const { username } = Route.useParams();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { isDesktop } = useDeviceType();
-  const { handleSettingsClick } = useNavigationButtons();
   const [isProfileSettingsOpen, setIsProfileSettingsOpen] = useState(false);
   const isOwnProfile = user?.username === username;
+
+  const handleSettingsClick = useCallback(() => {
+    navigate({ to: "/settings" });
+  }, [navigate]);
 
   const handleProfileSettingsOpen = useCallback(() => {
     if (document.activeElement instanceof HTMLElement) {
