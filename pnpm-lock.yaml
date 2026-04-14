@@ -14,7 +14,7 @@ overrides:
   minimatch: 10.2.5
   node-forge: '>=1.4.0'
   picomatch: '>=4.0.4'
-  seroval: '>=1.4.1'
+  seroval: '>=1.5.2'
   undici: '>=7.24.6'
   yaml: '>=2.8.3'
 
@@ -5299,7 +5299,7 @@ packages:
     resolution: {integrity: sha512-qpY0Cl+fKYFn4GOf3cMiq6l72CpuVaawb6ILjubOQ+diJ54LfOWaSSPsaswN8DRPIPW4Yq+tE1k5aKd7ILyaFg==}
     engines: {node: '>=10'}
     peerDependencies:
-      seroval: '>=1.4.1'
+      seroval: '>=1.5.2'
 
   seroval@1.5.2:
     resolution: {integrity: sha512-xcRN39BdsnO9Tf+VzsE7b3JyTJASItIV1FVFewJKCFcW4s4haIKS3e6vj8PGB9qBwC7tnuOywQMdv5N4qkzi7Q==}
