@@ -55,7 +55,7 @@ export function Sidebar({ onClose, activeSection, onSectionClick }: SidebarProps
         key={item.label}
         selected={item.id === activeSection}
         onClick={() => onSectionClick(item.id)}
-        sx={{ borderRadius: 2, gap: 0.5, height: 40 }}
+        sx={{ borderRadius: 2, gap: 1, height: 40 }}
       >
         <ListItemIcon sx={{ minWidth: "fit-content" }}>{item.icon}</ListItemIcon>
         <ListItemText
@@ -76,7 +76,8 @@ export function Sidebar({ onClose, activeSection, onSectionClick }: SidebarProps
         width: "100%",
         maxWidth: 210,
         gap: 1,
-        border: "1px solid red",
+        borderRight: "1px solid",
+        borderColor: "divider",
       }}
     >
       <Stack
@@ -85,7 +86,8 @@ export function Sidebar({ onClose, activeSection, onSectionClick }: SidebarProps
           padding: 2,
           alignItems: "center",
           justifyContent: "space-between",
-          borderBottom: "1px solid red",
+          borderBottom: "1px solid",
+          borderColor: "divider",
         }}
       >
         <Typography variant="subtitle1">Profile</Typography>
@@ -94,7 +96,7 @@ export function Sidebar({ onClose, activeSection, onSectionClick }: SidebarProps
         </IconButton>
       </Stack>
 
-      <List disablePadding sx={{ border: "1px solid yellow" }}>
+      <List disablePadding sx={{ paddingX: 0.5 }}>
         {sectionButtons}
       </List>
     </Stack>

@@ -1,8 +1,10 @@
-import IconButton from "@mui/material/IconButton";
+import { useCallback, useState } from "react";
+
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import CloseIcon from "@mui/icons-material/Close";
+
 import { type ProfileSettingsSectionId } from "@/hooks/profile/settings/useNavigation";
+import { Header } from "./Header";
 import { IdentityCard } from "./IdentityCard";
 import { SectionNavButtons } from "./SectionNavButtons";
 
@@ -12,33 +14,51 @@ type MobileProfileSettingsProps = {
   onSectionClick: (sectionLabel: ProfileSettingsSectionId) => void;
 };
 
+type MobileSettingsView = "menu" | "section";
+
 export function MobileProfileSettings({
   onClose,
   activeSection,
   onSectionClick,
 }: MobileProfileSettingsProps) {
+  const [view, setView] = useState<MobileSettingsView>("menu");
+
+  const handleSectionSelect = useCallback(
+    (sectionId: ProfileSettingsSectionId) => {
+      onSectionClick(sectionId);
+      setView("section");
+    },
+    [onSectionClick],
+  );
+
+  const handleBackToMenu = useCallback(() => {
+    setView("menu");
+  }, []);
+
   return (
     <Stack sx={{ height: "100%" }}>
-      <Stack
-        direction="row"
-        sx={{ alignItems: "center", justifyContent: "space-between", border: "1px solid orange" }}
-      >
-        <Typography variant="h6">Settings</Typography>
-        <IconButton onClick={onClose} size="large">
-          <CloseIcon />
-        </IconButton>
-      </Stack>
+      {view === "menu" ? (
+        <Header view="menu" onClose={onClose} />
+      ) : (
+        <Header view="section" activeSection={activeSection} onBack={handleBackToMenu} />
+      )}
+
       <Stack
         sx={{
           padding: 2,
           gap: 2,
           height: "100%",
-          border: "1px solid yellow",
         }}
       >
-        <IdentityCard onClick={() => onSectionClick("identity")} />
+        {view === "menu" ? (
+          <>
+            <IdentityCard onClick={() => handleSectionSelect("identity")} />
 
-        <SectionNavButtons activeSection={activeSection} onSectionClick={onSectionClick} />
+            <SectionNavButtons activeSection={activeSection} onSectionClick={handleSectionSelect} />
+          </>
+        ) : (
+          <Typography variant="h6">{activeSection}</Typography>
+        )}
       </Stack>
     </Stack>
   );

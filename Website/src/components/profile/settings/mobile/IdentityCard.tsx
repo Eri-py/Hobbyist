@@ -28,7 +28,8 @@ export function IdentityCard({ onClick }: IdentityCardProps) {
         borderRadius: 3,
         padding: 2,
         gap: 2,
-        border: "1px solid green",
+        border: "1px solid",
+        borderColor: "divider",
         maxHeight: 120,
       }}
     >

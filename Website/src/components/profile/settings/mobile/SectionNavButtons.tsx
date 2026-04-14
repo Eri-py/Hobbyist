@@ -50,13 +50,18 @@ export function SectionNavButtons({ activeSection, onSectionClick }: SectionNavB
   }));
 
   return (
-    <List disablePadding sx={{ border: "1px solid indigo" }}>
-      {sectionItems.map((item) => (
+    <List disablePadding>
+      {sectionItems.map((item, index) => (
         <ListItemButton
           key={item.label}
           aria-current={item.id === activeSection ? "page" : undefined}
           onClick={() => onSectionClick(item.id)}
-          sx={{ borderRadius: 3, gap: 1.25, padding: "10px 12px" }}
+          sx={{
+            gap: 1,
+            borderBottom: index < sectionItems.length - 1 ? "1px solid" : "none",
+            borderColor: "divider",
+            boxShadow: "none",
+          }}
         >
           <ListItemIcon
             sx={{

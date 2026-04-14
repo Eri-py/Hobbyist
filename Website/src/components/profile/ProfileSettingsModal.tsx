@@ -20,24 +20,19 @@ const desktopContainerStyles = {
   width: "100%",
   maxWidth: 900,
   aspectRatio: 3 / 2,
-  bgcolor: "background.paper",
+  bgcolor: "background.default",
   borderRadius: 2,
   boxShadow: 16,
 };
 
-const mobileContainerStyles = { position: "absolute", inset: 0, bgcolor: "background.paper" };
+const mobileContainerStyles = { position: "absolute", inset: 0, bgcolor: "background.default" };
 
 export function ProfileSettingsModal({ open, onClose }: ProfileSettingsModalProps) {
   const { isDesktop } = useDeviceType();
   const { activeSection, onSectionClick } = useNavigation();
 
   return (
-    <Modal
-      open={open}
-      onClose={onClose}
-      closeAfterTransition
-      aria-labelledby="profile-settings-modal-title"
-    >
+    <Modal open={open} onClose={onClose} closeAfterTransition>
       {isDesktop ? (
         <Fade in={open} timeout={180}>
           <Box sx={desktopContainerStyles}>

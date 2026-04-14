@@ -1,6 +1,8 @@
 import Stack from "@mui/material/Stack";
 import { Sidebar } from "./Sidebar";
 import type { ProfileSettingsSectionId } from "@/hooks/profile/settings/useNavigation";
+import Typography from "@mui/material/Typography";
+import Paper from "@mui/material/Paper";
 
 type DesktopProfileSettingsProps = {
   onClose: () => void;
@@ -16,7 +18,9 @@ export function DesktopProfileSettings({
   return (
     <Stack direction="row" sx={{ height: "100%" }}>
       <Sidebar onClose={onClose} onSectionClick={onSectionClick} activeSection={activeSection} />
-      <Stack sx={{ width: "100%", border: "1px solid orange" }}></Stack>
+      <Paper sx={{ width: "100%" }}>
+        <Typography>{activeSection}</Typography>
+      </Paper>
     </Stack>
   );
 }
