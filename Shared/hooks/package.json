@@ -29,7 +29,7 @@
     "@tanstack/react-query": "^5.96.2",
     "@testing-library/react": "^16.3.2",
     "axios": "^1.15.0",
-    "jsdom": "^29.0.0",
+    "jsdom": "^29.0.2",
     "react": "19.2.5",
     "react-hook-form": "^7.71.2",
     "typescript": "~5.9.3",
