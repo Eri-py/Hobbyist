@@ -7,6 +7,7 @@ import SettingsIcon from "@mui/icons-material/Settings";
 
 import { useDeviceType } from "@/hooks/shared/useDeviceType";
 import { useMobileHeaderConfig } from "@/hooks/app/useMobileHeader";
+import { useHistoryLayer } from "@/hooks/shared/useHistoryLayer";
 import { useAuth } from "@hobbyist/hooks";
 import { Header } from "@/components/profile/Header";
 import { Details } from "@/components/profile/Details";
@@ -22,6 +23,10 @@ function UserProfilePage() {
   const { user } = useAuth();
   const { isDesktop } = useDeviceType();
   const [isProfileSettingsOpen, setIsProfileSettingsOpen] = useState(false);
+  const modalHistoryLayer = useHistoryLayer({
+    stateKey: "profileSettingsModal",
+    onPopOut: () => setIsProfileSettingsOpen(false),
+  });
   const isOwnProfile = user?.username === username;
 
   const handleSettingsClick = useCallback(() => {
@@ -29,12 +34,28 @@ function UserProfilePage() {
   }, [navigate]);
 
   const handleProfileSettingsOpen = useCallback(() => {
+    if (isProfileSettingsOpen) {
+      return;
+    }
+
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
 
+    modalHistoryLayer.pushEntry();
+
     setIsProfileSettingsOpen(true);
-  }, []);
+  }, [isProfileSettingsOpen, modalHistoryLayer]);
+
+  const handleProfileSettingsClose = useCallback(() => {
+    if (!isProfileSettingsOpen) {
+      return;
+    }
+
+    modalHistoryLayer.popEntryOr(() => {
+      setIsProfileSettingsOpen(false);
+    });
+  }, [isProfileSettingsOpen, modalHistoryLayer]);
 
   const rightMobileHeaderSlot = useMemo(
     () => (
@@ -115,10 +136,7 @@ function UserProfilePage() {
         }}
       />
 
-      <ProfileSettingsModal
-        open={isProfileSettingsOpen}
-        onClose={() => setIsProfileSettingsOpen(false)}
-      />
+      <ProfileSettingsModal open={isProfileSettingsOpen} onClose={handleProfileSettingsClose} />
     </Stack>
   );
 }
