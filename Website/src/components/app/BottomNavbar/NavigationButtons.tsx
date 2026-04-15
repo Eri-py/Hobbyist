@@ -1,5 +1,4 @@
 import { type ReactElement } from "react";
-import { useNavigate } from "@tanstack/react-router";
 
 import AddIcon from "@mui/icons-material/Add";
 import HomeIcon from "@mui/icons-material/Home";
@@ -11,11 +10,7 @@ import Badge, { badgeClasses } from "@mui/material/Badge";
 import BottomNavigation from "@mui/material/BottomNavigation";
 import BottomNavigationAction from "@mui/material/BottomNavigationAction";
 
-import { useNavigationButtons } from "@/hooks/shared/useNavigationButtons";
-import { useProfile } from "@/hooks/profile/useProfile";
-import { useNavigation } from "@/hooks/app/useNavigation";
-import { useFeatureFlags } from "@hobbyist/hooks";
-import { FeatureFlags } from "@hobbyist/types";
+import { useNavigation, type MobileNavbarItem } from "@/hooks/app/useNavigation";
 
 const NotificationBadge = styled(Badge)`
   & .${badgeClasses.badge} {
@@ -32,48 +27,29 @@ type NavigationItem = {
 };
 
 export function NavigationButtons() {
-  const { handleHomeClick, handleMessagesClick, handleEventsClick } = useNavigationButtons();
-  const navigate = useNavigate();
-  const { handleProfileClick } = useProfile();
-  const { activeTab } = useNavigation();
-  const flags = useFeatureFlags();
+  const { mobileItems, activeTab } = useNavigation();
 
-  const navigationItems: NavigationItem[] = [
-    {
-      label: "Home",
-      icon: <HomeIcon style={{ fontSize: 28 }} />,
-      handleClick: handleHomeClick,
-    },
-    ...(flags[FeatureFlags.Events]
-      ? [
-          {
-            label: "Events",
-            icon: <EventIcon style={{ fontSize: 28 }} />,
-            handleClick: handleEventsClick,
-          },
-        ]
-      : []),
-    {
-      label: "Create",
-      icon: <AddIcon style={{ fontSize: 28 }} />,
-      handleClick: () => navigate({ to: "/create" }),
-    },
-    ...(flags[FeatureFlags.Messages]
-      ? [
-          {
-            label: "Messages",
-            icon: <ChatIconOulined style={{ fontSize: 28 }} />,
-            notifications: 2,
-            handleClick: handleMessagesClick,
-          },
-        ]
-      : []),
-    {
-      label: "Profile",
-      icon: <PersonIcon style={{ fontSize: 28 }} />,
-      handleClick: handleProfileClick,
-    },
-  ];
+  const getMobileIcon = (item: MobileNavbarItem): ReactElement => {
+    switch (item.key) {
+      case "home":
+        return <HomeIcon style={{ fontSize: 28 }} />;
+      case "events":
+        return <EventIcon style={{ fontSize: 28 }} />;
+      case "create":
+        return <AddIcon style={{ fontSize: 28 }} />;
+      case "messages":
+        return <ChatIconOulined style={{ fontSize: 28 }} />;
+      case "profile":
+        return <PersonIcon style={{ fontSize: 28 }} />;
+    }
+  };
+
+  const navigationItems: NavigationItem[] = mobileItems.map((item) => ({
+    label: item.label,
+    icon: getMobileIcon(item),
+    handleClick: item.handleClick,
+    notifications: item.notifications,
+  }));
 
   return (
     <BottomNavigation value={activeTab} showLabels>

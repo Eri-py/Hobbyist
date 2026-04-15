@@ -7,24 +7,11 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
 import ListItemIcon from "@mui/material/ListItemIcon";
-import Stack from "@mui/material/Stack";
 import { styled } from "@mui/material/styles";
 
 import { useSidebar } from "@/hooks/app/useSidebar";
-import { useNavigationButtons } from "@/hooks/shared/useNavigationButtons";
-import { useNavigation } from "@/hooks/app/useNavigation";
-import { useAuth, useFeatureFlags } from "@hobbyist/hooks";
-import { FeatureFlags } from "@hobbyist/types";
-
-type NavigationItem = {
-  label: string;
-  icon: ReactElement;
-  handleClick: () => void;
-};
-
-const NavigationContainer = styled(Stack)({
-  gap: 8,
-});
+import { useNavigation, type DesktopNavbarItem } from "@/hooks/app/useNavigation";
+import List from "@mui/material/List";
 
 const NavItemButton = styled(ListItemButton, {
   shouldForwardProp: (prop) => prop !== "isSidebarOpen",
@@ -57,27 +44,23 @@ const CollapsedLabel = styled(ListItemText)({
 });
 
 export function NavigationButtons() {
-  const { handleHomeClick, handleTradeClick, handleEventsClick, handleSettingsClick } =
-    useNavigationButtons();
-  const { getActiveTab } = useNavigation();
+  const { desktopItems, getActiveTab } = useNavigation();
   const { isSidebarOpen } = useSidebar();
-  const { isAuthenticated } = useAuth();
-  const flags = useFeatureFlags();
 
-  const navigationItems: NavigationItem[] = [
-    { label: "Home", icon: <HomeIcon />, handleClick: handleHomeClick },
-    ...(flags[FeatureFlags.Trade]
-      ? [{ label: "Trade", icon: <StoreIcon />, handleClick: handleTradeClick }]
-      : []),
-    ...(flags[FeatureFlags.Events]
-      ? [{ label: "Events", icon: <EventIcon />, handleClick: handleEventsClick }]
-      : []),
-    ...(isAuthenticated && flags[FeatureFlags.Settings]
-      ? [{ label: "Settings", icon: <SettingsIcon />, handleClick: handleSettingsClick }]
-      : []),
-  ];
+  const getDesktopIcon = (item: DesktopNavbarItem): ReactElement => {
+    switch (item.key) {
+      case "home":
+        return <HomeIcon />;
+      case "trade":
+        return <StoreIcon />;
+      case "events":
+        return <EventIcon />;
+      case "settings":
+        return <SettingsIcon />;
+    }
+  };
 
-  const navigationButtons = navigationItems.map((item) => {
+  const navigationButtons = desktopItems.map((item) => {
     const isActive = getActiveTab(item.label);
 
     return (
@@ -89,15 +72,15 @@ export function NavigationButtons() {
       >
         {isSidebarOpen ? (
           <>
-            <ExpandedIcon>{item.icon}</ExpandedIcon>
+            <ExpandedIcon>{getDesktopIcon(item)}</ExpandedIcon>
             <ExpandedLabel primary={item.label} />
           </>
         ) : (
-          <CollapsedLabel primary={item.icon} secondary={item.label} />
+          <CollapsedLabel primary={getDesktopIcon(item)} secondary={item.label} />
         )}
       </NavItemButton>
     );
   });
 
-  return <NavigationContainer>{navigationButtons}</NavigationContainer>;
+  return <List disablePadding>{navigationButtons}</List>;
 }

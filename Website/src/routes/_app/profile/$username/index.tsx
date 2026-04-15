@@ -1,12 +1,17 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useCallback, useMemo, useState } from "react";
 
 import Stack from "@mui/material/Stack";
+import IconButton from "@mui/material/IconButton";
+import SettingsIcon from "@mui/icons-material/Settings";
 
 import { useDeviceType } from "@/hooks/shared/useDeviceType";
+import { useMobileHeaderConfig } from "@/hooks/app/useMobileHeader";
+import { useHistoryLayer } from "@/hooks/shared/useHistoryLayer";
 import { useAuth } from "@hobbyist/hooks";
 import { Header } from "@/components/profile/Header";
 import { Details } from "@/components/profile/Details";
-import { ActionButtons } from "@/components/profile/ActionButtons";
+import { ProfileSettingsModal } from "@/components/profile/ProfileSettingsModal";
 
 export const Route = createFileRoute("/_app/profile/$username/")({
   component: UserProfilePage,
@@ -14,9 +19,56 @@ export const Route = createFileRoute("/_app/profile/$username/")({
 
 function UserProfilePage() {
   const { username } = Route.useParams();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { isDesktop } = useDeviceType();
+  const [isProfileSettingsOpen, setIsProfileSettingsOpen] = useState(false);
+  const modalHistoryLayer = useHistoryLayer({
+    stateKey: "profileSettingsModal",
+    onPopOut: () => setIsProfileSettingsOpen(false),
+  });
   const isOwnProfile = user?.username === username;
+
+  const handleSettingsClick = useCallback(() => {
+    navigate({ to: "/settings" });
+  }, [navigate]);
+
+  const handleProfileSettingsOpen = useCallback(() => {
+    if (isProfileSettingsOpen) {
+      return;
+    }
+
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+
+    modalHistoryLayer.pushEntry();
+
+    setIsProfileSettingsOpen(true);
+  }, [isProfileSettingsOpen, modalHistoryLayer]);
+
+  const handleProfileSettingsClose = useCallback(() => {
+    if (!isProfileSettingsOpen) {
+      return;
+    }
+
+    modalHistoryLayer.popEntryOr(() => {
+      setIsProfileSettingsOpen(false);
+    });
+  }, [isProfileSettingsOpen, modalHistoryLayer]);
+
+  const rightMobileHeaderSlot = useMemo(
+    () => (
+      <IconButton onClick={handleSettingsClick} aria-label="Open app settings">
+        <SettingsIcon />
+      </IconButton>
+    ),
+    [handleSettingsClick],
+  );
+
+  useMobileHeaderConfig({
+    right: rightMobileHeaderSlot,
+  });
 
   // Placeholder shape until profile backend data is wired.
   const avatarSize = isDesktop ? 108 : 82;
@@ -65,12 +117,13 @@ function UserProfilePage() {
           >
             <Details
               username={username}
+              isOwnProfile={isOwnProfile}
+              onProfileSettingsClick={handleProfileSettingsOpen}
               bio={profileBio}
               hobbies={hobbyPlaceholders}
               tradeRatingOutOf100={tradeRatingOutOf100}
               tradeReviewCount={tradeReviewCount}
             />
-            <ActionButtons isOwnProfile={isOwnProfile} />
           </Stack>
         </Stack>
       </Stack>
@@ -82,6 +135,8 @@ function UserProfilePage() {
           border: "1px solid yellow",
         }}
       />
+
+      <ProfileSettingsModal open={isProfileSettingsOpen} onClose={handleProfileSettingsClose} />
     </Stack>
   );
 }
