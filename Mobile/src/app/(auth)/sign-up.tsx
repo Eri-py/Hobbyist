@@ -19,7 +19,7 @@ import type { components } from "@hobbyist/types";
 
 type AuthResult = components["schemas"]["AuthResult"];
 
-const SignUp = () => {
+export default function SignUp() {
   const router = useRouter();
   const { isTablet } = useDeviceType();
 
@@ -89,7 +89,7 @@ const SignUp = () => {
       </FormProvider>
     </ThemedView>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -102,5 +102,3 @@ const styles = StyleSheet.create({
     gap: 16,
   },
 });
-
-export default SignUp;

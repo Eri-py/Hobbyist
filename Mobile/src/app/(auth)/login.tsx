@@ -17,7 +17,7 @@ import type { components } from "@hobbyist/types";
 
 type AuthResult = components["schemas"]["AuthResult"];
 
-const Login = () => {
+export default function Login() {
   const handleAuthSuccess = useCallback(async (authResult: AuthResult) => {
     await TokenManager.storeTokens(authResult);
   }, []);
@@ -80,7 +80,7 @@ const Login = () => {
       </FormProvider>
     </ThemedView>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -93,5 +93,3 @@ const styles = StyleSheet.create({
     gap: 16,
   },
 });
-
-export default Login;

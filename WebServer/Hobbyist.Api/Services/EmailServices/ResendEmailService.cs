@@ -40,7 +40,7 @@ public class ResendEmailService(IConfiguration configuration, ILogger<ResendEmai
                 SecureSocketOptions.SslOnConnect,
                 ct
             );
-            await client.AuthenticateAsync("resend", configuration["Resend:ApiKey"], ct);
+            await client.AuthenticateAsync("resend", configuration["Resend:ApiKey"]!, ct);
             await client.SendAsync(message, ct);
             await client.DisconnectAsync(true, ct);
 

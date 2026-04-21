@@ -37,15 +37,15 @@ public class MailtrapEmailService(
 
             using var client = new SmtpClient();
             await client.ConnectAsync(
-                configuration["Mailtrap:Host"],
+                configuration["Mailtrap:Host"]!,
                 int.Parse(configuration["Mailtrap:Port"]!),
                 SecureSocketOptions.StartTls,
                 ct
             );
 
             await client.AuthenticateAsync(
-                configuration["Mailtrap:Username"],
-                configuration["Mailtrap:Password"],
+                configuration["Mailtrap:Username"]!,
+                configuration["Mailtrap:Password"]!,
                 ct
             );
 
