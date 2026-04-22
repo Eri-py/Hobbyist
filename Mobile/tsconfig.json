@@ -7,16 +7,15 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
-
     "paths": {
+      "@/*": ["./src/*"],
       "@/components/*": ["./src/components/*"],
       "@/hooks/*": ["./src/hooks/*"],
       "@/api/*": ["./src/api/*"],
       "@/types/*": ["./src/types/*"],
       "@/providers/*": ["./src/providers/*"],
-      "@/themes/*": ["./src/themes/*"],
-      "@/screens/*": ["./src/screens/*"]
+      "@/themes/*": ["./src/themes/*"]
     }
   },
-  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"]
+  "include": ["**/*.ts", "**/*.tsx"]
 }

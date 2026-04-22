@@ -9,7 +9,7 @@ import { useDeviceType } from "@/hooks/shared/useDeviceType";
 import { mockPosts } from "@/components/home/mockData";
 import { useAuth } from "@hobbyist/hooks";
 
-const HomeScreen = () => {
+export default function Index() {
   const { isTablet, isPhone } = useDeviceType();
   const [snackbarVisible, setSnackbarVisible] = useState(false);
   const theme = useTheme();
@@ -18,7 +18,6 @@ const HomeScreen = () => {
 
   const onDismissSnackBar = () => setSnackbarVisible(false);
 
-  // Show snackbar only when not authenticated
   useEffect(() => {
     if (!isAuthenticated) {
       setSnackbarVisible(true);
@@ -66,7 +65,7 @@ const HomeScreen = () => {
       )}
     </ThemedView>
   );
-};
+}
 
 const styles = StyleSheet.create({
   scrollContent: {
@@ -79,5 +78,3 @@ const styles = StyleSheet.create({
     alignSelf: "center",
   },
 });
-
-export default HomeScreen;

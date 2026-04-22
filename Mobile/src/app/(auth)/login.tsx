@@ -1,46 +1,42 @@
 import { useCallback } from "react";
-import { FormProvider } from "react-hook-form";
 import { Href, useRouter } from "expo-router";
+import { FormProvider } from "react-hook-form";
 import { View, StyleSheet } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 
-import { useSignUp } from "@hobbyist/hooks";
 import { ThemedView } from "@/components/shared/ThemedView";
-import { UsernameAndEmailStep } from "@/components/auth/sign-up/UsernameEmailStep";
+import { useLogin } from "@hobbyist/hooks";
+import { UsernameAndPasswordStep } from "@/components/auth/login/UsernamePasswordStep";
 import { OtpStep } from "@/components/auth/OtpStep/OtpStep";
-import { PasswordStep } from "@/components/auth/sign-up/PasswordStep";
-import { PersonalDetailsStep } from "@/components/auth/sign-up/PersonalDetailsStep";
 import { FormHeader } from "@/components/auth/FormHeader";
-import { ErrorMessage } from "@/components/shared/ErrorMessage";
 import { useDeviceType } from "@/hooks/shared/useDeviceType";
+import { ErrorMessage } from "@/components/shared/ErrorMessage";
 import { axiosInstance } from "@/api/axiosInstance";
 import * as TokenManager from "@/api/tokenManager";
 import type { components } from "@hobbyist/types";
 
 type AuthResult = components["schemas"]["AuthResult"];
 
-export function SignUpScreen() {
-  const router = useRouter();
-  const { isTablet } = useDeviceType();
-
+export default function Login() {
   const handleAuthSuccess = useCallback(async (authResult: AuthResult) => {
     await TokenManager.storeTokens(authResult);
   }, []);
 
+  const router = useRouter();
+  const { isTablet } = useDeviceType();
   const {
     methods,
     step,
     setStep,
-    otpExpiresAt,
+    otpData,
     serverErrorMessage,
     handleNext,
     onSubmit,
     isStarting,
-    isVerifying,
     isCompleting,
-    signUpHeaderConfig,
-    SIGNUP_TOTAL_STEPS,
-  } = useSignUp((path: string) => router.push(path as Href), axiosInstance, handleAuthSuccess);
+    loginHeaderConfig,
+    LOGIN_TOTAL_STEPS,
+  } = useLogin((path: string) => router.push(path as Href), axiosInstance, handleAuthSuccess);
 
   return (
     <ThemedView
@@ -52,7 +48,7 @@ export function SignUpScreen() {
       ]}
     >
       <FormProvider {...methods}>
-        <KeyboardAwareScrollView 
+        <KeyboardAwareScrollView
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
@@ -60,27 +56,22 @@ export function SignUpScreen() {
             {serverErrorMessage && <ErrorMessage>{serverErrorMessage}</ErrorMessage>}
 
             <FormHeader
-              header={signUpHeaderConfig[step].header}
-              subtext={signUpHeaderConfig[step].subtext}
+              header={loginHeaderConfig[step].header}
+              subtext={loginHeaderConfig[step].subtext}
               currentStep={String(step + 1)}
-              totalSteps={String(SIGNUP_TOTAL_STEPS)}
+              totalSteps={String(LOGIN_TOTAL_STEPS)}
             />
 
-            {step === 0 && <UsernameAndEmailStep handleNext={handleNext} isPending={isStarting} />}
-            {step === 1 && otpExpiresAt && (
-              <OtpStep
-                mode="signup"
-                email={methods.getValues("email")}
-                intitialOtpExpiresAt={otpExpiresAt}
-                handleNext={handleNext}
-                handleBack={() => setStep(0)}
-                isPending={isVerifying}
-              />
+            {step === 0 && (
+              <UsernameAndPasswordStep handleNext={handleNext} isPending={isStarting} />
             )}
-            {step === 2 && <PasswordStep handleNext={handleNext} />}
-            {step === 3 && (
-              <PersonalDetailsStep
-                onSubmit={methods.handleSubmit(onSubmit)}
+            {step === 1 && otpData && (
+              <OtpStep
+                mode="login"
+                email={otpData.email}
+                intitialOtpExpiresAt={new Date(otpData.otpExpiresAt)}
+                handleBack={() => setStep(0)}
+                handleSubmit={methods.handleSubmit(onSubmit)}
                 isPending={isCompleting}
               />
             )}

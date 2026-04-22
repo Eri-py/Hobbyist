@@ -25,7 +25,7 @@ const BackArrowButton = () => {
   );
 };
 
-const AuthLayout = () => {
+export default function AuthLayout() {
   const theme = useTheme();
   const router = useRouter();
   const { isAuthenticated } = useAuth();
@@ -59,5 +59,4 @@ const AuthLayout = () => {
       <Stack.Screen name="sign-up" options={{ headerShown: true, gestureEnabled: false }} />
     </Stack>
   );
-};
-export default AuthLayout;
+}

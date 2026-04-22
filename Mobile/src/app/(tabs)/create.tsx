@@ -2,12 +2,10 @@ import { Text } from "react-native-paper";
 
 import { ThemedView } from "@/components/shared/ThemedView";
 
-const Trade = () => {
+export default function Create() {
   return (
     <ThemedView>
-      <Text>Trade</Text>
+      <Text>Create</Text>
     </ThemedView>
   );
-};
-
-export default Trade;
+}

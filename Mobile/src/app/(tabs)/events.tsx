@@ -2,12 +2,10 @@ import { Text } from "react-native-paper";
 
 import { ThemedView } from "@/components/shared/ThemedView";
 
-const Search = () => {
+export default function Events() {
   return (
     <ThemedView>
-      <Text>Search</Text>
+      <Text>Events</Text>
     </ThemedView>
   );
-};
-
-export default Search;
+}
