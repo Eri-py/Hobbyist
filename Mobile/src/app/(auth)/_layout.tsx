@@ -1,14 +1,14 @@
 import { Stack, useRouter } from "expo-router";
 import { Pressable } from "react-native";
-import { useTheme } from "react-native-paper";
 import { useEffect } from "react";
 
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useAuth } from "@hobbyist/hooks";
+import { useAppTheme } from "@/hooks/shared/useAppTheme";
 
 const BackArrowButton = () => {
   const router = useRouter();
-  const theme = useTheme();
+  const theme = useAppTheme();
 
   return (
     <Pressable
@@ -20,13 +20,13 @@ const BackArrowButton = () => {
       }}
       onPress={() => router.replace("/")}
     >
-      <Ionicons name="arrow-back-outline" size={28} color={theme.colors.onSurfaceVariant} />
+      <Ionicons name="arrow-back-outline" size={28} color={theme.text} />
     </Pressable>
   );
 };
 
-export default function AuthLayout() {
-  const theme = useTheme();
+export default function Layout() {
+  const theme = useAppTheme();
   const router = useRouter();
   const { isAuthenticated } = useAuth();
 
@@ -49,7 +49,7 @@ export default function AuthLayout() {
         headerTitle: "",
         headerShadowVisible: false,
         headerStyle: {
-          backgroundColor: theme.colors.background,
+          backgroundColor: theme.background,
         },
         headerLeft: () => <BackArrowButton />,
         gestureEnabled: false,
