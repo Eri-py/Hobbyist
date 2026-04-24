@@ -1,8 +1,11 @@
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
+
 import { useAppTheme } from "@/hooks/shared/useAppTheme";
 
 export default function HomeLayout() {
   const theme = useAppTheme();
+  const router = useRouter();
+
   return (
     <Stack
       screenOptions={{
@@ -11,7 +14,28 @@ export default function HomeLayout() {
         headerShadowVisible: false,
       }}
     >
-      <Stack.Screen name="index" options={{ title: "Home" }} />
+      <Stack.Screen
+        name="index"
+        options={{
+          title: "Home",
+          unstable_headerRightItems: () => [
+            {
+              type: "button",
+              label: "Add",
+              icon: { type: "sfSymbol", name: "plus" },
+              onPress: () => router.push("/(create)"),
+            },
+          ],
+          unstable_headerLeftItems: () => [
+            {
+              type: "button",
+              label: "Profile",
+              icon: { type: "sfSymbol", name: "person" },
+              onPress: () => router.push("/(profile)"),
+            },
+          ],
+        }}
+      />
     </Stack>
   );
 }

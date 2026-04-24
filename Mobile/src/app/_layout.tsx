@@ -20,7 +20,6 @@ export default function AppLayout() {
                 <Stack.Screen name="(tabs)" />
                 <Stack.Screen name="(auth)" />
                 <Stack.Screen name="(create)" />
-                <Stack.Screen name="(search)" />
                 <Stack.Screen name="(profile)" />
               </Stack>
             </AuthProvider>

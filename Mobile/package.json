@@ -4,7 +4,7 @@
   "private": true,
   "main": "expo-router/entry",
   "scripts": {
-    "dev": "expo start --tunnel",
+    "dev": "expo start --tunnel --clear",
     "build": "expo export",
     "lint": "expo lint",
     "lint:fix": "expo lint --fix",

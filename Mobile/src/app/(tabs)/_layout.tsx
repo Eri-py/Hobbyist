@@ -26,12 +26,17 @@ export default function TabsLayout() {
 
       <NativeTabs.Trigger name="(events)">
         <NativeTabs.Trigger.Label>Events</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf={{ default: "calendar", selected: "calendar.circle.fill" }} />
+        <NativeTabs.Trigger.Icon sf={{ default: "calendar", selected: "calendar" }} />
       </NativeTabs.Trigger>
 
-      <NativeTabs.Trigger name="(messages)" role={isTablet ? undefined : "search"}>
+      <NativeTabs.Trigger name="(messages)">
         <NativeTabs.Trigger.Label>Messages</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf={{ default: "message", selected: "message.fill" }} />
+      </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name="(search)" role={isTablet ? undefined : "search"}>
+        <NativeTabs.Trigger.Label>Search</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf={{ default: "magnifyingglass", selected: "magnifyingglass" }} />
       </NativeTabs.Trigger>
     </NativeTabs>
   );

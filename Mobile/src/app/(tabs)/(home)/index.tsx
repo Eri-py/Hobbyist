@@ -65,11 +65,6 @@ export default function Home() {
       )}
     </ThemedView>
   );
-  // return (
-  //   <ThemedView>
-  //     <Text>Messages</Text>
-  //   </ThemedView>
-  // );
 }
 
 const styles = StyleSheet.create({
