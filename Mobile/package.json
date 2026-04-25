@@ -24,7 +24,7 @@
     "@react-navigation/drawer": "^7.7.2",
     "@react-navigation/elements": "^2.9.10",
     "@react-navigation/native": "^7.1.28",
-    "@tanstack/react-query": "^5.100.3",
+    "@tanstack/react-query": "^5.100.5",
     "axios": "^1.15.2",
     "date-fns": "^4.1.0",
     "expo": "~55.0.15",
@@ -56,7 +56,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@tanstack/eslint-plugin-query": "^5.100.3",
+    "@tanstack/eslint-plugin-query": "^5.100.5",
     "baseline-browser-mapping": "^2.10.22",
     "eslint-config-expo": "~55.0.0",
     "eslint-import-resolver-alias": "^1.1.2",
