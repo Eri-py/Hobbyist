@@ -4,32 +4,33 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useDeviceType } from "@/hooks/shared/useDeviceType";
 
-export function ThemedView({ style, children, ...props }: ViewProps) {
+type ThemedViewProps = ViewProps & {
+  safeArea?: boolean;
+};
+
+export function ThemedView({ style, children, safeArea = false, ...props }: ThemedViewProps) {
   const theme = useTheme();
   const { isTablet } = useDeviceType();
   const insets = useSafeAreaInsets();
 
-  if (isTablet) {
-    return (
-      <View
-        style={[
-          styles.container,
-          {
-            backgroundColor: theme.colors.background,
-            paddingTop: insets.top,
-          },
-          style,
-        ]}
-        {...props}
-      >
-        {children}
-      </View>
-    );
-  }
+  const safeAreaStyle = safeArea
+    ? {
+        paddingTop: insets.top,
+        paddingBottom: insets.bottom,
+        paddingLeft: insets.left,
+        paddingRight: insets.right,
+      }
+    : {};
 
   return (
     <View
-      style={[styles.container, { backgroundColor: theme.colors.background }, style]}
+      style={[
+        styles.container,
+        { backgroundColor: theme.colors.background },
+        isTablet && { paddingTop: insets.top },
+        safeAreaStyle,
+        style,
+      ]}
       {...props}
     >
       {children}

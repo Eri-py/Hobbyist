@@ -1,8 +1,16 @@
-import { Stack } from "expo-router";
+import { Redirect, Stack } from "expo-router";
+
 import { useAppTheme } from "@/hooks/shared/useAppTheme";
+import { useAuth } from "@hobbyist/hooks";
 
 export default function ProfileLayout() {
   const theme = useAppTheme();
+  const { isAuthenticated } = useAuth();
+
+  if (!isAuthenticated) {
+    return <Redirect href="/(auth)/login" />;
+  }
+
   return (
     <Stack
       screenOptions={{
@@ -11,7 +19,9 @@ export default function ProfileLayout() {
         headerShadowVisible: false,
       }}
     >
-      <Stack.Screen name="index" options={{ title: "Profile" }} />
+      <Stack.Protected guard={isAuthenticated}>
+        <Stack.Screen name="index" options={{ title: "Profile" }} />
+      </Stack.Protected>
     </Stack>
   );
 }

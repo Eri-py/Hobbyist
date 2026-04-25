@@ -9,6 +9,7 @@ export default function SearchLayout() {
         headerStyle: { backgroundColor: theme.background },
         headerTintColor: theme.text,
         headerShadowVisible: false,
+        headerTransparent: false,
       }}
     >
       <Stack.Screen name="index" options={{ title: "Search" }} />

@@ -1,8 +1,15 @@
-import { Stack } from "expo-router";
+import { Redirect, Stack } from "expo-router";
 import { useAppTheme } from "@/hooks/shared/useAppTheme";
+import { useAuth } from "@hobbyist/hooks";
 
 export default function CreateLayout() {
   const theme = useAppTheme();
+  const { isAuthenticated } = useAuth();
+
+  if (!isAuthenticated) {
+    return <Redirect href="/(auth)/login" />;
+  }
+
   return (
     <Stack
       screenOptions={{
@@ -11,7 +18,9 @@ export default function CreateLayout() {
         headerShadowVisible: false,
       }}
     >
-      <Stack.Screen name="index" options={{ title: "Create" }} />
+      <Stack.Protected guard={isAuthenticated}>
+        <Stack.Screen name="index" options={{ title: "Create" }} />
+      </Stack.Protected>
     </Stack>
   );
 }

@@ -4,7 +4,7 @@
     "slug": "hobbyist",
     "version": "1.0.0",
     "orientation": "portrait",
-    "scheme": "mobile",
+    "scheme": "hobbyist",
     "userInterfaceStyle": "automatic",
     "icon": "./assets/images/icon.png",
     "splash": {

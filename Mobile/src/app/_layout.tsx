@@ -18,8 +18,16 @@ export default function AppLayout() {
             <AuthProvider>
               <Stack screenOptions={{ headerShown: false }} initialRouteName="(tabs)">
                 <Stack.Screen name="(tabs)" />
-                <Stack.Screen name="(auth)" />
-                <Stack.Screen name="(create)" />
+                <Stack.Screen
+                  name="(auth)"
+                  options={{
+                    presentation: "formSheet",
+                    sheetAllowedDetents: [0.5, 0.75, 1.0],
+                    sheetInitialDetentIndex: 1,
+                    sheetGrabberVisible: true,
+                  }}
+                />
+                <Stack.Screen name="(create)" options={{ presentation: "formSheet" }} />
                 <Stack.Screen name="(profile)" />
               </Stack>
             </AuthProvider>

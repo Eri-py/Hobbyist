@@ -2,6 +2,7 @@ import { rmSync } from "fs";
 
 const pathsToRemove = [
   "node_modules",
+  "pnpm-lock.yaml",
   "Mobile/node_modules",
   "Mobile/.expo",
   "Mobile/dist",
