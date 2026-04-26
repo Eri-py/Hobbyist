@@ -12,6 +12,7 @@
         "@react-native-/*",
         "@react-native/*",
         "@react-navigation/*",
+        "@xmldom/xmldom",
         "expo",
         "expo-*",
         "react",
