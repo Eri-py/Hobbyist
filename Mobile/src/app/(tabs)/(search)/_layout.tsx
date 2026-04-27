@@ -1,13 +1,13 @@
 import { Stack } from "expo-router";
-import { useAppTheme } from "@/hooks/shared/useAppTheme";
+import { useTheme } from "react-native-paper";
 
 export default function SearchLayout() {
-  const theme = useAppTheme();
+  const theme = useTheme();
   return (
     <Stack
       screenOptions={{
-        headerStyle: { backgroundColor: theme.background },
-        headerTintColor: theme.text,
+        headerStyle: { backgroundColor: theme.colors.background },
+        headerTintColor: theme.colors.onSurface,
         headerShadowVisible: false,
         headerTransparent: false,
       }}

@@ -1,7 +1,6 @@
 import { View, StyleSheet } from "react-native";
 
 import { FormInput } from "../FormInputs";
-import { OAuthButtons } from "../OAuthButtons";
 import { AuthFooter } from "../AuthFooter";
 import { ThemedButton } from "@/components/shared/ThemedButton";
 
@@ -18,6 +17,7 @@ export function UsernameAndPasswordStep({ handleNext, isPending }: UsernameAndPa
         label="Username or Email"
         startIcon="account-circle"
         autoComplete="email"
+        autoFocus
       />
 
       <FormInput
@@ -31,8 +31,6 @@ export function UsernameAndPasswordStep({ handleNext, isPending }: UsernameAndPa
       <ThemedButton mode="contained" onPress={handleNext} loading={isPending}>
         Continue
       </ThemedButton>
-
-      <OAuthButtons mode="login" />
 
       <AuthFooter mode="login" />
     </View>

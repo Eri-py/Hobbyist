@@ -33,38 +33,38 @@ type HeaderConfig = Record<
     subtext: string | ReactNode;
   }
 >;
-
-// Header configurations for each step
-export const signUpHeaderConfig: HeaderConfig = {
-  0: {
-    header: "Sign up",
-    subtext: "Welcome to Hobbyist!",
-  },
-  1: {
-    header: "Verify email",
-    subtext: "Enter the code sent to your email",
-  },
-  2: {
-    header: "Create password",
-    subtext: "Choose a secure password",
-  },
-  3: {
-    header: "Personal details",
-    subtext: "Tell us a bit about yourself",
-  },
-  4: {
-    header: "What do you collect?",
-    subtext: "Pick your interests so we can personalise your experience",
-  },
-};
-
-const SIGNUP_TOTAL_STEPS = 5;
-
 export function useSignUp(
   navigate: (path: string) => void,
   axiosInstance: AxiosInstance,
   onAuthSuccess?: (authResult: AuthResult) => Promise<void>,
 ) {
+  // Constants
+  const SIGNUP_TOTAL_STEPS = 5;
+
+  // Header configurations for each step
+  const signUpHeaderConfig: HeaderConfig = {
+    0: {
+      header: "Sign up",
+      subtext: "Welcome to Hobbyist!",
+    },
+    1: {
+      header: "Verify email",
+      subtext: "Enter the code sent to your email",
+    },
+    2: {
+      header: "Create password",
+      subtext: "Choose a secure password",
+    },
+    3: {
+      header: "Personal details",
+      subtext: "Tell us a bit about yourself",
+    },
+    4: {
+      header: "What do you collect?",
+      subtext: "Pick your interests so we can personalise your experience",
+    },
+  };
+
   const { serverErrorMessage, handleServerError, clearServerError } = useServerError();
   const [step, setStep] = useState<number>(0);
   const [otpExpiresAt, setOtpExpiresAt] = useState<Date | null>(null);

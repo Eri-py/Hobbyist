@@ -1,9 +1,9 @@
 import { Redirect, Stack } from "expo-router";
-import { useAppTheme } from "@/hooks/shared/useAppTheme";
+import { useTheme } from "react-native-paper";
 import { useAuth } from "@hobbyist/hooks";
 
 export default function CreateLayout() {
-  const theme = useAppTheme();
+  const theme = useTheme();
   const { isAuthenticated } = useAuth();
 
   if (!isAuthenticated) {
@@ -13,8 +13,8 @@ export default function CreateLayout() {
   return (
     <Stack
       screenOptions={{
-        headerStyle: { backgroundColor: theme.background },
-        headerTintColor: theme.text,
+        headerStyle: { backgroundColor: theme.colors.background },
+        headerTintColor: theme.colors.onSurface,
         headerShadowVisible: false,
       }}
     >

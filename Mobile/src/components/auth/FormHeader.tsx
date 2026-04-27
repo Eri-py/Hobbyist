@@ -1,24 +1,26 @@
 import { ReactNode } from "react";
 import { StyleSheet, View } from "react-native";
-import { Text } from "react-native-paper";
+import { Text, useTheme } from "react-native-paper";
+
+import { CircularProgressBar } from "@/components/shared/CircularProgressBar";
 
 type FormHeaderProps = {
   header: string;
   subtext: string | ReactNode;
-  currentStep: string;
-  totalSteps: string;
+  currentStep: number;
+  totalSteps: number;
 };
 
 export function FormHeader({ header, subtext, currentStep, totalSteps }: FormHeaderProps) {
+  const theme = useTheme();
+
   return (
     <View style={styles.container}>
       <View>
-        <Text style={styles.headerText}>{header}</Text>
-        <Text style={styles.subText}>{subtext}</Text>
+        <Text style={[styles.headerText, { color: theme.colors.onSurface }]}>{header}</Text>
+        <Text style={[styles.subText, { color: theme.colors.onSurfaceVariant }]}>{subtext}</Text>
       </View>
-      <Text style={styles.stepText}>
-        Step {currentStep} / {totalSteps}
-      </Text>
+      <CircularProgressBar totalSteps={totalSteps} activeStep={currentStep} size={30} />
     </View>
   );
 }
@@ -28,18 +30,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    gap: 2,
   },
   headerText: {
-    fontWeight: 500,
-    fontSize: 24,
+    fontSize: 28,
+    fontWeight: "700",
   },
   subText: {
-    fontWeight: 200,
-    fontSize: 15,
-  },
-  stepText: {
-    fontWeight: 200,
-    fontSize: 15,
+    fontSize: 16,
   },
 });

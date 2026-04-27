@@ -62,7 +62,7 @@ vi.mock("../../shared/useServerError", () => ({
   }),
 }));
 
-import { useLogin, loginHeaderConfig, LOGIN_TOTAL_STEPS } from "../../auth/useLogin";
+import { useLogin } from "../../auth/useLogin";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -101,12 +101,16 @@ describe("useLogin", () => {
 
   describe("exports", () => {
     it("exports loginHeaderConfig with headers for step 0 and step 1", () => {
-      expect(loginHeaderConfig[0].header).toBe("Log in");
-      expect(loginHeaderConfig[1].header).toBe("Verify email");
+      const { result } = renderHook(() => useLogin(mockNavigate, mockAxios));
+
+      expect(result.current.loginHeaderConfig[0].header).toBe("Log in");
+      expect(result.current.loginHeaderConfig[1].header).toBe("Verify email");
     });
 
     it("exports LOGIN_TOTAL_STEPS as 2", () => {
-      expect(LOGIN_TOTAL_STEPS).toBe(2);
+      const { result } = renderHook(() => useLogin(mockNavigate, mockAxios));
+
+      expect(result.current.LOGIN_TOTAL_STEPS).toBe(2);
     });
   });
 

@@ -1,16 +1,15 @@
 import { Stack, useRouter } from "expo-router";
-
-import { useAppTheme } from "@/hooks/shared/useAppTheme";
+import { useTheme } from "react-native-paper";
 
 export default function HomeLayout() {
-  const theme = useAppTheme();
+  const theme = useTheme();
   const router = useRouter();
 
   return (
     <Stack
       screenOptions={{
-        headerStyle: { backgroundColor: theme.background },
-        headerTintColor: theme.text,
+        headerStyle: { backgroundColor: theme.colors.background },
+        headerTintColor: theme.colors.onSurface,
         headerShadowVisible: false,
       }}
     >
