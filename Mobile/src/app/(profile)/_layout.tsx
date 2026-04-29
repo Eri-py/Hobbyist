@@ -1,10 +1,10 @@
 import { Redirect, Stack } from "expo-router";
+import { useTheme } from "react-native-paper";
 
-import { useAppTheme } from "@/hooks/shared/useAppTheme";
 import { useAuth } from "@hobbyist/hooks";
 
 export default function ProfileLayout() {
-  const theme = useAppTheme();
+  const theme = useTheme();
   const { isAuthenticated } = useAuth();
 
   if (!isAuthenticated) {
@@ -14,8 +14,8 @@ export default function ProfileLayout() {
   return (
     <Stack
       screenOptions={{
-        headerStyle: { backgroundColor: theme.background },
-        headerTintColor: theme.text,
+        headerStyle: { backgroundColor: theme.colors.background },
+        headerTintColor: theme.colors.onSurface,
         headerShadowVisible: false,
       }}
     >

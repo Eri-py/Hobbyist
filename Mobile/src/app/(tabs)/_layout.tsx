@@ -1,25 +1,23 @@
 import { useColorScheme } from "react-native";
 import { NativeTabs } from "expo-router/unstable-native-tabs";
 import { ThemeProvider, DarkTheme, DefaultTheme } from "@react-navigation/native";
+import { useTheme } from "react-native-paper";
 
-import { useAppTheme } from "@/hooks/shared/useAppTheme";
-import { useDeviceType } from "@/hooks/shared/useDeviceType";
 import { useAuth } from "@hobbyist/hooks";
 
 export default function TabsLayout() {
-  const theme = useAppTheme();
+  const theme = useTheme();
   const { isAuthenticated } = useAuth();
   const colorScheme = useColorScheme();
-  const { isTablet } = useDeviceType();
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <NativeTabs
         minimizeBehavior="onScrollDown"
-        tintColor={theme.primary}
-        iconColor={{ default: theme.textSecondary, selected: theme.primary }}
-        labelStyle={{ color: theme.textSecondary }}
-        backgroundColor={theme.background}
+        tintColor={theme.colors.primary}
+        iconColor={{ default: theme.colors.onSurfaceVariant, selected: theme.colors.primary }}
+        labelStyle={{ color: theme.colors.onSurfaceVariant }}
+        backgroundColor={theme.colors.background}
         disableTransparentOnScrollEdge
       >
         <NativeTabs.Trigger name="(home)">
@@ -42,7 +40,7 @@ export default function TabsLayout() {
           <NativeTabs.Trigger.Icon sf={{ default: "message", selected: "message.fill" }} />
         </NativeTabs.Trigger>
 
-        <NativeTabs.Trigger name="(search)" role={isTablet ? undefined : "search"}>
+        <NativeTabs.Trigger name="(search)" role="search">
           <NativeTabs.Trigger.Label>Search</NativeTabs.Trigger.Label>
           <NativeTabs.Trigger.Icon
             sf={{ default: "magnifyingglass", selected: "magnifyingglass" }}
