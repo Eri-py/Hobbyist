@@ -195,8 +195,8 @@ importers:
         specifier: ^5.100.8
         version: 5.100.8(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3)
       baseline-browser-mapping:
-        specifier: ^2.10.25
-        version: 2.10.25
+        specifier: ^2.10.27
+        version: 2.10.27
       eslint-config-expo:
         specifier: ~55.0.0
         version: 55.0.0(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3)
@@ -2783,8 +2783,8 @@ packages:
   base64-js@1.5.1:
     resolution: {integrity: sha512-AKpaYlHn8t4SVbOHCy+b5+KKgvR4vrsD8vbvrbiQJps7fKDTkjkDry6ji0rUJjC0kzbNePLwzxq8iypo41qeWA==}
 
-  baseline-browser-mapping@2.10.25:
-    resolution: {integrity: sha512-QO/VHsXCQdnzADMfmkeOPvHdIAkoB7i0/rGjINPJEetLx75hNttVWGQ/jycHUDP9zZ9rupbm60WRxcwViB0MiA==}
+  baseline-browser-mapping@2.10.27:
+    resolution: {integrity: sha512-zEs/ufmZoUd7WftKpKyXaT6RFxpQ5Qm9xytKRHvJfxFV9DFJkZph9RvJ1LcOUi0Z1ZVijMte65JbILeV+8QQEA==}
     engines: {node: '>=6.0.0'}
     hasBin: true
 
@@ -8854,7 +8854,7 @@ snapshots:
 
   base64-js@1.5.1: {}
 
-  baseline-browser-mapping@2.10.25: {}
+  baseline-browser-mapping@2.10.27: {}
 
   better-opn@3.0.2:
     dependencies:
@@ -8892,7 +8892,7 @@ snapshots:
 
   browserslist@4.28.2:
     dependencies:
-      baseline-browser-mapping: 2.10.25
+      baseline-browser-mapping: 2.10.27
       caniuse-lite: 1.0.30001791
       electron-to-chromium: 1.5.344
       node-releases: 2.0.38
