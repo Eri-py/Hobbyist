@@ -1,9 +1,11 @@
+import { useCreate } from "@/hooks/create/useCreate";
 import { Stack, useRouter } from "expo-router";
 import { useTheme } from "react-native-paper";
 
 export default function HomeLayout() {
   const theme = useTheme();
   const router = useRouter();
+  const { onCreateClick } = useCreate();
 
   return (
     <Stack
@@ -22,7 +24,7 @@ export default function HomeLayout() {
               type: "button",
               label: "Add",
               icon: { type: "sfSymbol", name: "plus" },
-              onPress: () => router.push("/(create)"),
+              onPress: onCreateClick,
             },
           ],
           unstable_headerLeftItems: () => [
