@@ -6,11 +6,10 @@ import { ThemedButton } from "@/components/shared/ThemedButton";
 import { DatePicker } from "@/components/shared/DatePicker";
 
 type PersonalDetailsStepProps = {
-  onSubmit: () => void;
-  isPending: boolean;
+  handleNext: () => void;
 };
 
-export function PersonalDetailsStep({ onSubmit, isPending }: PersonalDetailsStepProps) {
+export function PersonalDetailsStep({ handleNext }: PersonalDetailsStepProps) {
   const {
     control,
     formState: { errors },
@@ -18,7 +17,13 @@ export function PersonalDetailsStep({ onSubmit, isPending }: PersonalDetailsStep
 
   return (
     <View style={styles.container}>
-      <FormInput name="firstname" label="Firstname" startIcon="account" autoComplete="given-name" />
+      <FormInput
+        name="firstname"
+        label="Firstname"
+        startIcon="account"
+        autoComplete="given-name"
+        autoFocus
+      />
 
       <FormInput name="lastname" label="Lastname" startIcon="account" autoComplete="family-name" />
 
@@ -34,8 +39,8 @@ export function PersonalDetailsStep({ onSubmit, isPending }: PersonalDetailsStep
         )}
       />
 
-      <ThemedButton mode="contained" onPress={onSubmit} loading={isPending}>
-        Submit
+      <ThemedButton mode="contained" onPress={handleNext}>
+        Continue
       </ThemedButton>
     </View>
   );

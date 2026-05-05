@@ -11,7 +11,7 @@ public class OnboardingService(HobbyistDbContext context) : IOnboardingService
             .Hobbies.OrderByDescending(hobby => hobby.Users.Count)
             .ThenBy(hobby => hobby.Name)
             .Select(hobby => hobby.Name)
-            .Take(20)
+            .Take(12)
             .AsNoTracking()
             .ToArrayAsync(ct);
     }

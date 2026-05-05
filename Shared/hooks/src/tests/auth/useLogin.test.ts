@@ -62,7 +62,7 @@ vi.mock("../../shared/useServerError", () => ({
   }),
 }));
 
-import { useLogin } from "../../auth/useLogin";
+import { useLogin } from "../../auth";
 
 // ---------------------------------------------------------------------------
 // Helpers

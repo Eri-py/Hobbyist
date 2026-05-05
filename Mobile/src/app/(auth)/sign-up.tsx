@@ -9,6 +9,7 @@ import { UsernameAndEmailStep } from "@/components/auth/sign-up/UsernameEmailSte
 import { OtpStep } from "@/components/auth/OtpStep/OtpStep";
 import { PasswordStep } from "@/components/auth/sign-up/PasswordStep";
 import { PersonalDetailsStep } from "@/components/auth/sign-up/PersonalDetailsStep";
+import { InterestsStep } from "@/components/auth/sign-up/InterestsStep";
 import { ErrorMessage } from "@/components/shared/ErrorMessage";
 import { axiosInstance } from "@/api/axiosInstance";
 import * as TokenManager from "@/api/tokenManager";
@@ -26,7 +27,6 @@ export default function SignUp() {
   const {
     methods,
     step,
-    setStep,
     otpExpiresAt,
     serverErrorMessage,
     handleNext,
@@ -34,6 +34,7 @@ export default function SignUp() {
     isStarting,
     isVerifying,
     isCompleting,
+    popularInterests,
     signUpHeaderConfig,
     SIGNUP_TOTAL_STEPS,
   } = useSignUp((path: string) => router.push(path as Href), axiosInstance, handleAuthSuccess);
@@ -58,13 +59,17 @@ export default function SignUp() {
             email={methods.getValues("email")}
             intitialOtpExpiresAt={otpExpiresAt}
             handleNext={handleNext}
-            handleBack={() => setStep(0)}
             isPending={isVerifying}
           />
         )}
         {step === 2 && <PasswordStep handleNext={handleNext} />}
-        {step === 3 && (
-          <PersonalDetailsStep onSubmit={methods.handleSubmit(onSubmit)} isPending={isCompleting} />
+        {step === 3 && <PersonalDetailsStep handleNext={handleNext} />}
+        {step === 4 && (
+          <InterestsStep
+            popularInterests={popularInterests}
+            onSubmit={methods.handleSubmit(onSubmit)}
+            isPending={isCompleting}
+          />
         )}
       </FormProvider>
     </ThemedView>

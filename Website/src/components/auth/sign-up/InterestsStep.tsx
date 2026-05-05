@@ -4,7 +4,7 @@ import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import CheckIcon from "@mui/icons-material/Check";
-import { useInterestsStep } from "@/hooks/auth/useInterestsStep";
+import { useInterestsStep } from "@hobbyist/hooks";
 
 type InterestsStepProps = {
   popularInterests: string[];
@@ -25,15 +25,18 @@ export function InterestsStep({ popularInterests, isPending }: InterestsStepProp
   } = useInterestsStep(popularInterests);
 
   return (
-    <Stack sx={{
-      gap: 2
-    }}>
+    <Stack
+      sx={{
+        gap: 2,
+      }}
+    >
       <Stack
         direction="row"
         sx={{
           flexWrap: "wrap",
-          gap: 0.75
-        }}>
+          gap: 0.75,
+        }}
+      >
         {popularInterests.map((name) => {
           const selected = interests.includes(name);
           return (
@@ -49,9 +52,12 @@ export function InterestsStep({ popularInterests, isPending }: InterestsStepProp
           );
         })}
       </Stack>
-      <Stack direction="row" sx={{
-        gap: 1
-      }}>
+      <Stack
+        direction="row"
+        sx={{
+          gap: 1,
+        }}
+      >
         <TextField
           size="small"
           fullWidth
@@ -70,8 +76,9 @@ export function InterestsStep({ popularInterests, isPending }: InterestsStepProp
           direction="row"
           sx={{
             flexWrap: "wrap",
-            gap: 0.75
-          }}>
+            gap: 0.75,
+          }}
+        >
           {customInterests.map((name) => (
             <Chip
               key={name}
@@ -84,9 +91,12 @@ export function InterestsStep({ popularInterests, isPending }: InterestsStepProp
         </Stack>
       )}
       {interestsError && (
-        <Typography color="error" sx={{
-          fontSize: 13
-        }}>
+        <Typography
+          color="error"
+          sx={{
+            fontSize: 13,
+          }}
+        >
           {interestsError}
         </Typography>
       )}

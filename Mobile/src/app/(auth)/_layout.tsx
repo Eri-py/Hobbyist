@@ -7,8 +7,8 @@ export default function AuthLayout() {
         headerShown: false,
       }}
     >
-      <Stack.Screen name="login" />
-      <Stack.Screen name="sign-up" />
+      <Stack.Screen name="login" options={{ gestureEnabled: false }} />
+      <Stack.Screen name="sign-up" options={{ gestureEnabled: false }} />
     </Stack>
   );
 }
