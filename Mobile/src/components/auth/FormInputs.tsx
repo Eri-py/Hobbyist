@@ -25,10 +25,18 @@ type FormInputProps = {
   label: string;
   type?: string;
   autoComplete?: AutoCompleteType;
+  autoFocus?: boolean;
   startIcon?: string | ReactNode;
 };
 
-export function FormInput({ name, label, type = "text", autoComplete, startIcon }: FormInputProps) {
+export function FormInput({
+  name,
+  label,
+  type = "text",
+  autoComplete,
+  autoFocus,
+  startIcon,
+}: FormInputProps) {
   const { control } = useFormContext();
   const theme = useTheme();
 
@@ -70,6 +78,7 @@ export function FormInput({ name, label, type = "text", autoComplete, startIcon 
             right={isPasswordField ? passwordRightIcon() : undefined}
             error={!!errors[name]}
             mode="outlined"
+            autoFocus={autoFocus ?? false}
             style={{ backgroundColor: theme.colors.surface }}
           />
           {get(errors, name)?.message && (

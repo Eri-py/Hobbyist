@@ -22,26 +22,26 @@ type HeaderConfig = Record<
     subtext: string | ReactNode;
   }
 >;
-
-// Header configurations for each step
-export const loginHeaderConfig: HeaderConfig = {
-  0: {
-    header: "Log in",
-    subtext: "Glad to have you back!",
-  },
-  1: {
-    header: "Verify email",
-    subtext: "Enter the 6 digit code sent to your email",
-  },
-};
-
-export const LOGIN_TOTAL_STEPS = 2;
-
 export function useLogin(
   navigate: (path: string) => void,
   axiosInstance: AxiosInstance,
   onAuthSuccess?: (authResult: AuthResult) => Promise<void>,
 ) {
+  // Constants
+  const LOGIN_TOTAL_STEPS = 2;
+
+  // Header configurations for each step
+  const loginHeaderConfig: HeaderConfig = {
+    0: {
+      header: "Log in",
+      subtext: "Glad to have you back!",
+    },
+    1: {
+      header: "Verify email",
+      subtext: "Enter the 6 digit code sent to your email",
+    },
+  };
+
   const [step, setStep] = useState<number>(0);
   const [otpData, setOtpData] = useState<{
     email: string;

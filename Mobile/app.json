@@ -4,7 +4,7 @@
     "slug": "hobbyist",
     "version": "1.0.0",
     "orientation": "portrait",
-    "scheme": "mobile",
+    "scheme": "hobbyist",
     "userInterfaceStyle": "automatic",
     "icon": "./assets/images/icon.png",
     "splash": {
@@ -40,10 +40,10 @@
       "expo-image"
     ],
     "extra": {
+      "router": {},
       "eas": {
-        "projectId": "50597242-ae48-457a-9b0a-609863e0ba42"
+        "projectId": "a8d6c299-e66a-4ccc-88eb-8cf97a4d0665"
       }
-    },
-    "owner": "lefti"
+    }
   }
 }

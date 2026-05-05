@@ -1,45 +1,52 @@
 using Hobbyist.Api.Extensions;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Hobbyist.Tests;
 
 [TestFixture]
 public class HttpExtensionsTests
 {
-    [Test]
-    public void GetPlatform_WithValidPlatform_ReturnsNormalizedValue()
+    private const string WebOrigin = "https://web.example.com";
+
+    private static DefaultHttpContext BuildContext(string? origin = null)
     {
-        // Arrange
-        var context = new DefaultHttpContext();
-        context.Request.Headers["Platform"] = "  Mobile  ";
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(
+                new Dictionary<string, string?> { ["ClientOrigin:Address"] = WebOrigin }
+            )
+            .Build();
 
-        // Act
-        var platform = context.Request.GetPlatform();
+        var services = new ServiceCollection();
+        services.AddSingleton<IConfiguration>(config);
+        services.AddLogging();
 
-        // Assert
-        Assert.That(platform, Is.EqualTo("mobile"));
+        var ctx = new DefaultHttpContext { RequestServices = services.BuildServiceProvider() };
+        if (origin != null)
+            ctx.Request.Headers.Origin = origin;
+
+        return ctx;
     }
 
     [Test]
-    public void GetPlatform_WhenMissing_ThrowsBadHttpRequestException()
+    public void GetPlatform_WithMatchingOrigin_ReturnsWeb()
     {
-        // Arrange
-        var context = new DefaultHttpContext();
-
-        // Act + Assert
-        var ex = Assert.Throws<BadHttpRequestException>(() => context.Request.GetPlatform());
-        Assert.That(ex!.Message, Is.EqualTo("Platform header is required"));
+        var context = BuildContext(WebOrigin);
+        Assert.That(context.Request.GetPlatform(), Is.EqualTo("web"));
     }
 
     [Test]
-    public void GetPlatform_WhenInvalid_ThrowsBadHttpRequestException()
+    public void GetPlatform_WithNoOrigin_ReturnsMobile()
     {
-        // Arrange
-        var context = new DefaultHttpContext();
-        context.Request.Headers["Platform"] = "desktop";
+        var context = BuildContext();
+        Assert.That(context.Request.GetPlatform(), Is.EqualTo("mobile"));
+    }
 
-        // Act + Assert
-        var ex = Assert.Throws<BadHttpRequestException>(() => context.Request.GetPlatform());
-        Assert.That(ex!.Message, Is.EqualTo("Platform header must be either 'mobile' or 'web'"));
+    [Test]
+    public void GetPlatform_WithNonMatchingOrigin_ThrowsBadHttpRequestException()
+    {
+        var context = BuildContext("https://other.example.com");
+        Assert.Throws<BadHttpRequestException>(() => context.Request.GetPlatform());
     }
 }

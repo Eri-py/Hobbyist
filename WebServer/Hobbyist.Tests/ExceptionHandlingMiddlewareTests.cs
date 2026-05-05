@@ -47,7 +47,7 @@ public class ExceptionHandlingMiddlewareTests
     {
         // Arrange
         static Task throwingNext(HttpContext _) =>
-            throw new BadHttpRequestException("Platform header is required");
+            throw new BadHttpRequestException("Invalid request body");
         var middleware = new ExceptionHandlingMiddleware(
             throwingNext,
             NullLogger<ExceptionHandlingMiddleware>.Instance
@@ -72,7 +72,7 @@ public class ExceptionHandlingMiddlewareTests
         var doc = JsonDocument.Parse(json);
         Assert.That(
             doc.RootElement.GetProperty("message").GetString(),
-            Is.EqualTo("Platform header is required")
+            Is.EqualTo("Invalid request body")
         );
     }
 

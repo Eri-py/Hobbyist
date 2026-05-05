@@ -64,7 +64,7 @@ vi.mock("../../shared/useServerError", () => ({
   }),
 }));
 
-import { useSignUp, signUpHeaderConfig } from "../../auth/useSignUp";
+import { useSignUp } from "../../auth/useSignUp";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -104,11 +104,13 @@ describe("useSignUp", () => {
 
   describe("exports", () => {
     it("exports signUpHeaderConfig with correct headers for all 5 steps", () => {
-      expect(signUpHeaderConfig[0].header).toBe("Sign up");
-      expect(signUpHeaderConfig[1].header).toBe("Verify email");
-      expect(signUpHeaderConfig[2].header).toBe("Create password");
-      expect(signUpHeaderConfig[3].header).toBe("Personal details");
-      expect(signUpHeaderConfig[4].header).toBe("What do you collect?");
+      const { result } = renderHook(() => useSignUp(mockNavigate, mockAxios));
+
+      expect(result.current.signUpHeaderConfig[0].header).toBe("Sign up");
+      expect(result.current.signUpHeaderConfig[1].header).toBe("Verify email");
+      expect(result.current.signUpHeaderConfig[2].header).toBe("Create password");
+      expect(result.current.signUpHeaderConfig[3].header).toBe("Personal details");
+      expect(result.current.signUpHeaderConfig[4].header).toBe("What do you collect?");
     });
 
     it("exposes SIGNUP_TOTAL_STEPS as 5", () => {

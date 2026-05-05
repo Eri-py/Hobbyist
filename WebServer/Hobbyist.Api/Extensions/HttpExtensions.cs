@@ -19,19 +19,26 @@ public static class HttpExtensions
 
     public static string GetPlatform(this HttpRequest request)
     {
-        var platform = request.Headers["Platform"].FirstOrDefault()?.Trim().ToLowerInvariant();
+        var origin = request.Headers.Origin.FirstOrDefault();
+        if (string.IsNullOrEmpty(origin))
+            return "mobile";
 
-        if (string.IsNullOrEmpty(platform))
-        {
-            throw new BadHttpRequestException("Platform header is required");
-        }
+        var config = request.HttpContext.RequestServices.GetRequiredService<IConfiguration>();
+        var webOrigin = config["ClientOrigin:Address"];
 
-        if (platform is not ("mobile" or "web"))
-        {
-            throw new BadHttpRequestException("Platform header must be either 'mobile' or 'web'");
-        }
+        if (origin.Equals(webOrigin, StringComparison.OrdinalIgnoreCase))
+            return "web";
 
-        return platform;
+        var logger = request
+            .HttpContext.RequestServices.GetRequiredService<ILoggerFactory>()
+            .CreateLogger(nameof(HttpExtensions));
+        logger.LogWarning(
+            "Request received with unrecognised Origin '{Origin}'. Expected '{WebOrigin}'.",
+            origin,
+            webOrigin
+        );
+
+        throw new BadHttpRequestException($"Request origin '{origin}' is not allowed.");
     }
 
     public static void ClearAuthCookies(this HttpContext httpContext)
