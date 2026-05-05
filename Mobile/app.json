@@ -39,10 +39,18 @@
       "expo-web-browser",
       "expo-image",
       [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Hobbyist to access your camera.",
+          "microphonePermission": "Allow Hobbyist to access your microphone."
+        }
+      ],
+      [
         "expo-media-library",
         {
-          "photosPermission": "Allow Hobbyist to access your photos to create posts.",
-          "savePhotosPermission": "Allow Hobbyist to save photos."
+          "photosPermission": "Allow Hobbyist to access your photos.",
+          "savePhotosPermission": "Allow Hobbyist to save photos.",
+          "isAccessMediaLocationEnabled": true
         }
       ]
     ],
