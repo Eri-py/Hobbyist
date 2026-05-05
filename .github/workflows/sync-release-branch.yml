@@ -1,6 +1,7 @@
 name: Sync Release Branch
 permissions:
     contents: write
+    pull-requests: write
 
 on:
     schedule:
@@ -22,28 +23,35 @@ jobs:
                   ref: main
                   fetch-depth: 0
 
-            - name: Configure git identity
-              run: |
-                  git config user.name "github-actions[bot]"
-                  git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-            - name: Sync main into release
+            - name: Open PR from main into release
+              env:
+                  GH_TOKEN: ${{ github.token }}
               run: |
                   set -euo pipefail
 
-                  git fetch origin main
-
-                  if git ls-remote --exit-code --heads origin release > /dev/null; then
-                    git fetch origin release
-                    git checkout -B release origin/release
-                  else
-                    git checkout -B release origin/main
+                  if ! git ls-remote --exit-code --heads origin release > /dev/null; then
+                    echo "Release branch does not exist. Skipping."
+                    exit 0
                   fi
 
-                  git merge --no-ff --no-edit origin/main || {
-                    echo "Merge conflict while syncing main into release."
-                    echo "Manual resolution is required."
-                    exit 1
-                  }
+                  git fetch origin release
 
-                  git push origin release
+                  COMMITS_AHEAD=$(git rev-list --count origin/release..origin/main)
+                  if [ "$COMMITS_AHEAD" -eq 0 ]; then
+                    echo "Release is already up to date with main."
+                    exit 0
+                  fi
+
+                  EXISTING=$(gh pr list --base release --head main --state open --json number --jq '.[0].number')
+                  if [ -n "$EXISTING" ]; then
+                    echo "PR #$EXISTING already exists. Skipping."
+                    exit 0
+                  fi
+
+                  PR_URL=$(gh pr create \
+                    --base release \
+                    --head main \
+                    --title "chore: sync main into release" \
+                    --body "Automated weekly sync of main into release.")
+
+                  gh pr merge --auto --merge "$PR_URL"
