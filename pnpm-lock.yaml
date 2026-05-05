@@ -14,7 +14,7 @@ overrides:
   minimatch: 10.2.5
   node-forge: '>=1.4.0'
   picomatch: '>=4.0.4'
-  seroval: '>=1.5.3'
+  seroval: '>=1.5.4'
   undici: 7.25.0
   yaml: '>=2.8.4'
 
@@ -5267,10 +5267,10 @@ packages:
     resolution: {integrity: sha512-qpY0Cl+fKYFn4GOf3cMiq6l72CpuVaawb6ILjubOQ+diJ54LfOWaSSPsaswN8DRPIPW4Yq+tE1k5aKd7ILyaFg==}
     engines: {node: '>=10'}
     peerDependencies:
-      seroval: '>=1.5.3'
+      seroval: '>=1.5.4'
 
-  seroval@1.5.3:
-    resolution: {integrity: sha512-BXe0x4buEeYiIKaRUnth1WqCILQ3k4O67KP/B4pC3pVz0Mv2c96ngA9QDREUYxWY1sb2RZVRqwI9RcpVMyHCVw==}
+  seroval@1.5.4:
+    resolution: {integrity: sha512-46uFvgrXTVxZcUorgSSRZ4y+ieqLLQRMlG4bnCZKW3qI6BZm7Rg4ntMW4p1mILEEBZWrFlcpp0AyIIlM6jD9iw==}
     engines: {node: '>=10'}
 
   serve-static@1.16.3:
@@ -8079,8 +8079,8 @@ snapshots:
     dependencies:
       '@tanstack/history': 1.161.6
       cookie-es: 3.1.1
-      seroval: 1.5.3
-      seroval-plugins: 1.5.2(seroval@1.5.3)
+      seroval: 1.5.4
+      seroval-plugins: 1.5.2(seroval@1.5.4)
 
   '@tanstack/router-devtools-core@1.167.3(@tanstack/router-core@1.169.1)(csstype@3.2.3)':
     dependencies:
@@ -11816,11 +11816,11 @@ snapshots:
 
   serialize-error@2.1.0: {}
 
-  seroval-plugins@1.5.2(seroval@1.5.3):
+  seroval-plugins@1.5.2(seroval@1.5.4):
     dependencies:
-      seroval: 1.5.3
+      seroval: 1.5.4
 
-  seroval@1.5.3: {}
+  seroval@1.5.4: {}
 
   serve-static@1.16.3:
     dependencies:
