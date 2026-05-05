@@ -39,6 +39,19 @@ public static class JwtAuthenticationRegistration
                 {
                     OnMessageReceived = context =>
                     {
+                        var authorization = context.Request.Headers.Authorization.FirstOrDefault();
+                        if (
+                            !string.IsNullOrWhiteSpace(authorization)
+                            && authorization.StartsWith(
+                                "Bearer ",
+                                StringComparison.OrdinalIgnoreCase
+                            )
+                        )
+                        {
+                            context.Token = authorization["Bearer ".Length..].Trim();
+                            return Task.CompletedTask;
+                        }
+
                         context.Token = context.Request.Cookies["accessToken"];
                         return Task.CompletedTask;
                     },

@@ -5,6 +5,8 @@ using Hobbyist.Api.Services.AuthServices.AuthSessionServices;
 using Hobbyist.Api.Services.AuthServices.TokenServices;
 using Hobbyist.Common;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
@@ -65,12 +67,28 @@ public class AuthSessionServiceTests : DatabaseTestBase
         return new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuth"));
     }
 
+    private const string WebOrigin = "https://web.example.com";
+
     private static DefaultHttpContext BuildHttpContext(string platform, string? cookieHeader = null)
     {
-        var ctx = new DefaultHttpContext();
-        ctx.Request.Headers["Platform"] = platform;
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(
+                new Dictionary<string, string?> { ["ClientOrigin:Address"] = WebOrigin }
+            )
+            .Build();
+
+        var services = new ServiceCollection();
+        services.AddSingleton<IConfiguration>(config);
+        services.AddLogging();
+
+        var ctx = new DefaultHttpContext { RequestServices = services.BuildServiceProvider() };
+
+        if (platform == "web")
+            ctx.Request.Headers.Origin = WebOrigin;
+
         if (cookieHeader != null)
             ctx.Request.Headers.Cookie = cookieHeader;
+
         return ctx;
     }
 

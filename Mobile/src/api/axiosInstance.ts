@@ -8,7 +8,6 @@ type CustomAxiosRequestConfig = { _retry?: boolean } & InternalAxiosRequestConfi
 
 export const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
-  headers: { Platform: "mobile" },
 });
 
 let isRefreshing = false;

@@ -7,6 +7,11 @@ module.exports = defineConfig([
     ignores: ["dist/*"],
   },
   {
+    rules: {
+      "import/no-named-as-default-member": "off",
+    },
+  },
+  {
     settings: {
       "import/resolver": {
         typescript: {
