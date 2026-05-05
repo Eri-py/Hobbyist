@@ -16,7 +16,7 @@
       "minimatch": "10.2.5",
       "node-forge": ">=1.4.0",
       "picomatch": ">=4.0.4",
-      "seroval": ">=1.5.3",
+      "seroval": ">=1.5.4",
       "undici": "7.25.0",
       "yaml": ">=2.8.4"
     }
