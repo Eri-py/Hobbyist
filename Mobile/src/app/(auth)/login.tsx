@@ -28,7 +28,6 @@ export default function Login() {
     handleNext,
     isStarting,
     otpData,
-    setStep,
     onSubmit,
     isCompleting,
     serverErrorMessage,
@@ -54,7 +53,6 @@ export default function Login() {
             mode="login"
             email={otpData.email}
             intitialOtpExpiresAt={new Date(otpData.otpExpiresAt)}
-            handleBack={() => setStep(0)}
             handleSubmit={methods.handleSubmit(onSubmit)}
             isPending={isCompleting}
           />

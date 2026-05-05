@@ -1,7 +1,7 @@
 import { renderHook, act } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import { useOtpInput } from "../../auth/useOtpInput";
+import { useOtpInput } from "../../auth";
 
 describe("useOtpInput", () => {
   it("emits onChange and onComplete for multi-character entry in first input", () => {

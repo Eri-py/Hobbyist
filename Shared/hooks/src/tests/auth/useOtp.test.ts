@@ -35,7 +35,7 @@ vi.mock("../../shared/useServerError", () => ({
   }),
 }));
 
-import { useOtp } from "../../auth/useOtp";
+import { useOtp } from "../../auth";
 
 // ---------------------------------------------------------------------------
 // Helpers

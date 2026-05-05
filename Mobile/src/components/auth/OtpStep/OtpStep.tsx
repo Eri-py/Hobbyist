@@ -16,7 +16,6 @@ type OtpStepProps = {
   intitialOtpExpiresAt: Date;
   handleNext?: () => void;
   handleSubmit?: () => void;
-  handleBack: () => void;
   isPending: boolean;
 };
 
@@ -26,7 +25,6 @@ export function OtpStep({
   intitialOtpExpiresAt,
   handleNext,
   handleSubmit,
-  handleBack,
   isPending,
 }: OtpStepProps) {
   const theme = useTheme();
@@ -91,10 +89,6 @@ export function OtpStep({
         loading={isPending}
       >
         {mode === "login" ? "Submit" : "Continue"}
-      </ThemedButton>
-
-      <ThemedButton mode="outlined" onPress={handleBack}>
-        Back
       </ThemedButton>
     </View>
   );

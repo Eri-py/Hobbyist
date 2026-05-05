@@ -37,7 +37,14 @@
       "expo-font",
       "expo-secure-store",
       "expo-web-browser",
-      "expo-image"
+      "expo-image",
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Allow Hobbyist to access your photos to create posts.",
+          "savePhotosPermission": "Allow Hobbyist to save photos."
+        }
+      ]
     ],
     "extra": {
       "router": {},

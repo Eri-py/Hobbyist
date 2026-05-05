@@ -5,7 +5,7 @@ import { ThemedView } from "@/components/shared/ThemedView";
 export default function Create() {
   return (
     <ThemedView>
-      <Text>Create</Text>
+      <Text>Create post</Text>
     </ThemedView>
   );
 }

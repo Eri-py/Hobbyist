@@ -4,14 +4,12 @@ import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { ThemeProvider } from "@/providers/shared/ThemeProvider";
 import { AuthProvider } from "@/providers/app/AuthProvider";
-import { useDeviceType } from "@/hooks/shared/useDeviceType";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1 } },
 });
 
 export default function AppLayout() {
-  const { isTablet } = useDeviceType();
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
@@ -20,15 +18,7 @@ export default function AppLayout() {
             <AuthProvider>
               <Stack screenOptions={{ headerShown: false }} initialRouteName="(tabs)">
                 <Stack.Screen name="(tabs)" />
-                <Stack.Screen
-                  name="(auth)"
-                  options={{
-                    presentation: "formSheet",
-                    sheetAllowedDetents: isTablet ? [1.0] : [0.5, 1.0],
-                    sheetInitialDetentIndex: 0,
-                    sheetGrabberVisible: true,
-                  }}
-                />
+                <Stack.Screen name="(auth)" options={{ presentation: "formSheet" }} />
                 <Stack.Screen name="(create)" options={{ presentation: "formSheet" }} />
                 <Stack.Screen name="(profile)" />
               </Stack>

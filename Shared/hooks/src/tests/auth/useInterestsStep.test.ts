@@ -2,7 +2,7 @@ import { act, renderHook } from "@testing-library/react";
 import { type KeyboardEvent } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { useInterestsStep } from "@/hooks/auth/useInterestsStep";
+import { useInterestsStep } from "../../auth";
 
 const { mockSetValue } = vi.hoisted(() => ({
   mockSetValue: vi.fn(),

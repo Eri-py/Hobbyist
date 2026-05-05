@@ -38,7 +38,7 @@ export function useLogin(
     },
     1: {
       header: "Verify email",
-      subtext: "Enter the 6 digit code sent to your email",
+      subtext: "Enter the code sent to your email",
     },
   };
 
@@ -129,7 +129,6 @@ export function useLogin(
 
     // State
     step,
-    setStep,
     otpData,
 
     // Header config
