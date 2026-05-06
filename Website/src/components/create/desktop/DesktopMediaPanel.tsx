@@ -49,10 +49,12 @@ export function DesktopMediaPanel({
     }
   };
   return (
-    <Stack sx={{
-      gap: 2
-    }}>
-      <Box sx={{ width: "100%", aspectRatio: "5 / 4", minHeight: 0, display: "flex" }}>
+    <Stack
+      sx={{
+        gap: 2,
+      }}
+    >
+      <Box sx={{ width: "100%", aspectRatio: 3 / 2, minHeight: 0, display: "flex" }}>
         {files.length > 0 ? (
           <MediaCarousel
             currentFile={currentFile}
@@ -82,8 +84,9 @@ export function DesktopMediaPanel({
         sx={{
           color: "text.secondary",
           textAlign: "center",
-          px: 2
-        }}>
+          px: 2,
+        }}
+      >
         {files.length > 1
           ? "Click and hold an image or video above, then drag it to rearrange the order of your media."
           : "We recommend using high quality .jpg files less than 20 MB or .mp4 files less than 200 MB."}

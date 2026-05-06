@@ -1,72 +1,89 @@
-import * as MediaLibrary from "expo-media-library";
-import { StyleSheet, Image, Button, View, Text } from "react-native";
-import { useEffect, useState } from "react";
+import { Image } from "expo-image";
+import { StyleSheet, Dimensions, View, FlatList, TouchableOpacity } from "react-native";
+import { Text, useTheme, Menu as PaperMenu } from "react-native-paper";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { useState } from "react";
 
-import { ThemedView } from "@/components/shared/ThemedView";
+import { ThemedScrollView } from "@/components/shared/views/ThemedScrollView";
+import { useCreate, ValidActiveAlbumTypes } from "@/hooks/create/useCreate";
+
+const NUM_COLUMNS = 3;
+const ITEM_SIZE = Dimensions.get("window").width / NUM_COLUMNS;
+const blurhash =
+  "|rF?hV%2WCj[ayj[a|j[az_NaeWBj@ayfRayfQfQM{M|azj[azf6fQfQfQIpWXofj[ayj[j[fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[j[ayofayayayj[fQj[ayayj[ayfjj[j[ayjuayj[";
+
+const ALBUMS: ValidActiveAlbumTypes[] = ["Recents", "Videos", "Favorites"];
 
 export default function Create() {
-  const [albums, setAlbums] = useState<MediaLibrary.Album[] | null>(null);
-
-  async function getAlbums() {
-    const fetchedAlbums = await MediaLibrary.getAlbumsAsync({
-      includeSmartAlbums: true,
-    });
-    setAlbums(fetchedAlbums);
-  }
+  const { media, activeAlbum, setAlbum } = useCreate();
+  const theme = useTheme();
+  const [menuVisible, setMenuVisible] = useState(false);
 
   return (
-    <View style={styles.container}>
-      <Button onPress={getAlbums} title="Get albums" />
-      <ThemedView>
-        {albums && albums.map((album) => <AlbumEntry key={album.id} album={album} />)}
-      </ThemedView>
-    </View>
-  );
-}
-
-type AlbumEntryTypes = {
-  album: MediaLibrary.Album;
-};
-
-function AlbumEntry({ album }: AlbumEntryTypes) {
-  const [assets, setAssets] = useState<MediaLibrary.Asset[]>([]);
-
-  useEffect(() => {
-    async function getAlbumAssets() {
-      const albumAssets = await MediaLibrary.getAssetsAsync({ album });
-      setAssets(albumAssets.assets);
-    }
-    getAlbumAssets();
-  }, [album]);
-
-  return (
-    <View key={album.id} style={styles.albumContainer}>
-      <Text>
-        {album.title} - {album.assetCount ?? "no"} assets
-      </Text>
-      <View style={styles.albumAssetsContainer}>
-        {assets &&
-          assets.map((asset) => (
-            <Image key={asset.id} source={{ uri: asset.uri }} width={50} height={50} />
-          ))}
+    <ThemedScrollView safeArea contentContainerStyle={styles.container}>
+      <View style={{ borderWidth: 2, borderColor: "red", aspectRatio: 4 / 3, flex: 1 }}>
+        <Text>Preview</Text>
       </View>
-    </View>
+
+      <View style={{ gap: 16, alignSelf: "flex-start" }}>
+        <PaperMenu
+          visible={menuVisible}
+          onDismiss={() => setMenuVisible(false)}
+          anchor={
+            <TouchableOpacity
+              onPress={() => setMenuVisible(true)}
+              style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
+            >
+              <Text style={{ fontSize: 17, fontWeight: "700" }}>{activeAlbum}</Text>
+              <FontAwesome
+                name="angle-down"
+                size={18}
+                color={theme.colors.onSurface}
+                style={{ marginTop: 1 }}
+              />
+            </TouchableOpacity>
+          }
+        >
+          {ALBUMS.map((album) => (
+            <PaperMenu.Item
+              key={album}
+              title={album}
+              onPress={() => {
+                setAlbum(album);
+                setMenuVisible(false);
+              }}
+            />
+          ))}
+        </PaperMenu>
+
+        {media && (
+          <FlatList
+            data={media}
+            keyExtractor={(item) => item.id}
+            numColumns={NUM_COLUMNS}
+            scrollEnabled={false}
+            renderItem={({ item }) => (
+              <Image
+                style={styles.image}
+                source={item.uri}
+                placeholder={{ blurhash }}
+                contentFit="cover"
+                transition={500}
+              />
+            )}
+          />
+        )}
+      </View>
+    </ThemedScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    gap: 8,
-    justifyContent: "center",
+    gap: 16,
   },
-  albumContainer: {
-    paddingHorizontal: 20,
-    marginBottom: 12,
-    gap: 4,
-  },
-  albumAssetsContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
+  image: {
+    width: ITEM_SIZE,
+    height: ITEM_SIZE,
   },
 });
