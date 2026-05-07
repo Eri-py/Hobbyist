@@ -4,6 +4,7 @@ import { generateThumbnail } from "./generateThumbnail";
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB per file
 const MAX_TOTAL_SIZE = 100 * 1024 * 1024; // 100MB total
+const MAX_FILES = 15;
 
 export type FileWithMetadata = {
   id: string;
@@ -132,6 +133,7 @@ export function useMediaUpload() {
     },
     multiple: true,
     maxSize: MAX_FILE_SIZE,
+    maxFiles: MAX_FILES,
   });
 
   const removeFile = useCallback((fileId: string) => {

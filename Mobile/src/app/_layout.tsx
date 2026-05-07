@@ -19,7 +19,10 @@ export default function AppLayout() {
               <Stack screenOptions={{ headerShown: false }} initialRouteName="(tabs)">
                 <Stack.Screen name="(tabs)" />
                 <Stack.Screen name="(auth)" options={{ presentation: "formSheet" }} />
-                <Stack.Screen name="(create)" options={{ presentation: "formSheet" }} />
+                <Stack.Screen
+                  name="(create)"
+                  options={{ presentation: "formSheet", gestureEnabled: false }}
+                />
                 <Stack.Screen name="(profile)" />
               </Stack>
             </AuthProvider>

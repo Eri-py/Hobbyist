@@ -54,7 +54,7 @@ export function DesktopMediaPanel({
         gap: 2,
       }}
     >
-      <Box sx={{ width: "100%", aspectRatio: 3 / 2, minHeight: 0, display: "flex" }}>
+      <Box sx={{ width: "100%", aspectRatio: 8 / 7, minHeight: 0, display: "flex" }}>
         {files.length > 0 ? (
           <MediaCarousel
             currentFile={currentFile}

@@ -75,7 +75,7 @@ export function MobileCreateForm({
             >
               <Typography variant="subtitle2">Images and videos</Typography>
 
-              <Box sx={{ width: "100%", aspectRatio: 4 / 3, minHeight: 250, display: "flex" }}>
+              <Box sx={{ width: "100%", aspectRatio: 8 / 7, minHeight: 250, display: "flex" }}>
                 {files.length > 0 ? (
                   <MediaCarousel
                     currentFile={currentFile}

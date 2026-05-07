@@ -19,7 +19,7 @@ type VideoPlayerProps = {
 
 export function VideoPlayer({ src, onRemove, showRemoveButton = false }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const controlsTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   const [currentTime, setCurrentTime] = useState(0);
@@ -171,8 +171,9 @@ export function VideoPlayer({ src, onRemove, showRemoveButton = false }: VideoPl
             background: "linear-gradient(transparent, rgba(0,0,0,0.6))",
             transition: "opacity 0.3s ease",
             opacity: showControls ? 1 : 0,
-            zIndex: 10
-          }}>
+            zIndex: 10,
+          }}
+        >
           <OverlayIconButton onClick={toggleMute} sx={{ padding: 1 }}>
             {isMuted ? (
               <VolumeOffIcon fontSize="small" sx={{ color: "white" }} />
@@ -185,8 +186,9 @@ export function VideoPlayer({ src, onRemove, showRemoveButton = false }: VideoPl
             color="white"
             sx={{
               fontFamily: "monospace",
-              fontSize: 14
-            }}>
+              fontSize: 14,
+            }}
+          >
             {formatTime(currentTime)} / {formatTime(duration)}
           </Typography>
         </Stack>

@@ -1,11 +1,12 @@
-import { useCreate } from "@/hooks/create/useCreate";
 import { Stack, useRouter } from "expo-router";
 import { useTheme } from "react-native-paper";
+
+import { useOpenCreate } from "@/hooks/create/useOpenCreate";
 
 export default function HomeLayout() {
   const theme = useTheme();
   const router = useRouter();
-  const { onCreateClick } = useCreate();
+  const onCreateClick = useOpenCreate();
 
   return (
     <Stack
