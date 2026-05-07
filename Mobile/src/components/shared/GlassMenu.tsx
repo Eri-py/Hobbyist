@@ -1,7 +1,7 @@
 import { type ReactNode, useRef, useState, useEffect } from "react";
-import { View, Pressable, StyleSheet, Animated } from "react-native";
+import { View, Pressable, StyleSheet, Animated, Modal } from "react-native";
 import { GlassView } from "expo-glass-effect";
-import { Portal, useTheme } from "react-native-paper";
+import { useTheme } from "react-native-paper";
 
 type GlassMenuProps = {
   visible: boolean;
@@ -19,10 +19,9 @@ export function GlassMenu({ visible, anchor, onDismiss, children }: GlassMenuPro
 
   useEffect(() => {
     if (visible) {
-      // screen-absolute coords needed since the Portal renders outside our view hierarchy
       anchorRef.current?.measureInWindow((x, y, _w, h) => {
         setLeft(x);
-        setTop(y + h + 8); // 8px gap below the anchor
+        setTop(y + h + 8);
       });
     }
 
@@ -36,22 +35,18 @@ export function GlassMenu({ visible, anchor, onDismiss, children }: GlassMenuPro
   return (
     <View ref={anchorRef}>
       {anchor}
-      {/* Portal renders above the ScrollView stacking context; needs a Portal.Host ancestor */}
-      {visible && (
-        <Portal>
-          <Pressable style={StyleSheet.absoluteFill} onPress={onDismiss} />
-          <Animated.View style={[styles.popover, { top, left, opacity }]}>
-            {/* Absolutely positioned so it doesn't affect content layout */}
-            <GlassView
-              pointerEvents="none"
-              style={styles.glass}
-              glassEffectStyle="regular"
-              tintColor={theme.colors.surface}
-            />
-            <View style={styles.content}>{children}</View>
-          </Animated.View>
-        </Portal>
-      )}
+      <Modal visible={visible} transparent animationType="none" onRequestClose={onDismiss}>
+        <Pressable style={StyleSheet.absoluteFill} onPress={onDismiss} />
+        <Animated.View style={[styles.popover, { top, left, opacity }]}>
+          <GlassView
+            pointerEvents="none"
+            style={styles.glass}
+            glassEffectStyle="regular"
+            tintColor={theme.colors.surface}
+          />
+          <View style={styles.content}>{children}</View>
+        </Animated.View>
+      </Modal>
     </View>
   );
 }

@@ -52,6 +52,9 @@ importers:
       '@expo/ngrok':
         specifier: 4.1.0
         version: 4.1.0
+      '@hobbyist/form-schemas':
+        specifier: workspace:*
+        version: link:../Shared/form-schemas
       '@hobbyist/hooks':
         specifier: workspace:*
         version: link:../Shared/hooks

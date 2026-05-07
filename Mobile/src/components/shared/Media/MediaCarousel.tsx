@@ -20,7 +20,6 @@ const SCREEN_WIDTH = Dimensions.get("window").width;
 
 export function MediaCarousel({ items }: MediaCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
-
   const safeIndex = Math.min(currentIndex, items.length - 1);
 
   const viewabilityConfig = useRef({ viewAreaCoveragePercentThreshold: 50 });

@@ -63,6 +63,11 @@ axiosInstance.interceptors.response.use(undefined, async (error: AxiosError) => 
     return Promise.reject(error);
   }
 
+  if (originalRequest.url?.includes("auth-session/refresh-token")) {
+    await TokenManager.clearTokens();
+    return Promise.reject(error);
+  }
+
   if (originalRequest._retry) {
     return Promise.reject(error);
   }

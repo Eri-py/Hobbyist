@@ -19,7 +19,7 @@ type VideoPlayerProps = {
 
 export function VideoPlayer({ src, onRemove, showRemoveButton = false }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const controlsTimeoutRef = useRef<number | null>(null);
+  const controlsTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   const [currentTime, setCurrentTime] = useState(0);
