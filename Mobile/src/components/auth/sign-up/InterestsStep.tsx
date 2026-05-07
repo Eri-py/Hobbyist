@@ -1,6 +1,6 @@
 import { StyleSheet, View } from "react-native";
 import { Chip, Text, TextInput, useTheme } from "react-native-paper";
-import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import { SymbolView } from "expo-symbols";
 
 import { ThemedButton } from "@/components/shared/ThemedButton";
 import { useInterestsStep } from "@hobbyist/hooks";
@@ -60,7 +60,7 @@ export function InterestsStep({ popularInterests, onSubmit, isPending }: Interes
           autoFocus
         />
         <ThemedButton mode="outlined" onPress={addCustom}>
-          <MaterialCommunityIcons name="plus" color={theme.colors.onSurface} size={24} />
+          <SymbolView name="plus" size={24} tintColor={theme.colors.onSurface} />
         </ThemedButton>
       </View>
 
