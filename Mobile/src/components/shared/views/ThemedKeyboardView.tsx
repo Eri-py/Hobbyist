@@ -1,4 +1,4 @@
-import { View, type ViewProps, StyleSheet, Keyboard } from "react-native";
+import { type ViewProps, StyleSheet, Keyboard } from "react-native";
 import { useEffect, useState } from "react";
 import { useTheme } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -6,20 +6,18 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 
 import { useDeviceType } from "@/hooks/shared/useDeviceType";
 
-type ThemedViewProps = ViewProps & {
+type ThemedKeyboardViewProps = ViewProps & {
   safeArea?: boolean;
-  mode?: "default" | "keyboard";
   contentContainerStyle?: object;
 };
 
-export function ThemedView({
+export function ThemedKeyboardView({
   style,
   children,
   safeArea = false,
-  mode = "default",
   contentContainerStyle,
   ...props
-}: ThemedViewProps) {
+}: ThemedKeyboardViewProps) {
   const theme = useTheme();
   const { isTablet } = useDeviceType();
   const insets = useSafeAreaInsets();
@@ -43,28 +41,21 @@ export function ThemedView({
       }
     : {};
 
-  const baseStyle = [
-    { backgroundColor: theme.colors.background },
-    isTablet && { paddingTop: insets.top },
-    safeAreaStyle,
-  ];
-
-  if (mode === "keyboard") {
-    return (
-      <KeyboardAwareScrollView
-        style={[styles.container, ...baseStyle, style]}
-        contentContainerStyle={contentContainerStyle}
-        keyboardShouldPersistTaps="handled"
-      >
-        {children}
-      </KeyboardAwareScrollView>
-    );
-  }
-
   return (
-    <View style={[styles.container, ...baseStyle, style]} {...props}>
+    <KeyboardAwareScrollView
+      style={[
+        styles.container,
+        { backgroundColor: theme.colors.background },
+        isTablet && { paddingTop: insets.top },
+        safeAreaStyle,
+        style,
+      ]}
+      contentContainerStyle={contentContainerStyle}
+      keyboardShouldPersistTaps="handled"
+      {...props}
+    >
       {children}
-    </View>
+    </KeyboardAwareScrollView>
   );
 }
 

@@ -4,7 +4,6 @@ import { type Href, useRouter } from "expo-router";
 import { StyleSheet } from "react-native";
 
 import { useSignUp } from "@hobbyist/hooks";
-import { ThemedView } from "@/components/shared/ThemedView";
 import { UsernameAndEmailStep } from "@/components/auth/sign-up/UsernameEmailStep";
 import { OtpStep } from "@/components/auth/OtpStep/OtpStep";
 import { PasswordStep } from "@/components/auth/sign-up/PasswordStep";
@@ -15,6 +14,7 @@ import { axiosInstance } from "@/api/axiosInstance";
 import * as TokenManager from "@/api/tokenManager";
 import type { components } from "@hobbyist/types";
 import { FormHeader } from "@/components/auth/FormHeader";
+import { ThemedKeyboardView } from "@/components/shared/views/ThemedKeyboardView";
 
 type AuthResult = components["schemas"]["AuthResult"];
 
@@ -40,7 +40,7 @@ export default function SignUp() {
   } = useSignUp((path: string) => router.push(path as Href), axiosInstance, handleAuthSuccess);
 
   return (
-    <ThemedView safeArea mode="keyboard" contentContainerStyle={styles.container}>
+    <ThemedKeyboardView safeArea contentContainerStyle={styles.container}>
       {/* Header */}
       <FormHeader
         header={signUpHeaderConfig[step].header}
@@ -72,7 +72,7 @@ export default function SignUp() {
           />
         )}
       </FormProvider>
-    </ThemedView>
+    </ThemedKeyboardView>
   );
 }
 

@@ -1,10 +1,15 @@
 import * as MediaLibrary from "expo-media-library";
 import { useRouter } from "expo-router";
+import { useEffect, useState } from "react";
 import { Linking } from "react-native";
 
+export type ValidActiveAlbumTypes = "Recents" | "Videos" | "Favorites";
+
 export function useCreate() {
-  const [permission, requestPermission] = MediaLibrary.usePermissions();
   const router = useRouter();
+  const [permission, requestPermission] = MediaLibrary.usePermissions();
+  const [media, setMedia] = useState<MediaLibrary.Asset[]>();
+  const [activeAlbum, setActiveAlbum] = useState<ValidActiveAlbumTypes>("Recents");
 
   const onCreateClick = async () => {
     if (permission?.granted) {
@@ -21,5 +26,29 @@ export function useCreate() {
     }
   };
 
-  return { onCreateClick };
+  const setAlbum = (album: ValidActiveAlbumTypes) => setActiveAlbum(album);
+
+  useEffect(() => {
+    (async () => {
+      const permission = await MediaLibrary.getPermissionsAsync();
+
+      if (permission.granted) {
+        const albums = await MediaLibrary.getAlbumsAsync({ includeSmartAlbums: true });
+
+        albums.map(async (album) => {
+          if (album.title === activeAlbum) {
+            const { assets } = await MediaLibrary.getAssetsAsync({
+              mediaType: ["photo", "video"],
+              sortBy: MediaLibrary.SortBy.creationTime,
+              first: 100,
+              album: album,
+            });
+            setMedia(assets);
+          }
+        });
+      }
+    })();
+  }, [activeAlbum]);
+
+  return { onCreateClick, media, activeAlbum, setAlbum };
 }

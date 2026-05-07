@@ -7,11 +7,11 @@ import { axiosInstance } from "@/api/axiosInstance";
 import { useLogin } from "@hobbyist/hooks";
 import * as TokenManager from "@/api/tokenManager";
 import type { components } from "@hobbyist/types";
-import { ThemedView } from "@/components/shared/ThemedView";
 import { UsernameAndPasswordStep } from "@/components/auth/login/UsernamePasswordStep";
 import { OtpStep } from "@/components/auth/OtpStep/OtpStep";
 import { ErrorMessage } from "@/components/shared/ErrorMessage";
 import { FormHeader } from "@/components/auth/FormHeader";
+import { ThemedKeyboardView } from "@/components/shared/views/ThemedKeyboardView";
 
 type AuthResult = components["schemas"]["AuthResult"];
 
@@ -34,7 +34,7 @@ export default function Login() {
   } = useLogin((path: string) => router.push(path as Href), axiosInstance, handleAuthSuccess);
 
   return (
-    <ThemedView safeArea mode="keyboard" contentContainerStyle={styles.container}>
+    <ThemedKeyboardView safeArea contentContainerStyle={styles.container}>
       {/* Header */}
       <FormHeader
         header={loginHeaderConfig[step].header}
@@ -58,7 +58,7 @@ export default function Login() {
           />
         )}
       </FormProvider>
-    </ThemedView>
+    </ThemedKeyboardView>
   );
 }
 

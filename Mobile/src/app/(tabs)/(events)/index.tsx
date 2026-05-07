@@ -1,6 +1,6 @@
 import { Text } from "react-native-paper";
 
-import { ThemedView } from "@/components/shared/ThemedView";
+import { ThemedView } from "@/components/shared/views/ThemedView";
 
 export default function Events() {
   return (

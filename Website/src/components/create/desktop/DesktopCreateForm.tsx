@@ -35,26 +35,32 @@ export function DesktopCreateForm({
         width: "100%",
         maxWidth: 1280,
         marginX: "auto",
-        padding: 2
-      }}>
+        padding: 2,
+      }}
+    >
       <Stack
         sx={{
           width: "100%",
-          gap: 3
-        }}>
+          gap: 3,
+        }}
+      >
         <Stack
           direction="row"
           sx={{
             justifyContent: "space-between",
-            alignItems: "flex-start"
-          }}>
+            alignItems: "flex-start",
+          }}
+        >
           <Stack>
             <Typography variant="h4" sx={{ fontWeight: 500 }}>
               Create post
             </Typography>
-            <Typography variant="body2" sx={{
-              color: "text.secondary"
-            }}>
+            <Typography
+              variant="body2"
+              sx={{
+                color: "text.secondary",
+              }}
+            >
               Showcase your collectible.
             </Typography>
           </Stack>
@@ -67,14 +73,16 @@ export function DesktopCreateForm({
           direction="row"
           sx={{
             gap: 3,
-            width: "100%"
-          }}>
+            width: "100%",
+          }}
+        >
           <Stack
             sx={{
               flex: 2,
               maxWidth: 500,
-              gap: 1
-            }}>
+              gap: 1,
+            }}
+          >
             <Typography variant="subtitle2">Images and videos</Typography>
             <DesktopMediaPanel
               files={files}
@@ -88,8 +96,9 @@ export function DesktopCreateForm({
           <Stack
             sx={{
               gap: 3,
-              flex: 3
-            }}>
+              flex: 3,
+            }}
+          >
             <FormInput
               field="hobby"
               label="Hobby"

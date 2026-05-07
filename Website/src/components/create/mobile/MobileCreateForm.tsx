@@ -43,17 +43,18 @@ export function MobileCreateForm({
       direction="column"
       sx={{
         width: "100%",
-        maxWidth: 1500,
         marginX: "auto",
         paddingBottom: 18,
-        alignItems: "flex-start"
-      }}>
+        alignItems: "flex-start",
+      }}
+    >
       <Stack
         sx={{
           gap: 3,
           width: "100%",
-          minWidth: 0
-        }}>
+          minWidth: 0,
+        }}
+      >
         <MobileHeader
           totalSteps={STEPS_LABELS.length}
           activeStep={activeStep}
@@ -61,16 +62,20 @@ export function MobileCreateForm({
           onNext={onNext}
           onBack={onBack}
         />
-        <Stack sx={{
-          gap: 3
-        }}>
+        <Stack
+          sx={{
+            gap: 3,
+          }}
+        >
           {activeStep === 0 && (
-            <Stack sx={{
-              gap: 1
-            }}>
+            <Stack
+              sx={{
+                gap: 1,
+              }}
+            >
               <Typography variant="subtitle2">Images and videos</Typography>
 
-              <Box sx={{ width: "100%", aspectRatio: "8 / 7", minHeight: 250, display: "flex" }}>
+              <Box sx={{ width: "100%", aspectRatio: 4 / 3, minHeight: 250, display: "flex" }}>
                 {files.length > 0 ? (
                   <MediaCarousel
                     currentFile={currentFile}
@@ -90,9 +95,11 @@ export function MobileCreateForm({
           )}
 
           {activeStep === 1 && (
-            <Stack sx={{
-              gap: 2
-            }}>
+            <Stack
+              sx={{
+                gap: 2,
+              }}
+            >
               <FormInput
                 field="hobby"
                 label="Hobby"

@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { SymbolView } from "expo-symbols";
 
 type PasswordRequirementsProps = {
   password: string;
@@ -41,7 +41,7 @@ export function PasswordRequirements({ password }: PasswordRequirementsProps) {
 
         return (
           <View key={requirement.message} style={styles.row}>
-            <MaterialCommunityIcons name={met ? "check" : "close"} size={18} color={iconColor} />
+            <SymbolView name={met ? "checkmark" : "xmark"} size={18} tintColor={iconColor} />
             <Text style={[styles.message, { color: theme.colors.onSurfaceVariant }]}>
               {requirement.message}
             </Text>
