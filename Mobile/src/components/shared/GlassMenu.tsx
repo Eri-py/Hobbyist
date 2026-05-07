@@ -45,7 +45,7 @@ export function GlassMenu({ visible, anchor, onDismiss, children }: GlassMenuPro
             <GlassView
               pointerEvents="none"
               style={styles.glass}
-              glassEffectStyle="clear"
+              glassEffectStyle="regular"
               tintColor={theme.colors.surface}
             />
             <View style={styles.content}>{children}</View>

@@ -52,7 +52,8 @@
           "savePhotosPermission": "Allow Hobbyist to save photos.",
           "isAccessMediaLocationEnabled": true
         }
-      ]
+      ],
+      "expo-video"
     ],
     "extra": {
       "router": {},

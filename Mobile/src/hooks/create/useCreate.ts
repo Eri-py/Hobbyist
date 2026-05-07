@@ -5,11 +5,14 @@ import { Linking } from "react-native";
 
 export type ValidActiveAlbumTypes = "Recents" | "Videos" | "Favorites";
 
+export const MAX_FILES = 15;
+
 export function useCreate() {
   const router = useRouter();
   const [permission, requestPermission] = MediaLibrary.usePermissions();
   const [media, setMedia] = useState<MediaLibrary.Asset[]>();
   const [activeAlbum, setActiveAlbum] = useState<ValidActiveAlbumTypes>("Recents");
+  const [selectedAssets, setSelectedAssets] = useState<MediaLibrary.Asset[]>([]);
 
   const onCreateClick = async () => {
     if (permission?.granted) {
@@ -28,6 +31,15 @@ export function useCreate() {
 
   const setAlbum = (album: ValidActiveAlbumTypes) => setActiveAlbum(album);
 
+  const toggleAsset = (asset: MediaLibrary.Asset) => {
+    setSelectedAssets((prev) => {
+      const isSelected = prev.some((a) => a.id === asset.id);
+      if (isSelected) return prev.filter((a) => a.id !== asset.id);
+      if (prev.length >= MAX_FILES) return prev;
+      return [...prev, asset];
+    });
+  };
+
   useEffect(() => {
     (async () => {
       const permission = await MediaLibrary.getPermissionsAsync();
@@ -40,7 +52,7 @@ export function useCreate() {
             const { assets } = await MediaLibrary.getAssetsAsync({
               mediaType: ["photo", "video"],
               sortBy: MediaLibrary.SortBy.creationTime,
-              first: 100,
+              first: 1000,
               album: album,
             });
             setMedia(assets);
@@ -50,5 +62,5 @@ export function useCreate() {
     })();
   }, [activeAlbum]);
 
-  return { onCreateClick, media, activeAlbum, setAlbum };
+  return { onCreateClick, media, activeAlbum, setAlbum, selectedAssets, toggleAsset };
 }
