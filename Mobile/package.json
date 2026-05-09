@@ -65,7 +65,7 @@
   },
   "devDependencies": {
     "@tanstack/eslint-plugin-query": "^5.100.9",
-    "baseline-browser-mapping": "^2.10.28",
+    "baseline-browser-mapping": "^2.10.29",
     "eslint-config-expo": "~55.0.0",
     "eslint-import-resolver-alias": "^1.1.2",
     "eslint-import-resolver-typescript": "^4.4.4",
