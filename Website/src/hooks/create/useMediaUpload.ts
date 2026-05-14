@@ -1,6 +1,7 @@
 import { useCallback, useState, useEffect } from "react";
 import { useDropzone, type FileRejection } from "react-dropzone";
 import { generateThumbnail } from "./generateThumbnail";
+import { compressImage } from "./compressImage";
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB per file
 const MAX_TOTAL_SIZE = 100 * 1024 * 1024; // 100MB total
@@ -78,13 +79,16 @@ export function useMediaUpload() {
         // Sort toAdd back to original upload order
         toAdd.sort((a, b) => a.originalIndex - b.originalIndex);
 
-        // Generate thumbnails for all accepted files
+        // Compress images and generate thumbnails
         const newFilesWithMetadata: FileWithMetadata[] = await Promise.all(
-          toAdd.map(async ({ file }) => ({
-            id: crypto.randomUUID(),
-            file,
-            preview: await generateThumbnail(file),
-          })),
+          toAdd.map(async ({ file }) => {
+            const processedFile = await compressImage(file);
+            return {
+              id: crypto.randomUUID(),
+              file: processedFile,
+              preview: await generateThumbnail(processedFile),
+            };
+          }),
         );
 
         setFilesWithMetadata((prev) => [...prev, ...newFilesWithMetadata]);

@@ -1,4 +1,5 @@
 import * as MediaLibrary from "expo-media-library";
+import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -107,16 +108,22 @@ export function useCreate() {
       formData.append("lookingFor", values.lookingFor);
     }
 
-    resolvedAssets.forEach((asset, index) => {
-      const uri = asset.localUri ?? asset.uri;
-      const ext =
-        asset.filename?.split(".").pop() ??
-        (asset.mediaType === MediaLibrary.MediaType.video ? "mp4" : "jpg");
-      formData.append("media", {
-        uri,
-        name: asset.filename ?? `media_${index}.${ext}`,
-        type: asset.mediaType === MediaLibrary.MediaType.video ? "video/mp4" : "image/jpeg",
-      } as unknown as Blob);
+    const mediaItems = await Promise.all(
+      resolvedAssets.map(async (asset, index) => {
+        const uri = asset.localUri ?? asset.uri;
+        if (asset.mediaType === MediaLibrary.MediaType.video) {
+          return { uri, name: asset.filename ?? `media_${index}.mp4`, type: "video/mp4" };
+        }
+        const context = ImageManipulator.manipulate(uri);
+        context.resize({ width: 1920 });
+        const image = await context.renderAsync();
+        const result = await image.saveAsync({ compress: 0.8, format: SaveFormat.JPEG });
+        return { uri: result.uri, name: `media_${index}.jpg`, type: "image/jpeg" };
+      }),
+    );
+
+    mediaItems.forEach((item) => {
+      formData.append("media", item as unknown as Blob);
     });
 
     createPostMutation.mutate(formData);

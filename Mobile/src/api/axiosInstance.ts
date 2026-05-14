@@ -97,7 +97,11 @@ axiosInstance.interceptors.response.use(undefined, async (error: AxiosError) => 
     return axiosInstance.request(originalRequest);
   } catch (refreshError) {
     processQueue(refreshError);
-    await TokenManager.clearTokens();
+    // Only wipe tokens if the server explicitly rejected the refresh token (401).
+    // Network errors and 5xx responses don't mean the token is invalid.
+    if (refreshError instanceof AxiosError && refreshError.response?.status === 401) {
+      await TokenManager.clearTokens();
+    }
     return Promise.reject(refreshError);
   } finally {
     isRefreshing = false;
