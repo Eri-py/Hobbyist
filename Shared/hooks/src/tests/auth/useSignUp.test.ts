@@ -458,7 +458,18 @@ describe("useSignUp", () => {
     it("does not trigger handleNext when Enter is pressed on step 4 (final step)", async () => {
       // Arrange
       const { result } = renderHook(() => useSignUp(mockNavigate, mockAxios));
-      act(() => result.current.setStep(4));
+
+      // step 0 → 1
+      act(() => capturedMutations[0].onSuccess(mockStartSignUpResponse));
+      // step 1 → 2
+      act(() => capturedMutations[1].onSuccess({ data: { popularInterests: [] } }));
+      // step 2 → 3 (passwords must match)
+      mockGetValues.mockImplementation((field: string) =>
+        field === "password" || field === "confirmPassword" ? "Password1!" : "",
+      );
+      await act(async () => result.current.handleNext());
+      // step 3 → 4
+      await act(async () => result.current.handleNext());
       expect(result.current.step).toBe(4);
 
       const event = { key: "Enter", preventDefault: vi.fn() } as any;

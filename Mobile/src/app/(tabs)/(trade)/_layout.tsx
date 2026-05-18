@@ -1,9 +1,12 @@
 import { Stack, useRouter } from "expo-router";
 import { useTheme } from "react-native-paper";
 
+import { useOpenCreate } from "@/hooks/create/useOpenCreate";
+
 export default function TradeLayout() {
   const theme = useTheme();
   const router = useRouter();
+  const onCreateClick = useOpenCreate();
 
   return (
     <Stack
@@ -22,7 +25,7 @@ export default function TradeLayout() {
               type: "button",
               label: "Add",
               icon: { type: "sfSymbol", name: "plus" },
-              onPress: () => router.push("/(create)"),
+              onPress: onCreateClick,
             },
           ],
           unstable_headerLeftItems: () => [

@@ -4,16 +4,17 @@ import { type Href, useRouter } from "expo-router";
 import { StyleSheet } from "react-native";
 
 import { useSignUp } from "@hobbyist/hooks";
-import { ThemedView } from "@/components/shared/ThemedView";
 import { UsernameAndEmailStep } from "@/components/auth/sign-up/UsernameEmailStep";
 import { OtpStep } from "@/components/auth/OtpStep/OtpStep";
 import { PasswordStep } from "@/components/auth/sign-up/PasswordStep";
 import { PersonalDetailsStep } from "@/components/auth/sign-up/PersonalDetailsStep";
+import { InterestsStep } from "@/components/auth/sign-up/InterestsStep";
 import { ErrorMessage } from "@/components/shared/ErrorMessage";
 import { axiosInstance } from "@/api/axiosInstance";
 import * as TokenManager from "@/api/tokenManager";
 import type { components } from "@hobbyist/types";
 import { FormHeader } from "@/components/auth/FormHeader";
+import { ThemedKeyboardView } from "@/components/shared/views/ThemedKeyboardView";
 
 type AuthResult = components["schemas"]["AuthResult"];
 
@@ -26,7 +27,6 @@ export default function SignUp() {
   const {
     methods,
     step,
-    setStep,
     otpExpiresAt,
     serverErrorMessage,
     handleNext,
@@ -34,12 +34,13 @@ export default function SignUp() {
     isStarting,
     isVerifying,
     isCompleting,
+    popularInterests,
     signUpHeaderConfig,
     SIGNUP_TOTAL_STEPS,
   } = useSignUp((path: string) => router.push(path as Href), axiosInstance, handleAuthSuccess);
 
   return (
-    <ThemedView safeArea mode="keyboard" contentContainerStyle={styles.container}>
+    <ThemedKeyboardView safeArea contentContainerStyle={styles.container}>
       {/* Header */}
       <FormHeader
         header={signUpHeaderConfig[step].header}
@@ -58,16 +59,20 @@ export default function SignUp() {
             email={methods.getValues("email")}
             intitialOtpExpiresAt={otpExpiresAt}
             handleNext={handleNext}
-            handleBack={() => setStep(0)}
             isPending={isVerifying}
           />
         )}
         {step === 2 && <PasswordStep handleNext={handleNext} />}
-        {step === 3 && (
-          <PersonalDetailsStep onSubmit={methods.handleSubmit(onSubmit)} isPending={isCompleting} />
+        {step === 3 && <PersonalDetailsStep handleNext={handleNext} />}
+        {step === 4 && (
+          <InterestsStep
+            popularInterests={popularInterests}
+            onSubmit={methods.handleSubmit(onSubmit)}
+            isPending={isCompleting}
+          />
         )}
       </FormProvider>
-    </ThemedView>
+    </ThemedKeyboardView>
   );
 }
 

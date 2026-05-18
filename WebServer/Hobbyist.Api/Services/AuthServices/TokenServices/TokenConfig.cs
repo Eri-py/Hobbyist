@@ -10,5 +10,5 @@ public static class TokenConfig
     /// <summary>
     /// Time in days that Refresh Token is valid for
     /// </summary>
-    public const int RefreshTokenValidForDays = 7;
+    public const int RefreshTokenValidForDays = 30;
 }

@@ -61,7 +61,7 @@ export function useSignUp(
     },
     4: {
       header: "What do you collect?",
-      subtext: "Pick your interests so we can personalise your experience",
+      subtext: "Pick your interests",
     },
   };
 
@@ -195,7 +195,6 @@ export function useSignUp(
 
     // State
     step,
-    setStep,
     otpExpiresAt,
     popularInterests,
 

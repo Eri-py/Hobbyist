@@ -37,7 +37,23 @@
       "expo-font",
       "expo-secure-store",
       "expo-web-browser",
-      "expo-image"
+      "expo-image",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Hobbyist to access your camera.",
+          "microphonePermission": "Allow Hobbyist to access your microphone."
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Allow Hobbyist to access your photos.",
+          "savePhotosPermission": "Allow Hobbyist to save photos.",
+          "isAccessMediaLocationEnabled": true
+        }
+      ],
+      "expo-video"
     ],
     "extra": {
       "router": {},

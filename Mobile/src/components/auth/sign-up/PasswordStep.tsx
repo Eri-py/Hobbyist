@@ -21,6 +21,7 @@ export function PasswordStep({ handleNext }: PasswordStepProps) {
         type="password"
         startIcon="lock"
         autoComplete="new-password"
+        autoFocus
       />
 
       <PasswordRequirements password={password} />

@@ -5,13 +5,13 @@ import { AuthContext, useAuthProvider } from "@hobbyist/hooks";
 import * as TokenManager from "@/api/tokenManager";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const { value, isPending } = useAuthProvider(axiosInstance);
+  const { value, isPending, isError } = useAuthProvider(axiosInstance);
 
   useEffect(() => {
-    if (!isPending && value.isAuthenticated === false) {
+    if (!isPending && !isError && value.isAuthenticated === false) {
       void TokenManager.clearTokens();
     }
-  }, [isPending, value.isAuthenticated]);
+  }, [isPending, isError, value.isAuthenticated]);
 
   if (isPending) {
     return <></>;
