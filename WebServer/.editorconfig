@@ -2,3 +2,6 @@ root = true
 
 [*.cs]
 dotnet_diagnostic.IDE0005.severity = warning
+
+[**/Migrations/**.cs]
+dotnet_diagnostic.IDE0005.severity = none

@@ -1,4 +1,3 @@
-using System;
 using Hobbyist.Api.Services.MediaStorageServices;
 
 namespace Hobbyist.Api.Extensions.ServiceRegistrations.InfrastructureServices;

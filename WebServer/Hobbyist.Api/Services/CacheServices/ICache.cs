@@ -1,5 +1,3 @@
-using System;
-
 namespace Hobbyist.Api.Services.CacheServices;
 
 public interface ICache

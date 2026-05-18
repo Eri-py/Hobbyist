@@ -1,4 +1,3 @@
-using System.Net;
 using Amazon.S3;
 using Amazon.S3.Model;
 using Hobbyist.Api.Dtos;
@@ -89,7 +88,11 @@ public class MinIOMediaStorageService(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to delete media object with key '{ObjectKey}'", objectKey.SanitizeForLog());
+            logger.LogError(
+                ex,
+                "Failed to delete media object with key '{ObjectKey}'",
+                objectKey.SanitizeForLog()
+            );
             return Result.InternalServerError(ErrorMessages.UnexpectedError);
         }
     }
@@ -235,7 +238,11 @@ public class MinIOMediaStorageService(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to delete objects under prefix '{Prefix}'", prefix.SanitizeForLog());
+            logger.LogError(
+                ex,
+                "Failed to delete objects under prefix '{Prefix}'",
+                prefix.SanitizeForLog()
+            );
             return Result.InternalServerError(ErrorMessages.UnexpectedError);
         }
     }

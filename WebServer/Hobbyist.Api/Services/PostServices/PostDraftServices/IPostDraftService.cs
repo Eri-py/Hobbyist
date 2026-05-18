@@ -1,6 +1,5 @@
 using Hobbyist.Api.Dtos.Posts;
 using Hobbyist.Common;
-using Microsoft.AspNetCore.Http;
 
 namespace Hobbyist.Api.Services.PostServices.PostDraftServices;
 
