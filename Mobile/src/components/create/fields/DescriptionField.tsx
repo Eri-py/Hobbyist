@@ -16,7 +16,7 @@ export function DescriptionField() {
     <View style={fieldStyles.fieldRow}>
       <View style={fieldStyles.labelRow}>
         <Text style={[fieldStyles.label, { color: theme.colors.onSurfaceVariant }]}>
-          Description <Text style={{ color: theme.colors.error }}>*</Text>
+          Description *
         </Text>
         {errors.description && (
           <Text style={[fieldStyles.error, { color: theme.colors.error }]}>

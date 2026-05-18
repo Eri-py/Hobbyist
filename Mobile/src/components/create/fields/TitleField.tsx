@@ -14,16 +14,6 @@ export function TitleField() {
 
   return (
     <View style={fieldStyles.fieldRow}>
-      <View style={fieldStyles.labelRow}>
-        <Text style={[fieldStyles.label, { color: theme.colors.onSurfaceVariant }]}>
-          Title <Text style={{ color: theme.colors.error }}>*</Text>
-        </Text>
-        {errors.title && (
-          <Text style={[fieldStyles.error, { color: theme.colors.error }]}>
-            {errors.title.message}
-          </Text>
-        )}
-      </View>
       <Controller
         control={control}
         name="title"
@@ -32,13 +22,18 @@ export function TitleField() {
             value={value}
             onChangeText={onChange}
             onBlur={onBlur}
-            placeholder="Add a title..."
+            placeholder="Add a title *"
             placeholderTextColor={theme.colors.onSurfaceVariant}
             style={[styles.input, { color: theme.colors.onSurface }]}
             returnKeyType="next"
           />
         )}
       />
+      {errors.title && (
+        <Text style={[fieldStyles.error, { color: theme.colors.error }]}>
+          {errors.title.message}
+        </Text>
+      )}
     </View>
   );
 }

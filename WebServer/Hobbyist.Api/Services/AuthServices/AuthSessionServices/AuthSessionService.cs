@@ -50,15 +50,18 @@ public class AuthSessionService(
         return new GetUserResponse { IsAuthenticated = true, User = userDto };
     }
 
-    public Task<Result<AuthResult>> RefreshTokenAsync(HttpRequest request, CancellationToken ct)
+    public Task<Result<AuthResult>> RefreshTokenAsync(
+        HttpRequest request,
+        RefreshTokenRequest? body,
+        CancellationToken ct
+    )
     {
-        // Get refresh token from cookie for web or refreshToken header for mobile
         var platform = request.GetPlatform();
         string? refreshToken = null;
 
         if (platform == "mobile")
         {
-            refreshToken = request.Headers["refreshToken"].FirstOrDefault();
+            refreshToken = body?.RefreshToken;
         }
         else if (platform == "web")
         {

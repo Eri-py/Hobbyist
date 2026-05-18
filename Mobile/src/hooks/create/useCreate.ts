@@ -13,7 +13,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { CreateFormSchema, type CreateFormSchemaTypes } from "@hobbyist/form-schemas";
 import { useMediaPicker, processMediaForUpload } from "./useMediaPicker";
 
-
 // --- Context ---
 
 type CreateContextValue = ReturnType<typeof useCreate>;
@@ -41,19 +40,24 @@ export const USER_HOBBIES_QUERY_KEY = ["user-hobbies"] as const;
 
 type CreatePostResponse = components["schemas"]["CreatePostResponse"];
 
+export type Hobby = {
+  name: string;
+  count: number;
+};
+
 // --- API ---
 
-// TODO: replace with axiosInstance.get<string[]>("user/hobbies") once endpoint exists
-const getUserHobbiesApi = async (): Promise<string[]> => {
+// TODO: replace with axiosInstance.get<Hobby[]>("user/hobbies") once endpoint exists
+const getUserHobbiesApi = async (): Promise<Hobby[]> => {
   return [
-    "Photography",
-    "Woodworking",
-    "Model Railways",
-    "Board Games",
-    "Knitting",
-    "Cycling",
-    "Painting",
-    "3D Printing",
+    { name: "Photography", count: 4821 },
+    { name: "Woodworking", count: 2340 },
+    { name: "Model Railways", count: 1876 },
+    { name: "Board Games", count: 3102 },
+    { name: "Knitting", count: 2567 },
+    { name: "Cycling", count: 1943 },
+    { name: "Painting", count: 3814 },
+    { name: "3D Printing", count: 1205 },
   ];
 };
 
@@ -140,7 +144,7 @@ export function useCreate() {
     handleNext,
     handleBack,
     // Form
-    methods: methods,
+    methods,
     // Hobby selection
     hobbies,
     isLoadingHobbies,

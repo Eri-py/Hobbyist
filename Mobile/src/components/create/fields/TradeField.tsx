@@ -17,7 +17,7 @@ export function TradeField() {
   return (
     <View style={fieldStyles.fieldRow}>
       <View style={fieldStyles.labelRow}>
-        <Text style={[fieldStyles.label, { color: theme.colors.onSurfaceVariant }]}>
+        <Text style={[styles.tradeLabel, { color: theme.colors.onSurfaceVariant }]}>
           Available for trade
         </Text>
         <Controller
@@ -67,6 +67,9 @@ export function TradeField() {
 }
 
 const styles = StyleSheet.create({
+  tradeLabel: {
+    fontSize: 15,
+  },
   input: {
     fontSize: 15,
     borderWidth: 1,
