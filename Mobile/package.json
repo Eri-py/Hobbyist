@@ -27,7 +27,7 @@
     "@react-navigation/native": "^7.1.28",
     "@tanstack/react-query": "^5.100.10",
     "axios": "^1.16.1",
-    "date-fns": "^4.2.0",
+    "date-fns": "^4.2.1",
     "expo": "~55.0.17",
     "expo-auth-session": "~55.0.15",
     "expo-camera": "^55.0.18",
