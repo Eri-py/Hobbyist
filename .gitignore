@@ -49,6 +49,7 @@ lerna-debug.log*
 *.obj
 *.iobj
 *.tlog
+*.lscache
 
 # NuGet
 *.nupkg

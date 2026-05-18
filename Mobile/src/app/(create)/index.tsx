@@ -19,6 +19,7 @@ export default function CreateScreen() {
     handleBack,
     handleSubmit,
     isSubmitting,
+    isCreatingDraft,
     serverErrorMessage,
   } = useCreateContext();
   const theme = useTheme();
@@ -45,7 +46,11 @@ export default function CreateScreen() {
             onPress={handleNext}
           />
         ) : (
-          <Stack.Toolbar.Button variant="done" onPress={handleSubmit} disabled={isSubmitting}>
+          <Stack.Toolbar.Button
+            variant="done"
+            onPress={handleSubmit}
+            disabled={isSubmitting || isCreatingDraft}
+          >
             Post
           </Stack.Toolbar.Button>
         )}

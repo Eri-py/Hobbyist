@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useRouter } from "expo-router";
 import { useFormContext } from "react-hook-form";
 
@@ -23,10 +23,13 @@ export function useHobby() {
     trimmedQuery.length > 0 &&
     !hobbies.some((h) => h.name.toLowerCase() === trimmedQuery.toLowerCase());
 
-  const handleSelect = (name: string) => {
-    setValue("hobby", name, { shouldValidate: true });
-    router.back();
-  };
+  const handleSelect = useCallback(
+    (name: string) => {
+      setValue("hobby", name, { shouldValidate: true });
+      router.back();
+    },
+    [setValue, router],
+  );
 
   return {
     query,

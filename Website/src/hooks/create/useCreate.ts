@@ -1,29 +1,15 @@
 import { useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
 
-import { useServerError, type ServerError } from "@hobbyist/hooks";
-import { axiosInstance } from "@/api/axiosInstance";
+import { useServerError } from "@hobbyist/hooks";
 import type { FileWithMetadata } from "@/hooks/create/useMediaUpload";
+import { useDraftPost } from "@/hooks/create/useDraftPost";
 import { CreateFormSchema, type CreateFormSchemaTypes } from "@hobbyist/form-schemas";
-import type { components } from "@hobbyist/types";
 
-// DTOs
-type CreatePostResponse = components["schemas"]["CreatePostResponse"];
-
-// API function
-const createPostApi = async (formData: FormData) => {
-  return axiosInstance.post<CreatePostResponse>("posts/create", formData, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
-};
-
-// --- Mobile step configuration ---
-
-// Define which form fields belong to each mobile step
+// Define which form fields are validated at each mobile step.
 const mobileStepFields: Record<number, (keyof CreateFormSchemaTypes)[]> = {
-  0: [], // Images — handled separately (not a zod field)
+  0: [], // Media — validated via files array, not zod
   1: ["hobby", "title", "description", "availableForTrade", "lookingFor"],
 };
 
@@ -32,7 +18,6 @@ const MOBILE_STEP_COUNT = Object.keys(mobileStepFields).length;
 export function useCreate(onPostCreated: (postId: string) => void) {
   const { serverErrorMessage, handleServerError, clearServerError } = useServerError();
 
-  // Initialize form methods
   const methods = useForm<CreateFormSchemaTypes>({
     mode: "onChange",
     resolver: zodResolver(CreateFormSchema),
@@ -43,35 +28,36 @@ export function useCreate(onPostCreated: (postId: string) => void) {
     },
   });
 
-  const createPostMutation = useMutation({
-    mutationFn: (formData: FormData) => createPostApi(formData),
-    onSuccess: (response) => {
-      const postId = response.data.postId;
-      onPostCreated(postId);
-    },
-    onError: (error: ServerError) => handleServerError(error),
-  });
+  const {
+    draftPostIdRef,
+    onFilesAdded,
+    onFileRemoved,
+    discardDraft,
+    publishDraft,
+    isUploadingMedia,
+    isPublishing,
+    isRemovingMedia,
+  } = useDraftPost({ onPostCreated, onError: handleServerError });
 
-  // --- Mobile step logic ---
+  // --- Mobile step navigation ---
 
   const [activeStep, setActiveStep] = useState<number>(0);
 
   const handleNext = useCallback(
     async (files: FileWithMetadata[], onFilesError: (message: string) => void) => {
-      const currentFields = mobileStepFields[activeStep];
-
-      // Step 0: images — no zod fields, just check we have files
       if (activeStep === 0) {
         if (files.length === 0) {
           onFilesError("Please upload at least one image or video before continuing.");
           return;
         }
+        // Upload runs in the background — advance immediately so the user can
+        // fill in the form while media uploads. The Post button is disabled
+        // until the draft is ready.
         setActiveStep((prev) => Math.min(prev + 1, MOBILE_STEP_COUNT - 1));
         return;
       }
 
-      // Validate the current step's fields
-      const isValid = await methods.trigger(currentFields);
+      const isValid = await methods.trigger(mobileStepFields[activeStep]);
       if (!isValid) return;
 
       clearServerError();
@@ -84,7 +70,7 @@ export function useCreate(onPostCreated: (postId: string) => void) {
     setActiveStep((prev) => Math.max(prev - 1, 0));
   }, []);
 
-  // --- Shared submit logic ---
+  // --- Submit ---
 
   const handleSubmit = (
     values: CreateFormSchemaTypes,
@@ -98,41 +84,28 @@ export function useCreate(onPostCreated: (postId: string) => void) {
       return;
     }
 
-    const formData = new FormData();
-
-    formData.append("title", values.title);
-    formData.append("hobby", values.hobby);
-    formData.append("description", values.description);
-    formData.append("availableForTrade", (values.availableForTrade ?? false).toString());
-
-    if (values.lookingFor) {
-      formData.append("lookingFor", values.lookingFor);
+    const currentDraftId = draftPostIdRef.current;
+    if (!currentDraftId) {
+      onFilesError("Media upload is still in progress. Please wait and try again.");
+      return;
     }
 
-    files.forEach((fileMetadata) => {
-      formData.append("media", fileMetadata.file);
-    });
-
-    createPostMutation.mutate(formData);
+    publishDraft(currentDraftId, values);
   };
 
   return {
-    // Form
     methods,
-
-    // Mobile step navigation
     activeStep,
     handleNext,
     handleBack,
-
-    // Errors
+    onFilesAdded,
+    onFileRemoved,
+    discardDraft,
     serverErrorMessage,
     clearServerError,
-
-    // Submit
     handleSubmit,
-
-    // Mutation state
-    isSubmitting: createPostMutation.isPending,
+    isSubmitting: isPublishing,
+    isUploadingMedia,
+    isRemovingMedia,
   };
 }

@@ -21,6 +21,7 @@ type MobileCreateFormProps = {
   isDragActive: boolean;
   removeFile: (fileId: string) => void;
   isSubmitting: boolean;
+  isUploadingMedia: boolean;
   activeStep: number;
   onNext: () => void;
   onBack: () => void;
@@ -32,6 +33,7 @@ export function MobileCreateForm({
   isDragActive,
   removeFile,
   isSubmitting,
+  isUploadingMedia,
   activeStep,
   onNext,
   onBack,
@@ -140,6 +142,7 @@ export function MobileCreateForm({
 
         <ActionButtons
           isSubmitting={isSubmitting}
+          isUploadingMedia={isUploadingMedia}
           showPost={activeStep === STEPS_LABELS.length - 1}
         />
       </Stack>
