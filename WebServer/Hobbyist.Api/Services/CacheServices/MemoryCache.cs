@@ -1,4 +1,3 @@
-using System;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace Hobbyist.Api.Services.CacheServices;

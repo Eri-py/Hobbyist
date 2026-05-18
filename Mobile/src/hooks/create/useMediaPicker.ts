@@ -68,7 +68,10 @@ export function useMediaPicker() {
         return;
       }
 
-      if (selectedAssets.length >= MAX_FILES) return;
+      if (selectedAssets.length >= MAX_FILES) {
+        setMediaError(`You can select up to ${MAX_FILES} files.`);
+        return;
+      }
 
       const info = await MediaLibrary.getAssetInfoAsync(asset);
       const uri = info.localUri ?? info.uri;

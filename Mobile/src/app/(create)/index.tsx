@@ -48,11 +48,10 @@ export default function CreateScreen() {
         ) : (
           <Stack.Toolbar.Button
             variant="done"
+            icon="checkmark"
             onPress={handleSubmit}
             disabled={isSubmitting || isCreatingDraft}
-          >
-            Post
-          </Stack.Toolbar.Button>
+          />
         )}
       </Stack.Toolbar>
 

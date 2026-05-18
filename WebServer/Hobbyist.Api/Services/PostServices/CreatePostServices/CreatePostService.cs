@@ -2,11 +2,9 @@ using Hobbyist.Api.Data;
 using Hobbyist.Api.Data.Entities;
 using Hobbyist.Api.Dtos;
 using Hobbyist.Api.Dtos.Posts;
-using Hobbyist.Api.Extensions;
 using Hobbyist.Api.Services.MediaStorageServices;
 using Hobbyist.Common;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Hobbyist.Api.Services.PostServices.CreatePostServices;
 
@@ -22,11 +20,14 @@ public class CreatePostService(
         CancellationToken ct
     )
     {
-        if (request.Media.Length == 0)
-            return Result<CreatePostResponse>.BadRequest("At least one media file is required.");
+        var mediaError = PostHelpers.ValidateMedia(request.Media);
+        if (mediaError is not null)
+            return Result<CreatePostResponse>.BadRequest(mediaError);
 
-        if (request.Media.Any(file => file.Length <= 0))
-            return Result<CreatePostResponse>.BadRequest("Uploaded files must not be empty.");
+        if (request.AvailableForTrade && string.IsNullOrWhiteSpace(request.LookingFor))
+            return Result<CreatePostResponse>.BadRequest(
+                "Please describe what you're looking for."
+            );
 
         if (!Guid.TryParse(userId, out var userGuid))
             return Result<CreatePostResponse>.BadRequest("Invalid user identifier.");
@@ -52,7 +53,12 @@ public class CreatePostService(
         if (!postStoreResult.IsSuccess)
         {
             // Best-effort rollback to avoid orphaned media objects.
-            await CleanupUploadedMediaAsync(uploadedObjectKeys, ct);
+            await PostHelpers.CleanupUploadedObjectsAsync(
+                uploadedObjectKeys,
+                mediaStorageService,
+                logger,
+                ct
+            );
             return Result<CreatePostResponse>.FromError(postStoreResult);
         }
 
@@ -92,7 +98,12 @@ public class CreatePostService(
             if (!uploadResult.IsSuccess)
             {
                 // Upload failed mid-batch: cleanup anything that was already uploaded.
-                await CleanupUploadedMediaAsync(uploadedObjectKeys, ct);
+                await PostHelpers.CleanupUploadedObjectsAsync(
+                    uploadedObjectKeys,
+                    mediaStorageService,
+                    logger,
+                    ct
+                );
                 return uploadResult.ResultType switch
                 {
                     ResultTypes.BadRequest => Result.BadRequest(
@@ -160,40 +171,5 @@ public class CreatePostService(
         }
 
         return Result.NoContent();
-    }
-
-    private async Task CleanupUploadedMediaAsync(
-        IEnumerable<string> objectKeys,
-        CancellationToken ct
-    )
-    {
-        // Cleanup is best-effort: log and continue so one delete failure does not block others.
-        foreach (var objectKey in objectKeys)
-        {
-            try
-            {
-                var deleteResult = await mediaStorageService.DeleteAsync(objectKey, ct);
-                if (!deleteResult.IsSuccess)
-                {
-                    logger.LogWarning(
-                        "Failed to rollback uploaded media object '{ObjectKey}'. ResultType: {ResultType}",
-                        objectKey.SanitizeForLog(),
-                        deleteResult.ResultType
-                    );
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                throw;
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(
-                    ex,
-                    "Unexpected error while rolling back uploaded media object '{ObjectKey}'",
-                    objectKey.SanitizeForLog()
-                );
-            }
-        }
     }
 }

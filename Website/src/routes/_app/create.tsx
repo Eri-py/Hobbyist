@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { FormProvider } from "react-hook-form";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect } from "react";
 import type { KeyboardEvent } from "react";
 
 import Stack from "@mui/material/Stack";
@@ -13,7 +13,6 @@ import { DesktopCreateForm } from "@/components/create/desktop/DesktopCreateForm
 import { MobileCreateForm } from "@/components/create/mobile/MobileCreateForm";
 import { useAuth } from "@hobbyist/hooks";
 
-const SERVER_ERROR_ID = "create-server-error";
 
 export const Route = createFileRoute("/_app/create")({
   component: CreatePage,
@@ -72,23 +71,11 @@ function CreatePage() {
     clearFiles,
   } = useMediaUpload({ onFilesAdded, onFileRemoved });
 
-  const allErrors = useMemo(() => {
-    if (serverErrorMessage) {
-      return [...errors, { id: SERVER_ERROR_ID, message: serverErrorMessage }];
-    }
-    return errors;
-  }, [errors, serverErrorMessage]);
-
-  const handleRemoveError = (errorId: string) => {
-    if (errorId === SERVER_ERROR_ID) return clearServerError();
-    removeError(errorId);
-  };
-
   const handleClear = () => {
+    discardDraft();
     methods.reset();
     clearFiles();
     clearServerError();
-    discardDraft();
   };
 
   const preventEnterSubmit = (event: KeyboardEvent<HTMLFormElement>) => {
@@ -135,8 +122,10 @@ function CreatePage() {
           )}
 
           <ErrorStack
-            errors={allErrors}
-            onRemoveError={handleRemoveError}
+            errors={errors}
+            onRemoveError={removeError}
+            serverError={serverErrorMessage}
+            onClearServerError={clearServerError}
             position={isDesktop ? "top-right" : "bottom-center"}
           />
 

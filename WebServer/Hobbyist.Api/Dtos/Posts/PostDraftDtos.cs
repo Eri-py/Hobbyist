@@ -46,19 +46,20 @@ public record RemoveDraftMediaRequest
 public record PublishPostRequest
 {
     [Required]
-    [MaxLength(100)]
+    [MaxLength(50)]
     public required string Hobby { get; set; }
 
     [Required]
-    [MaxLength(150)]
+    [MaxLength(100)]
     public required string Title { get; set; }
 
     [Required]
-    [MaxLength(5000)]
+    [MinLength(10)]
+    [MaxLength(2000)]
     public required string Description { get; set; }
 
     public required bool AvailableForTrade { get; set; }
 
-    [MaxLength(150)]
+    [MaxLength(500)]
     public string? LookingFor { get; set; }
 }

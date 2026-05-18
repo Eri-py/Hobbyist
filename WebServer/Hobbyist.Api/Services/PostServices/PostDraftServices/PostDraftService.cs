@@ -2,10 +2,8 @@ using Hobbyist.Api.Data;
 using Hobbyist.Api.Data.Entities;
 using Hobbyist.Api.Dtos;
 using Hobbyist.Api.Dtos.Posts;
-using Hobbyist.Api.Extensions;
 using Hobbyist.Api.Services.MediaStorageServices;
 using Hobbyist.Common;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 
 namespace Hobbyist.Api.Services.PostServices.PostDraftServices;
@@ -23,19 +21,12 @@ public class PostDraftService(
         CancellationToken ct
     )
     {
-        if (media.Length == 0)
-            return Result<CreateDraftResponse>.BadRequest("At least one media file is required.");
-
-        if (media.Any(f => f.Length <= 0))
-            return Result<CreateDraftResponse>.BadRequest("Uploaded files must not be empty.");
+        var mediaError = PostHelpers.ValidateMedia(media);
+        if (mediaError is not null)
+            return Result<CreateDraftResponse>.BadRequest(mediaError);
 
         if (!Guid.TryParse(userId, out var userGuid))
             return Result<CreateDraftResponse>.BadRequest("Invalid user identifier.");
-
-        if (media.Length > PostDraftConfig.MaxMediaFiles)
-            return Result<CreateDraftResponse>.BadRequest(
-                $"A post can contain at most {PostDraftConfig.MaxMediaFiles} media files."
-            );
 
         // Generate the post slug upfront so every object key is scoped to this draft.
         var postId = SlugGenerator.Generate();
@@ -68,7 +59,12 @@ public class PostDraftService(
 
             if (!uploadResult.IsSuccess)
             {
-                await CleanupUploadedObjectsAsync(uploadedKeys, ct);
+                await PostHelpers.CleanupUploadedObjectsAsync(
+                    uploadedKeys,
+                    mediaStorageService,
+                    logger,
+                    ct
+                );
                 return Result<CreateDraftResponse>.FromError(uploadResult);
             }
 
@@ -101,7 +97,12 @@ public class PostDraftService(
                 postId,
                 userId
             );
-            await CleanupUploadedObjectsAsync(uploadedKeys, ct);
+            await PostHelpers.CleanupUploadedObjectsAsync(
+                uploadedKeys,
+                mediaStorageService,
+                logger,
+                ct
+            );
             return Result<CreateDraftResponse>.InternalServerError(ErrorMessages.UnexpectedError);
         }
 
@@ -219,7 +220,7 @@ public class PostDraftService(
         if (!deleteResult.IsSuccess)
             return deleteResult;
 
-        post.MediaCount = Math.Max(0, post.MediaCount - 1);
+        post.MediaCount--;
 
         try
         {
@@ -263,6 +264,11 @@ public class PostDraftService(
         if (post.MediaCount == 0)
             return Result<CreatePostResponse>.BadRequest(
                 "At least one media file is required before publishing."
+            );
+
+        if (request.AvailableForTrade && string.IsNullOrWhiteSpace(request.LookingFor))
+            return Result<CreatePostResponse>.BadRequest(
+                "Please describe what you're looking for."
             );
 
         post.Hobby = request.Hobby;
@@ -324,49 +330,10 @@ public class PostDraftService(
         }
         catch (Exception ex)
         {
-            logger.LogError(
-                ex,
-                "Failed to remove draft post {PostId} from database",
-                postId
-            );
+            logger.LogError(ex, "Failed to remove draft post {PostId} from database", postId);
             return Result.InternalServerError(ErrorMessages.UnexpectedError);
         }
 
         return Result.NoContent();
-    }
-
-    // -------------------------------------------------------------------------
-    // Private helpers
-    // -------------------------------------------------------------------------
-
-    private async Task CleanupUploadedObjectsAsync(
-        IEnumerable<string> objectKeys,
-        CancellationToken ct
-    )
-    {
-        foreach (var key in objectKeys)
-        {
-            try
-            {
-                var result = await mediaStorageService.DeleteAsync(key, ct);
-                if (!result.IsSuccess)
-                    logger.LogWarning(
-                        "Rollback: failed to delete uploaded object '{ObjectKey}'",
-                        key.SanitizeForLog()
-                    );
-            }
-            catch (OperationCanceledException)
-            {
-                throw;
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(
-                    ex,
-                    "Rollback: unexpected error deleting object '{ObjectKey}'",
-                    key.SanitizeForLog()
-                );
-            }
-        }
     }
 }
