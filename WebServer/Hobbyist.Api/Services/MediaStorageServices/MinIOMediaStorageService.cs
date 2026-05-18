@@ -1,3 +1,4 @@
+using System.Net;
 using Amazon.S3;
 using Amazon.S3.Model;
 using Hobbyist.Api.Dtos;
@@ -153,5 +154,88 @@ public class MinIOMediaStorageService(
         var extension = Path.GetExtension(fileName);
         var safeExtension = string.IsNullOrWhiteSpace(extension) ? string.Empty : extension;
         return $"{userId}/{postId:N}/{mediaIndex:D3}{safeExtension}";
+    }
+
+    /// <inheritdoc/>
+    public string BuildDraftMediaObjectKey(
+        string userId,
+        Guid postId,
+        Guid mediaId,
+        string fileName
+    )
+    {
+        var extension = Path.GetExtension(fileName);
+        var safeExtension = string.IsNullOrWhiteSpace(extension) ? string.Empty : extension;
+        return $"{userId}/{postId:N}/{mediaId:N}{safeExtension}";
+    }
+
+    /// <inheritdoc/>
+    public string BuildPostMediaPrefix(string userId, Guid postId) => $"{userId}/{postId:N}/";
+
+    /// <inheritdoc/>
+    public async Task<Result> DeleteByPrefixAsync(string prefix, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(prefix))
+            return Result.BadRequest("Prefix is required.");
+
+        try
+        {
+            string? continuationToken = null;
+
+            // S3 returns at most 1000 keys per page; loop until all pages are consumed.
+            do
+            {
+                var listResponse = await s3Client.ListObjectsV2Async(
+                    new ListObjectsV2Request
+                    {
+                        BucketName = _bucketName,
+                        Prefix = prefix,
+                        ContinuationToken = continuationToken,
+                    },
+                    ct
+                );
+
+                if (listResponse.S3Objects.Count == 0)
+                    break;
+
+                // Batch-delete up to 1000 objects in a single request.
+                var deleteResponse = await s3Client.DeleteObjectsAsync(
+                    new DeleteObjectsRequest
+                    {
+                        BucketName = _bucketName,
+                        Objects =
+                        [
+                            .. listResponse.S3Objects.Select(o => new KeyVersion { Key = o.Key }),
+                        ],
+                    },
+                    ct
+                );
+
+                foreach (var error in deleteResponse.DeleteErrors)
+                {
+                    logger.LogWarning(
+                        "Failed to delete object '{Key}' under prefix '{Prefix}': {Code} — {Message}",
+                        error.Key,
+                        prefix,
+                        error.Code,
+                        error.Message
+                    );
+                }
+
+                continuationToken =
+                    listResponse.IsTruncated == true ? listResponse.NextContinuationToken : null;
+            } while (continuationToken != null);
+
+            return Result.NoContent();
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to delete objects under prefix '{Prefix}'", prefix);
+            return Result.InternalServerError(ErrorMessages.UnexpectedError);
+        }
     }
 }
