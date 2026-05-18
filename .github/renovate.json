@@ -1,6 +1,7 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended"],
+  "platformAutomerge": false,
   "prHourlyLimit": 5,
   "lockFileMaintenance": {
     "enabled": false
