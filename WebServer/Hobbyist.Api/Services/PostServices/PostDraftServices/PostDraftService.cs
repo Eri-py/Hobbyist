@@ -2,6 +2,7 @@ using Hobbyist.Api.Data;
 using Hobbyist.Api.Data.Entities;
 using Hobbyist.Api.Dtos;
 using Hobbyist.Api.Dtos.Posts;
+using Hobbyist.Api.Extensions;
 using Hobbyist.Api.Services.MediaStorageServices;
 using Hobbyist.Common;
 using Microsoft.AspNetCore.Http;
@@ -97,8 +98,8 @@ public class PostDraftService(
             logger.LogError(
                 ex,
                 "Failed to persist draft post {PostId} for user {UserId}",
-                postId,
-                userId
+                postId.SanitizeForLog(),
+                userId.SanitizeForLog()
             );
             await CleanupUploadedObjectsAsync(uploadedKeys, ct);
             return Result<CreateDraftResponse>.InternalServerError(ErrorMessages.UnexpectedError);
@@ -176,13 +177,15 @@ public class PostDraftService(
             logger.LogError(
                 ex,
                 "Failed to update MediaCount for draft {PostId} after adding media",
-                postId
+                postId.SanitizeForLog()
             );
             await mediaStorageService.DeleteAsync(objectKey, ct);
             return Result<AddDraftMediaResponse>.InternalServerError(ErrorMessages.UnexpectedError);
         }
 
-        return Result<AddDraftMediaResponse>.Success(new AddDraftMediaResponse { ObjectKey = objectKey });
+        return Result<AddDraftMediaResponse>.Success(
+            new AddDraftMediaResponse { ObjectKey = objectKey }
+        );
     }
 
     /// <inheritdoc/>
@@ -227,7 +230,7 @@ public class PostDraftService(
             logger.LogError(
                 ex,
                 "Failed to update MediaCount for draft {PostId} after removing media",
-                postId
+                postId.SanitizeForLog()
             );
             return Result.InternalServerError(ErrorMessages.UnexpectedError);
         }
@@ -276,7 +279,7 @@ public class PostDraftService(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to publish draft post {PostId}", postId);
+            logger.LogError(ex, "Failed to publish draft post {PostId}", postId.SanitizeForLog());
             return Result<CreatePostResponse>.InternalServerError(ErrorMessages.UnexpectedError);
         }
 
@@ -308,8 +311,8 @@ public class PostDraftService(
             logger.LogWarning(
                 "Storage cleanup failed for draft {PostId} (prefix '{Prefix}'). "
                     + "Objects will be removed by the scheduled expiry job.",
-                postId,
-                prefix
+                postId.SanitizeForLog(),
+                prefix.SanitizeForLog()
             );
         }
 
@@ -321,7 +324,11 @@ public class PostDraftService(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to remove draft post {PostId} from database", postId);
+            logger.LogError(
+                ex,
+                "Failed to remove draft post {PostId} from database",
+                postId.SanitizeForLog()
+            );
             return Result.InternalServerError(ErrorMessages.UnexpectedError);
         }
 
@@ -343,7 +350,10 @@ public class PostDraftService(
             {
                 var result = await mediaStorageService.DeleteAsync(key, ct);
                 if (!result.IsSuccess)
-                    logger.LogWarning("Rollback: failed to delete uploaded object '{ObjectKey}'", key);
+                    logger.LogWarning(
+                        "Rollback: failed to delete uploaded object '{ObjectKey}'",
+                        key.SanitizeForLog()
+                    );
             }
             catch (OperationCanceledException)
             {
@@ -351,7 +361,11 @@ public class PostDraftService(
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Rollback: unexpected error deleting object '{ObjectKey}'", key);
+                logger.LogError(
+                    ex,
+                    "Rollback: unexpected error deleting object '{ObjectKey}'",
+                    key.SanitizeForLog()
+                );
             }
         }
     }

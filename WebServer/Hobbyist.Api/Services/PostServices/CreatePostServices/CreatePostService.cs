@@ -2,6 +2,7 @@ using Hobbyist.Api.Data;
 using Hobbyist.Api.Data.Entities;
 using Hobbyist.Api.Dtos;
 using Hobbyist.Api.Dtos.Posts;
+using Hobbyist.Api.Extensions;
 using Hobbyist.Api.Services.MediaStorageServices;
 using Hobbyist.Common;
 using Microsoft.EntityFrameworkCore;
@@ -151,8 +152,8 @@ public class CreatePostService(
             logger.LogError(
                 ex,
                 "Failed to persist post {PostId} for user {UserId} after media upload",
-                postId,
-                userId
+                postId.SanitizeForLog(),
+                userId.SanitizeForLog()
             );
 
             return Result.InternalServerError("Failed to create post. Please try again.");
@@ -176,7 +177,7 @@ public class CreatePostService(
                 {
                     logger.LogWarning(
                         "Failed to rollback uploaded media object '{ObjectKey}'. ResultType: {ResultType}",
-                        objectKey,
+                        objectKey.SanitizeForLog(),
                         deleteResult.ResultType
                     );
                 }
@@ -190,7 +191,7 @@ public class CreatePostService(
                 logger.LogError(
                     ex,
                     "Unexpected error while rolling back uploaded media object '{ObjectKey}'",
-                    objectKey
+                    objectKey.SanitizeForLog()
                 );
             }
         }

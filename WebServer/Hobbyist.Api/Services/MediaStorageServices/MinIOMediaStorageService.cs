@@ -2,6 +2,7 @@ using System.Net;
 using Amazon.S3;
 using Amazon.S3.Model;
 using Hobbyist.Api.Dtos;
+using Hobbyist.Api.Extensions;
 using Hobbyist.Common;
 
 namespace Hobbyist.Api.Services.MediaStorageServices;
@@ -62,7 +63,7 @@ public class MinIOMediaStorageService(
             logger.LogError(
                 ex,
                 "Failed to upload media object with key '{ObjectKey}'",
-                request.ObjectKey
+                request.ObjectKey.SanitizeForLog()
             );
             return Result<UploadMediaResponse>.InternalServerError(ErrorMessages.UnexpectedError);
         }
@@ -88,7 +89,7 @@ public class MinIOMediaStorageService(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to delete media object with key '{ObjectKey}'", objectKey);
+            logger.LogError(ex, "Failed to delete media object with key '{ObjectKey}'", objectKey.SanitizeForLog());
             return Result.InternalServerError(ErrorMessages.UnexpectedError);
         }
     }
@@ -135,7 +136,7 @@ public class MinIOMediaStorageService(
             logger.LogError(
                 ex,
                 "Failed to generate read URL for object key '{ObjectKey}'",
-                objectKey
+                objectKey.SanitizeForLog()
             );
             return Task.FromResult(
                 Result<string>.InternalServerError(ErrorMessages.UnexpectedError)
@@ -215,10 +216,10 @@ public class MinIOMediaStorageService(
                 {
                     logger.LogWarning(
                         "Failed to delete object '{Key}' under prefix '{Prefix}': {Code} — {Message}",
-                        error.Key,
-                        prefix,
-                        error.Code,
-                        error.Message
+                        error.Key.SanitizeForLog(),
+                        prefix.SanitizeForLog(),
+                        error.Code.SanitizeForLog(),
+                        error.Message.SanitizeForLog()
                     );
                 }
 
@@ -234,7 +235,7 @@ public class MinIOMediaStorageService(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to delete objects under prefix '{Prefix}'", prefix);
+            logger.LogError(ex, "Failed to delete objects under prefix '{Prefix}'", prefix.SanitizeForLog());
             return Result.InternalServerError(ErrorMessages.UnexpectedError);
         }
     }
