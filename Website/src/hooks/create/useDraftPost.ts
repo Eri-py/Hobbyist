@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useRef } from "react";
 import { useMutation } from "@tanstack/react-query";
 
 import type { ServerError } from "@hobbyist/hooks";
@@ -56,12 +56,9 @@ type UseDraftPostOptions = {
  * without triggering unnecessary re-renders.
  */
 export function useDraftPost({ onPostCreated, onError }: UseDraftPostOptions) {
-  const [draftPostId, setDraftPostId] = useState<string | null>(null);
-
   // Ref so callbacks read the latest draft ID without being recreated on every
   // state change, which would cause useMediaUpload's dropzone to reinitialise.
   const draftPostIdRef = useRef<string | null>(null);
-  draftPostIdRef.current = draftPostId;
 
   // Maps each local FileWithMetadata.id to its server-assigned S3 objectKey
   // so individual files can be removed from the draft by the caller.
@@ -73,7 +70,6 @@ export function useDraftPost({ onPostCreated, onError }: UseDraftPostOptions) {
     mutationFn: ({ files }: { files: File[]; fileIds: string[] }) => createDraftApi(files),
     onSuccess: (response, variables) => {
       const { postId, mediaObjectKeys } = response.data;
-      setDraftPostId(postId);
       draftPostIdRef.current = postId;
       variables.fileIds.forEach((id, i) => {
         fileObjectKeys.current.set(id, mediaObjectKeys[i]);
@@ -104,7 +100,6 @@ export function useDraftPost({ onPostCreated, onError }: UseDraftPostOptions) {
     mutationFn: ({ postId, values }: { postId: string; values: CreateFormSchemaTypes }) =>
       publishPostApi(postId, values),
     onSuccess: (response) => {
-      setDraftPostId(null);
       draftPostIdRef.current = null;
       fileObjectKeys.current.clear();
       onPostCreated(response.data.postId);
@@ -115,7 +110,6 @@ export function useDraftPost({ onPostCreated, onError }: UseDraftPostOptions) {
   const discardDraftMutation = useMutation({
     mutationFn: (postId: string) => discardDraftApi(postId),
     onSuccess: () => {
-      setDraftPostId(null);
       draftPostIdRef.current = null;
       fileObjectKeys.current.clear();
     },
@@ -146,7 +140,6 @@ export function useDraftPost({ onPostCreated, onError }: UseDraftPostOptions) {
         );
       }
     },
-    // mutate references are stable; draftPostIdRef is always current via the ref.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [createDraftMutation.mutate, addMediaMutation.mutate],
   );
@@ -177,7 +170,7 @@ export function useDraftPost({ onPostCreated, onError }: UseDraftPostOptions) {
     const currentDraftId = draftPostIdRef.current;
     if (!currentDraftId) return;
     discardDraftMutation.mutate(currentDraftId);
-  }, [discardDraftMutation.mutate]);
+  }, [discardDraftMutation]);
 
   /**
    * Publishes the active draft with the supplied form values.
@@ -187,7 +180,7 @@ export function useDraftPost({ onPostCreated, onError }: UseDraftPostOptions) {
     (postId: string, values: CreateFormSchemaTypes) => {
       publishPostMutation.mutate({ postId, values });
     },
-    [publishPostMutation.mutate],
+    [publishPostMutation],
   );
 
   return {

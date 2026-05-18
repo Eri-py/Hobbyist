@@ -98,8 +98,8 @@ public class PostDraftService(
             logger.LogError(
                 ex,
                 "Failed to persist draft post {PostId} for user {UserId}",
-                postId.SanitizeForLog(),
-                userId.SanitizeForLog()
+                postId,
+                userId
             );
             await CleanupUploadedObjectsAsync(uploadedKeys, ct);
             return Result<CreateDraftResponse>.InternalServerError(ErrorMessages.UnexpectedError);
@@ -177,7 +177,7 @@ public class PostDraftService(
             logger.LogError(
                 ex,
                 "Failed to update MediaCount for draft {PostId} after adding media",
-                postId.SanitizeForLog()
+                postId
             );
             await mediaStorageService.DeleteAsync(objectKey, ct);
             return Result<AddDraftMediaResponse>.InternalServerError(ErrorMessages.UnexpectedError);
@@ -230,7 +230,7 @@ public class PostDraftService(
             logger.LogError(
                 ex,
                 "Failed to update MediaCount for draft {PostId} after removing media",
-                postId.SanitizeForLog()
+                postId
             );
             return Result.InternalServerError(ErrorMessages.UnexpectedError);
         }
@@ -279,7 +279,7 @@ public class PostDraftService(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to publish draft post {PostId}", postId.SanitizeForLog());
+            logger.LogError(ex, "Failed to publish draft post {PostId}", postId);
             return Result<CreatePostResponse>.InternalServerError(ErrorMessages.UnexpectedError);
         }
 
@@ -311,8 +311,8 @@ public class PostDraftService(
             logger.LogWarning(
                 "Storage cleanup failed for draft {PostId} (prefix '{Prefix}'). "
                     + "Objects will be removed by the scheduled expiry job.",
-                postId.SanitizeForLog(),
-                prefix.SanitizeForLog()
+                postId,
+                prefix
             );
         }
 
@@ -327,7 +327,7 @@ public class PostDraftService(
             logger.LogError(
                 ex,
                 "Failed to remove draft post {PostId} from database",
-                postId.SanitizeForLog()
+                postId
             );
             return Result.InternalServerError(ErrorMessages.UnexpectedError);
         }

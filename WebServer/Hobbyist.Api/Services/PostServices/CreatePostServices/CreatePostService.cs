@@ -152,8 +152,8 @@ public class CreatePostService(
             logger.LogError(
                 ex,
                 "Failed to persist post {PostId} for user {UserId} after media upload",
-                postId.SanitizeForLog(),
-                userId.SanitizeForLog()
+                postId,
+                userId
             );
 
             return Result.InternalServerError("Failed to create post. Please try again.");

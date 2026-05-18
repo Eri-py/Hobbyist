@@ -36,8 +36,8 @@ public class AuthSessionService(
             var platform = request.GetPlatform();
             logger.LogWarning(
                 "get-user-details called for deleted user {UserId} (platform: {Platform})",
-                userId.SanitizeForLog(),
-                platform.SanitizeForLog()
+                userId,
+                platform
             );
             if (platform == "web")
             {
