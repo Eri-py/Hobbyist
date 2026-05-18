@@ -56,16 +56,16 @@ public class PostsController(
     /// Used on web when the user appends more files to the carousel after the
     /// initial upload.
     /// </summary>
-    [HttpPost("{id:guid}/media")]
+    [HttpPost("{slug}/media")]
     [Authorize]
     public async Task<ActionResult<AddDraftMediaResponse>> AddMediaAsync(
-        Guid id,
+        string slug,
         IFormFile file,
         CancellationToken ct
     )
     {
         var userId = User.GetUserId();
-        var result = await postDraftService.AddMediaAsync(id, file, userId, ct);
+        var result = await postDraftService.AddMediaAsync(slug, file, userId, ct);
         return result.ToActionResult();
     }
 
@@ -74,16 +74,16 @@ public class PostsController(
     /// The client must supply the exact object key returned at upload time.
     /// The server validates that the key belongs to this post before deleting.
     /// </summary>
-    [HttpDelete("{id:guid}/media")]
+    [HttpDelete("{slug}/media")]
     [Authorize]
     public async Task<ActionResult> RemoveMediaAsync(
-        Guid id,
+        string slug,
         [FromBody] RemoveDraftMediaRequest request,
         CancellationToken ct
     )
     {
         var userId = User.GetUserId();
-        var result = await postDraftService.RemoveMediaAsync(id, request.ObjectKey, userId, ct);
+        var result = await postDraftService.RemoveMediaAsync(slug, request.ObjectKey, userId, ct);
         return result.ToActionResult();
     }
 
@@ -92,16 +92,16 @@ public class PostsController(
     /// Validates server-side that at least one media file is associated before
     /// allowing the transition from draft to published.
     /// </summary>
-    [HttpPost("{id:guid}/publish")]
+    [HttpPost("{slug}/publish")]
     [Authorize]
     public async Task<ActionResult<CreatePostResponse>> PublishAsync(
-        Guid id,
+        string slug,
         [FromBody] PublishPostRequest request,
         CancellationToken ct
     )
     {
         var userId = User.GetUserId();
-        var result = await postDraftService.PublishDraftAsync(id, request, userId, ct);
+        var result = await postDraftService.PublishDraftAsync(slug, request, userId, ct);
         return result.ToActionResult();
     }
 
@@ -110,12 +110,12 @@ public class PostsController(
     /// best-effort bulk deletion of all associated S3 objects.
     /// Called when the user cancels the create flow after tapping "Next".
     /// </summary>
-    [HttpDelete("{id:guid}")]
+    [HttpDelete("{slug}")]
     [Authorize]
-    public async Task<ActionResult> DiscardAsync(Guid id, CancellationToken ct)
+    public async Task<ActionResult> DiscardAsync(string slug, CancellationToken ct)
     {
         var userId = User.GetUserId();
-        var result = await postDraftService.DiscardDraftAsync(id, userId, ct);
+        var result = await postDraftService.DiscardDraftAsync(slug, userId, ct);
         return result.ToActionResult();
     }
 }

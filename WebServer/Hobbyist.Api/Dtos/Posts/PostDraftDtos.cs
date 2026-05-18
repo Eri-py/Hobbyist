@@ -10,7 +10,7 @@ namespace Hobbyist.Api.Dtos.Posts;
 public record CreateDraftResponse
 {
     [Required]
-    public required Guid PostId { get; set; }
+    public required string PostId { get; set; }
 
     /// <summary>S3 object keys for every file that was uploaded with this draft.</summary>
     [Required]

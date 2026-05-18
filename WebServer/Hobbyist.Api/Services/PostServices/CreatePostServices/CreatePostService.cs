@@ -5,6 +5,7 @@ using Hobbyist.Api.Dtos.Posts;
 using Hobbyist.Api.Services.MediaStorageServices;
 using Hobbyist.Common;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Hobbyist.Api.Services.PostServices.CreatePostServices;
 
@@ -30,7 +31,7 @@ public class CreatePostService(
             return Result<CreatePostResponse>.BadRequest("Invalid user identifier.");
 
         // Generate server-owned identifiers/timestamps once so all writes stay consistent.
-        var postId = Guid.NewGuid();
+        var postId = SlugGenerator.Generate();
         var createdAt = DateTimeOffset.UtcNow;
 
         // Keep uploaded keys for compensation if DB persistence fails later.
@@ -60,7 +61,7 @@ public class CreatePostService(
     public async Task<Result> StorePostMediaAsync(
         IFormFile[] media,
         string userId,
-        Guid postId,
+        string postId,
         ICollection<string> uploadedObjectKeys,
         CancellationToken ct
     )
@@ -121,7 +122,7 @@ public class CreatePostService(
     public async Task<Result> StorePostDetailsAsync(
         CreatePostRequest request,
         Guid userId,
-        Guid postId,
+        string postId,
         DateTimeOffset createdAt,
         CancellationToken ct
     )

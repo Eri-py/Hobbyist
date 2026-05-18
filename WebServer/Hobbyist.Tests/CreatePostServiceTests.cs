@@ -73,7 +73,7 @@ public class CreatePostServiceTests : DatabaseTestBase
     public async Task StorePostMediaAsync_WhenUploadFails_RollsBackPreviouslyUploadedOnly()
     {
         // Arrange
-        var postId = Guid.NewGuid();
+        const string postId = "testslug1234";
         var userId = "user-123";
         var uploadedObjectKeys = new List<string>();
         var files = new[]
@@ -124,11 +124,11 @@ public class CreatePostServiceTests : DatabaseTestBase
             Assert.That(uploadedObjectKeys, Has.Count.EqualTo(1));
         }
         _mediaStorageServiceMock.Verify(
-            m => m.DeleteAsync($"{userId}/{postId:N}/001.png", It.IsAny<CancellationToken>()),
+            m => m.DeleteAsync($"{userId}/{postId}/001.png", It.IsAny<CancellationToken>()),
             Times.Once
         );
         _mediaStorageServiceMock.Verify(
-            m => m.DeleteAsync($"{userId}/{postId:N}/002.png", It.IsAny<CancellationToken>()),
+            m => m.DeleteAsync($"{userId}/{postId}/002.png", It.IsAny<CancellationToken>()),
             Times.Never
         );
     }
@@ -137,7 +137,7 @@ public class CreatePostServiceTests : DatabaseTestBase
     public async Task StorePostMediaAsync_WhenSuccessful_ReturnsNoContentAndTracksObjectKeys()
     {
         // Arrange
-        var postId = Guid.NewGuid();
+        const string postId = "testslug1234";
         var userId = "user-123";
         var uploadedObjectKeys = new List<string>();
         var files = new[]
@@ -166,8 +166,8 @@ public class CreatePostServiceTests : DatabaseTestBase
             Assert.That(uploadedObjectKeys, Has.Count.EqualTo(2));
         }
 
-        Assert.That(uploadedObjectKeys[0], Is.EqualTo($"{userId}/{postId:N}/001.png"));
-        Assert.That(uploadedObjectKeys[1], Is.EqualTo($"{userId}/{postId:N}/002.jpg"));
+        Assert.That(uploadedObjectKeys[0], Is.EqualTo($"{userId}/{postId}/001.png"));
+        Assert.That(uploadedObjectKeys[1], Is.EqualTo($"{userId}/{postId}/002.jpg"));
     }
 
     [Test]
@@ -224,7 +224,7 @@ public class CreatePostServiceTests : DatabaseTestBase
         }
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(result.Content.PostId, Is.Not.EqualTo(Guid.Empty));
+            Assert.That(result.Content.PostId, Is.Not.Empty);
             Assert.That(Context.Posts.Count(), Is.EqualTo(1));
         }
 
@@ -240,14 +240,14 @@ public class CreatePostServiceTests : DatabaseTestBase
             .Setup(m =>
                 m.BuildObjectKey(
                     It.IsAny<string>(),
-                    It.IsAny<Guid>(),
+                    It.IsAny<string>(),
                     It.IsAny<int>(),
                     It.IsAny<string>()
                 )
             )
             .Returns(
-                (string id, Guid pid, int index, string fileName) =>
-                    $"{id}/{pid:N}/{index:D3}{Path.GetExtension(fileName)}"
+                (string id, string pid, int index, string fileName) =>
+                    $"{id}/{pid}/{index:D3}{Path.GetExtension(fileName)}"
             );
     }
 

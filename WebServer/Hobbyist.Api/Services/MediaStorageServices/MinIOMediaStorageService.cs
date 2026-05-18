@@ -143,7 +143,7 @@ public class MinIOMediaStorageService(
         }
     }
 
-    public string BuildObjectKey(string userId, Guid postId, int mediaIndex, string fileName)
+    public string BuildObjectKey(string userId, string postId, int mediaIndex, string fileName)
     {
         if (mediaIndex <= 0)
             throw new ArgumentOutOfRangeException(
@@ -153,24 +153,24 @@ public class MinIOMediaStorageService(
 
         var extension = Path.GetExtension(fileName);
         var safeExtension = string.IsNullOrWhiteSpace(extension) ? string.Empty : extension;
-        return $"{userId}/{postId:N}/{mediaIndex:D3}{safeExtension}";
+        return $"{userId}/{postId}/{mediaIndex:D3}{safeExtension}";
     }
 
     /// <inheritdoc/>
     public string BuildDraftMediaObjectKey(
         string userId,
-        Guid postId,
+        string postId,
         Guid mediaId,
         string fileName
     )
     {
         var extension = Path.GetExtension(fileName);
         var safeExtension = string.IsNullOrWhiteSpace(extension) ? string.Empty : extension;
-        return $"{userId}/{postId:N}/{mediaId:N}{safeExtension}";
+        return $"{userId}/{postId}/{mediaId:N}{safeExtension}";
     }
 
     /// <inheritdoc/>
-    public string BuildPostMediaPrefix(string userId, Guid postId) => $"{userId}/{postId:N}/";
+    public string BuildPostMediaPrefix(string userId, string postId) => $"{userId}/{postId}/";
 
     /// <inheritdoc/>
     public async Task<Result> DeleteByPrefixAsync(string prefix, CancellationToken ct)

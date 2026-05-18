@@ -36,8 +36,8 @@ public class PostDraftService(
                 $"A post can contain at most {PostDraftConfig.MaxMediaFiles} media files."
             );
 
-        // Generate the post ID upfront so every object key is scoped to this draft.
-        var postId = Guid.NewGuid();
+        // Generate the post slug upfront so every object key is scoped to this draft.
+        var postId = SlugGenerator.Generate();
         var uploadedKeys = new List<string>(media.Length);
 
         // Upload every file before touching the database.
@@ -111,7 +111,7 @@ public class PostDraftService(
 
     /// <inheritdoc/>
     public async Task<Result<AddDraftMediaResponse>> AddMediaAsync(
-        Guid postId,
+        string postId,
         IFormFile file,
         string userId,
         CancellationToken ct
@@ -178,7 +178,6 @@ public class PostDraftService(
                 "Failed to update MediaCount for draft {PostId} after adding media",
                 postId
             );
-            // Best-effort cleanup of the file that was just uploaded.
             await mediaStorageService.DeleteAsync(objectKey, ct);
             return Result<AddDraftMediaResponse>.InternalServerError(ErrorMessages.UnexpectedError);
         }
@@ -188,7 +187,7 @@ public class PostDraftService(
 
     /// <inheritdoc/>
     public async Task<Result> RemoveMediaAsync(
-        Guid postId,
+        string postId,
         string objectKey,
         string userId,
         CancellationToken ct
@@ -238,7 +237,7 @@ public class PostDraftService(
 
     /// <inheritdoc/>
     public async Task<Result<CreatePostResponse>> PublishDraftAsync(
-        Guid postId,
+        string postId,
         PublishPostRequest request,
         string userId,
         CancellationToken ct
@@ -258,7 +257,6 @@ public class PostDraftService(
         if (!post.IsDraft)
             return Result<CreatePostResponse>.BadRequest("Post is already published.");
 
-        // Never trust the client — validate media count server-side.
         if (post.MediaCount == 0)
             return Result<CreatePostResponse>.BadRequest(
                 "At least one media file is required before publishing."
@@ -286,7 +284,7 @@ public class PostDraftService(
     }
 
     /// <inheritdoc/>
-    public async Task<Result> DiscardDraftAsync(Guid postId, string userId, CancellationToken ct)
+    public async Task<Result> DiscardDraftAsync(string postId, string userId, CancellationToken ct)
     {
         if (!Guid.TryParse(userId, out var userGuid))
             return Result.BadRequest("Invalid user identifier.");
@@ -334,10 +332,6 @@ public class PostDraftService(
     // Private helpers
     // -------------------------------------------------------------------------
 
-    /// <summary>
-    /// Deletes every already-uploaded object on a partial failure.
-    /// Each deletion is attempted independently so one failure does not skip the rest.
-    /// </summary>
     private async Task CleanupUploadedObjectsAsync(
         IEnumerable<string> objectKeys,
         CancellationToken ct
@@ -349,12 +343,7 @@ public class PostDraftService(
             {
                 var result = await mediaStorageService.DeleteAsync(key, ct);
                 if (!result.IsSuccess)
-                {
-                    logger.LogWarning(
-                        "Rollback: failed to delete uploaded object '{ObjectKey}'",
-                        key
-                    );
-                }
+                    logger.LogWarning("Rollback: failed to delete uploaded object '{ObjectKey}'", key);
             }
             catch (OperationCanceledException)
             {
@@ -362,11 +351,7 @@ public class PostDraftService(
             }
             catch (Exception ex)
             {
-                logger.LogError(
-                    ex,
-                    "Rollback: unexpected error deleting object '{ObjectKey}'",
-                    key
-                );
+                logger.LogError(ex, "Rollback: unexpected error deleting object '{ObjectKey}'", key);
             }
         }
     }

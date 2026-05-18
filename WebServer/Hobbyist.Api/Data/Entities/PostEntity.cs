@@ -4,7 +4,7 @@ namespace Hobbyist.Api.Data.Entities;
 
 public class PostEntity
 {
-    public Guid Id { get; set; }
+    public required string Id { get; set; }
 
     [ForeignKey("User")]
     public required Guid UserId { get; set; }

@@ -28,5 +28,5 @@ public record class CreatePostRequest
 public record class CreatePostResponse
 {
     [Required]
-    public required Guid PostId { get; set; }
+    public required string PostId { get; set; }
 }

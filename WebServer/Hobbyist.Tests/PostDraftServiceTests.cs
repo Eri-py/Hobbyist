@@ -126,8 +126,6 @@ public class PostDraftServiceTests : DatabaseTestBase
     [Test]
     public async Task CreateDraftAsync_WhenSecondUploadFails_RollsBackFirstUploadAndReturnsError()
     {
-        var postId = Guid.Empty; // will be set by the mock callback
-
         SetupBuildDraftMediaObjectKey();
         SetupBuildPostMediaPrefix();
 
@@ -222,7 +220,7 @@ public class PostDraftServiceTests : DatabaseTestBase
         {
             Assert.That(result.IsSuccess, Is.True);
             Assert.That(result.Content, Is.Not.Null);
-            Assert.That(result.Content!.PostId, Is.Not.EqualTo(Guid.Empty));
+            Assert.That(result.Content!.PostId, Is.Not.Empty);
             Assert.That(result.Content.MediaObjectKeys, Has.Length.EqualTo(2));
         }
     }
@@ -269,7 +267,7 @@ public class PostDraftServiceTests : DatabaseTestBase
     public async Task AddMediaAsync_WhenDraftNotFound_ReturnsNotFound()
     {
         var result = await _service.AddMediaAsync(
-            Guid.NewGuid(),
+            "nonexistentslug",
             BuildFile("a.jpg", "image/jpeg", "data"),
             _user.Id.ToString(),
             CancellationToken.None
@@ -403,7 +401,7 @@ public class PostDraftServiceTests : DatabaseTestBase
         SetupBuildPostMediaPrefix();
 
         var result = await _service.RemoveMediaAsync(
-            Guid.NewGuid(),
+            "nonexistentslug",
             "any-key",
             _user.Id.ToString(),
             CancellationToken.None
@@ -521,7 +519,7 @@ public class PostDraftServiceTests : DatabaseTestBase
     public async Task PublishDraftAsync_WhenDraftNotFound_ReturnsNotFound()
     {
         var result = await _service.PublishDraftAsync(
-            Guid.NewGuid(),
+            "nonexistentslug",
             BuildPublishRequest(),
             _user.Id.ToString(),
             CancellationToken.None
@@ -633,7 +631,7 @@ public class PostDraftServiceTests : DatabaseTestBase
     public async Task DiscardDraftAsync_WhenDraftNotFound_ReturnsNotFound()
     {
         var result = await _service.DiscardDraftAsync(
-            Guid.NewGuid(),
+            "nonexistentslug",
             _user.Id.ToString(),
             CancellationToken.None
         );
@@ -673,7 +671,7 @@ public class PostDraftServiceTests : DatabaseTestBase
     public async Task DiscardDraftAsync_WhenSuccessful_DeletesPostFromDatabaseAndTriggersStorageCleanup()
     {
         var draft = await SeedPostAsync(isDraft: true, mediaCount: 2);
-        var expectedPrefix = $"{_user.Id}/{draft.Id:N}/";
+        var expectedPrefix = $"{_user.Id}/{draft.Id}/";
 
         SetupBuildPostMediaPrefix();
         _storage
@@ -727,7 +725,7 @@ public class PostDraftServiceTests : DatabaseTestBase
     {
         var post = new PostEntity
         {
-            Id = Guid.NewGuid(),
+            Id = SlugGenerator.Generate(),
             UserId = _user.Id,
             IsDraft = isDraft,
             MediaCount = mediaCount,
@@ -750,7 +748,7 @@ public class PostDraftServiceTests : DatabaseTestBase
     /// Builds an object key that passes the prefix-ownership check for <see cref="_user"/>.
     /// </summary>
     private string BuildValidKeyForDraft(PostEntity draft) =>
-        $"{_user.Id}/{draft.Id:N}/{Guid.NewGuid():N}.jpg";
+        $"{_user.Id}/{draft.Id}/{Guid.NewGuid():N}.jpg";
 
     private void SetupBuildDraftMediaObjectKey()
     {
@@ -758,16 +756,16 @@ public class PostDraftServiceTests : DatabaseTestBase
             .Setup(s =>
                 s.BuildDraftMediaObjectKey(
                     It.IsAny<string>(),
-                    It.IsAny<Guid>(),
+                    It.IsAny<string>(),
                     It.IsAny<Guid>(),
                     It.IsAny<string>()
                 )
             )
             .Returns(
-                (string uid, Guid pid, Guid mid, string fn) =>
+                (string uid, string pid, Guid mid, string fn) =>
                 {
                     var ext = Path.GetExtension(fn);
-                    return $"{uid}/{pid:N}/{mid:N}{ext}";
+                    return $"{uid}/{pid}/{mid:N}{ext}";
                 }
             );
     }
@@ -775,8 +773,8 @@ public class PostDraftServiceTests : DatabaseTestBase
     private void SetupBuildPostMediaPrefix()
     {
         _storage
-            .Setup(s => s.BuildPostMediaPrefix(It.IsAny<string>(), It.IsAny<Guid>()))
-            .Returns((string uid, Guid pid) => $"{uid}/{pid:N}/");
+            .Setup(s => s.BuildPostMediaPrefix(It.IsAny<string>(), It.IsAny<string>()))
+            .Returns((string uid, string pid) => $"{uid}/{pid}/");
     }
 
     private void SetupUploadAlwaysSucceeds()
