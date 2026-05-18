@@ -1,4 +1,4 @@
-import { type ViewProps, StyleSheet, Keyboard } from "react-native";
+import { type ScrollViewProps, StyleSheet, Keyboard } from "react-native";
 import { useEffect, useState } from "react";
 import { useTheme } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -6,16 +6,14 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 
 import { useDeviceType } from "@/hooks/shared/useDeviceType";
 
-type ThemedKeyboardViewProps = ViewProps & {
+type ThemedKeyboardViewProps = ScrollViewProps & {
   safeArea?: boolean;
-  contentContainerStyle?: object;
 };
 
 export function ThemedKeyboardView({
   style,
   children,
   safeArea = false,
-  contentContainerStyle,
   ...props
 }: ThemedKeyboardViewProps) {
   const theme = useTheme();
@@ -50,7 +48,6 @@ export function ThemedKeyboardView({
         safeAreaStyle,
         style,
       ]}
-      contentContainerStyle={contentContainerStyle}
       keyboardShouldPersistTaps="handled"
       {...props}
     >

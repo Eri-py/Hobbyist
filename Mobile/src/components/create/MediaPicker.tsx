@@ -1,7 +1,5 @@
 import { View, FlatList, StyleSheet, Dimensions } from "react-native";
 import { useMemo } from "react";
-import { Text, useTheme } from "react-native-paper";
-import { SymbolView } from "expo-symbols";
 import { MediaType, type Asset } from "expo-media-library";
 
 import { MediaCarousel } from "@/components/shared/Media/MediaCarousel";
@@ -28,8 +26,6 @@ export function MediaPicker({
   onAlbumChange,
   onToggleAsset,
 }: MediaPickerProps) {
-  const theme = useTheme();
-
   const carouselItems = useMemo(
     () =>
       selectedAssets.map((a) => ({
@@ -42,20 +38,7 @@ export function MediaPicker({
 
   return (
     <>
-      {carouselItems.length > 0 ? (
-        <MediaCarousel items={carouselItems} />
-      ) : (
-        <View style={[styles.placeholder, { borderColor: theme.colors.outlineVariant }]}>
-          <SymbolView
-            name="photo.on.rectangle"
-            size={32}
-            tintColor={theme.colors.onSurfaceVariant}
-          />
-          <Text style={{ color: theme.colors.onSurfaceVariant, fontSize: 14 }}>
-            Select photos and videos
-          </Text>
-        </View>
-      )}
+      {carouselItems.length > 0 && <MediaCarousel items={carouselItems} />}
 
       <View style={styles.pickerSection}>
         <AlbumPicker activeAlbum={activeAlbum} onAlbumChange={onAlbumChange} />
@@ -84,16 +67,6 @@ export function MediaPicker({
 }
 
 const styles = StyleSheet.create({
-  placeholder: {
-    aspectRatio: 8 / 7,
-    width: "100%",
-    borderRadius: 12,
-    borderWidth: 1,
-    borderStyle: "dashed",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-  },
   pickerSection: {
     flex: 1,
     gap: 16,

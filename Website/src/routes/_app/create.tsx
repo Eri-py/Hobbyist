@@ -24,12 +24,40 @@ function CreatePage() {
   const { isAuthenticated, user } = useAuth();
   const { isDesktop } = useDeviceType();
 
-  // Redirect unauthenticated users away from create page.
+  // Redirect unauthenticated users away from the create page.
   useEffect(() => {
     if (!isAuthenticated) {
       navigate({ to: "/" });
     }
   }, [isAuthenticated, navigate]);
+
+  const handlePostCreated = useCallback(
+    (postId: string) => {
+      if (user?.username) {
+        navigate({ to: `/profile/${user.username}/${postId}` });
+        return;
+      }
+      navigate({ to: "/profile" });
+    },
+    [navigate, user],
+  );
+
+  // useCreate must be initialised first so its callbacks can be forwarded to
+  // useMediaUpload, which needs them at construction time.
+  const {
+    methods,
+    serverErrorMessage,
+    handleSubmit,
+    isSubmitting,
+    isUploadingMedia,
+    activeStep,
+    handleNext,
+    handleBack,
+    clearServerError,
+    onFilesAdded,
+    onFileRemoved,
+    discardDraft,
+  } = useCreate(handlePostCreated);
 
   const {
     files,
@@ -42,29 +70,7 @@ function CreatePage() {
     removeError,
     addError,
     clearFiles,
-  } = useMediaUpload();
-  const handlePostCreated = useCallback(
-    (postId: string) => {
-      if (user?.username) {
-        navigate({ to: `/profile/${user.username}/${postId}` });
-        return;
-      }
-
-      navigate({ to: "/profile" });
-    },
-    [navigate, user],
-  );
-
-  const {
-    methods,
-    serverErrorMessage,
-    handleSubmit,
-    isSubmitting,
-    activeStep,
-    handleNext,
-    handleBack,
-    clearServerError,
-  } = useCreate(handlePostCreated);
+  } = useMediaUpload({ onFilesAdded, onFileRemoved });
 
   const allErrors = useMemo(() => {
     if (serverErrorMessage) {
@@ -82,6 +88,7 @@ function CreatePage() {
     methods.reset();
     clearFiles();
     clearServerError();
+    discardDraft();
   };
 
   const preventEnterSubmit = (event: KeyboardEvent<HTMLFormElement>) => {
@@ -90,7 +97,6 @@ function CreatePage() {
     }
   };
 
-  // Don't render the form if user is unauthenticated
   if (!isAuthenticated) {
     return null;
   }
@@ -102,12 +108,7 @@ function CreatePage() {
         onKeyDown={preventEnterSubmit}
         style={{ display: "flex", flex: 1 }}
       >
-        <Stack
-          sx={{
-            gap: 3,
-            flex: 1,
-          }}
-        >
+        <Stack sx={{ gap: 3, flex: 1 }}>
           {isDesktop ? (
             <DesktopCreateForm
               files={files}
@@ -116,6 +117,7 @@ function CreatePage() {
               removeFile={removeFile}
               reorderFiles={reorderFiles}
               isSubmitting={isSubmitting}
+              isUploadingMedia={isUploadingMedia}
               onClear={handleClear}
             />
           ) : (
@@ -125,6 +127,7 @@ function CreatePage() {
               isDragActive={isDragActive}
               removeFile={removeFile}
               isSubmitting={isSubmitting}
+              isUploadingMedia={isUploadingMedia}
               activeStep={activeStep}
               onNext={() => handleNext(files, addError)}
               onBack={handleBack}

@@ -20,9 +20,12 @@ namespace Hobbyist.Api.Controllers.AuthControllers
         }
 
         [HttpPost("refresh-token")]
-        public async Task<ActionResult<AuthResult>> RefreshToken(CancellationToken ct)
+        public async Task<ActionResult<AuthResult>> RefreshToken(
+            [FromBody] RefreshTokenRequest? body,
+            CancellationToken ct
+        )
         {
-            var result = await authService.RefreshTokenAsync(Request, ct);
+            var result = await authService.RefreshTokenAsync(Request, body, ct);
             if (!result.IsSuccess)
             {
                 return Result<AuthResult>.FromError(result).ToActionResult();

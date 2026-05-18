@@ -12,6 +12,7 @@
 .github/AGENTS.md
 .github/CODEBASE_CONTEXT.md
 TODOs.md
+.claude/
 
 # ============================================
 # NODE.JS / VITE
@@ -48,6 +49,7 @@ lerna-debug.log*
 *.obj
 *.iobj
 *.tlog
+*.lscache
 
 # NuGet
 *.nupkg

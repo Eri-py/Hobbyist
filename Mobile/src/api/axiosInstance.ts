@@ -32,11 +32,7 @@ const refreshAccessToken = async () => {
     return null;
   }
 
-  const response = await axiosInstance.post("/auth-session/refresh-token", null, {
-    headers: {
-      refreshToken,
-    },
-  });
+  const response = await axiosInstance.post("/auth-session/refresh-token", { refreshToken });
 
   return response.data;
 };

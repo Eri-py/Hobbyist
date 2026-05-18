@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using Hobbyist.Api.Extensions;
 using Hobbyist.Common;
 
 namespace Hobbyist.Api.Middleware;
@@ -21,7 +22,7 @@ public class ExceptionHandlingMiddleware(
                 ex,
                 "Bad request for {Method} {Path}",
                 context.Request.Method,
-                context.Request.Path
+                context.Request.Path.Value.SanitizeForLog()
             );
             await WriteErrorResponseAsync(context, ex.StatusCode, ex.Message);
         }
@@ -31,7 +32,7 @@ public class ExceptionHandlingMiddleware(
                 ex,
                 "Unhandled exception for {Method} {Path}",
                 context.Request.Method,
-                context.Request.Path
+                context.Request.Path.Value.SanitizeForLog()
             );
             await WriteErrorResponseAsync(
                 context,

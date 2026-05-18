@@ -249,6 +249,7 @@ public class AuthSessionServiceTests : DatabaseTestBase
         // Act
         var result = await _authSessionService.RefreshTokenAsync(
             httpContext.Request,
+            body: null,
             CancellationToken.None
         );
 
@@ -261,12 +262,12 @@ public class AuthSessionServiceTests : DatabaseTestBase
     }
 
     [Test]
-    public async Task RefreshTokenAsync_MobilePlatform_ReadsHeaderAndCallsTokenService()
+    public async Task RefreshTokenAsync_MobilePlatform_ReadsBodyAndCallsTokenService()
     {
         // Arrange
         const string refreshToken = "mobile-refresh-token";
         var httpContext = BuildHttpContext("mobile");
-        httpContext.Request.Headers["refreshToken"] = refreshToken;
+        var body = new RefreshTokenRequest { RefreshToken = refreshToken };
         var expectedResult = Result<AuthResult>.Success(
             new AuthResult
             {
@@ -283,6 +284,7 @@ public class AuthSessionServiceTests : DatabaseTestBase
         // Act
         var result = await _authSessionService.RefreshTokenAsync(
             httpContext.Request,
+            body,
             CancellationToken.None
         );
 
@@ -297,12 +299,13 @@ public class AuthSessionServiceTests : DatabaseTestBase
     [Test]
     public async Task RefreshTokenAsync_MissingToken_ReturnsBadRequest()
     {
-        // Arrange — no cookie, no header
+        // Arrange — no cookie, no body
         var httpContext = BuildHttpContext("web");
 
         // Act
         var result = await _authSessionService.RefreshTokenAsync(
             httpContext.Request,
+            body: null,
             CancellationToken.None
         );
 

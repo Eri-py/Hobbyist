@@ -11,6 +11,7 @@ export default function SearchIndex() {
       <Stack.SearchBar
         placement={isTablet ? "stacked" : "automatic"}
         placeholder="Search"
+        autoFocus
         onChangeText={() => {}}
       />
       <ThemedView>

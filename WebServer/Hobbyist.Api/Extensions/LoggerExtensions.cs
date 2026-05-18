@@ -21,4 +21,9 @@ public static class LoggerExtensions
 
         return _configuredHasher.Hash(value);
     }
+
+    public static string SanitizeForLog(this string? value) =>
+        value is null
+            ? "(null)"
+            : value.Replace("\r", "\\r").Replace("\n", "\\n").Replace("\0", "\\0");
 }

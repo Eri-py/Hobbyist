@@ -1,13 +1,12 @@
 import { Stack, useRouter } from "expo-router";
-import { FormProvider } from "react-hook-form";
 import { Text, useTheme } from "react-native-paper";
 
-import { useCreateContext } from "@/hooks/create/CreateContext";
+import { useCreateContext } from "@/hooks/create/useCreate";
 import { ThemedView } from "@/components/shared/views/ThemedView";
 import { MediaPicker } from "@/components/create/MediaPicker";
 import { CreateForm } from "@/components/create/CreateForm";
 
-export default function Create() {
+export default function CreateScreen() {
   const router = useRouter();
   const {
     media,
@@ -19,9 +18,8 @@ export default function Create() {
     handleNext,
     handleBack,
     handleSubmit,
-    selectedHobby,
-    methods,
     isSubmitting,
+    isCreatingDraft,
     serverErrorMessage,
   } = useCreateContext();
   const theme = useTheme();
@@ -48,7 +46,11 @@ export default function Create() {
             onPress={handleNext}
           />
         ) : (
-          <Stack.Toolbar.Button variant="done" onPress={handleSubmit} disabled={isSubmitting}>
+          <Stack.Toolbar.Button
+            variant="done"
+            onPress={handleSubmit}
+            disabled={isSubmitting || isCreatingDraft}
+          >
             Post
           </Stack.Toolbar.Button>
         )}
@@ -65,14 +67,16 @@ export default function Create() {
           />
         )}
         {activeStep === 1 && (
-          <FormProvider {...methods}>
-            <CreateForm selectedAssets={selectedAssets} selectedHobby={selectedHobby} />
+          <>
+            <CreateForm selectedAssets={selectedAssets} />
             {serverErrorMessage && (
-              <Text style={{ color: theme.colors.error, paddingHorizontal: 16, paddingBottom: 12 }}>
+              <Text
+                style={{ color: theme.colors.error, paddingHorizontal: 16, paddingBottom: 12 }}
+              >
                 {serverErrorMessage}
               </Text>
             )}
-          </FormProvider>
+          </>
         )}
       </ThemedView>
     </>

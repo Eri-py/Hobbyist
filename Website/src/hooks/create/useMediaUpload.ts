@@ -23,7 +23,14 @@ const createMediaUploadError = (message: string): MediaUploadError => ({
   message,
 });
 
-export function useMediaUpload() {
+type UseMediaUploadOptions = {
+  /** Called after new files are processed and added to local state. */
+  onFilesAdded?: (files: FileWithMetadata[]) => void;
+  /** Called when a file is removed from the local list. */
+  onFileRemoved?: (fileId: string) => void;
+};
+
+export function useMediaUpload({ onFilesAdded, onFileRemoved }: UseMediaUploadOptions = {}) {
   const [filesWithMetadata, setFilesWithMetadata] = useState<FileWithMetadata[]>([]);
   const [errors, setErrors] = useState<MediaUploadError[]>([]);
 
@@ -92,12 +99,17 @@ export function useMediaUpload() {
         );
 
         setFilesWithMetadata((prev) => [...prev, ...newFilesWithMetadata]);
+
+        if (newFilesWithMetadata.length > 0) {
+          onFilesAdded?.(newFilesWithMetadata);
+        }
+
         if (rejected.length > 0) {
           setErrors((prev) => [...prev, ...rejected.map(createMediaUploadError)]);
         }
       }
     },
-    [filesWithMetadata],
+    [filesWithMetadata, onFilesAdded],
   );
 
   const onDropRejected = useCallback((fileRejections: FileRejection[]) => {
@@ -140,17 +152,22 @@ export function useMediaUpload() {
     maxFiles: MAX_FILES,
   });
 
-  const removeFile = useCallback((fileId: string) => {
-    setFilesWithMetadata((prev) => {
-      const fileToRemove = prev.find((f) => f.id === fileId);
+  const removeFile = useCallback(
+    (fileId: string) => {
+      setFilesWithMetadata((prev) => {
+        const fileToRemove = prev.find((f) => f.id === fileId);
 
-      if (!fileToRemove) return prev;
+        if (!fileToRemove) return prev;
 
-      URL.revokeObjectURL(fileToRemove.preview);
+        URL.revokeObjectURL(fileToRemove.preview);
 
-      return prev.filter((f) => f.id !== fileId);
-    });
-  }, []);
+        return prev.filter((f) => f.id !== fileId);
+      });
+
+      onFileRemoved?.(fileId);
+    },
+    [onFileRemoved],
+  );
 
   const removeError = useCallback((errorId: string) => {
     setErrors((prev) => prev.filter((error) => error.id !== errorId));

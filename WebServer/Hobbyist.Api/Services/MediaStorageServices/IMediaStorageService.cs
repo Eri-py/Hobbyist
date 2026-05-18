@@ -30,5 +30,24 @@ public interface IMediaStorageService
     /// <summary>
     /// Builds an object key for storing a post media file.
     /// </summary>
-    string BuildObjectKey(string userId, Guid postId, int mediaIndex, string fileName);
+    string BuildObjectKey(string userId, string postId, int mediaIndex, string fileName);
+
+    /// <summary>
+    /// Builds an object key for a draft media upload. Uses a random <paramref name="mediaId"/>
+    /// instead of an ordinal index so files can be added and removed independently without
+    /// needing to know the current count.
+    /// </summary>
+    string BuildDraftMediaObjectKey(string userId, string postId, Guid mediaId, string fileName);
+
+    /// <summary>
+    /// Returns the shared S3 prefix for all media belonging to a post.
+    /// Used to validate ownership of an object key and to bulk-delete on discard.
+    /// </summary>
+    string BuildPostMediaPrefix(string userId, string postId);
+
+    /// <summary>
+    /// Deletes every object whose key begins with <paramref name="prefix"/>.
+    /// Best-effort: logs failures per object but does not abort on the first error.
+    /// </summary>
+    Task<Result> DeleteByPrefixAsync(string prefix, CancellationToken ct);
 }
