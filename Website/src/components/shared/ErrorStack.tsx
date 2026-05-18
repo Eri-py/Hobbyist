@@ -14,11 +14,19 @@ type ErrorStackPosition =
 type ErrorStackProps = {
   errors: MediaUploadError[];
   onRemoveError: (errorId: string) => void;
+  serverError?: string | null;
+  onClearServerError?: () => void;
   position?: ErrorStackPosition;
 };
 
-export function ErrorStack({ errors, onRemoveError, position = "top-right" }: ErrorStackProps) {
-  if (errors.length === 0) return null;
+export function ErrorStack({
+  errors,
+  onRemoveError,
+  serverError,
+  onClearServerError,
+  position = "top-right",
+}: ErrorStackProps) {
+  if (errors.length === 0 && !serverError) return null;
 
   const isTop = position.startsWith("top");
   const verticalPlacement = isTop ? { top: 70 } : { top: "calc(100% - 60px)" };
@@ -44,6 +52,23 @@ export function ErrorStack({ errors, onRemoveError, position = "top-right" }: Er
         maxWidth: 370,
       }}
     >
+      {serverError && (
+        <Alert
+          severity="error"
+          action={
+            <IconButton
+              size="small"
+              color="inherit"
+              onClick={onClearServerError}
+              sx={{ ml: 1 }}
+            >
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          }
+        >
+          {serverError}
+        </Alert>
+      )}
       {errors.map((error) => (
         <Alert
           key={error.id}

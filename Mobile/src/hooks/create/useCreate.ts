@@ -94,11 +94,9 @@ export function useCreate() {
 
   // --- Draft state ---
 
-  const [draftPostId, setDraftPostId] = useState<string | null>(null);
   // Ref so handleBack and handleSubmit always read the latest ID without
   // needing it in their dependency arrays.
   const draftPostIdRef = useRef<string | null>(null);
-  draftPostIdRef.current = draftPostId;
 
   // --- Queries ---
 
@@ -129,9 +127,7 @@ export function useCreate() {
       return createDraftApi(formData);
     },
     onSuccess: (response) => {
-      const postId = response.data.postId;
-      setDraftPostId(postId);
-      draftPostIdRef.current = postId;
+      draftPostIdRef.current = response.data.postId;
     },
     onError: (error: ServerError) => handleServerError(error),
   });
@@ -146,7 +142,6 @@ export function useCreate() {
   const discardDraftMutation = useMutation({
     mutationFn: (postId: string) => discardDraftApi(postId),
     onSuccess: () => {
-      setDraftPostId(null);
       draftPostIdRef.current = null;
     },
     // Discard is best-effort — a failed discard is logged but not surfaced to the user
@@ -202,7 +197,7 @@ export function useCreate() {
     // Submit
     handleSubmit,
     isSubmitting: publishPostMutation.isPending,
-    // Upload (processing + network) — used to disable the Next button
+    // Upload (processing + network) — used to disable the Post button while media is still uploading
     isCreatingDraft: createDraftMutation.isPending,
     // Errors
     serverErrorMessage,
