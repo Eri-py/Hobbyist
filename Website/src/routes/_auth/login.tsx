@@ -31,7 +31,7 @@ function Login() {
     isCompleting,
     loginHeaderConfig,
     LOGIN_TOTAL_STEPS,
-  } = useLogin((path) => navigate({ to: path }), axiosInstance);
+  } = useLogin({ replace: (path) => navigate({ to: path, replace: true }) }, axiosInstance);
 
   return (
     <FormContainer step={step}>
