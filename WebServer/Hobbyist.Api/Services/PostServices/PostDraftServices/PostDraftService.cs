@@ -80,7 +80,6 @@ public class PostDraftService(
                 LookingFor = request.LookingFor,
                 IsDraft = true,
                 MediaCount = request.Media.Length,
-                ExpiresAt = null,
                 CreatedAt = DateTimeOffset.UtcNow,
                 Likes = 0,
             }
@@ -158,7 +157,6 @@ public class PostDraftService(
             );
 
         post.IsDraft = false;
-        post.ExpiresAt = null;
 
         try
         {
