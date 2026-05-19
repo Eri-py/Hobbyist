@@ -1,19 +1,56 @@
 import { useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
 
-import { useServerError } from "@hobbyist/hooks";
+import { useServerError, type ServerError } from "@hobbyist/hooks";
 import type { FileWithMetadata } from "@/hooks/create/useMediaUpload";
-import { useDraftPost } from "@/hooks/create/useDraftPost";
+import { axiosInstance } from "@/api/axiosInstance";
 import { CreateFormSchema, type CreateFormSchemaTypes } from "@hobbyist/form-schemas";
+import type { components } from "@hobbyist/types";
 
-// Define which form fields are validated at each mobile step.
+// --- Types ---
+
+type CreatePostResponse = components["schemas"]["CreatePostResponse"];
+type CreateDraftResponse = components["schemas"]["CreateDraftResponse"];
+
+// --- API ---
+
+const createPostApi = (files: File[], values: CreateFormSchemaTypes) => {
+  const formData = new FormData();
+  files.forEach((f) => formData.append("media", f));
+  formData.append("hobby", values.hobby);
+  formData.append("title", values.title);
+  formData.append("description", values.description);
+  formData.append("availableForTrade", String(values.availableForTrade));
+  if (values.lookingFor) {
+    formData.append("lookingFor", values.lookingFor);
+  }
+  return axiosInstance.post<CreatePostResponse>("posts/create", formData);
+};
+
+const saveDraftApi = (files: File[], values: CreateFormSchemaTypes) => {
+  const formData = new FormData();
+  files.forEach((f) => formData.append("media", f));
+  // All form fields are optional on a draft — only send non-empty values.
+  if (values.title) formData.append("title", values.title);
+  if (values.description) formData.append("description", values.description);
+  if (values.hobby) formData.append("hobby", values.hobby);
+  formData.append("availableForTrade", String(values.availableForTrade));
+  if (values.lookingFor) formData.append("lookingFor", values.lookingFor);
+  return axiosInstance.post<CreateDraftResponse>("posts/draft", formData);
+};
+
+// --- Mobile step config ---
+
 const mobileStepFields: Record<number, (keyof CreateFormSchemaTypes)[]> = {
-  0: [], // Media — validated via files array, not zod
+  0: [],
   1: ["hobby", "title", "description", "availableForTrade", "lookingFor"],
 };
 
 const MOBILE_STEP_COUNT = Object.keys(mobileStepFields).length;
+
+// --- Hook ---
 
 export function useCreate(onPostCreated: (postId: string) => void) {
   const { serverErrorMessage, handleServerError, clearServerError } = useServerError();
@@ -23,21 +60,25 @@ export function useCreate(onPostCreated: (postId: string) => void) {
     resolver: zodResolver(CreateFormSchema),
     defaultValues: {
       hobby: "",
+      title: "",
+      description: "",
       availableForTrade: false,
       lookingFor: "",
     },
   });
 
-  const {
-    draftPostIdRef,
-    onFilesAdded,
-    onFileRemoved,
-    discardDraft,
-    publishDraft,
-    isUploadingMedia,
-    isPublishing,
-    isRemovingMedia,
-  } = useDraftPost({ onPostCreated, onError: handleServerError });
+  const createPostMutation = useMutation({
+    mutationFn: ({ files, values }: { files: File[]; values: CreateFormSchemaTypes }) =>
+      createPostApi(files, values),
+    onSuccess: (response) => onPostCreated(response.data.postId),
+    onError: (error: ServerError) => handleServerError(error),
+  });
+
+  const saveDraftMutation = useMutation({
+    mutationFn: ({ files, values }: { files: File[]; values: CreateFormSchemaTypes }) =>
+      saveDraftApi(files, values),
+    onError: (error: ServerError) => handleServerError(error),
+  });
 
   // --- Mobile step navigation ---
 
@@ -50,9 +91,6 @@ export function useCreate(onPostCreated: (postId: string) => void) {
           onFilesError("Please upload at least one image or video before continuing.");
           return;
         }
-        // Upload runs in the background — advance immediately so the user can
-        // fill in the form while media uploads. The Post button is disabled
-        // until the draft is ready.
         setActiveStep((prev) => Math.min(prev + 1, MOBILE_STEP_COUNT - 1));
         return;
       }
@@ -84,28 +122,30 @@ export function useCreate(onPostCreated: (postId: string) => void) {
       return;
     }
 
-    const currentDraftId = draftPostIdRef.current;
-    if (!currentDraftId) {
-      onFilesError("Media upload is still in progress. Please wait and try again.");
-      return;
-    }
-
-    publishDraft(currentDraftId, values);
+    createPostMutation.mutate({ files: files.map((f) => f.file), values });
   };
+
+  // --- Draft save (called by navigation blocker dialog) ---
+
+  const saveDraft = useCallback(
+    (files: FileWithMetadata[]) =>
+      saveDraftMutation.mutateAsync({
+        files: files.map((f) => f.file),
+        values: methods.getValues(),
+      }),
+    [methods, saveDraftMutation],
+  );
 
   return {
     methods,
     activeStep,
     handleNext,
     handleBack,
-    onFilesAdded,
-    onFileRemoved,
-    discardDraft,
     serverErrorMessage,
     clearServerError,
     handleSubmit,
-    isSubmitting: isPublishing,
-    isUploadingMedia,
-    isRemovingMedia,
+    isSubmitting: createPostMutation.isPending,
+    saveDraft,
+    isSavingDraft: saveDraftMutation.isPending,
   };
 }

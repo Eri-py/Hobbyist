@@ -9,13 +9,36 @@ export const MAX_FILES = 15;
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB per file
 const MAX_TOTAL_SIZE = 100 * 1024 * 1024; // 100MB total
 
+function getVideoMimeType(filename: string): string {
+  const ext = filename.split(".").pop()?.toLowerCase() ?? "";
+  const mimeTypes: Record<string, string> = {
+    mp4: "video/mp4",
+    mov: "video/quicktime",
+    mpeg: "video/mpeg",
+    mpg: "video/mpeg",
+    webm: "video/webm",
+    ogv: "video/ogg",
+    avi: "video/x-msvideo",
+  };
+  return mimeTypes[ext] ?? "video/mp4";
+}
+
+const MAX_DIMENSION = 1920;
+
 async function processAssetForUpload(asset: MediaLibrary.AssetInfo, index: number) {
   const uri = asset.localUri ?? asset.uri;
   if (asset.mediaType === MediaLibrary.MediaType.video) {
-    return { uri, name: asset.filename ?? `media_${index}.mp4`, type: "video/mp4" };
+    const filename = asset.filename ?? `media_${index}.mp4`;
+    return { uri, name: filename, type: getVideoMimeType(filename) };
   }
   const context = ImageManipulator.manipulate(uri);
-  context.resize({ width: 1920 });
+  if (asset.width > MAX_DIMENSION || asset.height > MAX_DIMENSION) {
+    if (asset.width >= asset.height) {
+      context.resize({ width: MAX_DIMENSION });
+    } else {
+      context.resize({ height: MAX_DIMENSION });
+    }
+  }
   const image = await context.renderAsync();
   const result = await image.saveAsync({ compress: 0.8, format: SaveFormat.JPEG });
   return { uri: result.uri, name: `media_${index}.jpg`, type: "image/jpeg" };

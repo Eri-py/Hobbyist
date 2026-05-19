@@ -5,11 +5,10 @@ import Stack from "@mui/material/Stack";
 
 type ActionButtonsProps = {
   isSubmitting: boolean;
-  isUploadingMedia?: boolean;
   showPost?: boolean;
 };
 
-export function ActionButtons({ isSubmitting, isUploadingMedia = false, showPost = true }: ActionButtonsProps) {
+export function ActionButtons({ isSubmitting, showPost = true }: ActionButtonsProps) {
   return (
     <Stack
       direction="row"
@@ -23,7 +22,7 @@ export function ActionButtons({ isSubmitting, isUploadingMedia = false, showPost
         <Button
           variant="text"
           type="submit"
-          disabled={isSubmitting || isUploadingMedia}
+          disabled={isSubmitting}
           size="large"
           startIcon={
             isSubmitting ? <CircularProgress size={16} thickness={5} /> : <SendRoundedIcon />

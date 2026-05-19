@@ -1,5 +1,6 @@
 import { View, FlatList, StyleSheet, Dimensions } from "react-native";
 import { useMemo } from "react";
+import { Text, useTheme } from "react-native-paper";
 import { MediaType, type Asset } from "expo-media-library";
 
 import { MediaCarousel } from "@/components/shared/Media/MediaCarousel";
@@ -17,6 +18,7 @@ type MediaPickerProps = {
   activeAlbum: ValidActiveAlbumTypes;
   onAlbumChange: (album: ValidActiveAlbumTypes) => void;
   onToggleAsset: (asset: Asset) => void;
+  mediaError?: string | null;
 };
 
 export function MediaPicker({
@@ -25,7 +27,9 @@ export function MediaPicker({
   activeAlbum,
   onAlbumChange,
   onToggleAsset,
+  mediaError,
 }: MediaPickerProps) {
+  const theme = useTheme();
   const carouselItems = useMemo(
     () =>
       selectedAssets.map((a) => ({
@@ -39,6 +43,10 @@ export function MediaPicker({
   return (
     <>
       {carouselItems.length > 0 && <MediaCarousel items={carouselItems} />}
+
+      {mediaError && (
+        <Text style={[styles.error, { color: theme.colors.error }]}>{mediaError}</Text>
+      )}
 
       <View style={styles.pickerSection}>
         <AlbumPicker activeAlbum={activeAlbum} onAlbumChange={onAlbumChange} />
@@ -70,5 +78,9 @@ const styles = StyleSheet.create({
   pickerSection: {
     flex: 1,
     gap: 16,
+  },
+  error: {
+    fontSize: 13,
+    paddingHorizontal: 16,
   },
 });

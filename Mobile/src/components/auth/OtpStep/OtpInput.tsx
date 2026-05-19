@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { View, TextInput, StyleSheet, type TextInputProps } from "react-native";
 import { useTheme } from "react-native-paper";
 
@@ -11,6 +11,7 @@ type OtpInputProps = {
   length?: number;
   mode?: OtpMode;
   hasError?: boolean;
+  autoFocus?: boolean;
   onChange?: (value: string) => void;
 };
 
@@ -22,6 +23,7 @@ export function OtpInput({
   length = 6,
   mode = "numeric",
   hasError = false,
+  autoFocus = false,
   onChange,
 }: OtpInputProps) {
   const theme = useTheme();
@@ -44,6 +46,11 @@ export function OtpInput({
       onChange,
       validateChar,
     });
+
+  useEffect(() => {
+    if (!autoFocus) return;
+    inputRefs[0]?.current?.focus();
+  }, [autoFocus, inputRefs]);
 
   return (
     <View style={styles.container}>

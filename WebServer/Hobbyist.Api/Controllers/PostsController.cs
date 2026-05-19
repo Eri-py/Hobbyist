@@ -15,7 +15,7 @@ public class PostsController(
 ) : ControllerBase
 {
     /// <summary>
-    /// Creates a post in one shot (existing flow). Kept for backward compatibility.
+    /// Creates and publishes a post in one shot (mobile optimistic-post flow).
     /// </summary>
     [HttpPost("create")]
     [Authorize]
@@ -34,81 +34,40 @@ public class PostsController(
     // -------------------------------------------------------------------------
 
     /// <summary>
-    /// Uploads all selected media and creates a draft post that owns them.
-    /// Called when the user taps "Next" on the media picker (mobile) or confirms
-    /// their selection (web). Returns the draft post ID and an object key per file
-    /// so the client can reference individual files for later removal.
+    /// Saves a complete draft — all form fields and media in one request.
+    /// The draft sits on the server until the user chooses to publish it.
     /// </summary>
     [HttpPost("draft")]
     [Authorize]
     public async Task<ActionResult<CreateDraftResponse>> CreateDraftAsync(
-        IFormFile[] media,
+        [FromForm] SaveDraftRequest request,
         CancellationToken ct
     )
     {
         var userId = User.GetUserId();
-        var result = await postDraftService.CreateDraftAsync(media, userId, ct);
+        var result = await postDraftService.CreateDraftAsync(request, userId, ct);
         return result.ToActionResult();
     }
 
     /// <summary>
-    /// Adds a single media file to an existing draft post.
-    /// Used on web when the user appends more files to the carousel after the
-    /// initial upload.
-    /// </summary>
-    [HttpPost("{slug}/media")]
-    [Authorize]
-    public async Task<ActionResult<AddDraftMediaResponse>> AddMediaAsync(
-        string slug,
-        IFormFile file,
-        CancellationToken ct
-    )
-    {
-        var userId = User.GetUserId();
-        var result = await postDraftService.AddMediaAsync(slug, file, userId, ct);
-        return result.ToActionResult();
-    }
-
-    /// <summary>
-    /// Removes a single media file from a draft post's carousel.
-    /// The client must supply the exact object key returned at upload time.
-    /// The server validates that the key belongs to this post before deleting.
-    /// </summary>
-    [HttpDelete("{slug}/media")]
-    [Authorize]
-    public async Task<ActionResult> RemoveMediaAsync(
-        string slug,
-        [FromBody] RemoveDraftMediaRequest request,
-        CancellationToken ct
-    )
-    {
-        var userId = User.GetUserId();
-        var result = await postDraftService.RemoveMediaAsync(slug, request.ObjectKey, userId, ct);
-        return result.ToActionResult();
-    }
-
-    /// <summary>
-    /// Fills in the post form fields and publishes the draft.
-    /// Validates server-side that at least one media file is associated before
-    /// allowing the transition from draft to published.
+    /// Publishes a saved draft. All required data is already on the draft;
+    /// no additional fields are needed from the caller.
     /// </summary>
     [HttpPost("{slug}/publish")]
     [Authorize]
     public async Task<ActionResult<CreatePostResponse>> PublishAsync(
         string slug,
-        [FromBody] PublishPostRequest request,
         CancellationToken ct
     )
     {
         var userId = User.GetUserId();
-        var result = await postDraftService.PublishDraftAsync(slug, request, userId, ct);
+        var result = await postDraftService.PublishDraftAsync(slug, userId, ct);
         return result.ToActionResult();
     }
 
     /// <summary>
     /// Discards a draft post. Deletes the database record and performs a
     /// best-effort bulk deletion of all associated S3 objects.
-    /// Called when the user cancels the create flow after tapping "Next".
     /// </summary>
     [HttpDelete("{slug}")]
     [Authorize]

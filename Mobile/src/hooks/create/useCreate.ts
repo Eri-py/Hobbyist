@@ -1,10 +1,10 @@
-import { createContext, useCallback, useContext, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useState } from "react";
+import { Alert } from "react-native";
 import * as MediaLibrary from "expo-media-library";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 
 import { axiosInstance } from "@/api/axiosInstance";
-import { useServerError, type ServerError } from "@hobbyist/hooks";
 import type { components } from "@hobbyist/types";
 
 import { useForm } from "react-hook-form";
@@ -62,22 +62,20 @@ const getUserHobbiesApi = async (): Promise<Hobby[]> => {
   ];
 };
 
-const createDraftApi = (formData: FormData) =>
-  axiosInstance.post<CreateDraftResponse>("posts/draft", formData, {
-    headers: { "Content-Type": "multipart/form-data" },
-    timeout: 30_000,
+const createPostApi = (formData: FormData) =>
+  axiosInstance.post<CreatePostResponse>("posts/create", formData, {
+    timeout: 60_000,
   });
 
-const publishPostApi = (postId: string, values: CreateFormSchemaTypes) =>
-  axiosInstance.post<CreatePostResponse>(`posts/${postId}/publish`, values);
-
-const discardDraftApi = (postId: string) => axiosInstance.delete(`posts/${postId}`);
+const saveDraftApi = (formData: FormData) =>
+  axiosInstance.post<CreateDraftResponse>("posts/draft", formData, {
+    timeout: 60_000,
+  });
 
 // --- Hook ---
 
 export function useCreate() {
   const router = useRouter();
-  const { serverErrorMessage, handleServerError, clearServerError } = useServerError();
   const mediaPicker = useMediaPicker();
   const methods = useForm<CreateFormSchemaTypes>({
     mode: "onChange",
@@ -92,12 +90,6 @@ export function useCreate() {
   });
   const [activeStep, setActiveStep] = useState(0);
 
-  // --- Draft state ---
-
-  // Ref so handleBack and handleSubmit always read the latest ID without
-  // needing it in their dependency arrays.
-  const draftPostIdRef = useRef<string | null>(null);
-
   // --- Queries ---
 
   const { data: hobbies = [], isLoading: isLoadingHobbies } = useQuery({
@@ -106,76 +98,106 @@ export function useCreate() {
     staleTime: 15 * 60 * 1000,
   });
 
-  // --- Mutations ---
-
-  const createDraftMutation = useMutation({
-    // Asset processing lives inside mutationFn so that isPending covers the
-    // full operation (device I/O + compression + network upload), not just the
-    // network leg. The step advances immediately on Next; this runs in the
-    // background while the user fills in the form.
-    mutationFn: async (assets: MediaLibrary.Asset[]) => {
-      const resolvedAssets = await Promise.all(
-        assets.map((asset) => MediaLibrary.getAssetInfoAsync(asset)),
-      );
-      const mediaItems = await processMediaForUpload(resolvedAssets);
-
-      const formData = new FormData();
-      mediaItems.forEach((item) => {
-        formData.append("media", item as unknown as Blob);
-      });
-
-      return createDraftApi(formData);
-    },
-    onSuccess: (response) => {
-      draftPostIdRef.current = response.data.postId;
-    },
-    onError: (error: ServerError) => handleServerError(error),
-  });
-
-  const publishPostMutation = useMutation({
-    mutationFn: ({ postId, values }: { postId: string; values: CreateFormSchemaTypes }) =>
-      publishPostApi(postId, values),
-    onSuccess: () => router.dismissAll(),
-    onError: (error: ServerError) => handleServerError(error),
-  });
-
-  const discardDraftMutation = useMutation({
-    mutationFn: (postId: string) => discardDraftApi(postId),
-    onSuccess: () => {
-      draftPostIdRef.current = null;
-    },
-    // Discard is best-effort — a failed discard is logged but not surfaced to the user
-    // since they've already navigated away. The draft will expire on its own.
-    onError: (error: ServerError) =>
-      console.warn("Failed to discard draft — it will expire automatically.", error),
-  });
-
   // --- Step navigation ---
 
   const handleNext = useCallback(() => {
     if (mediaPicker.selectedAssets.length === 0) return;
-    // Fire upload in the background and advance immediately
-    createDraftMutation.mutate(mediaPicker.selectedAssets);
     setActiveStep(1);
-  }, [mediaPicker.selectedAssets, createDraftMutation]);
+  }, [mediaPicker.selectedAssets.length]);
 
   const handleBack = useCallback(() => {
-    methods.clearErrors();
-    // Fire-and-forget: user navigates back immediately. Draft expires if discard fails.
-    const currentDraftId = draftPostIdRef.current;
-    if (currentDraftId) {
-      discardDraftMutation.mutate(currentDraftId);
-    }
     setActiveStep(0);
-  }, [methods, discardDraftMutation]);
+  }, []);
+
+  // --- Close with draft prompt ---
+
+  // Shown when the user taps X having already selected media.
+  const handleClose = useCallback(() => {
+    if (mediaPicker.selectedAssets.length === 0) {
+      router.back();
+      return;
+    }
+
+    Alert.alert(
+      "Save as draft?",
+      "Would you like to save your post as a draft to finish later?",
+      [
+        { text: "Discard", style: "destructive", onPress: () => router.back() },
+        {
+          text: "Save Draft",
+          onPress: () => {
+            const assets = mediaPicker.selectedAssets;
+            const values = methods.getValues();
+            router.back();
+            (async () => {
+              try {
+                const resolvedAssets = await Promise.all(
+                  assets.map((asset) => MediaLibrary.getAssetInfoAsync(asset)),
+                );
+                const mediaItems = await processMediaForUpload(resolvedAssets);
+
+                const formData = new FormData();
+                mediaItems.forEach((item) => {
+                  formData.append("media", item as unknown as Blob);
+                });
+                // All form fields are optional on the draft — only append non-empty values.
+                if (values.title) formData.append("title", values.title);
+                if (values.description) formData.append("description", values.description);
+                if (values.hobby) formData.append("hobby", values.hobby);
+                formData.append("availableForTrade", String(values.availableForTrade));
+                if (values.lookingFor) formData.append("lookingFor", values.lookingFor);
+
+                await saveDraftApi(formData);
+              } catch {
+                Alert.alert(
+                  "Couldn't save draft",
+                  "Something went wrong saving your draft.",
+                  [{ text: "OK" }],
+                );
+              }
+            })();
+          },
+        },
+      ],
+    );
+  }, [mediaPicker.selectedAssets, methods, router]);
 
   // --- Submit ---
 
   const handleSubmit = methods.handleSubmit((values) => {
-    clearServerError();
-    const currentDraftId = draftPostIdRef.current;
-    if (!currentDraftId) return;
-    publishPostMutation.mutate({ postId: currentDraftId, values });
+    const assets = mediaPicker.selectedAssets;
+
+    // Close the UI immediately — upload runs in the background
+    router.dismissAll();
+
+    (async () => {
+      try {
+        const resolvedAssets = await Promise.all(
+          assets.map((asset) => MediaLibrary.getAssetInfoAsync(asset)),
+        );
+        const mediaItems = await processMediaForUpload(resolvedAssets);
+
+        const formData = new FormData();
+        mediaItems.forEach((item) => {
+          formData.append("media", item as unknown as Blob);
+        });
+        formData.append("title", values.title);
+        formData.append("description", values.description);
+        formData.append("hobby", values.hobby);
+        formData.append("availableForTrade", String(values.availableForTrade));
+        if (values.lookingFor) {
+          formData.append("lookingFor", values.lookingFor);
+        }
+
+        await createPostApi(formData);
+      } catch {
+        Alert.alert(
+          "Couldn't post",
+          "Something went wrong while uploading your post. Please try again.",
+          [{ text: "OK" }],
+        );
+      }
+    })();
   });
 
   return {
@@ -185,10 +207,12 @@ export function useCreate() {
     setAlbum: mediaPicker.setAlbum,
     selectedAssets: mediaPicker.selectedAssets,
     toggleAsset: mediaPicker.toggleAsset,
+    mediaError: mediaPicker.mediaError,
     // Step navigation
     activeStep,
     handleNext,
     handleBack,
+    handleClose,
     // Form
     methods,
     // Hobby selection
@@ -196,10 +220,5 @@ export function useCreate() {
     isLoadingHobbies,
     // Submit
     handleSubmit,
-    isSubmitting: publishPostMutation.isPending,
-    // Upload (processing + network) — used to disable the Post button while media is still uploading
-    isCreatingDraft: createDraftMutation.isPending,
-    // Errors
-    serverErrorMessage,
   };
 }

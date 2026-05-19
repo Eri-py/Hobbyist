@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import Box from "@mui/material/Box";
 import type { BoxProps } from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
@@ -51,6 +52,13 @@ export function OtpInput({
     onBlur,
   });
 
+  useEffect(() => {
+    if (!autoFocus) return;
+    const firstInput = inputRefs[0]?.current;
+    firstInput?.focus();
+    firstInput?.setSelectionRange(0, 0);
+  }, [autoFocus, inputRefs]);
+
   return (
     <Box
       {...boxProps}
@@ -81,7 +89,6 @@ export function OtpInput({
         return (
           <TextField
             key={index}
-            autoFocus={autoFocus ? index === 0 : false}
             autoComplete="one-time-code"
             value={character}
             inputRef={inputRefs[index]}

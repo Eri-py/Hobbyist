@@ -47,7 +47,10 @@ export const compressImage = (file: File): Promise<File> => {
       );
     };
 
-    img.onerror = () => resolve(file);
+    img.onerror = () => {
+      URL.revokeObjectURL(img.src);
+      resolve(file);
+    };
     img.src = URL.createObjectURL(file);
   });
 };
