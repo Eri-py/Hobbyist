@@ -112,8 +112,13 @@ export function useMediaUpload() {
 
     const errorMessages = fileRejections.map((rejection) => {
       const fileName = rejection.file.name;
-      if (rejection.errors[0]?.code === "file-invalid-type") {
+      const code = rejection.errors[0]?.code;
+      if (code === "file-invalid-type") {
         return `${fileName}: Invalid file type. Please upload image or video files only.`;
+      }
+      if (code === "file-too-large") {
+        const limitMB = (MAX_FILE_SIZE / 1024 / 1024).toFixed(2);
+        return `${fileName}: Failed to upload. File is too large (limit: ${limitMB}MB).`;
       }
       return `${fileName}: Failed to upload. ${rejection.errors[0]?.message || "Unknown error"}`;
     });

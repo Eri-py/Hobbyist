@@ -262,6 +262,51 @@ public class AuthSessionServiceTests : DatabaseTestBase
     }
 
     [Test]
+    public async Task RefreshTokenAsync_WebPlatform_IgnoresBodyAndUsesCookie()
+    {
+        // Arrange
+        const string cookieToken = "cookie-refresh-token";
+        const string bodyToken = "body-refresh-token";
+        var httpContext = BuildHttpContext("web", $"__Secure-refreshToken={cookieToken}");
+        var body = new RefreshTokenRequest { RefreshToken = bodyToken };
+
+        var expectedResult = Result<AuthResult>.Success(
+            new AuthResult
+            {
+                AccessToken = "new-access",
+                RefreshToken = "new-refresh",
+                AccessTokenExpiresAt = DateTime.UtcNow.AddMinutes(15),
+                RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(30),
+            }
+        );
+
+        _tokenServiceMock
+            .Setup(t => t.RotateRefreshTokenAsync(cookieToken, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expectedResult);
+        _tokenServiceMock
+            .Setup(t => t.RotateRefreshTokenAsync(bodyToken, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<AuthResult>.Unauthorized(ErrorMessages.InvalidRefreshToken));
+
+        // Act
+        var result = await _authSessionService.RefreshTokenAsync(
+            httpContext.Request,
+            body,
+            CancellationToken.None
+        );
+
+        // Assert
+        Assert.That(result.IsSuccess, Is.True);
+        _tokenServiceMock.Verify(
+            t => t.RotateRefreshTokenAsync(cookieToken, It.IsAny<CancellationToken>()),
+            Times.Once
+        );
+        _tokenServiceMock.Verify(
+            t => t.RotateRefreshTokenAsync(bodyToken, It.IsAny<CancellationToken>()),
+            Times.Never
+        );
+    }
+
+    [Test]
     public async Task RefreshTokenAsync_MobilePlatform_ReadsBodyAndCallsTokenService()
     {
         // Arrange
@@ -293,6 +338,51 @@ public class AuthSessionServiceTests : DatabaseTestBase
         _tokenServiceMock.Verify(
             t => t.RotateRefreshTokenAsync(refreshToken, It.IsAny<CancellationToken>()),
             Times.Once
+        );
+    }
+
+    [Test]
+    public async Task RefreshTokenAsync_MobilePlatform_IgnoresCookieAndUsesBody()
+    {
+        // Arrange
+        const string cookieToken = "cookie-refresh-token";
+        const string bodyToken = "body-refresh-token";
+        var httpContext = BuildHttpContext("mobile", $"__Secure-refreshToken={cookieToken}");
+        var body = new RefreshTokenRequest { RefreshToken = bodyToken };
+
+        var expectedResult = Result<AuthResult>.Success(
+            new AuthResult
+            {
+                AccessToken = "new-access",
+                RefreshToken = "new-refresh",
+                AccessTokenExpiresAt = DateTime.UtcNow.AddMinutes(15),
+                RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(30),
+            }
+        );
+
+        _tokenServiceMock
+            .Setup(t => t.RotateRefreshTokenAsync(bodyToken, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expectedResult);
+        _tokenServiceMock
+            .Setup(t => t.RotateRefreshTokenAsync(cookieToken, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<AuthResult>.Unauthorized(ErrorMessages.InvalidRefreshToken));
+
+        // Act
+        var result = await _authSessionService.RefreshTokenAsync(
+            httpContext.Request,
+            body,
+            CancellationToken.None
+        );
+
+        // Assert
+        Assert.That(result.IsSuccess, Is.True);
+        _tokenServiceMock.Verify(
+            t => t.RotateRefreshTokenAsync(bodyToken, It.IsAny<CancellationToken>()),
+            Times.Once
+        );
+        _tokenServiceMock.Verify(
+            t => t.RotateRefreshTokenAsync(cookieToken, It.IsAny<CancellationToken>()),
+            Times.Never
         );
     }
 
