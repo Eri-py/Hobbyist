@@ -369,9 +369,37 @@ public class PostDraftServiceTests : DatabaseTestBase
     }
 
     [Test]
+    public async Task PublishDraftAsync_WhenHobbyTooShort_ReturnsBadRequest()
+    {
+        var draft = await SeedPostAsync(isDraft: true, mediaCount: 1, hobby: "X");
+
+        var result = await _service.PublishDraftAsync(
+            draft.Id,
+            _user.Id.ToString(),
+            CancellationToken.None
+        );
+
+        Assert.That(result.ResultType, Is.EqualTo(ResultTypes.BadRequest));
+    }
+
+    [Test]
     public async Task PublishDraftAsync_WhenTitleIsNull_ReturnsBadRequest()
     {
         var draft = await SeedPostAsync(isDraft: true, mediaCount: 1, title: null);
+
+        var result = await _service.PublishDraftAsync(
+            draft.Id,
+            _user.Id.ToString(),
+            CancellationToken.None
+        );
+
+        Assert.That(result.ResultType, Is.EqualTo(ResultTypes.BadRequest));
+    }
+
+    [Test]
+    public async Task PublishDraftAsync_WhenTitleTooShort_ReturnsBadRequest()
+    {
+        var draft = await SeedPostAsync(isDraft: true, mediaCount: 1, title: "AB");
 
         var result = await _service.PublishDraftAsync(
             draft.Id,

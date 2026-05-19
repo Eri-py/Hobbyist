@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, useBlocker } from "@tanstack/react-router";
 import { FormProvider } from "react-hook-form";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 
 import Stack from "@mui/material/Stack";
@@ -25,12 +25,6 @@ function CreatePage() {
   const { isAuthenticated, user } = useAuth();
   const { isDesktop } = useDeviceType();
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      navigate({ to: "/" });
-    }
-  }, [isAuthenticated, navigate]);
-
   const hasPostedRef = useRef(false);
 
   const handlePostCreated = useCallback(() => {
@@ -40,12 +34,10 @@ function CreatePage() {
 
   const {
     methods,
-    serverErrorMessage,
     handleSubmit,
     activeStep,
     handleNext,
     handleBack,
-    clearServerError,
     saveDraft,
     isSavingDraft,
   } = useCreate(handlePostCreated);
@@ -63,7 +55,6 @@ function CreatePage() {
     clearFiles,
   } = useMediaUpload();
 
-  // Block navigation when the user has files loaded but hasn't posted yet.
   const blocker = useBlocker({
     shouldBlockFn: () => files.length > 0 && !hasPostedRef.current,
     enableBeforeUnload: true,
@@ -95,7 +86,6 @@ function CreatePage() {
   const handleClear = () => {
     methods.reset();
     clearFiles();
-    clearServerError();
   };
 
   const preventEnterSubmit = (event: KeyboardEvent<HTMLFormElement>) => {
@@ -124,7 +114,6 @@ function CreatePage() {
                 isDragActive={isDragActive}
                 removeFile={removeFile}
                 reorderFiles={reorderFiles}
-                isSubmitting={false}
                 onClear={handleClear}
               />
             ) : (
@@ -133,7 +122,6 @@ function CreatePage() {
                 getRootProps={getRootProps}
                 isDragActive={isDragActive}
                 removeFile={removeFile}
-                isSubmitting={false}
                 activeStep={activeStep}
                 onNext={() => handleNext(files, addError)}
                 onBack={handleBack}
@@ -143,8 +131,6 @@ function CreatePage() {
             <ErrorStack
               errors={errors}
               onRemoveError={removeError}
-              serverError={serverErrorMessage}
-              onClearServerError={clearServerError}
               position={isDesktop ? "top-right" : "bottom-center"}
             />
 

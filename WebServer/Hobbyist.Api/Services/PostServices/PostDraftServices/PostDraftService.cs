@@ -1,6 +1,5 @@
 using Hobbyist.Api.Data;
 using Hobbyist.Api.Data.Entities;
-using Hobbyist.Api.Dtos;
 using Hobbyist.Api.Dtos.Posts;
 using Hobbyist.Api.Services.MediaStorageServices;
 using Hobbyist.Common;
@@ -29,44 +28,17 @@ public class PostDraftService(
             return Result<CreateDraftResponse>.BadRequest("Invalid user identifier.");
 
         var postId = SlugGenerator.Generate();
-        var uploadedKeys = new List<string>(request.Media.Length);
 
-        for (var i = 0; i < request.Media.Length; i++)
-        {
-            var file = request.Media[i];
-            var objectKey = mediaStorageService.BuildObjectKey(
-                userId,
-                postId,
-                i + 1,
-                file.FileName
-            );
-
-            await using var stream = file.OpenReadStream();
-            var uploadResult = await mediaStorageService.UploadAsync(
-                new UploadMediaRequest
-                {
-                    Content = stream,
-                    ObjectKey = objectKey,
-                    FileName = file.FileName,
-                    ContentType = file.ContentType,
-                    ContentLength = file.Length,
-                },
-                ct
-            );
-
-            if (!uploadResult.IsSuccess)
-            {
-                await PostHelpers.CleanupUploadedObjectsAsync(
-                    uploadedKeys,
-                    mediaStorageService,
-                    logger,
-                    ct
-                );
-                return Result<CreateDraftResponse>.FromError(uploadResult);
-            }
-
-            uploadedKeys.Add(objectKey);
-        }
+        var uploadResult = await PostHelpers.UploadPostMediaAsync(
+            request.Media,
+            userId,
+            postId,
+            mediaStorageService,
+            logger,
+            ct
+        );
+        if (!uploadResult.IsSuccess)
+            return Result<CreateDraftResponse>.FromError(uploadResult);
 
         context.Posts.Add(
             new PostEntity
@@ -98,7 +70,7 @@ public class PostDraftService(
                 userId
             );
             await PostHelpers.CleanupUploadedObjectsAsync(
-                uploadedKeys,
+                uploadResult.Content!,
                 mediaStorageService,
                 logger,
                 ct
