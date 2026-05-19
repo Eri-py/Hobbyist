@@ -17,8 +17,6 @@ export default function CreateScreen() {
     handleNext,
     handleBack,
     handleSubmit,
-    isSubmitting,
-    isCreatingDraft,
   } = useCreateContext();
   return (
     <>
@@ -29,7 +27,6 @@ export default function CreateScreen() {
           <Stack.Toolbar.Button
             icon="chevron.backward"
             onPress={handleBack}
-            disabled={isSubmitting}
           />
         )}
       </Stack.Toolbar>
@@ -46,7 +43,7 @@ export default function CreateScreen() {
             variant="done"
             icon="checkmark"
             onPress={handleSubmit}
-            disabled={isSubmitting || isCreatingDraft}
+
           />
         )}
       </Stack.Toolbar>

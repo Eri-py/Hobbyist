@@ -16,7 +16,6 @@ type DesktopCreateFormProps = {
   removeFile: (fileId: string) => void;
   reorderFiles: (newOrder: FileWithMetadata[]) => void;
   isSubmitting: boolean;
-  isUploadingMedia: boolean;
   onClear: () => void;
 };
 
@@ -27,7 +26,6 @@ export function DesktopCreateForm({
   removeFile,
   reorderFiles,
   isSubmitting,
-  isUploadingMedia,
   onClear,
 }: DesktopCreateFormProps) {
   return (
@@ -136,7 +134,7 @@ export function DesktopCreateForm({
 
             <TradeOptionsFormInput />
 
-            <ActionButtons isSubmitting={isSubmitting} isUploadingMedia={isUploadingMedia} />
+            <ActionButtons isSubmitting={isSubmitting} />
           </Stack>
         </Stack>
       </Stack>

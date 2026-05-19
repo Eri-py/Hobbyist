@@ -1,14 +1,15 @@
-import { createContext, useCallback, useContext, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useState } from "react";
+import { Alert } from "react-native";
 import * as MediaLibrary from "expo-media-library";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { isAxiosError } from "axios";
+
+import { axiosInstance } from "@/api/axiosInstance";
+import type { components } from "@hobbyist/types";
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import { axiosInstance } from "@/api/axiosInstance";
-import { useServerError, type ServerError } from "@hobbyist/hooks";
-import type { components } from "@hobbyist/types";
 import { CreateFormSchema, type CreateFormSchemaTypes } from "@hobbyist/form-schemas";
 import { useMediaPicker, processMediaForUpload } from "./useMediaPicker";
 
@@ -38,7 +39,6 @@ export const USER_HOBBIES_QUERY_KEY = ["user-hobbies"] as const;
 // --- Types ---
 
 type CreatePostResponse = components["schemas"]["CreatePostResponse"];
-type CreateDraftResponse = components["schemas"]["CreateDraftResponse"];
 
 export type Hobby = {
   name: string;
@@ -61,22 +61,15 @@ const getUserHobbiesApi = async (): Promise<Hobby[]> => {
   ];
 };
 
-const createDraftApi = (formData: FormData, signal: AbortSignal) =>
-  axiosInstance.post<CreateDraftResponse>("posts/draft", formData, {
-    timeout: 30_000,
-    signal,
+const createPostApi = (formData: FormData) =>
+  axiosInstance.post<CreatePostResponse>("posts/create", formData, {
+    timeout: 60_000,
   });
-
-const publishPostApi = (postId: string, values: CreateFormSchemaTypes) =>
-  axiosInstance.post<CreatePostResponse>(`posts/${postId}/publish`, values);
-
-const discardDraftApi = (postId: string) => axiosInstance.delete(`posts/${postId}`);
 
 // --- Hook ---
 
 export function useCreate() {
   const router = useRouter();
-  const { serverErrorMessage, handleServerError, clearServerError } = useServerError();
   const mediaPicker = useMediaPicker();
   const methods = useForm<CreateFormSchemaTypes>({
     mode: "onChange",
@@ -91,13 +84,6 @@ export function useCreate() {
   });
   const [activeStep, setActiveStep] = useState(0);
 
-  // --- Draft state ---
-
-  // Ref so handleBack and handleSubmit always read the latest ID without
-  // needing it in their dependency arrays.
-  const draftPostIdRef = useRef<string | null>(null);
-  const uploadAbortControllerRef = useRef<AbortController | null>(null);
-
   // --- Queries ---
 
   const { data: hobbies = [], isLoading: isLoadingHobbies } = useQuery({
@@ -106,89 +92,55 @@ export function useCreate() {
     staleTime: 15 * 60 * 1000,
   });
 
-  // --- Mutations ---
-
-  const createDraftMutation = useMutation({
-    // Asset processing lives inside mutationFn so that isPending covers the
-    // full operation (device I/O + compression + network upload), not just the
-    // network leg. The step advances immediately on Next; this runs in the
-    // background while the user fills in the form.
-    mutationFn: async ({
-      assets,
-      signal,
-    }: {
-      assets: MediaLibrary.Asset[];
-      signal: AbortSignal;
-    }) => {
-      const resolvedAssets = await Promise.all(
-        assets.map((asset) => MediaLibrary.getAssetInfoAsync(asset)),
-      );
-      const mediaItems = await processMediaForUpload(resolvedAssets);
-
-      const formData = new FormData();
-      mediaItems.forEach((item) => {
-        formData.append("media", item as unknown as Blob);
-      });
-
-      return createDraftApi(formData, signal);
-    },
-    onSuccess: (response) => {
-      draftPostIdRef.current = response.data.postId;
-    },
-    onError: (error: ServerError) => {
-      if (isAxiosError(error) && error.code === "ERR_CANCELED") return;
-      handleServerError(error);
-    },
-  });
-
-  const publishPostMutation = useMutation({
-    mutationFn: ({ postId, values }: { postId: string; values: CreateFormSchemaTypes }) =>
-      publishPostApi(postId, values),
-    onSuccess: () => router.dismissAll(),
-    onError: (error: ServerError) => handleServerError(error),
-  });
-
-  const discardDraftMutation = useMutation({
-    mutationFn: (postId: string) => discardDraftApi(postId),
-    onSuccess: () => {
-      draftPostIdRef.current = null;
-    },
-    // Discard is best-effort — a failed discard is logged but not surfaced to the user
-    // since they've already navigated away. The draft will expire on its own.
-    onError: (error: ServerError) =>
-      console.warn("Failed to discard draft — it will expire automatically.", error),
-  });
-
   // --- Step navigation ---
 
   const handleNext = useCallback(() => {
     if (mediaPicker.selectedAssets.length === 0) return;
-    const controller = new AbortController();
-    uploadAbortControllerRef.current = controller;
-    // Fire upload in the background and advance immediately
-    createDraftMutation.mutate({ assets: mediaPicker.selectedAssets, signal: controller.signal });
     setActiveStep(1);
-  }, [mediaPicker.selectedAssets, createDraftMutation]);
+  }, [mediaPicker.selectedAssets.length]);
 
   const handleBack = useCallback(() => {
     methods.clearErrors();
-    uploadAbortControllerRef.current?.abort();
-    uploadAbortControllerRef.current = null;
-    // Fire-and-forget: user navigates back immediately. Draft expires if discard fails.
-    const currentDraftId = draftPostIdRef.current;
-    if (currentDraftId) {
-      discardDraftMutation.mutate(currentDraftId);
-    }
     setActiveStep(0);
-  }, [methods, discardDraftMutation]);
+  }, [methods]);
 
   // --- Submit ---
 
   const handleSubmit = methods.handleSubmit((values) => {
-    clearServerError();
-    const currentDraftId = draftPostIdRef.current;
-    if (!currentDraftId) return;
-    publishPostMutation.mutate({ postId: currentDraftId, values });
+    // Capture assets before navigation unmounts the component
+    const assets = mediaPicker.selectedAssets;
+
+    // Close the UI immediately — upload runs in the background
+    router.dismissAll();
+
+    (async () => {
+      try {
+        const resolvedAssets = await Promise.all(
+          assets.map((asset) => MediaLibrary.getAssetInfoAsync(asset)),
+        );
+        const mediaItems = await processMediaForUpload(resolvedAssets);
+
+        const formData = new FormData();
+        mediaItems.forEach((item) => {
+          formData.append("media", item as unknown as Blob);
+        });
+        formData.append("title", values.title);
+        formData.append("description", values.description);
+        formData.append("hobby", values.hobby);
+        formData.append("availableForTrade", String(values.availableForTrade));
+        if (values.lookingFor) {
+          formData.append("lookingFor", values.lookingFor);
+        }
+
+        await createPostApi(formData);
+      } catch {
+        Alert.alert(
+          "Couldn't post",
+          "Something went wrong while uploading your post. Please try again.",
+          [{ text: "OK" }],
+        );
+      }
+    })();
   });
 
   return {
@@ -209,10 +161,5 @@ export function useCreate() {
     isLoadingHobbies,
     // Submit
     handleSubmit,
-    isSubmitting: publishPostMutation.isPending,
-    // Upload (processing + network) — used to disable the Post button while media is still uploading
-    isCreatingDraft: createDraftMutation.isPending,
-    // Errors
-    serverErrorMessage,
   };
 }

@@ -13,7 +13,6 @@ import { DesktopCreateForm } from "@/components/create/desktop/DesktopCreateForm
 import { MobileCreateForm } from "@/components/create/mobile/MobileCreateForm";
 import { useAuth } from "@hobbyist/hooks";
 
-
 export const Route = createFileRoute("/_app/create")({
   component: CreatePage,
 });
@@ -23,7 +22,6 @@ function CreatePage() {
   const { isAuthenticated, user } = useAuth();
   const { isDesktop } = useDeviceType();
 
-  // Redirect unauthenticated users away from the create page.
   useEffect(() => {
     if (!isAuthenticated) {
       navigate({ to: "/" });
@@ -41,21 +39,15 @@ function CreatePage() {
     [navigate, user],
   );
 
-  // useCreate must be initialised first so its callbacks can be forwarded to
-  // useMediaUpload, which needs them at construction time.
   const {
     methods,
     serverErrorMessage,
     handleSubmit,
     isSubmitting,
-    isUploadingMedia,
     activeStep,
     handleNext,
     handleBack,
     clearServerError,
-    onFilesAdded,
-    onFileRemoved,
-    discardDraft,
   } = useCreate(handlePostCreated);
 
   const {
@@ -69,10 +61,9 @@ function CreatePage() {
     removeError,
     addError,
     clearFiles,
-  } = useMediaUpload({ onFilesAdded, onFileRemoved });
+  } = useMediaUpload();
 
   const handleClear = () => {
-    discardDraft();
     methods.reset();
     clearFiles();
     clearServerError();
@@ -104,7 +95,6 @@ function CreatePage() {
               removeFile={removeFile}
               reorderFiles={reorderFiles}
               isSubmitting={isSubmitting}
-              isUploadingMedia={isUploadingMedia}
               onClear={handleClear}
             />
           ) : (
@@ -114,7 +104,6 @@ function CreatePage() {
               isDragActive={isDragActive}
               removeFile={removeFile}
               isSubmitting={isSubmitting}
-              isUploadingMedia={isUploadingMedia}
               activeStep={activeStep}
               onNext={() => handleNext(files, addError)}
               onBack={handleBack}

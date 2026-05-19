@@ -23,14 +23,7 @@ const createMediaUploadError = (message: string): MediaUploadError => ({
   message,
 });
 
-type UseMediaUploadOptions = {
-  /** Called after new files are processed and added to local state. */
-  onFilesAdded?: (files: FileWithMetadata[]) => void;
-  /** Called when a file is removed from the local list. */
-  onFileRemoved?: (fileId: string) => void;
-};
-
-export function useMediaUpload({ onFilesAdded, onFileRemoved }: UseMediaUploadOptions = {}) {
+export function useMediaUpload() {
   const [filesWithMetadata, setFilesWithMetadata] = useState<FileWithMetadata[]>([]);
   const [errors, setErrors] = useState<MediaUploadError[]>([]);
 
@@ -100,10 +93,6 @@ export function useMediaUpload({ onFilesAdded, onFileRemoved }: UseMediaUploadOp
 
         setFilesWithMetadata((prev) => [...prev, ...newFilesWithMetadata]);
 
-        if (newFilesWithMetadata.length > 0) {
-          onFilesAdded?.(newFilesWithMetadata);
-        }
-
         if (rejected.length > 0) {
           setErrors((prev) => [...prev, ...rejected.map(createMediaUploadError)]);
         }
@@ -152,22 +141,14 @@ export function useMediaUpload({ onFilesAdded, onFileRemoved }: UseMediaUploadOp
     maxFiles: MAX_FILES,
   });
 
-  const removeFile = useCallback(
-    (fileId: string) => {
-      setFilesWithMetadata((prev) => {
-        const fileToRemove = prev.find((f) => f.id === fileId);
-
-        if (!fileToRemove) return prev;
-
-        URL.revokeObjectURL(fileToRemove.preview);
-
-        return prev.filter((f) => f.id !== fileId);
-      });
-
-      onFileRemoved?.(fileId);
-    },
-    [onFileRemoved],
-  );
+  const removeFile = useCallback((fileId: string) => {
+    setFilesWithMetadata((prev) => {
+      const fileToRemove = prev.find((f) => f.id === fileId);
+      if (!fileToRemove) return prev;
+      URL.revokeObjectURL(fileToRemove.preview);
+      return prev.filter((f) => f.id !== fileId);
+    });
+  }, []);
 
   const removeError = useCallback((errorId: string) => {
     setErrors((prev) => prev.filter((error) => error.id !== errorId));
