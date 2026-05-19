@@ -63,6 +63,11 @@ export function useLogin(
   const methods = useForm<LoginFormSchemaTypes>({
     mode: "onChange",
     resolver: zodResolver(LoginFormSchema),
+    defaultValues: {
+      identifier: "",
+      otp: "",
+      password: "",
+    },
   });
 
   const startLoginMutation = useMutation({

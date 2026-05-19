@@ -215,7 +215,7 @@ public class MinIOMediaStorageService(
                     ct
                 );
 
-                foreach (var error in deleteResponse.DeleteErrors)
+                foreach (var error in deleteResponse.DeleteErrors ?? [])
                 {
                     logger.LogWarning(
                         "Failed to delete object '{Key}' under prefix '{Prefix}': {Code} — {Message}",

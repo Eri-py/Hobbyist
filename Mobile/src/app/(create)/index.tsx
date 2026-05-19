@@ -1,5 +1,4 @@
 import { Stack, useRouter } from "expo-router";
-import { Text, useTheme } from "react-native-paper";
 
 import { useCreateContext } from "@/hooks/create/useCreate";
 import { ThemedView } from "@/components/shared/views/ThemedView";
@@ -20,10 +19,7 @@ export default function CreateScreen() {
     handleSubmit,
     isSubmitting,
     isCreatingDraft,
-    serverErrorMessage,
   } = useCreateContext();
-  const theme = useTheme();
-
   return (
     <>
       <Stack.Toolbar placement="left">
@@ -65,18 +61,7 @@ export default function CreateScreen() {
             onToggleAsset={toggleAsset}
           />
         )}
-        {activeStep === 1 && (
-          <>
-            <CreateForm selectedAssets={selectedAssets} />
-            {serverErrorMessage && (
-              <Text
-                style={{ color: theme.colors.error, paddingHorizontal: 16, paddingBottom: 12 }}
-              >
-                {serverErrorMessage}
-              </Text>
-            )}
-          </>
-        )}
+        {activeStep === 1 && <CreateForm selectedAssets={selectedAssets} />}
       </ThemedView>
     </>
   );

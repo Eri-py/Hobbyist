@@ -54,6 +54,7 @@ export function OtpStep({
               onChange={onChange}
               mode={isTablet ? "alphanumeric" : "numeric"}
               hasError={Boolean(errors.otp)}
+              autoFocus
             />
             {get(errors, "otp")?.message && (
               <Text style={[styles.errorMessage, { color: theme.colors.error }]}>

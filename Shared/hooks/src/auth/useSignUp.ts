@@ -89,6 +89,14 @@ export function useSignUp(
     mode: "onChange",
     resolver: zodResolver(SignUpFormSchema),
     defaultValues: {
+      username: "",
+      email: "",
+      otp: "",
+      password: "",
+      confirmPassword: "",
+      firstname: "",
+      lastname: "",
+      dateOfBirth: "",
       interests: [],
     },
   });

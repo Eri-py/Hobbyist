@@ -2,14 +2,13 @@ import { createContext, useCallback, useContext, useRef, useState } from "react"
 import * as MediaLibrary from "expo-media-library";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
+import { isAxiosError } from "axios";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 import { axiosInstance } from "@/api/axiosInstance";
 import { useServerError, type ServerError } from "@hobbyist/hooks";
 import type { components } from "@hobbyist/types";
-
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-
 import { CreateFormSchema, type CreateFormSchemaTypes } from "@hobbyist/form-schemas";
 import { useMediaPicker, processMediaForUpload } from "./useMediaPicker";
 
@@ -62,10 +61,10 @@ const getUserHobbiesApi = async (): Promise<Hobby[]> => {
   ];
 };
 
-const createDraftApi = (formData: FormData) =>
+const createDraftApi = (formData: FormData, signal: AbortSignal) =>
   axiosInstance.post<CreateDraftResponse>("posts/draft", formData, {
-    headers: { "Content-Type": "multipart/form-data" },
     timeout: 30_000,
+    signal,
   });
 
 const publishPostApi = (postId: string, values: CreateFormSchemaTypes) =>
@@ -97,6 +96,7 @@ export function useCreate() {
   // Ref so handleBack and handleSubmit always read the latest ID without
   // needing it in their dependency arrays.
   const draftPostIdRef = useRef<string | null>(null);
+  const uploadAbortControllerRef = useRef<AbortController | null>(null);
 
   // --- Queries ---
 
@@ -113,7 +113,13 @@ export function useCreate() {
     // full operation (device I/O + compression + network upload), not just the
     // network leg. The step advances immediately on Next; this runs in the
     // background while the user fills in the form.
-    mutationFn: async (assets: MediaLibrary.Asset[]) => {
+    mutationFn: async ({
+      assets,
+      signal,
+    }: {
+      assets: MediaLibrary.Asset[];
+      signal: AbortSignal;
+    }) => {
       const resolvedAssets = await Promise.all(
         assets.map((asset) => MediaLibrary.getAssetInfoAsync(asset)),
       );
@@ -124,12 +130,15 @@ export function useCreate() {
         formData.append("media", item as unknown as Blob);
       });
 
-      return createDraftApi(formData);
+      return createDraftApi(formData, signal);
     },
     onSuccess: (response) => {
       draftPostIdRef.current = response.data.postId;
     },
-    onError: (error: ServerError) => handleServerError(error),
+    onError: (error: ServerError) => {
+      if (isAxiosError(error) && error.code === "ERR_CANCELED") return;
+      handleServerError(error);
+    },
   });
 
   const publishPostMutation = useMutation({
@@ -154,13 +163,17 @@ export function useCreate() {
 
   const handleNext = useCallback(() => {
     if (mediaPicker.selectedAssets.length === 0) return;
+    const controller = new AbortController();
+    uploadAbortControllerRef.current = controller;
     // Fire upload in the background and advance immediately
-    createDraftMutation.mutate(mediaPicker.selectedAssets);
+    createDraftMutation.mutate({ assets: mediaPicker.selectedAssets, signal: controller.signal });
     setActiveStep(1);
   }, [mediaPicker.selectedAssets, createDraftMutation]);
 
   const handleBack = useCallback(() => {
     methods.clearErrors();
+    uploadAbortControllerRef.current?.abort();
+    uploadAbortControllerRef.current = null;
     // Fire-and-forget: user navigates back immediately. Draft expires if discard fails.
     const currentDraftId = draftPostIdRef.current;
     if (currentDraftId) {
