@@ -64,7 +64,7 @@ public class CreatePostService(
         return Result<CreatePostResponse>.Success(new CreatePostResponse { PostId = postId });
     }
 
-    public async Task<Result> StorePostMediaAsync(
+    private async Task<Result> StorePostMediaAsync(
         IFormFile[] media,
         string userId,
         string postId,
@@ -130,7 +130,7 @@ public class CreatePostService(
         return Result.NoContent();
     }
 
-    public async Task<Result> StorePostDetailsAsync(
+    private async Task<Result> StorePostDetailsAsync(
         CreatePostRequest request,
         Guid userId,
         string postId,

@@ -64,36 +64,6 @@ public class MinIOMediaStorageServiceTests
     }
 
     [Test]
-    public void BuildDraftMediaObjectKey_WithValidInputs_ReturnsUserAndPostScopedPath()
-    {
-        // Arrange
-        var service = BuildService();
-        const string postId = "abc123def456";
-        var mediaId = new Guid("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
-
-        // Act
-        var key = service.BuildDraftMediaObjectKey("user-42", postId, mediaId, "photo.jpg");
-
-        // Assert
-        Assert.That(key, Is.EqualTo($"user-42/{postId}/{mediaId:N}.jpg"));
-    }
-
-    [Test]
-    public void BuildDraftMediaObjectKey_WithoutExtension_DoesNotAppendDot()
-    {
-        // Arrange
-        var service = BuildService();
-        const string postId = "abc123def456";
-        var mediaId = new Guid("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
-
-        // Act
-        var key = service.BuildDraftMediaObjectKey("user-42", postId, mediaId, "blob");
-
-        // Assert
-        Assert.That(key, Is.EqualTo($"user-42/{postId}/{mediaId:N}"));
-    }
-
-    [Test]
     public void BuildPostMediaPrefix_ReturnsTrailingSlashScopedPath()
     {
         // Arrange
@@ -108,22 +78,16 @@ public class MinIOMediaStorageServiceTests
     }
 
     [Test]
-    public void BuildPostMediaPrefix_StartsEveryDraftMediaObjectKey()
+    public void BuildPostMediaPrefix_StartsEveryObjectKey()
     {
-        // Both key builders share the same prefix — ownership validation in PostDraftService relies on this.
+        // DeleteByPrefixAsync bulk-deletion relies on BuildObjectKey keys sharing this prefix.
         var service = BuildService();
         const string postId = "abc123def456";
-        var mediaId = Guid.NewGuid();
 
         var prefix = service.BuildPostMediaPrefix("user-42", postId);
-        var draftKey = service.BuildDraftMediaObjectKey("user-42", postId, mediaId, "clip.mp4");
-        var legacyKey = service.BuildObjectKey("user-42", postId, 1, "image.png");
+        var key = service.BuildObjectKey("user-42", postId, 1, "image.png");
 
-        using (Assert.EnterMultipleScope())
-        {
-            Assert.That(draftKey.StartsWith(prefix, StringComparison.Ordinal), Is.True);
-            Assert.That(legacyKey.StartsWith(prefix, StringComparison.Ordinal), Is.True);
-        }
+        Assert.That(key.StartsWith(prefix, StringComparison.Ordinal), Is.True);
     }
 
     private static MinIOMediaStorageService BuildService()

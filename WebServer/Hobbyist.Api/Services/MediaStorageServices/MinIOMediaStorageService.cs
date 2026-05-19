@@ -161,19 +161,6 @@ public class MinIOMediaStorageService(
     }
 
     /// <inheritdoc/>
-    public string BuildDraftMediaObjectKey(
-        string userId,
-        string postId,
-        Guid mediaId,
-        string fileName
-    )
-    {
-        var extension = Path.GetExtension(fileName);
-        var safeExtension = string.IsNullOrWhiteSpace(extension) ? string.Empty : extension;
-        return $"{userId}/{postId}/{mediaId:N}{safeExtension}";
-    }
-
-    /// <inheritdoc/>
     public string BuildPostMediaPrefix(string userId, string postId) => $"{userId}/{postId}/";
 
     /// <inheritdoc/>

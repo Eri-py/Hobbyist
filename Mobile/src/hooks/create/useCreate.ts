@@ -162,6 +162,7 @@ export function useCreate() {
 
   const handleSubmit = methods.handleSubmit((values) => {
     const assets = mediaPicker.selectedAssets;
+    if (assets.length === 0) return;
 
     // Close the UI immediately — upload runs in the background
     router.dismissAll();
