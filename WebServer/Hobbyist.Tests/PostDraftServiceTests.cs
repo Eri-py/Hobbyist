@@ -124,7 +124,7 @@ public class PostDraftServiceTests : DatabaseTestBase
     [Test]
     public async Task CreateDraftAsync_WhenSecondUploadFails_RollsBackFirstUploadAndReturnsError()
     {
-        SetupBuildDraftMediaObjectKey();
+        SetupBuildObjectKey();
         SetupBuildPostMediaPrefix();
 
         var callCount = 0;
@@ -154,11 +154,13 @@ public class PostDraftServiceTests : DatabaseTestBase
             .ReturnsAsync(Result.NoContent());
 
         var result = await _service.CreateDraftAsync(
-            BuildSaveDraftRequest(media:
-            [
-                BuildFile("a.jpg", "image/jpeg", "data"),
-                BuildFile("b.jpg", "image/jpeg", "data"),
-            ]),
+            BuildSaveDraftRequest(
+                media:
+                [
+                    BuildFile("a.jpg", "image/jpeg", "data"),
+                    BuildFile("b.jpg", "image/jpeg", "data"),
+                ]
+            ),
             _user.Id.ToString(),
             CancellationToken.None
         );
@@ -176,7 +178,7 @@ public class PostDraftServiceTests : DatabaseTestBase
     {
         var nonExistentUserId = Guid.NewGuid().ToString();
 
-        SetupBuildDraftMediaObjectKey();
+        SetupBuildObjectKey();
         SetupBuildPostMediaPrefix();
         SetupUploadAlwaysSucceeds();
 
@@ -185,11 +187,13 @@ public class PostDraftServiceTests : DatabaseTestBase
             .ReturnsAsync(Result.NoContent());
 
         var result = await _service.CreateDraftAsync(
-            BuildSaveDraftRequest(media:
-            [
-                BuildFile("a.jpg", "image/jpeg", "data"),
-                BuildFile("b.jpg", "image/jpeg", "data"),
-            ]),
+            BuildSaveDraftRequest(
+                media:
+                [
+                    BuildFile("a.jpg", "image/jpeg", "data"),
+                    BuildFile("b.jpg", "image/jpeg", "data"),
+                ]
+            ),
             nonExistentUserId,
             CancellationToken.None
         );
@@ -208,7 +212,7 @@ public class PostDraftServiceTests : DatabaseTestBase
     [Test]
     public async Task CreateDraftAsync_WhenSuccessful_ReturnsPostId()
     {
-        SetupBuildDraftMediaObjectKey();
+        SetupBuildObjectKey();
         SetupBuildPostMediaPrefix();
         SetupUploadAlwaysSucceeds();
 
@@ -228,18 +232,26 @@ public class PostDraftServiceTests : DatabaseTestBase
     [Test]
     public async Task CreateDraftAsync_WhenSuccessful_WithAllFormFields_PersistsFieldsAndNoExpiry()
     {
-        SetupBuildDraftMediaObjectKey();
+        SetupBuildObjectKey();
         SetupBuildPostMediaPrefix();
         SetupUploadAlwaysSucceeds();
 
         var request = BuildSaveDraftRequest(
-            media: [BuildFile("a.jpg", "image/jpeg", "data"), BuildFile("b.jpg", "image/jpeg", "data")],
+            media:
+            [
+                BuildFile("a.jpg", "image/jpeg", "data"),
+                BuildFile("b.jpg", "image/jpeg", "data"),
+            ],
             hobby: "Photography",
             title: "Custom shelf",
             description: "Handmade oak shelf with three adjustable levels"
         );
 
-        var result = await _service.CreateDraftAsync(request, _user.Id.ToString(), CancellationToken.None);
+        var result = await _service.CreateDraftAsync(
+            request,
+            _user.Id.ToString(),
+            CancellationToken.None
+        );
 
         var post = await Context.Posts.FindAsync(result.Content!.PostId);
         Assert.That(post, Is.Not.Null);
@@ -259,17 +271,17 @@ public class PostDraftServiceTests : DatabaseTestBase
     [Test]
     public async Task CreateDraftAsync_WhenSuccessful_WithNoFormFields_PersistsDraftWithNullFields()
     {
-        SetupBuildDraftMediaObjectKey();
+        SetupBuildObjectKey();
         SetupBuildPostMediaPrefix();
         SetupUploadAlwaysSucceeds();
 
-        var request = BuildSaveDraftRequest(
-            hobby: null,
-            title: null,
-            description: null
-        );
+        var request = BuildSaveDraftRequest(hobby: null, title: null, description: null);
 
-        var result = await _service.CreateDraftAsync(request, _user.Id.ToString(), CancellationToken.None);
+        var result = await _service.CreateDraftAsync(
+            request,
+            _user.Id.ToString(),
+            CancellationToken.None
+        );
 
         var post = await Context.Posts.FindAsync(result.Content!.PostId);
         Assert.That(post, Is.Not.Null);
@@ -526,7 +538,7 @@ public class PostDraftServiceTests : DatabaseTestBase
     }
 
     [Test]
-    public async Task DiscardDraftAsync_WhenStorageCleanupFails_StillDeletesPostAndReturnsNoContent()
+    public async Task DiscardDraftAsync_WhenStorageCleanupFails_ReturnsErrorAndKeepsPostInDatabase()
     {
         var draft = await SeedPostAsync(isDraft: true, mediaCount: 1);
 
@@ -541,10 +553,10 @@ public class PostDraftServiceTests : DatabaseTestBase
             CancellationToken.None
         );
 
-        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(result.ResultType, Is.EqualTo(ResultTypes.InternalServerError));
 
         Context.ChangeTracker.Clear();
-        Assert.That(await Context.Posts.FindAsync(draft.Id), Is.Null);
+        Assert.That(await Context.Posts.FindAsync(draft.Id), Is.Not.Null);
     }
 
     // -------------------------------------------------------------------------
@@ -581,22 +593,22 @@ public class PostDraftServiceTests : DatabaseTestBase
         return post;
     }
 
-    private void SetupBuildDraftMediaObjectKey()
+    private void SetupBuildObjectKey()
     {
         _storage
             .Setup(s =>
-                s.BuildDraftMediaObjectKey(
+                s.BuildObjectKey(
                     It.IsAny<string>(),
                     It.IsAny<string>(),
-                    It.IsAny<Guid>(),
+                    It.IsAny<int>(),
                     It.IsAny<string>()
                 )
             )
             .Returns(
-                (string uid, string pid, Guid mid, string fn) =>
+                (string uid, string pid, int index, string fn) =>
                 {
                     var ext = Path.GetExtension(fn);
-                    return $"{uid}/{pid}/{mid:N}{ext}";
+                    return $"{uid}/{pid}/{index:D3}{ext}";
                 }
             );
     }

@@ -19,6 +19,7 @@ public class PostsController(
     /// </summary>
     [HttpPost("create")]
     [Authorize]
+    [RequestFormLimits(MultipartBodyLengthLimit = 105_000_000)]
     public async Task<ActionResult<CreatePostResponse>> CreateAsync(
         [FromForm] CreatePostRequest request,
         CancellationToken ct
@@ -39,6 +40,7 @@ public class PostsController(
     /// </summary>
     [HttpPost("draft")]
     [Authorize]
+    [RequestFormLimits(MultipartBodyLengthLimit = 105_000_000)]
     public async Task<ActionResult<CreateDraftResponse>> CreateDraftAsync(
         [FromForm] SaveDraftRequest request,
         CancellationToken ct

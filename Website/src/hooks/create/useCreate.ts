@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 
-import { useServerError, type ServerError } from "@hobbyist/hooks";
+import { useServerError } from "@hobbyist/hooks";
 import type { FileWithMetadata } from "@/hooks/create/useMediaUpload";
 import { axiosInstance } from "@/api/axiosInstance";
 import { CreateFormSchema, type CreateFormSchemaTypes } from "@hobbyist/form-schemas";
@@ -26,7 +26,7 @@ const createPostApi = (files: File[], values: CreateFormSchemaTypes) => {
   if (values.lookingFor) {
     formData.append("lookingFor", values.lookingFor);
   }
-  return axiosInstance.post<CreatePostResponse>("posts/create", formData);
+  return axiosInstance.post<CreatePostResponse>("posts/create", formData, { timeout: 60_000 });
 };
 
 const saveDraftApi = (files: File[], values: CreateFormSchemaTypes) => {
@@ -53,7 +53,7 @@ const MOBILE_STEP_COUNT = Object.keys(mobileStepFields).length;
 // --- Hook ---
 
 export function useCreate(onPostCreated: () => void) {
-  const { serverErrorMessage, handleServerError, clearServerError } = useServerError();
+  const { serverErrorMessage, clearServerError } = useServerError();
 
   const methods = useForm<CreateFormSchemaTypes>({
     mode: "onChange",
@@ -70,7 +70,6 @@ export function useCreate(onPostCreated: () => void) {
   const saveDraftMutation = useMutation({
     mutationFn: ({ files, values }: { files: File[]; values: CreateFormSchemaTypes }) =>
       saveDraftApi(files, values),
-    onError: (error: ServerError) => handleServerError(error),
   });
 
   // --- Mobile step navigation ---

@@ -31,13 +31,13 @@ public class PostDraftService(
         var postId = SlugGenerator.Generate();
         var uploadedKeys = new List<string>(request.Media.Length);
 
-        foreach (var file in request.Media)
+        for (var i = 0; i < request.Media.Length; i++)
         {
-            var mediaId = Guid.NewGuid();
-            var objectKey = mediaStorageService.BuildDraftMediaObjectKey(
+            var file = request.Media[i];
+            var objectKey = mediaStorageService.BuildObjectKey(
                 userId,
                 postId,
-                mediaId,
+                i + 1,
                 file.FileName
             );
 
@@ -171,12 +171,13 @@ public class PostDraftService(
         var storageResult = await mediaStorageService.DeleteByPrefixAsync(prefix, ct);
         if (!storageResult.IsSuccess)
         {
-            logger.LogWarning(
-                "Storage cleanup failed for draft {PostId} (prefix '{Prefix}'). "
-                    + "Objects will be removed by the scheduled expiry job.",
+            logger.LogError(
+                "Failed to delete storage objects for draft {PostId} (prefix '{Prefix}'). "
+                    + "Aborting discard to avoid orphaned media.",
                 postId,
                 prefix
             );
+            return Result.InternalServerError("Failed to delete draft media. Please try again.");
         }
 
         context.Posts.Remove(post);

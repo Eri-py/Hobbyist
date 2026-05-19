@@ -232,6 +232,7 @@ describe("useCreate", () => {
         expect(mockPost).toHaveBeenCalledWith(
           "posts/create",
           expect.any(FormData),
+          { timeout: 60_000 },
         );
       });
     });
@@ -287,19 +288,21 @@ describe("useCreate", () => {
       expect(postId).toBe(DRAFT_POST_ID);
     });
 
-    it("calls handleServerError when the API fails", async () => {
+    it("rejects and does not call handleServerError when the API fails", async () => {
       mockPost.mockRejectedValueOnce(new Error("network error"));
       const { result } = renderHook(() => useCreate(noopOnPostCreated), { wrapper: makeWrapper() });
 
+      let threw = false;
       await act(async () => {
         try {
           await result.current.saveDraft([makeFile()]);
         } catch {
-          // expected — mutateAsync re-throws
+          threw = true;
         }
       });
 
-      expect(mockHandleServerError).toHaveBeenCalled();
+      expect(threw).toBe(true);
+      expect(mockHandleServerError).not.toHaveBeenCalled();
     });
   });
 });
