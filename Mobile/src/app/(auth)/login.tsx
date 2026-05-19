@@ -31,7 +31,7 @@ export default function Login() {
     onSubmit,
     isCompleting,
     serverErrorMessage,
-  } = useLogin((path: string) => router.push(path as Href), axiosInstance, handleAuthSuccess);
+  } = useLogin({ replace: (path: string) => router.replace(path as Href) }, axiosInstance, handleAuthSuccess);
 
   return (
     <ThemedKeyboardView safeArea contentContainerStyle={styles.container}>

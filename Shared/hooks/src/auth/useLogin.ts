@@ -23,7 +23,7 @@ type HeaderConfig = Record<
   }
 >;
 export function useLogin(
-  navigate: (path: string) => void,
+  router: { replace: (path: string) => void },
   axiosInstance: AxiosInstance,
   onAuthSuccess?: (authResult: AuthResult) => Promise<void>,
 ) {
@@ -92,7 +92,7 @@ export function useLogin(
         await onAuthSuccess(authResult);
       }
       await queryClient.invalidateQueries({ queryKey: USER_DETAILS_QUERY_KEY });
-      navigate("/");
+      router.replace("/");
     },
     onError: (error: ServerError) => handleServerError(error),
   });
