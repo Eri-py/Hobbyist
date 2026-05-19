@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import * as MediaLibrary from "expo-media-library";
 import { useRouter } from "expo-router";
 import { Linking } from "react-native";
@@ -6,7 +7,7 @@ export function useOpenCreate() {
   const router = useRouter();
   const [permission, requestPermission] = MediaLibrary.usePermissions();
 
-  return async () => {
+  return useCallback(async () => {
     if (permission?.granted) {
       router.push("/(create)");
       return;
@@ -19,5 +20,5 @@ export function useOpenCreate() {
     if (result.granted) {
       router.push("/(create)");
     }
-  };
+  }, [permission, requestPermission, router]);
 }

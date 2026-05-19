@@ -45,7 +45,7 @@ export const generateThumbnail = (file: File): Promise<string> => {
     };
 
     img.onerror = () => {
-      // Fallback if image loading fails
+      URL.revokeObjectURL(img.src);
       resolve(URL.createObjectURL(file));
     };
 

@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, useBlocker } from "@tanstack/react-router";
 import { FormProvider } from "react-hook-form";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 
 import Stack from "@mui/material/Stack";
@@ -31,8 +31,11 @@ function CreatePage() {
     }
   }, [isAuthenticated, navigate]);
 
+  const hasPostedRef = useRef(false);
+
   const handlePostCreated = useCallback(
     (postId: string) => {
+      hasPostedRef.current = true;
       if (user?.username) {
         navigate({ to: `/profile/${user.username}/${postId}` });
         return;
@@ -70,7 +73,7 @@ function CreatePage() {
 
   // Block navigation when the user has files loaded but hasn't posted yet.
   const blocker = useBlocker({
-    shouldBlockFn: () => files.length > 0 && !isSubmitting,
+    shouldBlockFn: () => files.length > 0 && !isSubmitting && !hasPostedRef.current,
     enableBeforeUnload: true,
     withResolver: true,
   });

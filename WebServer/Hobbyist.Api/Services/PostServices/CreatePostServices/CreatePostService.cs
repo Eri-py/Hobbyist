@@ -150,6 +150,7 @@ public class CreatePostService(
                 AvailableForTrade = request.AvailableForTrade,
                 LookingFor = request.LookingFor,
                 CreatedAt = createdAt,
+                MediaCount = request.Media.Length,
                 Likes = 0,
             }
         );

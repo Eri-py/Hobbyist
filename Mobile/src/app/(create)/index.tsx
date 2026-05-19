@@ -12,6 +12,7 @@ export default function CreateScreen() {
     setAlbum,
     selectedAssets,
     toggleAsset,
+    mediaError,
     activeStep,
     handleNext,
     handleBack,
@@ -49,6 +50,7 @@ export default function CreateScreen() {
             activeAlbum={activeAlbum}
             onAlbumChange={setAlbum}
             onToggleAsset={toggleAsset}
+            mediaError={mediaError}
           />
         )}
         {activeStep === 1 && <CreateForm selectedAssets={selectedAssets} />}

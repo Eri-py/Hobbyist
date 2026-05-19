@@ -20,8 +20,8 @@ const createPostApi = (files: File[], values: CreateFormSchemaTypes) => {
   const formData = new FormData();
   files.forEach((f) => formData.append("media", f));
   formData.append("hobby", values.hobby);
-  formData.append("title", values.title ?? "");
-  formData.append("description", values.description ?? "");
+  formData.append("title", values.title);
+  formData.append("description", values.description);
   formData.append("availableForTrade", String(values.availableForTrade));
   if (values.lookingFor) {
     formData.append("lookingFor", values.lookingFor);

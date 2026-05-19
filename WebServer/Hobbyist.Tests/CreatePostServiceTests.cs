@@ -204,7 +204,12 @@ public class CreatePostServiceTests : DatabaseTestBase
     {
         // Arrange
         var user = await CreateUserAsync();
-        var request = BuildCreatePostRequest([BuildFile("one.png", "image/png", "one")]);
+        var files = new[]
+        {
+            BuildFile("one.png", "image/png", "one"),
+            BuildFile("two.jpg", "image/jpeg", "two"),
+        };
+        var request = BuildCreatePostRequest(files);
 
         SetupBuildObjectKey();
         SetupUploadAlwaysSuccess();
@@ -222,16 +227,17 @@ public class CreatePostServiceTests : DatabaseTestBase
             Assert.That(result.IsSuccess, Is.True);
             Assert.That(result.Content, Is.Not.Null);
         }
+
+        var post = Context.Posts.SingleOrDefault(p => p.Id == result.Content!.PostId);
+
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(result.Content.PostId, Is.Not.Empty);
-            Assert.That(Context.Posts.Count(), Is.EqualTo(1));
+            Assert.That(result.Content!.PostId, Is.Not.Empty);
+            Assert.That(post, Is.Not.Null);
+            Assert.That(post!.UserId, Is.EqualTo(user.Id));
+            Assert.That(post.IsDraft, Is.False);
+            Assert.That(post.MediaCount, Is.EqualTo(2));
         }
-
-        Assert.That(
-            Context.Posts.Any(post => post.Id == result.Content!.PostId && post.UserId == user.Id),
-            Is.True
-        );
     }
 
     private void SetupBuildObjectKey()

@@ -1,4 +1,4 @@
-import { useCallback, useState, useEffect } from "react";
+import { useCallback, useState, useEffect, useRef } from "react";
 import { useDropzone, type FileRejection } from "react-dropzone";
 import { generateThumbnail } from "./generateThumbnail";
 import { compressImage } from "./compressImage";
@@ -38,14 +38,14 @@ export function useMediaUpload() {
     return () => clearTimeout(timerId);
   }, [errors]);
 
-  // Clean up all object URLs when component unmounts
+  // Keep a ref in sync so the unmount cleanup always sees the latest files.
+  const filesRef = useRef(filesWithMetadata);
   useEffect(() => {
-    return () => {
-      filesWithMetadata.forEach((fileWithMetadata) => {
-        URL.revokeObjectURL(fileWithMetadata.preview);
-      });
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    filesRef.current = filesWithMetadata;
+  }, [filesWithMetadata]);
+
+  useEffect(() => {
+    return () => filesRef.current.forEach((f: FileWithMetadata) => URL.revokeObjectURL(f.preview));
   }, []);
 
   const onDrop = useCallback(
@@ -57,16 +57,19 @@ export function useMediaUpload() {
         // Sort by size for processing
         const sortedFiles = filesWithIndex.sort((a, b) => a.file.size - b.file.size);
 
-        // Get current size of all files stored
+        // Get current size and slot count of all files already stored.
         let currentTotal = 0;
         filesWithMetadata.forEach((f) => (currentTotal += f.file.size));
+        const availableSlots = MAX_FILES - filesWithMetadata.length;
 
         // Keep track of added files and rejected files.
         const toAdd: { file: File; originalIndex: number }[] = [];
         const rejected: string[] = [];
 
         for (const { file, originalIndex } of sortedFiles) {
-          if (currentTotal + file.size > MAX_TOTAL_SIZE) {
+          if (toAdd.length >= availableSlots) {
+            rejected.push(`${file.name}: Maximum ${MAX_FILES} files allowed.`);
+          } else if (currentTotal + file.size > MAX_TOTAL_SIZE) {
             rejected.push(
               `${file.name}: Not enough space (${(currentTotal / 1024 / 1024).toFixed(2)}MB of ${(MAX_TOTAL_SIZE / 1024 / 1024).toFixed(2)}MB used)`,
             );

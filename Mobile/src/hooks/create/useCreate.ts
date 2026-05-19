@@ -106,9 +106,8 @@ export function useCreate() {
   }, [mediaPicker.selectedAssets.length]);
 
   const handleBack = useCallback(() => {
-    methods.clearErrors();
     setActiveStep(0);
-  }, [methods]);
+  }, []);
 
   // --- Close with draft prompt ---
 
@@ -119,47 +118,46 @@ export function useCreate() {
       return;
     }
 
-    const doSave = async () => {
-      try {
-        const assets = mediaPicker.selectedAssets;
-        const values = methods.getValues();
-
-        const resolvedAssets = await Promise.all(
-          assets.map((asset) => MediaLibrary.getAssetInfoAsync(asset)),
-        );
-        const mediaItems = await processMediaForUpload(resolvedAssets);
-
-        const formData = new FormData();
-        mediaItems.forEach((item) => {
-          formData.append("media", item as unknown as Blob);
-        });
-        // All form fields are optional on the draft — only append non-empty values.
-        if (values.title) formData.append("title", values.title);
-        if (values.description) formData.append("description", values.description);
-        if (values.hobby) formData.append("hobby", values.hobby);
-        formData.append("availableForTrade", String(values.availableForTrade));
-        if (values.lookingFor) formData.append("lookingFor", values.lookingFor);
-
-        await saveDraftApi(formData);
-        router.back();
-      } catch {
-        Alert.alert(
-          "Couldn't save draft",
-          "Something went wrong saving your draft.",
-          [
-            { text: "Discard & Close", style: "destructive", onPress: () => router.back() },
-            { text: "Try Again", onPress: doSave },
-          ],
-        );
-      }
-    };
-
     Alert.alert(
       "Save as draft?",
       "Would you like to save your post as a draft to finish later?",
       [
         { text: "Discard", style: "destructive", onPress: () => router.back() },
-        { text: "Save Draft", onPress: doSave },
+        {
+          text: "Save Draft",
+          onPress: () => {
+            const assets = mediaPicker.selectedAssets;
+            const values = methods.getValues();
+            router.back();
+            (async () => {
+              try {
+                const resolvedAssets = await Promise.all(
+                  assets.map((asset) => MediaLibrary.getAssetInfoAsync(asset)),
+                );
+                const mediaItems = await processMediaForUpload(resolvedAssets);
+
+                const formData = new FormData();
+                mediaItems.forEach((item) => {
+                  formData.append("media", item as unknown as Blob);
+                });
+                // All form fields are optional on the draft — only append non-empty values.
+                if (values.title) formData.append("title", values.title);
+                if (values.description) formData.append("description", values.description);
+                if (values.hobby) formData.append("hobby", values.hobby);
+                formData.append("availableForTrade", String(values.availableForTrade));
+                if (values.lookingFor) formData.append("lookingFor", values.lookingFor);
+
+                await saveDraftApi(formData);
+              } catch {
+                Alert.alert(
+                  "Couldn't save draft",
+                  "Something went wrong saving your draft.",
+                  [{ text: "OK" }],
+                );
+              }
+            })();
+          },
+        },
       ],
     );
   }, [mediaPicker.selectedAssets, methods, router]);
@@ -209,6 +207,7 @@ export function useCreate() {
     setAlbum: mediaPicker.setAlbum,
     selectedAssets: mediaPicker.selectedAssets,
     toggleAsset: mediaPicker.toggleAsset,
+    mediaError: mediaPicker.mediaError,
     // Step navigation
     activeStep,
     handleNext,

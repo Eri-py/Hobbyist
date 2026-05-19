@@ -10,6 +10,7 @@ export function TradeField() {
   const {
     control,
     watch,
+    setValue,
     formState: { errors },
   } = useFormContext<CreateFormSchemaTypes>();
   const availableForTrade = watch("availableForTrade");
@@ -26,7 +27,10 @@ export function TradeField() {
           render={({ field: { value, onChange } }) => (
             <Switch
               value={value ?? false}
-              onValueChange={onChange}
+              onValueChange={(checked) => {
+                onChange(checked);
+                if (!checked) setValue("lookingFor", "");
+              }}
               trackColor={{ true: theme.colors.primary }}
             />
           )}
