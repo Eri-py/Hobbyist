@@ -1,4 +1,4 @@
-import { Stack, useRouter } from "expo-router";
+import { Stack } from "expo-router";
 
 import { useCreateContext } from "@/hooks/create/useCreate";
 import { ThemedView } from "@/components/shared/views/ThemedView";
@@ -6,7 +6,6 @@ import { MediaPicker } from "@/components/create/MediaPicker";
 import { CreateForm } from "@/components/create/CreateForm";
 
 export default function CreateScreen() {
-  const router = useRouter();
   const {
     media,
     activeAlbum,
@@ -16,18 +15,17 @@ export default function CreateScreen() {
     activeStep,
     handleNext,
     handleBack,
+    handleClose,
     handleSubmit,
   } = useCreateContext();
+
   return (
     <>
       <Stack.Toolbar placement="left">
         {activeStep === 0 ? (
-          <Stack.Toolbar.Button icon="xmark" onPress={() => router.back()} />
+          <Stack.Toolbar.Button icon="xmark" onPress={handleClose} />
         ) : (
-          <Stack.Toolbar.Button
-            icon="chevron.backward"
-            onPress={handleBack}
-          />
+          <Stack.Toolbar.Button icon="chevron.backward" onPress={handleBack} />
         )}
       </Stack.Toolbar>
 
@@ -39,12 +37,7 @@ export default function CreateScreen() {
             onPress={handleNext}
           />
         ) : (
-          <Stack.Toolbar.Button
-            variant="done"
-            icon="checkmark"
-            onPress={handleSubmit}
-
-          />
+          <Stack.Toolbar.Button variant="done" icon="checkmark" onPress={handleSubmit} />
         )}
       </Stack.Toolbar>
 

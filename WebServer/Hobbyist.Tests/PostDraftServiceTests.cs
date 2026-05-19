@@ -122,28 +122,6 @@ public class PostDraftServiceTests : DatabaseTestBase
     }
 
     [Test]
-    public async Task CreateDraftAsync_WhenAvailableForTradeWithNoLookingFor_ReturnsBadRequest()
-    {
-        var request = BuildSaveDraftRequest() with
-        {
-            AvailableForTrade = true,
-            LookingFor = null,
-        };
-
-        var result = await _service.CreateDraftAsync(
-            request,
-            _user.Id.ToString(),
-            CancellationToken.None
-        );
-
-        using (Assert.EnterMultipleScope())
-        {
-            Assert.That(result.IsSuccess, Is.False);
-            Assert.That(result.ResultType, Is.EqualTo(ResultTypes.BadRequest));
-        }
-    }
-
-    [Test]
     public async Task CreateDraftAsync_WhenSecondUploadFails_RollsBackFirstUploadAndReturnsError()
     {
         SetupBuildDraftMediaObjectKey();
@@ -235,11 +213,7 @@ public class PostDraftServiceTests : DatabaseTestBase
         SetupUploadAlwaysSucceeds();
 
         var result = await _service.CreateDraftAsync(
-            BuildSaveDraftRequest(media:
-            [
-                BuildFile("a.jpg", "image/jpeg", "data"),
-                BuildFile("b.mp4", "video/mp4", "data"),
-            ]),
+            BuildSaveDraftRequest(),
             _user.Id.ToString(),
             CancellationToken.None
         );
@@ -252,23 +226,20 @@ public class PostDraftServiceTests : DatabaseTestBase
     }
 
     [Test]
-    public async Task CreateDraftAsync_WhenSuccessful_PersistsDraftWithFormFieldsAndNoExpiry()
+    public async Task CreateDraftAsync_WhenSuccessful_WithAllFormFields_PersistsFieldsAndNoExpiry()
     {
         SetupBuildDraftMediaObjectKey();
         SetupBuildPostMediaPrefix();
         SetupUploadAlwaysSucceeds();
 
-        var request = BuildSaveDraftRequest(media:
-        [
-            BuildFile("a.jpg", "image/jpeg", "data"),
-            BuildFile("b.jpg", "image/jpeg", "data"),
-        ]);
-
-        var result = await _service.CreateDraftAsync(
-            request,
-            _user.Id.ToString(),
-            CancellationToken.None
+        var request = BuildSaveDraftRequest(
+            media: [BuildFile("a.jpg", "image/jpeg", "data"), BuildFile("b.jpg", "image/jpeg", "data")],
+            hobby: "Photography",
+            title: "Custom shelf",
+            description: "Handmade oak shelf with three adjustable levels"
         );
+
+        var result = await _service.CreateDraftAsync(request, _user.Id.ToString(), CancellationToken.None);
 
         var post = await Context.Posts.FindAsync(result.Content!.PostId);
         Assert.That(post, Is.Not.Null);
@@ -283,6 +254,35 @@ public class PostDraftServiceTests : DatabaseTestBase
             Assert.That(post.Description, Is.EqualTo(request.Description));
             Assert.That(post.AvailableForTrade, Is.EqualTo(request.AvailableForTrade));
             Assert.That(post.LookingFor, Is.EqualTo(request.LookingFor));
+        }
+    }
+
+    [Test]
+    public async Task CreateDraftAsync_WhenSuccessful_WithNoFormFields_PersistsDraftWithNullFields()
+    {
+        SetupBuildDraftMediaObjectKey();
+        SetupBuildPostMediaPrefix();
+        SetupUploadAlwaysSucceeds();
+
+        var request = BuildSaveDraftRequest(
+            hobby: null,
+            title: null,
+            description: null
+        );
+
+        var result = await _service.CreateDraftAsync(request, _user.Id.ToString(), CancellationToken.None);
+
+        var post = await Context.Posts.FindAsync(result.Content!.PostId);
+        Assert.That(post, Is.Not.Null);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(post!.IsDraft, Is.True);
+            Assert.That(post.MediaCount, Is.EqualTo(1));
+            Assert.That(post.ExpiresAt, Is.Null);
+            Assert.That(post.Hobby, Is.Null);
+            Assert.That(post.Title, Is.Null);
+            Assert.That(post.Description, Is.Null);
         }
     }
 
@@ -334,6 +334,81 @@ public class PostDraftServiceTests : DatabaseTestBase
     public async Task PublishDraftAsync_WhenDraftHasNoMedia_ReturnsBadRequest()
     {
         var draft = await SeedPostAsync(isDraft: true, mediaCount: 0);
+
+        var result = await _service.PublishDraftAsync(
+            draft.Id,
+            _user.Id.ToString(),
+            CancellationToken.None
+        );
+
+        Assert.That(result.ResultType, Is.EqualTo(ResultTypes.BadRequest));
+    }
+
+    [Test]
+    public async Task PublishDraftAsync_WhenHobbyIsNull_ReturnsBadRequest()
+    {
+        var draft = await SeedPostAsync(isDraft: true, mediaCount: 1, hobby: null);
+
+        var result = await _service.PublishDraftAsync(
+            draft.Id,
+            _user.Id.ToString(),
+            CancellationToken.None
+        );
+
+        Assert.That(result.ResultType, Is.EqualTo(ResultTypes.BadRequest));
+    }
+
+    [Test]
+    public async Task PublishDraftAsync_WhenTitleIsNull_ReturnsBadRequest()
+    {
+        var draft = await SeedPostAsync(isDraft: true, mediaCount: 1, title: null);
+
+        var result = await _service.PublishDraftAsync(
+            draft.Id,
+            _user.Id.ToString(),
+            CancellationToken.None
+        );
+
+        Assert.That(result.ResultType, Is.EqualTo(ResultTypes.BadRequest));
+    }
+
+    [Test]
+    public async Task PublishDraftAsync_WhenDescriptionIsNull_ReturnsBadRequest()
+    {
+        var draft = await SeedPostAsync(isDraft: true, mediaCount: 1, description: null);
+
+        var result = await _service.PublishDraftAsync(
+            draft.Id,
+            _user.Id.ToString(),
+            CancellationToken.None
+        );
+
+        Assert.That(result.ResultType, Is.EqualTo(ResultTypes.BadRequest));
+    }
+
+    [Test]
+    public async Task PublishDraftAsync_WhenDescriptionTooShort_ReturnsBadRequest()
+    {
+        var draft = await SeedPostAsync(isDraft: true, mediaCount: 1, description: "Too short");
+
+        var result = await _service.PublishDraftAsync(
+            draft.Id,
+            _user.Id.ToString(),
+            CancellationToken.None
+        );
+
+        Assert.That(result.ResultType, Is.EqualTo(ResultTypes.BadRequest));
+    }
+
+    [Test]
+    public async Task PublishDraftAsync_WhenAvailableForTradeWithNoLookingFor_ReturnsBadRequest()
+    {
+        var draft = await SeedPostAsync(
+            isDraft: true,
+            mediaCount: 1,
+            availableForTrade: true,
+            lookingFor: null
+        );
 
         var result = await _service.PublishDraftAsync(
             draft.Id,
@@ -482,7 +557,15 @@ public class PostDraftServiceTests : DatabaseTestBase
     // Helpers
     // -------------------------------------------------------------------------
 
-    private async Task<PostEntity> SeedPostAsync(bool isDraft, int mediaCount)
+    private async Task<PostEntity> SeedPostAsync(
+        bool isDraft,
+        int mediaCount,
+        string? hobby = "Photography",
+        string? title = "My Post",
+        string? description = "A sufficient description that meets the minimum",
+        bool availableForTrade = false,
+        string? lookingFor = null
+    )
     {
         var post = new PostEntity
         {
@@ -491,11 +574,11 @@ public class PostDraftServiceTests : DatabaseTestBase
             IsDraft = isDraft,
             MediaCount = mediaCount,
             ExpiresAt = null,
-            Hobby = "Photography",
-            Title = "My Post",
-            Description = "A sufficient description",
-            AvailableForTrade = false,
-            LookingFor = null,
+            Hobby = hobby,
+            Title = title,
+            Description = description,
+            AvailableForTrade = availableForTrade,
+            LookingFor = lookingFor,
             CreatedAt = DateTimeOffset.UtcNow,
             Likes = 0,
         };
@@ -551,14 +634,21 @@ public class PostDraftServiceTests : DatabaseTestBase
             );
     }
 
-    private static SaveDraftRequest BuildSaveDraftRequest(IFormFile[]? media = null) =>
+    private static SaveDraftRequest BuildSaveDraftRequest(
+        IFormFile[]? media = null,
+        string? hobby = "Photography",
+        string? title = "Custom shelf",
+        string? description = "Handmade oak shelf with three adjustable levels",
+        bool availableForTrade = false,
+        string? lookingFor = null
+    ) =>
         new()
         {
-            Hobby = "Photography",
-            Title = "Custom shelf",
-            Description = "Handmade oak shelf with three adjustable levels",
-            AvailableForTrade = false,
-            LookingFor = null,
+            Hobby = hobby,
+            Title = title,
+            Description = description,
+            AvailableForTrade = availableForTrade,
+            LookingFor = lookingFor,
             Media = media ?? [BuildFile("a.jpg", "image/jpeg", "data")],
         };
 

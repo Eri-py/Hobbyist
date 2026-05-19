@@ -39,6 +39,7 @@ export const USER_HOBBIES_QUERY_KEY = ["user-hobbies"] as const;
 // --- Types ---
 
 type CreatePostResponse = components["schemas"]["CreatePostResponse"];
+type CreateDraftResponse = components["schemas"]["CreateDraftResponse"];
 
 export type Hobby = {
   name: string;
@@ -63,6 +64,11 @@ const getUserHobbiesApi = async (): Promise<Hobby[]> => {
 
 const createPostApi = (formData: FormData) =>
   axiosInstance.post<CreatePostResponse>("posts/create", formData, {
+    timeout: 60_000,
+  });
+
+const saveDraftApi = (formData: FormData) =>
+  axiosInstance.post<CreateDraftResponse>("posts/draft", formData, {
     timeout: 60_000,
   });
 
@@ -104,10 +110,63 @@ export function useCreate() {
     setActiveStep(0);
   }, [methods]);
 
+  // --- Close with draft prompt ---
+
+  // Shown when the user taps X having already selected media.
+  const handleClose = useCallback(() => {
+    if (mediaPicker.selectedAssets.length === 0) {
+      router.back();
+      return;
+    }
+
+    const doSave = async () => {
+      try {
+        const assets = mediaPicker.selectedAssets;
+        const values = methods.getValues();
+
+        const resolvedAssets = await Promise.all(
+          assets.map((asset) => MediaLibrary.getAssetInfoAsync(asset)),
+        );
+        const mediaItems = await processMediaForUpload(resolvedAssets);
+
+        const formData = new FormData();
+        mediaItems.forEach((item) => {
+          formData.append("media", item as unknown as Blob);
+        });
+        // All form fields are optional on the draft — only append non-empty values.
+        if (values.title) formData.append("title", values.title);
+        if (values.description) formData.append("description", values.description);
+        if (values.hobby) formData.append("hobby", values.hobby);
+        formData.append("availableForTrade", String(values.availableForTrade));
+        if (values.lookingFor) formData.append("lookingFor", values.lookingFor);
+
+        await saveDraftApi(formData);
+        router.back();
+      } catch {
+        Alert.alert(
+          "Couldn't save draft",
+          "Something went wrong saving your draft.",
+          [
+            { text: "Discard & Close", style: "destructive", onPress: () => router.back() },
+            { text: "Try Again", onPress: doSave },
+          ],
+        );
+      }
+    };
+
+    Alert.alert(
+      "Save as draft?",
+      "Would you like to save your post as a draft to finish later?",
+      [
+        { text: "Discard", style: "destructive", onPress: () => router.back() },
+        { text: "Save Draft", onPress: doSave },
+      ],
+    );
+  }, [mediaPicker.selectedAssets, methods, router]);
+
   // --- Submit ---
 
   const handleSubmit = methods.handleSubmit((values) => {
-    // Capture assets before navigation unmounts the component
     const assets = mediaPicker.selectedAssets;
 
     // Close the UI immediately — upload runs in the background
@@ -154,6 +213,7 @@ export function useCreate() {
     activeStep,
     handleNext,
     handleBack,
+    handleClose,
     // Form
     methods,
     // Hobby selection

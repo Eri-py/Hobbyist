@@ -12,6 +12,7 @@ import type { components } from "@hobbyist/types";
 // --- Types ---
 
 type CreatePostResponse = components["schemas"]["CreatePostResponse"];
+type CreateDraftResponse = components["schemas"]["CreateDraftResponse"];
 
 // --- API ---
 
@@ -26,6 +27,18 @@ const createPostApi = (files: File[], values: CreateFormSchemaTypes) => {
     formData.append("lookingFor", values.lookingFor);
   }
   return axiosInstance.post<CreatePostResponse>("posts/create", formData);
+};
+
+const saveDraftApi = (files: File[], values: CreateFormSchemaTypes) => {
+  const formData = new FormData();
+  files.forEach((f) => formData.append("media", f));
+  // All form fields are optional on a draft — only send non-empty values.
+  if (values.title) formData.append("title", values.title);
+  if (values.description) formData.append("description", values.description);
+  if (values.hobby) formData.append("hobby", values.hobby);
+  formData.append("availableForTrade", String(values.availableForTrade));
+  if (values.lookingFor) formData.append("lookingFor", values.lookingFor);
+  return axiosInstance.post<CreateDraftResponse>("posts/draft", formData);
 };
 
 // --- Mobile step config ---
@@ -58,6 +71,12 @@ export function useCreate(onPostCreated: (postId: string) => void) {
     mutationFn: ({ files, values }: { files: File[]; values: CreateFormSchemaTypes }) =>
       createPostApi(files, values),
     onSuccess: (response) => onPostCreated(response.data.postId),
+    onError: (error: ServerError) => handleServerError(error),
+  });
+
+  const saveDraftMutation = useMutation({
+    mutationFn: ({ files, values }: { files: File[]; values: CreateFormSchemaTypes }) =>
+      saveDraftApi(files, values),
     onError: (error: ServerError) => handleServerError(error),
   });
 
@@ -106,6 +125,17 @@ export function useCreate(onPostCreated: (postId: string) => void) {
     createPostMutation.mutate({ files: files.map((f) => f.file), values });
   };
 
+  // --- Draft save (called by navigation blocker dialog) ---
+
+  const saveDraft = useCallback(
+    (files: FileWithMetadata[]) =>
+      saveDraftMutation.mutateAsync({
+        files: files.map((f) => f.file),
+        values: methods.getValues(),
+      }),
+    [methods, saveDraftMutation],
+  );
+
   return {
     methods,
     activeStep,
@@ -115,5 +145,7 @@ export function useCreate(onPostCreated: (postId: string) => void) {
     clearServerError,
     handleSubmit,
     isSubmitting: createPostMutation.isPending,
+    saveDraft,
+    isSavingDraft: saveDraftMutation.isPending,
   };
 }

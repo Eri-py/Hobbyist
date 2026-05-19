@@ -28,11 +28,6 @@ public class PostDraftService(
         if (!Guid.TryParse(userId, out var userGuid))
             return Result<CreateDraftResponse>.BadRequest("Invalid user identifier.");
 
-        if (request.AvailableForTrade && string.IsNullOrWhiteSpace(request.LookingFor))
-            return Result<CreateDraftResponse>.BadRequest(
-                "Please describe what you're looking for."
-            );
-
         var postId = SlugGenerator.Generate();
         var uploadedKeys = new List<string>(request.Media.Length);
 
@@ -139,6 +134,22 @@ public class PostDraftService(
         if (post.MediaCount == 0)
             return Result<CreatePostResponse>.BadRequest(
                 "At least one media file is required before publishing."
+            );
+
+        if (string.IsNullOrWhiteSpace(post.Hobby))
+            return Result<CreatePostResponse>.BadRequest("Hobby is required before publishing.");
+
+        if (string.IsNullOrWhiteSpace(post.Title))
+            return Result<CreatePostResponse>.BadRequest("Title is required before publishing.");
+
+        if (string.IsNullOrWhiteSpace(post.Description))
+            return Result<CreatePostResponse>.BadRequest(
+                "Description is required before publishing."
+            );
+
+        if (post.Description.Trim().Length < 10)
+            return Result<CreatePostResponse>.BadRequest(
+                "Description must be at least 10 characters."
             );
 
         if (post.AvailableForTrade && string.IsNullOrWhiteSpace(post.LookingFor))

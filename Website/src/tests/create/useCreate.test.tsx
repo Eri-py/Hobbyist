@@ -18,21 +18,13 @@ vi.mock("@hobbyist/hooks", () => ({
   })),
 }));
 
-const DRAFT_POST_ID = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
 const PUBLISHED_POST_ID = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb";
+const DRAFT_POST_ID = "cccccccc-cccc-cccc-cccc-cccccccccccc";
 
-// vi.mock is hoisted to the top of the file, so the fns must be created with
-// vi.hoisted to be available inside the factory before const declarations run.
-const { mockPost, mockDelete } = vi.hoisted(() => ({
-  mockPost: vi.fn(),
-  mockDelete: vi.fn(),
-}));
+const { mockPost } = vi.hoisted(() => ({ mockPost: vi.fn() }));
 
 vi.mock("@/api/axiosInstance", () => ({
-  axiosInstance: {
-    post: mockPost,
-    delete: mockDelete,
-  },
+  axiosInstance: { post: mockPost },
 }));
 
 import { useCreate } from "@/hooks/create/useCreate";
@@ -60,45 +52,23 @@ const makeFile = (name = "photo.jpg"): FileWithMetadata => ({
 
 const noopOnPostCreated = vi.fn();
 
-// ---------------------------------------------------------------------------
-// Mock responses
-// ---------------------------------------------------------------------------
-
-/** Sets up axiosInstance.post to return appropriate shapes per endpoint. */
-const setupPostMock = ({
-  draftKeys = ["key1"],
-  publishedPostId = PUBLISHED_POST_ID,
-  addedKey = "added-key",
-}: {
-  draftKeys?: string[];
-  publishedPostId?: string;
-  addedKey?: string;
-} = {}) => {
-  mockPost.mockImplementation((url: string) => {
-    if (url === "posts/draft") {
-      return Promise.resolve({
-        data: { postId: DRAFT_POST_ID, mediaObjectKeys: draftKeys },
-      });
-    }
-    if (url.endsWith("/publish")) {
-      return Promise.resolve({ data: { postId: publishedPostId } });
-    }
-    if (url.endsWith("/media")) {
-      return Promise.resolve({ data: { objectKey: addedKey } });
-    }
-    return Promise.resolve({ data: {} });
-  });
+const validValues = {
+  hobby: "Trading Cards",
+  title: "My Item",
+  description: "Some description here.",
+  availableForTrade: false as boolean,
+  lookingFor: "",
 };
 
-/** Creates a draft in the hook by calling onFilesAdded and waiting for it to settle. */
-const createDraft = async (
-  result: ReturnType<typeof renderHook<ReturnType<typeof useCreate>, unknown>>["result"],
-  files: FileWithMetadata[],
-) => {
-  await act(async () => {
-    result.current.onFilesAdded(files);
+const setupPostMock = ({
+  publishedPostId = PUBLISHED_POST_ID,
+  draftPostId = DRAFT_POST_ID,
+}: { publishedPostId?: string; draftPostId?: string } = {}) => {
+  mockPost.mockImplementation((url: string) => {
+    if (url === "posts/create") return Promise.resolve({ data: { postId: publishedPostId } });
+    if (url === "posts/draft") return Promise.resolve({ data: { postId: draftPostId } });
+    return Promise.resolve({ data: {} });
   });
-  await waitFor(() => expect(result.current.isUploadingMedia).toBe(false));
 };
 
 // ---------------------------------------------------------------------------
@@ -111,7 +81,6 @@ describe("useCreate", () => {
     mockHandleServerError.mockReset();
     noopOnPostCreated.mockReset();
     mockPost.mockReset();
-    mockDelete.mockReset();
   });
 
   // -------------------------------------------------------------------------
@@ -130,161 +99,13 @@ describe("useCreate", () => {
       expect(result.current.handleNext).toBeTypeOf("function");
       expect(result.current.handleBack).toBeTypeOf("function");
       expect(result.current.handleSubmit).toBeTypeOf("function");
-      expect(result.current.onFilesAdded).toBeTypeOf("function");
-      expect(result.current.onFileRemoved).toBeTypeOf("function");
-      expect(result.current.discardDraft).toBeTypeOf("function");
+      expect(result.current.saveDraft).toBeTypeOf("function");
     });
 
-    it("isSubmitting and isUploadingMedia start as false", () => {
+    it("isSubmitting and isSavingDraft start as false", () => {
       const { result } = renderHook(() => useCreate(noopOnPostCreated), { wrapper: makeWrapper() });
       expect(result.current.isSubmitting).toBe(false);
-      expect(result.current.isUploadingMedia).toBe(false);
-    });
-  });
-
-  // -------------------------------------------------------------------------
-  // onFilesAdded — draft creation
-  // -------------------------------------------------------------------------
-
-  describe("onFilesAdded", () => {
-    it("calls posts/draft with the files when no draft exists", async () => {
-      setupPostMock();
-      const { result } = renderHook(() => useCreate(noopOnPostCreated), { wrapper: makeWrapper() });
-      const file = makeFile();
-
-      await act(async () => {
-        result.current.onFilesAdded([file]);
-      });
-
-      await waitFor(() => {
-        expect(mockPost).toHaveBeenCalledWith(
-          "posts/draft",
-          expect.any(FormData),
-          expect.objectContaining({ headers: { "Content-Type": "multipart/form-data" } }),
-        );
-      });
-    });
-
-    it("does nothing when called with an empty array", async () => {
-      const { result } = renderHook(() => useCreate(noopOnPostCreated), { wrapper: makeWrapper() });
-
-      await act(async () => {
-        result.current.onFilesAdded([]);
-      });
-
-      expect(mockPost).not.toHaveBeenCalled();
-    });
-
-    it("calls posts/{id}/media for each file when draft already exists", async () => {
-      setupPostMock();
-      const { result } = renderHook(() => useCreate(noopOnPostCreated), { wrapper: makeWrapper() });
-      const firstFile = makeFile("first.jpg");
-      const secondFile = makeFile("second.jpg");
-
-      // Create the draft with the first batch.
-      await createDraft(result, [firstFile]);
-
-      // Add more files to the existing draft.
-      await act(async () => {
-        result.current.onFilesAdded([secondFile]);
-      });
-
-      await waitFor(() => {
-        expect(mockPost).toHaveBeenCalledWith(
-          `posts/${DRAFT_POST_ID}/media`,
-          expect.any(FormData),
-          expect.objectContaining({ headers: { "Content-Type": "multipart/form-data" } }),
-        );
-      });
-    });
-
-    it("calls handleServerError when the draft creation API fails", async () => {
-      mockPost.mockRejectedValueOnce(new Error("network error"));
-      const { result } = renderHook(() => useCreate(noopOnPostCreated), { wrapper: makeWrapper() });
-
-      await act(async () => {
-        result.current.onFilesAdded([makeFile()]);
-      });
-
-      await waitFor(() => expect(mockHandleServerError).toHaveBeenCalled());
-    });
-  });
-
-  // -------------------------------------------------------------------------
-  // onFileRemoved
-  // -------------------------------------------------------------------------
-
-  describe("onFileRemoved", () => {
-    it("calls DELETE posts/{id}/media with the correct objectKey", async () => {
-      setupPostMock({ draftKeys: ["object-key-1"] });
-      mockDelete.mockResolvedValue({});
-      const { result } = renderHook(() => useCreate(noopOnPostCreated), { wrapper: makeWrapper() });
-      const file = makeFile();
-
-      await createDraft(result, [file]);
-
-      await act(async () => {
-        result.current.onFileRemoved(file.id);
-      });
-
-      await waitFor(() => {
-        expect(mockDelete).toHaveBeenCalledWith(
-          `posts/${DRAFT_POST_ID}/media`,
-          expect.objectContaining({ data: { objectKey: "object-key-1" } }),
-        );
-      });
-    });
-
-    it("does nothing when there is no active draft", async () => {
-      const { result } = renderHook(() => useCreate(noopOnPostCreated), { wrapper: makeWrapper() });
-
-      await act(async () => {
-        result.current.onFileRemoved("any-id");
-      });
-
-      expect(mockDelete).not.toHaveBeenCalled();
-    });
-
-    it("does nothing when the fileId has no matching objectKey", async () => {
-      setupPostMock({ draftKeys: ["key1"] });
-      mockDelete.mockResolvedValue({});
-      const { result } = renderHook(() => useCreate(noopOnPostCreated), { wrapper: makeWrapper() });
-
-      await createDraft(result, [makeFile()]);
-
-      await act(async () => {
-        // "unknown-id" was never uploaded so there is no objectKey for it.
-        result.current.onFileRemoved("unknown-id");
-      });
-
-      expect(mockDelete).not.toHaveBeenCalled();
-    });
-  });
-
-  // -------------------------------------------------------------------------
-  // discardDraft
-  // -------------------------------------------------------------------------
-
-  describe("discardDraft", () => {
-    it("calls DELETE posts/{id} when a draft exists", async () => {
-      setupPostMock();
-      mockDelete.mockResolvedValue({});
-      const { result } = renderHook(() => useCreate(noopOnPostCreated), { wrapper: makeWrapper() });
-
-      await createDraft(result, [makeFile()]);
-      act(() => result.current.discardDraft());
-
-      await waitFor(() => {
-        expect(mockDelete).toHaveBeenCalledWith(`posts/${DRAFT_POST_ID}`);
-      });
-    });
-
-    it("does nothing when there is no draft to discard", async () => {
-      const { result } = renderHook(() => useCreate(noopOnPostCreated), { wrapper: makeWrapper() });
-
-      act(() => result.current.discardDraft());
-
-      expect(mockDelete).not.toHaveBeenCalled();
+      expect(result.current.isSavingDraft).toBe(false);
     });
   });
 
@@ -305,7 +126,7 @@ describe("useCreate", () => {
       expect(result.current.activeStep).toBe(0);
     });
 
-    it("advances to step 1 when files are present regardless of upload state", async () => {
+    it("advances to step 1 when files are present", async () => {
       const { result } = renderHook(() => useCreate(noopOnPostCreated), { wrapper: makeWrapper() });
       const onFilesError = vi.fn();
 
@@ -390,13 +211,6 @@ describe("useCreate", () => {
   // -------------------------------------------------------------------------
 
   describe("handleSubmit", () => {
-    const validValues = {
-      hobby: "Trading Cards",
-      title: "My Item",
-      description: "Some description here.",
-      availableForTrade: false,
-    };
-
     it("calls onFilesError and does not call the API when files array is empty", () => {
       const { result } = renderHook(() => useCreate(noopOnPostCreated), { wrapper: makeWrapper() });
       const onFilesError = vi.fn();
@@ -407,32 +221,18 @@ describe("useCreate", () => {
       expect(mockPost).not.toHaveBeenCalled();
     });
 
-    it("calls onFilesError when files are present but no draft exists", () => {
+    it("calls posts/create with files and form data when files are present", async () => {
+      setupPostMock();
       const { result } = renderHook(() => useCreate(noopOnPostCreated), { wrapper: makeWrapper() });
       const onFilesError = vi.fn();
 
       act(() => result.current.handleSubmit(validValues, [makeFile()], onFilesError));
 
-      expect(onFilesError).toHaveBeenCalledOnce();
-      expect(mockPost).not.toHaveBeenCalled();
-    });
-
-    it("calls clearServerError and publishes when draft exists", async () => {
-      setupPostMock();
-      const { result } = renderHook(() => useCreate(noopOnPostCreated), { wrapper: makeWrapper() });
-      const onFilesError = vi.fn();
-      const file = makeFile();
-
-      await createDraft(result, [file]);
-
-      act(() => result.current.handleSubmit(validValues, [file], onFilesError));
-
       expect(onFilesError).not.toHaveBeenCalled();
-      expect(mockClearServerError).toHaveBeenCalled();
       await waitFor(() => {
         expect(mockPost).toHaveBeenCalledWith(
-          `posts/${DRAFT_POST_ID}/publish`,
-          expect.objectContaining({ title: validValues.title }),
+          "posts/create",
+          expect.any(FormData),
         );
       });
     });
@@ -441,43 +241,73 @@ describe("useCreate", () => {
       setupPostMock({ publishedPostId: PUBLISHED_POST_ID });
       const onPostCreated = vi.fn();
       const { result } = renderHook(() => useCreate(onPostCreated), { wrapper: makeWrapper() });
-      const file = makeFile();
 
-      await createDraft(result, [file]);
-      act(() => result.current.handleSubmit(validValues, [file], vi.fn()));
+      act(() => result.current.handleSubmit(validValues, [makeFile()], vi.fn()));
 
       await waitFor(() => expect(onPostCreated).toHaveBeenCalledWith(PUBLISHED_POST_ID));
     });
 
-    it("calls handleServerError when the publish API fails", async () => {
-      setupPostMock();
-      mockPost.mockImplementationOnce(() => Promise.resolve({ data: { postId: DRAFT_POST_ID, mediaObjectKeys: ["k"] } }))
-               .mockRejectedValueOnce(new Error("server error"));
+    it("calls handleServerError when the API fails", async () => {
+      mockPost.mockRejectedValueOnce(new Error("server error"));
       const { result } = renderHook(() => useCreate(noopOnPostCreated), { wrapper: makeWrapper() });
-      const file = makeFile();
 
-      await createDraft(result, [file]);
-      act(() => result.current.handleSubmit(validValues, [file], vi.fn()));
+      act(() => result.current.handleSubmit(validValues, [makeFile()], vi.fn()));
 
       await waitFor(() => expect(mockHandleServerError).toHaveBeenCalled());
     });
 
-    it("includes optional lookingFor when provided", async () => {
+    it("calls clearServerError before submitting", async () => {
       setupPostMock();
       const { result } = renderHook(() => useCreate(noopOnPostCreated), { wrapper: makeWrapper() });
-      const file = makeFile();
 
-      await createDraft(result, [file]);
+      act(() => result.current.handleSubmit(validValues, [makeFile()], vi.fn()));
 
-      expect(() => {
-        act(() => {
-          result.current.handleSubmit(
-            { ...validValues, availableForTrade: true, lookingFor: "Baseball cards" },
-            [file],
-            vi.fn(),
-          );
-        });
-      }).not.toThrow();
+      expect(mockClearServerError).toHaveBeenCalled();
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // saveDraft
+  // -------------------------------------------------------------------------
+
+  describe("saveDraft", () => {
+    it("calls posts/draft with the provided files", async () => {
+      setupPostMock();
+      const { result } = renderHook(() => useCreate(noopOnPostCreated), { wrapper: makeWrapper() });
+
+      await act(async () => {
+        await result.current.saveDraft([makeFile()]);
+      });
+
+      expect(mockPost).toHaveBeenCalledWith("posts/draft", expect.any(FormData));
+    });
+
+    it("resolves with the draft post id on success", async () => {
+      setupPostMock({ draftPostId: DRAFT_POST_ID });
+      const { result } = renderHook(() => useCreate(noopOnPostCreated), { wrapper: makeWrapper() });
+
+      let postId: string | undefined;
+      await act(async () => {
+        const response = await result.current.saveDraft([makeFile()]);
+        postId = response.data.postId;
+      });
+
+      expect(postId).toBe(DRAFT_POST_ID);
+    });
+
+    it("calls handleServerError when the API fails", async () => {
+      mockPost.mockRejectedValueOnce(new Error("network error"));
+      const { result } = renderHook(() => useCreate(noopOnPostCreated), { wrapper: makeWrapper() });
+
+      await act(async () => {
+        try {
+          await result.current.saveDraft([makeFile()]);
+        } catch {
+          // expected — mutateAsync re-throws
+        }
+      });
+
+      expect(mockHandleServerError).toHaveBeenCalled();
     });
   });
 });

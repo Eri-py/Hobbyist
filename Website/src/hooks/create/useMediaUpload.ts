@@ -98,7 +98,7 @@ export function useMediaUpload() {
         }
       }
     },
-    [filesWithMetadata, onFilesAdded],
+    [filesWithMetadata],
   );
 
   const onDropRejected = useCallback((fileRejections: FileRejection[]) => {
