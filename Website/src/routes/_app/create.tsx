@@ -33,23 +33,15 @@ function CreatePage() {
 
   const hasPostedRef = useRef(false);
 
-  const handlePostCreated = useCallback(
-    (postId: string) => {
-      hasPostedRef.current = true;
-      if (user?.username) {
-        navigate({ to: `/profile/${user.username}/${postId}` });
-        return;
-      }
-      navigate({ to: "/profile" });
-    },
-    [navigate, user],
-  );
+  const handlePostCreated = useCallback(() => {
+    hasPostedRef.current = true;
+    navigate({ to: user?.username ? `/profile/${user.username}` : "/profile" });
+  }, [navigate, user]);
 
   const {
     methods,
     serverErrorMessage,
     handleSubmit,
-    isSubmitting,
     activeStep,
     handleNext,
     handleBack,
@@ -73,7 +65,7 @@ function CreatePage() {
 
   // Block navigation when the user has files loaded but hasn't posted yet.
   const blocker = useBlocker({
-    shouldBlockFn: () => files.length > 0 && !isSubmitting && !hasPostedRef.current,
+    shouldBlockFn: () => files.length > 0 && !hasPostedRef.current,
     enableBeforeUnload: true,
     withResolver: true,
   });
@@ -132,7 +124,7 @@ function CreatePage() {
                 isDragActive={isDragActive}
                 removeFile={removeFile}
                 reorderFiles={reorderFiles}
-                isSubmitting={isSubmitting}
+                isSubmitting={false}
                 onClear={handleClear}
               />
             ) : (
@@ -141,7 +133,7 @@ function CreatePage() {
                 getRootProps={getRootProps}
                 isDragActive={isDragActive}
                 removeFile={removeFile}
-                isSubmitting={isSubmitting}
+                isSubmitting={false}
                 activeStep={activeStep}
                 onNext={() => handleNext(files, addError)}
                 onBack={handleBack}

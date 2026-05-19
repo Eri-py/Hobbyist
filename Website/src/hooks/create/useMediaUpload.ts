@@ -50,55 +50,57 @@ export function useMediaUpload() {
 
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
-      if (acceptedFiles.length > 0) {
-        // Keep track of the original order before sorting
-        const filesWithIndex = acceptedFiles.map((file, index) => ({ file, originalIndex: index }));
+      if (acceptedFiles.length === 0) return;
 
-        // Sort by size for processing
-        const sortedFiles = filesWithIndex.sort((a, b) => a.file.size - b.file.size);
+      const withIndex = acceptedFiles.map((file, i) => ({ file, i }));
+      // Sort smallest-first so we fit as many files as possible within the total limit.
+      const sorted = [...withIndex].sort((a, b) => a.file.size - b.file.size);
 
-        // Get current size and slot count of all files already stored.
-        let currentTotal = 0;
-        filesWithMetadata.forEach((f) => (currentTotal += f.file.size));
-        const availableSlots = MAX_FILES - filesWithMetadata.length;
+      const availableSlots = MAX_FILES - filesWithMetadata.length;
+      const candidates = sorted.slice(0, availableSlots);
+      const overflow = sorted.slice(availableSlots);
 
-        // Keep track of added files and rejected files.
-        const toAdd: { file: File; originalIndex: number }[] = [];
-        const rejected: string[] = [];
+      const rejected: string[] = overflow.map(
+        ({ file }) => `${file.name}: Maximum ${MAX_FILES} files allowed.`,
+      );
 
-        for (const { file, originalIndex } of sortedFiles) {
-          if (toAdd.length >= availableSlots) {
-            rejected.push(`${file.name}: Maximum ${MAX_FILES} files allowed.`);
-          } else if (currentTotal + file.size > MAX_TOTAL_SIZE) {
-            rejected.push(
-              `${file.name}: Not enough space (${(currentTotal / 1024 / 1024).toFixed(2)}MB of ${(MAX_TOTAL_SIZE / 1024 / 1024).toFixed(2)}MB used)`,
-            );
-          } else {
-            currentTotal += file.size;
-            toAdd.push({ file, originalIndex });
-          }
+      // Compress all candidates in parallel, then size-check against compressed sizes.
+      const compressed = await Promise.all(
+        candidates.map(async ({ file, i }) => ({
+          file: await compressImage(file),
+          originalName: file.name,
+          i,
+        })),
+      );
+      // Restore original drop order before the size check.
+      compressed.sort((a, b) => a.i - b.i);
+
+      let currentTotal = filesWithMetadata.reduce((sum, f) => sum + f.file.size, 0);
+      const accepted: (typeof compressed)[number][] = [];
+
+      for (const entry of compressed) {
+        if (currentTotal + entry.file.size > MAX_TOTAL_SIZE) {
+          rejected.push(
+            `${entry.originalName}: Not enough space (${(currentTotal / 1024 / 1024).toFixed(2)}MB of ${(MAX_TOTAL_SIZE / 1024 / 1024).toFixed(2)}MB used)`,
+          );
+        } else {
+          currentTotal += entry.file.size;
+          accepted.push(entry);
         }
+      }
 
-        // Sort toAdd back to original upload order
-        toAdd.sort((a, b) => a.originalIndex - b.originalIndex);
+      const newFilesWithMetadata: FileWithMetadata[] = await Promise.all(
+        accepted.map(async ({ file }) => ({
+          id: crypto.randomUUID(),
+          file,
+          preview: await generateThumbnail(file),
+        })),
+      );
 
-        // Compress images and generate thumbnails
-        const newFilesWithMetadata: FileWithMetadata[] = await Promise.all(
-          toAdd.map(async ({ file }) => {
-            const processedFile = await compressImage(file);
-            return {
-              id: crypto.randomUUID(),
-              file: processedFile,
-              preview: await generateThumbnail(processedFile),
-            };
-          }),
-        );
+      setFilesWithMetadata((prev) => [...prev, ...newFilesWithMetadata]);
 
-        setFilesWithMetadata((prev) => [...prev, ...newFilesWithMetadata]);
-
-        if (rejected.length > 0) {
-          setErrors((prev) => [...prev, ...rejected.map(createMediaUploadError)]);
-        }
+      if (rejected.length > 0) {
+        setErrors((prev) => [...prev, ...rejected.map(createMediaUploadError)]);
       }
     },
     [filesWithMetadata],

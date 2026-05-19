@@ -4,7 +4,6 @@ using Hobbyist.Api.Dtos;
 using Hobbyist.Api.Dtos.Posts;
 using Hobbyist.Api.Services.MediaStorageServices;
 using Hobbyist.Common;
-using Microsoft.EntityFrameworkCore;
 
 namespace Hobbyist.Api.Services.PostServices.CreatePostServices;
 
@@ -159,7 +158,7 @@ public class CreatePostService(
         {
             await context.SaveChangesAsync(ct);
         }
-        catch (DbUpdateException ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             logger.LogError(
                 ex,

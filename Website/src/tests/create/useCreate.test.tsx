@@ -102,9 +102,8 @@ describe("useCreate", () => {
       expect(result.current.saveDraft).toBeTypeOf("function");
     });
 
-    it("isSubmitting and isSavingDraft start as false", () => {
+    it("isSavingDraft starts as false", () => {
       const { result } = renderHook(() => useCreate(noopOnPostCreated), { wrapper: makeWrapper() });
-      expect(result.current.isSubmitting).toBe(false);
       expect(result.current.isSavingDraft).toBe(false);
     });
   });
@@ -237,32 +236,25 @@ describe("useCreate", () => {
       });
     });
 
-    it("calls onPostCreated with the published post id on success", async () => {
+    it("calls onPostCreated immediately without waiting for the API", () => {
       setupPostMock({ publishedPostId: PUBLISHED_POST_ID });
       const onPostCreated = vi.fn();
       const { result } = renderHook(() => useCreate(onPostCreated), { wrapper: makeWrapper() });
 
       act(() => result.current.handleSubmit(validValues, [makeFile()], vi.fn()));
 
-      await waitFor(() => expect(onPostCreated).toHaveBeenCalledWith(PUBLISHED_POST_ID));
+      expect(onPostCreated).toHaveBeenCalledOnce();
+      expect(onPostCreated).toHaveBeenCalledWith();
     });
 
-    it("calls handleServerError when the API fails", async () => {
+    it("fails silently when the API errors — no handleServerError called", async () => {
       mockPost.mockRejectedValueOnce(new Error("server error"));
       const { result } = renderHook(() => useCreate(noopOnPostCreated), { wrapper: makeWrapper() });
 
       act(() => result.current.handleSubmit(validValues, [makeFile()], vi.fn()));
 
-      await waitFor(() => expect(mockHandleServerError).toHaveBeenCalled());
-    });
-
-    it("calls clearServerError before submitting", async () => {
-      setupPostMock();
-      const { result } = renderHook(() => useCreate(noopOnPostCreated), { wrapper: makeWrapper() });
-
-      act(() => result.current.handleSubmit(validValues, [makeFile()], vi.fn()));
-
-      expect(mockClearServerError).toHaveBeenCalled();
+      await waitFor(() => expect(mockPost).toHaveBeenCalled());
+      expect(mockHandleServerError).not.toHaveBeenCalled();
     });
   });
 

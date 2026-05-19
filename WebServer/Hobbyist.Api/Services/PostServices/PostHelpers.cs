@@ -1,3 +1,4 @@
+using Hobbyist.Api.Data.Entities;
 using Hobbyist.Api.Extensions;
 using Hobbyist.Api.Services.MediaStorageServices;
 using Hobbyist.Api.Services.PostServices.PostDraftServices;
@@ -6,6 +7,29 @@ namespace Hobbyist.Api.Services.PostServices;
 
 internal static class PostHelpers
 {
+    internal static string? ValidateDraftForPublish(PostEntity post)
+    {
+        if (post.MediaCount == 0)
+            return "At least one media file is required before publishing.";
+
+        if (string.IsNullOrWhiteSpace(post.Hobby))
+            return "Hobby is required before publishing.";
+
+        if (string.IsNullOrWhiteSpace(post.Title))
+            return "Title is required before publishing.";
+
+        if (string.IsNullOrWhiteSpace(post.Description))
+            return "Description is required before publishing.";
+
+        if (post.Description.Trim().Length < 10)
+            return "Description must be at least 10 characters.";
+
+        if (post.AvailableForTrade && string.IsNullOrWhiteSpace(post.LookingFor))
+            return "Please describe what you're looking for.";
+
+        return null;
+    }
+
     internal static string? ValidateMedia(IFormFile[] media)
     {
         if (media.Length == 0)
@@ -16,6 +40,14 @@ internal static class PostHelpers
 
         if (media.Length > PostDraftConfig.MaxMediaFiles)
             return $"A post can contain at most {PostDraftConfig.MaxMediaFiles} media files.";
+
+        var oversized = media.FirstOrDefault(f => f.Length > PostDraftConfig.MaxFileSizeBytes);
+        if (oversized is not null)
+            return $"\"{oversized.FileName}\" exceeds the {PostDraftConfig.MaxFileSizeBytes / 1024 / 1024} MB per-file limit.";
+
+        var totalSize = media.Sum(f => f.Length);
+        if (totalSize > PostDraftConfig.MaxTotalSizeBytes)
+            return $"Total upload size exceeds the {PostDraftConfig.MaxTotalSizeBytes / 1024 / 1024} MB limit.";
 
         return null;
     }
