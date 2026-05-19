@@ -40,6 +40,12 @@ async function processAssetForUpload(asset: MediaLibrary.AssetInfo, index: numbe
     }
   }
   const image = await context.renderAsync();
+  // Preserve PNG format so transparency survives; compress everything else as JPEG.
+  const isPng = (asset.filename ?? "").toLowerCase().endsWith(".png");
+  if (isPng) {
+    const result = await image.saveAsync({ format: SaveFormat.PNG });
+    return { uri: result.uri, name: `media_${index}.png`, type: "image/png" };
+  }
   const result = await image.saveAsync({ compress: 0.8, format: SaveFormat.JPEG });
   return { uri: result.uri, name: `media_${index}.jpg`, type: "image/jpeg" };
 }
@@ -69,6 +75,7 @@ export function useMediaPicker() {
       const albums = await MediaLibrary.getAlbumsAsync({ includeSmartAlbums: true });
       const album = albums.find((a) => a.title === activeAlbum);
       if (!album) return;
+      // Loads up to 1000 assets — users with larger libraries won't see older items.
       const { assets } = await MediaLibrary.getAssetsAsync({
         mediaType: ["photo", "video"],
         sortBy: MediaLibrary.SortBy.creationTime,
@@ -100,7 +107,10 @@ export function useMediaPicker() {
       const uri = info.localUri ?? info.uri;
       const size = new File(uri).size;
 
-      if (size > MAX_FILE_SIZE) {
+      // Images are compressed before upload so skip the per-file check for them —
+      // a large raw photo will shrink significantly. Videos are not compressed, so enforce strictly.
+      const isVideo = asset.mediaType === MediaLibrary.MediaType.video;
+      if (isVideo && size > MAX_FILE_SIZE) {
         setMediaError(
           `"${asset.filename}" exceeds the ${MAX_FILE_SIZE / 1024 / 1024}MB per-file limit.`,
         );

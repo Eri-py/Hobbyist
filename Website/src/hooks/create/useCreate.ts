@@ -52,7 +52,7 @@ const MOBILE_STEP_COUNT = Object.keys(mobileStepFields).length;
 
 // --- Hook ---
 
-export function useCreate(onPostCreated: (postId: string) => void) {
+export function useCreate(onPostCreated: () => void) {
   const { serverErrorMessage, handleServerError, clearServerError } = useServerError();
 
   const methods = useForm<CreateFormSchemaTypes>({
@@ -65,13 +65,6 @@ export function useCreate(onPostCreated: (postId: string) => void) {
       availableForTrade: false,
       lookingFor: "",
     },
-  });
-
-  const createPostMutation = useMutation({
-    mutationFn: ({ files, values }: { files: File[]; values: CreateFormSchemaTypes }) =>
-      createPostApi(files, values),
-    onSuccess: (response) => onPostCreated(response.data.postId),
-    onError: (error: ServerError) => handleServerError(error),
   });
 
   const saveDraftMutation = useMutation({
@@ -115,14 +108,13 @@ export function useCreate(onPostCreated: (postId: string) => void) {
     files: FileWithMetadata[],
     onFilesError: (message: string) => void,
   ) => {
-    clearServerError();
-
     if (files.length === 0) {
       onFilesError("Please upload at least one image or video before continuing.");
       return;
     }
 
-    createPostMutation.mutate({ files: files.map((f) => f.file), values });
+    onPostCreated();
+    void createPostApi(files.map((f) => f.file), values);
   };
 
   // --- Draft save (called by navigation blocker dialog) ---
@@ -144,7 +136,6 @@ export function useCreate(onPostCreated: (postId: string) => void) {
     serverErrorMessage,
     clearServerError,
     handleSubmit,
-    isSubmitting: createPostMutation.isPending,
     saveDraft,
     isSavingDraft: saveDraftMutation.isPending,
   };

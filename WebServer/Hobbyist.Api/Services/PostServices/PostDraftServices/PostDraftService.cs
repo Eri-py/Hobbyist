@@ -89,7 +89,7 @@ public class PostDraftService(
         {
             await context.SaveChangesAsync(ct);
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             logger.LogError(
                 ex,
@@ -130,39 +130,18 @@ public class PostDraftService(
         if (!post.IsDraft)
             return Result<CreatePostResponse>.BadRequest("Post is already published.");
 
-        if (post.MediaCount == 0)
-            return Result<CreatePostResponse>.BadRequest(
-                "At least one media file is required before publishing."
-            );
-
-        if (string.IsNullOrWhiteSpace(post.Hobby))
-            return Result<CreatePostResponse>.BadRequest("Hobby is required before publishing.");
-
-        if (string.IsNullOrWhiteSpace(post.Title))
-            return Result<CreatePostResponse>.BadRequest("Title is required before publishing.");
-
-        if (string.IsNullOrWhiteSpace(post.Description))
-            return Result<CreatePostResponse>.BadRequest(
-                "Description is required before publishing."
-            );
-
-        if (post.Description.Trim().Length < 10)
-            return Result<CreatePostResponse>.BadRequest(
-                "Description must be at least 10 characters."
-            );
-
-        if (post.AvailableForTrade && string.IsNullOrWhiteSpace(post.LookingFor))
-            return Result<CreatePostResponse>.BadRequest(
-                "Please describe what you're looking for."
-            );
+        var publishError = PostHelpers.ValidateDraftForPublish(post);
+        if (publishError is not null)
+            return Result<CreatePostResponse>.BadRequest(publishError);
 
         post.IsDraft = false;
+        post.CreatedAt = DateTimeOffset.UtcNow;
 
         try
         {
             await context.SaveChangesAsync(ct);
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             logger.LogError(ex, "Failed to publish draft post {PostId}", postId);
             return Result<CreatePostResponse>.InternalServerError(ErrorMessages.UnexpectedError);
@@ -206,7 +185,7 @@ public class PostDraftService(
         {
             await context.SaveChangesAsync(ct);
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             logger.LogError(ex, "Failed to remove draft post {PostId} from database", postId);
             return Result.InternalServerError(ErrorMessages.UnexpectedError);

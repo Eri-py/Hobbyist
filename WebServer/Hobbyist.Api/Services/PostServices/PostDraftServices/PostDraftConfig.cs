@@ -15,4 +15,10 @@ public static class PostDraftConfig
     /// Must stay in sync with MAX_FILES on the mobile client.
     /// </summary>
     public const int MaxMediaFiles = 15;
+
+    /// <summary>Maximum size in bytes for a single media file (50 MB).</summary>
+    public const long MaxFileSizeBytes = 50L * 1024 * 1024;
+
+    /// <summary>Maximum combined size in bytes for all media files in one request (100 MB).</summary>
+    public const long MaxTotalSizeBytes = 100L * 1024 * 1024;
 }

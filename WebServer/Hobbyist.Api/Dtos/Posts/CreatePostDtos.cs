@@ -5,10 +5,12 @@ namespace Hobbyist.Api.Dtos.Posts;
 public record class CreatePostRequest
 {
     [Required]
+    [MinLength(2)]
     [MaxLength(50)]
     public required string Hobby { get; set; }
 
     [Required]
+    [MinLength(3)]
     [MaxLength(100)]
     public required string Title { get; set; }
 

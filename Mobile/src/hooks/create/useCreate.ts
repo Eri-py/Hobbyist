@@ -1,5 +1,5 @@
-import { createContext, useCallback, useContext, useState } from "react";
 import { Alert } from "react-native";
+import { createContext, useCallback, useContext, useState } from "react";
 import * as MediaLibrary from "expo-media-library";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
@@ -149,11 +149,7 @@ export function useCreate() {
 
                 await saveDraftApi(formData);
               } catch {
-                Alert.alert(
-                  "Couldn't save draft",
-                  "Something went wrong saving your draft.",
-                  [{ text: "OK" }],
-                );
+                // silent — best-effort draft save
               }
             })();
           },
@@ -191,11 +187,7 @@ export function useCreate() {
 
         await createPostApi(formData);
       } catch {
-        Alert.alert(
-          "Couldn't post",
-          "Something went wrong while uploading your post. Please try again.",
-          [{ text: "OK" }],
-        );
+        // silent — user will notice the post isn't on their profile
       }
     })();
   });
