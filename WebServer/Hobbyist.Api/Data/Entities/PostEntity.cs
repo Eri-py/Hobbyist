@@ -36,12 +36,6 @@ public class PostEntity
     /// </summary>
     public int MediaCount { get; set; }
 
-    /// <summary>
-    /// When this draft expires and becomes eligible for cleanup.
-    /// Null on published posts.
-    /// </summary>
-    public DateTimeOffset? ExpiresAt { get; set; }
-
     // Navigation property
     public UserEntity? User { get; set; }
 }

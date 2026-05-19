@@ -248,7 +248,6 @@ public class PostDraftServiceTests : DatabaseTestBase
         {
             Assert.That(post!.IsDraft, Is.True);
             Assert.That(post.MediaCount, Is.EqualTo(2));
-            Assert.That(post.ExpiresAt, Is.Null);
             Assert.That(post.Hobby, Is.EqualTo(request.Hobby));
             Assert.That(post.Title, Is.EqualTo(request.Title));
             Assert.That(post.Description, Is.EqualTo(request.Description));
@@ -279,7 +278,6 @@ public class PostDraftServiceTests : DatabaseTestBase
         {
             Assert.That(post!.IsDraft, Is.True);
             Assert.That(post.MediaCount, Is.EqualTo(1));
-            Assert.That(post.ExpiresAt, Is.Null);
             Assert.That(post.Hobby, Is.Null);
             Assert.That(post.Title, Is.Null);
             Assert.That(post.Description, Is.Null);
@@ -420,7 +418,7 @@ public class PostDraftServiceTests : DatabaseTestBase
     }
 
     [Test]
-    public async Task PublishDraftAsync_WhenSuccessful_PublishesDraftAndClearsExpiresAt()
+    public async Task PublishDraftAsync_WhenSuccessful_PublishesDraft()
     {
         var draft = await SeedPostAsync(isDraft: true, mediaCount: 2);
 
@@ -435,11 +433,7 @@ public class PostDraftServiceTests : DatabaseTestBase
         Context.ChangeTracker.Clear();
         var post = await Context.Posts.FindAsync(draft.Id);
 
-        using (Assert.EnterMultipleScope())
-        {
-            Assert.That(post!.IsDraft, Is.False);
-            Assert.That(post.ExpiresAt, Is.Null);
-        }
+        Assert.That(post!.IsDraft, Is.False);
     }
 
     [Test]
@@ -573,7 +567,6 @@ public class PostDraftServiceTests : DatabaseTestBase
             UserId = _user.Id,
             IsDraft = isDraft,
             MediaCount = mediaCount,
-            ExpiresAt = null,
             Hobby = hobby,
             Title = title,
             Description = description,
