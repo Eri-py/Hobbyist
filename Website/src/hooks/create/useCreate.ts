@@ -1,80 +1,26 @@
 import { useCallback, useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
 
-import { useServerError } from "@hobbyist/hooks";
+import { useCreatePost, appendPostFields, appendDraftFields } from "@hobbyist/hooks";
+import type { CreateFormSchemaTypes } from "@hobbyist/form-schemas";
 import type { FileWithMetadata } from "@/hooks/create/useMediaUpload";
 import { axiosInstance } from "@/api/axiosInstance";
-import { CreateFormSchema, type CreateFormSchemaTypes } from "@hobbyist/form-schemas";
-import type { components } from "@hobbyist/types";
 
-// --- Types ---
+// --- Small-screen step config ---
 
-type CreatePostResponse = components["schemas"]["CreatePostResponse"];
-type CreateDraftResponse = components["schemas"]["CreateDraftResponse"];
-
-// --- API ---
-
-const createPostApi = (files: File[], values: CreateFormSchemaTypes) => {
-  const formData = new FormData();
-  files.forEach((f) => formData.append("media", f));
-  formData.append("hobby", values.hobby);
-  formData.append("title", values.title);
-  formData.append("description", values.description);
-  formData.append("availableForTrade", String(values.availableForTrade));
-  if (values.lookingFor) {
-    formData.append("lookingFor", values.lookingFor);
-  }
-  return axiosInstance.post<CreatePostResponse>("posts/create", formData, { timeout: 60_000 });
-};
-
-const saveDraftApi = (files: File[], values: CreateFormSchemaTypes) => {
-  const formData = new FormData();
-  files.forEach((f) => formData.append("media", f));
-  // All form fields are optional on a draft — only send non-empty values.
-  if (values.title) formData.append("title", values.title);
-  if (values.description) formData.append("description", values.description);
-  if (values.hobby) formData.append("hobby", values.hobby);
-  formData.append("availableForTrade", String(values.availableForTrade));
-  if (values.lookingFor) formData.append("lookingFor", values.lookingFor);
-  return axiosInstance.post<CreateDraftResponse>("posts/draft", formData);
-};
-
-// --- Mobile step config ---
-
-const mobileStepFields: Record<number, (keyof CreateFormSchemaTypes)[]> = {
+const smallScreenStepFields: Record<number, (keyof CreateFormSchemaTypes)[]> = {
   0: [],
   1: ["hobby", "title", "description", "availableForTrade", "lookingFor"],
 };
 
-const MOBILE_STEP_COUNT = Object.keys(mobileStepFields).length;
+const SMALL_SCREEN_STEP_COUNT = Object.keys(smallScreenStepFields).length;
 
 // --- Hook ---
 
 export function useCreate(onPostCreated: () => void) {
-  const { serverErrorMessage, clearServerError } = useServerError();
-
-  const methods = useForm<CreateFormSchemaTypes>({
-    mode: "onChange",
-    resolver: zodResolver(CreateFormSchema),
-    defaultValues: {
-      hobby: "",
-      title: "",
-      description: "",
-      availableForTrade: false,
-      lookingFor: "",
-    },
-  });
-
-  const saveDraftMutation = useMutation({
-    mutationFn: ({ files, values }: { files: File[]; values: CreateFormSchemaTypes }) =>
-      saveDraftApi(files, values),
-  });
-
-  // --- Mobile step navigation ---
-
+  const { methods, createPost, saveDraft, isSavingDraft } = useCreatePost(axiosInstance);
   const [activeStep, setActiveStep] = useState<number>(0);
+
+  // --- Small-screen step navigation ---
 
   const handleNext = useCallback(
     async (files: FileWithMetadata[], onFilesError: (message: string) => void) => {
@@ -83,17 +29,16 @@ export function useCreate(onPostCreated: () => void) {
           onFilesError("Please upload at least one image or video before continuing.");
           return;
         }
-        setActiveStep((prev) => Math.min(prev + 1, MOBILE_STEP_COUNT - 1));
+        setActiveStep((prev) => Math.min(prev + 1, SMALL_SCREEN_STEP_COUNT - 1));
         return;
       }
 
-      const isValid = await methods.trigger(mobileStepFields[activeStep]);
+      const isValid = await methods.trigger(smallScreenStepFields[activeStep]);
       if (!isValid) return;
 
-      clearServerError();
-      setActiveStep((prev) => Math.min(prev + 1, MOBILE_STEP_COUNT - 1));
+      setActiveStep((prev) => Math.min(prev + 1, SMALL_SCREEN_STEP_COUNT - 1));
     },
-    [activeStep, clearServerError, methods],
+    [activeStep, methods],
   );
 
   const handleBack = useCallback(() => {
@@ -112,19 +57,24 @@ export function useCreate(onPostCreated: () => void) {
       return;
     }
 
+    const formData = new FormData();
+    files.forEach((f) => formData.append("media", f.file));
+    appendPostFields(formData, values);
+
     onPostCreated();
-    void createPostApi(files.map((f) => f.file), values);
+    createPost(formData);
   };
 
   // --- Draft save (called by navigation blocker dialog) ---
 
-  const saveDraft = useCallback(
-    (files: FileWithMetadata[]) =>
-      saveDraftMutation.mutateAsync({
-        files: files.map((f) => f.file),
-        values: methods.getValues(),
-      }),
-    [methods, saveDraftMutation],
+  const handleSaveDraft = useCallback(
+    (files: FileWithMetadata[]) => {
+      const formData = new FormData();
+      files.forEach((f) => formData.append("media", f.file));
+      appendDraftFields(formData, methods.getValues());
+      return saveDraft(formData);
+    },
+    [methods, saveDraft],
   );
 
   return {
@@ -132,10 +82,8 @@ export function useCreate(onPostCreated: () => void) {
     activeStep,
     handleNext,
     handleBack,
-    serverErrorMessage,
-    clearServerError,
     handleSubmit,
-    saveDraft,
-    isSavingDraft: saveDraftMutation.isPending,
+    saveDraft: handleSaveDraft,
+    isSavingDraft,
   };
 }

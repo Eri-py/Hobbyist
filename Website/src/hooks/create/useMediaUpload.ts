@@ -2,10 +2,7 @@ import { useCallback, useState, useEffect, useRef } from "react";
 import { useDropzone, type FileRejection } from "react-dropzone";
 import { generateThumbnail } from "./generateThumbnail";
 import { compressImage } from "./compressImage";
-
-const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB per file
-const MAX_TOTAL_SIZE = 100 * 1024 * 1024; // 100MB total
-const MAX_FILES = 15;
+import { MAX_FILE_SIZE, MAX_TOTAL_SIZE, MAX_FILES } from "@hobbyist/hooks";
 
 export type FileWithMetadata = {
   id: string;
@@ -79,7 +76,11 @@ export function useMediaUpload() {
       const accepted: (typeof compressed)[number][] = [];
 
       for (const entry of compressed) {
-        if (currentTotal + entry.file.size > MAX_TOTAL_SIZE) {
+        if (entry.file.size > MAX_FILE_SIZE) {
+          rejected.push(
+            `${entry.originalName}: Exceeds the ${MAX_FILE_SIZE / 1024 / 1024}MB per-file limit.`,
+          );
+        } else if (currentTotal + entry.file.size > MAX_TOTAL_SIZE) {
           rejected.push(
             `${entry.originalName}: Not enough space (${(currentTotal / 1024 / 1024).toFixed(2)}MB of ${(MAX_TOTAL_SIZE / 1024 / 1024).toFixed(2)}MB used)`,
           );
@@ -111,16 +112,15 @@ export function useMediaUpload() {
 
     const errorMessages = fileRejections.map((rejection) => {
       const fileName = rejection.file.name;
-      const errorCode = rejection.errors[0]?.code;
-
-      switch (errorCode) {
-        case "file-invalid-type":
-          return `${fileName}: Invalid file type. Please upload image or video files only.`;
-        case "file-too-large":
-          return `${fileName}: File is too large. Maximum size is ${(MAX_FILE_SIZE / 1024 / 1024).toFixed(2)}MB per file.`;
-        default:
-          return `${fileName}: Failed to upload. ${rejection.errors[0]?.message || "Unknown error"}`;
+      const code = rejection.errors[0]?.code;
+      if (code === "file-invalid-type") {
+        return `${fileName}: Invalid file type. Please upload image or video files only.`;
       }
+      if (code === "file-too-large") {
+        const limitMB = (MAX_FILE_SIZE / 1024 / 1024).toFixed(2);
+        return `${fileName}: Failed to upload. File is too large (limit: ${limitMB}MB).`;
+      }
+      return `${fileName}: Failed to upload. ${rejection.errors[0]?.message || "Unknown error"}`;
     });
 
     setErrors((prev) => [...prev, ...errorMessages.map(createMediaUploadError)]);
@@ -142,7 +142,6 @@ export function useMediaUpload() {
       "video/x-msvideo": [".avi"],
     },
     multiple: true,
-    maxSize: MAX_FILE_SIZE,
     maxFiles: MAX_FILES,
   });
 

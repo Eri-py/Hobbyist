@@ -2,12 +2,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import * as MediaLibrary from "expo-media-library";
 import { File } from "expo-file-system";
 import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
+import { MAX_FILE_SIZE, MAX_TOTAL_SIZE, MAX_FILES } from "@hobbyist/hooks";
 
 export type ValidActiveAlbumTypes = "Recents" | "Videos" | "Favorites";
 
-export const MAX_FILES = 15;
-const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB per file
-const MAX_TOTAL_SIZE = 100 * 1024 * 1024; // 100MB total
+export { MAX_FILES };
 
 function getVideoMimeType(filename: string): string {
   const ext = filename.split(".").pop()?.toLowerCase() ?? "";

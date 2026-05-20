@@ -1,6 +1,5 @@
 using Hobbyist.Api.Data;
 using Hobbyist.Api.Data.Entities;
-using Hobbyist.Api.Dtos;
 using Hobbyist.Api.Dtos.Posts;
 using Hobbyist.Api.Services.MediaStorageServices;
 using Hobbyist.Common;
@@ -35,17 +34,16 @@ public class CreatePostService(
         var postId = SlugGenerator.Generate();
         var createdAt = DateTimeOffset.UtcNow;
 
-        // Keep uploaded keys for compensation if DB persistence fails later.
-        var uploadedObjectKeys = new List<string>(request.Media.Length);
-        var mediaStoreResult = await StorePostMediaAsync(
+        var uploadResult = await PostHelpers.UploadPostMediaAsync(
             request.Media,
             userId,
             postId,
-            uploadedObjectKeys,
+            mediaStorageService,
+            logger,
             ct
         );
-        if (!mediaStoreResult.IsSuccess)
-            return Result<CreatePostResponse>.FromError(mediaStoreResult);
+        if (!uploadResult.IsSuccess)
+            return Result<CreatePostResponse>.FromError(uploadResult);
 
         // Persist post metadata only after media is safely stored.
         var postStoreResult = await StorePostDetailsAsync(request, userGuid, postId, createdAt, ct);
@@ -53,7 +51,7 @@ public class CreatePostService(
         {
             // Best-effort rollback to avoid orphaned media objects.
             await PostHelpers.CleanupUploadedObjectsAsync(
-                uploadedObjectKeys,
+                uploadResult.Content!,
                 mediaStorageService,
                 logger,
                 ct
@@ -62,72 +60,6 @@ public class CreatePostService(
         }
 
         return Result<CreatePostResponse>.Success(new CreatePostResponse { PostId = postId });
-    }
-
-    private async Task<Result> StorePostMediaAsync(
-        IFormFile[] media,
-        string userId,
-        string postId,
-        ICollection<string> uploadedObjectKeys,
-        CancellationToken ct
-    )
-    {
-        for (var i = 0; i < media.Length; i++)
-        {
-            var file = media[i];
-            var objectKey = mediaStorageService.BuildObjectKey(
-                userId,
-                postId,
-                i + 1,
-                file.FileName
-            );
-
-            await using var contentStream = file.OpenReadStream();
-            var uploadResult = await mediaStorageService.UploadAsync(
-                new UploadMediaRequest
-                {
-                    Content = contentStream,
-                    ObjectKey = objectKey,
-                    FileName = file.FileName,
-                    ContentType = file.ContentType,
-                    ContentLength = file.Length,
-                },
-                ct
-            );
-            if (!uploadResult.IsSuccess)
-            {
-                // Upload failed mid-batch: cleanup anything that was already uploaded.
-                await PostHelpers.CleanupUploadedObjectsAsync(
-                    uploadedObjectKeys,
-                    mediaStorageService,
-                    logger,
-                    ct
-                );
-                return uploadResult.ResultType switch
-                {
-                    ResultTypes.BadRequest => Result.BadRequest(
-                        uploadResult.Message ?? string.Empty
-                    ),
-                    ResultTypes.Unauthorized => Result.Unauthorized(
-                        uploadResult.Message ?? string.Empty
-                    ),
-                    ResultTypes.NotFound => Result.NotFound(uploadResult.Message ?? string.Empty),
-                    ResultTypes.Conflict => Result.Conflict(uploadResult.Message ?? string.Empty),
-                    ResultTypes.TooManyRequests => Result.TooManyRequests(
-                        uploadResult.Message ?? string.Empty
-                    ),
-                    _ => Result.InternalServerError(
-                        uploadResult.Message ?? ErrorMessages.UnexpectedError
-                    ),
-                };
-            }
-
-            var uploadedMedia = uploadResult.Content!;
-            // Track immediately so rollback includes this file if URL generation fails.
-            uploadedObjectKeys.Add(uploadedMedia.ObjectKey);
-        }
-
-        return Result.NoContent();
     }
 
     private async Task<Result> StorePostDetailsAsync(

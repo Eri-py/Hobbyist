@@ -5,12 +5,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 
 import { axiosInstance } from "@/api/axiosInstance";
-import type { components } from "@hobbyist/types";
+import { useCreatePost, appendPostFields, appendDraftFields } from "@hobbyist/hooks";
 
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-
-import { CreateFormSchema, type CreateFormSchemaTypes } from "@hobbyist/form-schemas";
 import { useMediaPicker, processMediaForUpload } from "./useMediaPicker";
 
 // --- Context ---
@@ -38,9 +34,6 @@ export const USER_HOBBIES_QUERY_KEY = ["user-hobbies"] as const;
 
 // --- Types ---
 
-type CreatePostResponse = components["schemas"]["CreatePostResponse"];
-type CreateDraftResponse = components["schemas"]["CreateDraftResponse"];
-
 export type Hobby = {
   name: string;
   count: number;
@@ -62,32 +55,12 @@ const getUserHobbiesApi = async (): Promise<Hobby[]> => {
   ];
 };
 
-const createPostApi = (formData: FormData) =>
-  axiosInstance.post<CreatePostResponse>("posts/create", formData, {
-    timeout: 60_000,
-  });
-
-const saveDraftApi = (formData: FormData) =>
-  axiosInstance.post<CreateDraftResponse>("posts/draft", formData, {
-    timeout: 60_000,
-  });
-
 // --- Hook ---
 
 export function useCreate() {
   const router = useRouter();
   const mediaPicker = useMediaPicker();
-  const methods = useForm<CreateFormSchemaTypes>({
-    mode: "onChange",
-    resolver: zodResolver(CreateFormSchema),
-    defaultValues: {
-      title: "",
-      description: "",
-      hobby: "",
-      availableForTrade: false,
-      lookingFor: "",
-    },
-  });
+  const { methods, createPost, saveDraft } = useCreatePost(axiosInstance);
   const [activeStep, setActiveStep] = useState(0);
 
   // --- Queries ---
@@ -111,7 +84,6 @@ export function useCreate() {
 
   // --- Close with draft prompt ---
 
-  // Shown when the user taps X having already selected media.
   const handleClose = useCallback(() => {
     if (mediaPicker.selectedAssets.length === 0) {
       router.back();
@@ -135,19 +107,12 @@ export function useCreate() {
                   assets.map((asset) => MediaLibrary.getAssetInfoAsync(asset)),
                 );
                 const mediaItems = await processMediaForUpload(resolvedAssets);
-
                 const formData = new FormData();
                 mediaItems.forEach((item) => {
                   formData.append("media", item as unknown as Blob);
                 });
-                // All form fields are optional on the draft — only append non-empty values.
-                if (values.title) formData.append("title", values.title);
-                if (values.description) formData.append("description", values.description);
-                if (values.hobby) formData.append("hobby", values.hobby);
-                formData.append("availableForTrade", String(values.availableForTrade));
-                if (values.lookingFor) formData.append("lookingFor", values.lookingFor);
-
-                await saveDraftApi(formData);
+                appendDraftFields(formData, values);
+                await saveDraft(formData);
               } catch {
                 // silent — best-effort draft save
               }
@@ -156,7 +121,7 @@ export function useCreate() {
         },
       ],
     );
-  }, [mediaPicker.selectedAssets, methods, router]);
+  }, [mediaPicker.selectedAssets, methods, router, saveDraft]);
 
   // --- Submit ---
 
@@ -173,20 +138,12 @@ export function useCreate() {
           assets.map((asset) => MediaLibrary.getAssetInfoAsync(asset)),
         );
         const mediaItems = await processMediaForUpload(resolvedAssets);
-
         const formData = new FormData();
         mediaItems.forEach((item) => {
           formData.append("media", item as unknown as Blob);
         });
-        formData.append("title", values.title);
-        formData.append("description", values.description);
-        formData.append("hobby", values.hobby);
-        formData.append("availableForTrade", String(values.availableForTrade));
-        if (values.lookingFor) {
-          formData.append("lookingFor", values.lookingFor);
-        }
-
-        await createPostApi(formData);
+        appendPostFields(formData, values);
+        createPost(formData);
       } catch {
         // silent — user will notice the post isn't on their profile
       }

@@ -12,8 +12,10 @@ namespace Hobbyist.Tests;
 [Parallelizable(ParallelScope.Self)]
 public abstract class DatabaseTestBase
 {
-    private string _databaseName;
-    private string _connectionString;
+    private string _databaseName = string.Empty;
+    private string _connectionString = string.Empty;
+
+    protected string ConnectionString => _connectionString;
     private readonly IConfiguration _configs = new ConfigurationBuilder()
         .AddJsonFile("appsettings.Development.json", optional: true)
         .AddEnvironmentVariables()

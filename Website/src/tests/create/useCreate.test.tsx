@@ -7,20 +7,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 // Module mocks
 // ---------------------------------------------------------------------------
 
-const mockClearServerError = vi.fn();
-const mockHandleServerError = vi.fn();
-
-vi.mock("@hobbyist/hooks", () => ({
-  useServerError: vi.fn(() => ({
-    serverErrorMessage: null,
-    handleServerError: mockHandleServerError,
-    clearServerError: mockClearServerError,
-  })),
-}));
-
-const PUBLISHED_POST_ID = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb";
-const DRAFT_POST_ID = "cccccccc-cccc-cccc-cccc-cccccccccccc";
-
 const { mockPost } = vi.hoisted(() => ({ mockPost: vi.fn() }));
 
 vi.mock("@/api/axiosInstance", () => ({
@@ -60,6 +46,9 @@ const validValues = {
   lookingFor: "",
 };
 
+const PUBLISHED_POST_ID = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb";
+const DRAFT_POST_ID = "cccccccc-cccc-cccc-cccc-cccccccccccc";
+
 const setupPostMock = ({
   publishedPostId = PUBLISHED_POST_ID,
   draftPostId = DRAFT_POST_ID,
@@ -77,8 +66,6 @@ const setupPostMock = ({
 
 describe("useCreate", () => {
   beforeEach(() => {
-    mockClearServerError.mockReset();
-    mockHandleServerError.mockReset();
     noopOnPostCreated.mockReset();
     mockPost.mockReset();
   });
@@ -152,7 +139,7 @@ describe("useCreate", () => {
       expect(result.current.activeStep).toBe(1);
     };
 
-    it("does not call clearServerError when form fields are invalid", async () => {
+    it("stays at step 1 when form fields are invalid", async () => {
       const { result } = renderHook(() => useCreate(noopOnPostCreated), { wrapper: makeWrapper() });
       await setupAtStep1(result);
 
@@ -160,10 +147,10 @@ describe("useCreate", () => {
         await result.current.handleNext([makeFile()], vi.fn());
       });
 
-      expect(mockClearServerError).not.toHaveBeenCalled();
+      expect(result.current.activeStep).toBe(1);
     });
 
-    it("calls clearServerError when all required fields are valid", async () => {
+    it("does not advance past the last step when all fields are valid", async () => {
       const { result } = renderHook(() => useCreate(noopOnPostCreated), { wrapper: makeWrapper() });
       await setupAtStep1(result);
       act(() => {
@@ -176,7 +163,7 @@ describe("useCreate", () => {
         await result.current.handleNext([makeFile()], vi.fn());
       });
 
-      expect(mockClearServerError).toHaveBeenCalled();
+      expect(result.current.activeStep).toBe(1);
     });
   });
 
@@ -248,14 +235,13 @@ describe("useCreate", () => {
       expect(onPostCreated).toHaveBeenCalledWith();
     });
 
-    it("fails silently when the API errors — no handleServerError called", async () => {
+    it("fails silently when the API errors", async () => {
       mockPost.mockRejectedValueOnce(new Error("server error"));
       const { result } = renderHook(() => useCreate(noopOnPostCreated), { wrapper: makeWrapper() });
 
       act(() => result.current.handleSubmit(validValues, [makeFile()], vi.fn()));
 
       await waitFor(() => expect(mockPost).toHaveBeenCalled());
-      expect(mockHandleServerError).not.toHaveBeenCalled();
     });
   });
 
@@ -272,7 +258,7 @@ describe("useCreate", () => {
         await result.current.saveDraft([makeFile()]);
       });
 
-      expect(mockPost).toHaveBeenCalledWith("posts/draft", expect.any(FormData));
+      expect(mockPost).toHaveBeenCalledWith("posts/draft", expect.any(FormData), { timeout: 60_000 });
     });
 
     it("resolves with the draft post id on success", async () => {
@@ -288,7 +274,7 @@ describe("useCreate", () => {
       expect(postId).toBe(DRAFT_POST_ID);
     });
 
-    it("rejects and does not call handleServerError when the API fails", async () => {
+    it("rejects when the API fails", async () => {
       mockPost.mockRejectedValueOnce(new Error("network error"));
       const { result } = renderHook(() => useCreate(noopOnPostCreated), { wrapper: makeWrapper() });
 
@@ -302,7 +288,6 @@ describe("useCreate", () => {
       });
 
       expect(threw).toBe(true);
-      expect(mockHandleServerError).not.toHaveBeenCalled();
     });
   });
 });

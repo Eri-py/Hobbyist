@@ -9,9 +9,11 @@ namespace Hobbyist.Api.Dtos.Posts;
 /// </summary>
 public record SaveDraftRequest
 {
+    [MinLength(2)]
     [MaxLength(50)]
     public string? Hobby { get; set; }
 
+    [MinLength(3)]
     [MaxLength(100)]
     public string? Title { get; set; }
 

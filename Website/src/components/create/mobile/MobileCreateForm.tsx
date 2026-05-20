@@ -20,7 +20,6 @@ type MobileCreateFormProps = {
   getRootProps: <T extends DropzoneRootProps>(props?: T) => T;
   isDragActive: boolean;
   removeFile: (fileId: string) => void;
-  isSubmitting: boolean;
   activeStep: number;
   onNext: () => void;
   onBack: () => void;
@@ -31,7 +30,6 @@ export function MobileCreateForm({
   getRootProps,
   isDragActive,
   removeFile,
-  isSubmitting,
   activeStep,
   onNext,
   onBack,
@@ -138,10 +136,7 @@ export function MobileCreateForm({
           )}
         </Stack>
 
-        <ActionButtons
-          isSubmitting={isSubmitting}
-          showPost={activeStep === STEPS_LABELS.length - 1}
-        />
+        <ActionButtons showPost={activeStep === STEPS_LABELS.length - 1} />
       </Stack>
     </Stack>
   );

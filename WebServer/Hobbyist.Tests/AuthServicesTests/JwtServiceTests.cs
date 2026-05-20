@@ -13,6 +13,7 @@ namespace Hobbyist.Tests.AuthServicesTests;
 public class JwtServiceTests : DatabaseTestBase
 {
     private JwtService _jwtService = null!;
+    private IConfiguration _configuration = null!;
     private UserEntity _testUser = null!;
     private UserEntity _testUser2 = null!;
 
@@ -49,7 +50,7 @@ public class JwtServiceTests : DatabaseTestBase
 
     protected override Task OnSetUpAsync()
     {
-        var configuration = new ConfigurationBuilder()
+        _configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(
                 new Dictionary<string, string?>
                 {
@@ -60,7 +61,7 @@ public class JwtServiceTests : DatabaseTestBase
             )
             .Build();
 
-        _jwtService = new JwtService(configuration, Context, NullLogger<JwtService>.Instance);
+        _jwtService = new JwtService(_configuration, Context, NullLogger<JwtService>.Instance);
         return Task.CompletedTask;
     }
 
