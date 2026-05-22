@@ -23,7 +23,7 @@
   "dependencies": {
     "@hobbyist/form-schemas": "workspace:*",
     "@hobbyist/types": "workspace:*",
-    "@hookform/resolvers": "^5.2.2"
+    "@hookform/resolvers": "^5.4.0"
   },
   "devDependencies": {
     "@tanstack/react-query": "^5.100.11",
