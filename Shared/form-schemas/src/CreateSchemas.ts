@@ -23,7 +23,7 @@ export const CreateFormSchema = z
       .min(10, "Description must be at least 10 characters")
       .max(2000, "Description must be less than 2000 characters"),
 
-    availableForTrade: z.boolean().optional(),
+    availableForTrade: z.boolean(),
 
     lookingFor: z.string().trim().max(500, "Must be less than 500 characters").optional(),
   })

@@ -33,21 +33,28 @@ export const compressImage = (file: File): Promise<File> => {
       ctx.drawImage(img, 0, 0, width, height);
       URL.revokeObjectURL(img.src);
 
+      const isPng = file.type === "image/png";
+      const outputType = isPng ? "image/png" : "image/jpeg";
+      const baseName = file.name.replace(/\.[^.]+$/, "");
+      const outputName = `${baseName}.${isPng ? "png" : "jpg"}`;
+
       canvas.toBlob(
         (blob) => {
           if (!blob) {
             resolve(file);
             return;
           }
-          const baseName = file.name.replace(/\.[^.]+$/, "");
-          resolve(new File([blob], `${baseName}.jpg`, { type: "image/jpeg" }));
+          resolve(new File([blob], outputName, { type: outputType }));
         },
-        "image/jpeg",
-        JPEG_QUALITY,
+        outputType,
+        isPng ? undefined : JPEG_QUALITY,
       );
     };
 
-    img.onerror = () => resolve(file);
+    img.onerror = () => {
+      URL.revokeObjectURL(img.src);
+      resolve(file);
+    };
     img.src = URL.createObjectURL(file);
   });
 };

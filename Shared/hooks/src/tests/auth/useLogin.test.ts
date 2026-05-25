@@ -68,7 +68,8 @@ import { useLogin } from "../../auth";
 // Helpers
 // ---------------------------------------------------------------------------
 
-const mockNavigate = vi.fn();
+const mockReplace = vi.fn();
+const mockNavigate = { replace: mockReplace };
 const mockAxios = { post: vi.fn() } as any;
 
 const mockStartLoginResponse = {
@@ -90,7 +91,7 @@ describe("useLogin", () => {
     capturedMutates.length = 0;
     mockTriggerResult = true;
     mockTrigger.mockImplementation(() => Promise.resolve(mockTriggerResult));
-    mockNavigate.mockReset();
+    mockReplace.mockReset();
     mockInvalidateQueries.mockReset();
     mockHandleServerError.mockReset();
     mockClearServerError.mockReset();
@@ -287,7 +288,7 @@ describe("useLogin", () => {
       await act(async () => capturedMutations[1].onSuccess(mockAuthResult));
 
       // Assert
-      expect(mockNavigate).toHaveBeenCalledWith("/");
+      expect(mockReplace).toHaveBeenCalledWith("/");
     });
 
     it("onSuccess calls onAuthSuccess when provided", async () => {

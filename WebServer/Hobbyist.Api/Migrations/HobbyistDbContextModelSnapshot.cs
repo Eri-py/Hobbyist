@@ -17,7 +17,7 @@ namespace Hobbyist.Api.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.12")
+                .HasAnnotation("ProductVersion", "10.0.8")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -131,9 +131,8 @@ namespace Hobbyist.Api.Migrations
 
             modelBuilder.Entity("Hobbyist.Api.Data.Entities.PostEntity", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
 
                     b.Property<bool>("AvailableForTrade")
                         .HasColumnType("boolean");
@@ -142,12 +141,13 @@ namespace Hobbyist.Api.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Description")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Hobby")
-                        .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<bool>("IsDraft")
+                        .HasColumnType("boolean");
 
                     b.Property<int>("Likes")
                         .HasColumnType("integer");
@@ -155,8 +155,10 @@ namespace Hobbyist.Api.Migrations
                     b.Property<string>("LookingFor")
                         .HasColumnType("text");
 
+                    b.Property<int>("MediaCount")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Title")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<Guid>("UserId")

@@ -37,7 +37,7 @@ function SignUp() {
     popularInterests,
     signUpHeaderConfig,
     SIGNUP_TOTAL_STEPS,
-  } = useSignUp((path) => navigate({ to: path }), axiosInstance);
+  } = useSignUp({ replace: (path) => navigate({ to: path, replace: true }) }, axiosInstance);
 
   return (
     <FormContainer step={step}>

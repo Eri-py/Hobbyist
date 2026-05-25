@@ -21,9 +21,14 @@ public interface IAuthSessionService
     );
 
     /// <summary>
-    /// Verifies refresh token from cookies (web) or Authorization header (mobile).
+    /// Verifies refresh token from cookies (web) or request body (mobile).
     /// </summary>
-    /// <param name="request">The request used for platform validation and token lookup</param>
+    /// <param name="request">The request used for platform detection and cookie lookup</param>
+    /// <param name="body">The request body containing the refresh token for mobile clients</param>
     /// <returns><see cref="Result{T}"/> where T is <see cref="AuthResult"/></returns>
-    Task<Result<AuthResult>> RefreshTokenAsync(HttpRequest request, CancellationToken ct);
+    Task<Result<AuthResult>> RefreshTokenAsync(
+        HttpRequest request,
+        RefreshTokenRequest? body,
+        CancellationToken ct
+    );
 }

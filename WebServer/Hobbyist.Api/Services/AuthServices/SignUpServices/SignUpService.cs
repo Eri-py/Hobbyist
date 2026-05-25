@@ -33,7 +33,7 @@ public class SignUpService(
         {
             logger.LogWarning(
                 "Sign-up conflict for username '{Username}' / email hash '{EmailHash}': {Error}",
-                username,
+                username.SanitizeForLog(),
                 logger.Hash(email),
                 errorMessage
             );

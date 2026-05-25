@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { CSS } from "@dnd-kit/utilities";
 import {
   DndContext,
@@ -58,10 +58,13 @@ function SortableThumbnail({
     }
   }, [isActive]);
 
-  const mergedRef = (node: HTMLButtonElement) => {
-    setNodeRef(node);
-    elementRef.current = node;
-  };
+  const mergedRef = useCallback(
+    (node: HTMLButtonElement | null) => {
+      setNodeRef(node);
+      elementRef.current = node;
+    },
+    [setNodeRef],
+  );
 
   return (
     <Box

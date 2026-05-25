@@ -37,7 +37,7 @@ export default function SignUp() {
     popularInterests,
     signUpHeaderConfig,
     SIGNUP_TOTAL_STEPS,
-  } = useSignUp((path: string) => router.push(path as Href), axiosInstance, handleAuthSuccess);
+  } = useSignUp({ replace: (path: string) => router.replace(path as Href) }, axiosInstance, handleAuthSuccess);
 
   return (
     <ThemedKeyboardView safeArea contentContainerStyle={styles.container}>

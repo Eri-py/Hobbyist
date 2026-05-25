@@ -1,138 +1,89 @@
 import { useCallback, useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
 
-import { useServerError, type ServerError } from "@hobbyist/hooks";
-import { axiosInstance } from "@/api/axiosInstance";
+import { useCreatePost, appendPostFields, appendDraftFields } from "@hobbyist/hooks";
+import type { CreateFormSchemaTypes } from "@hobbyist/form-schemas";
 import type { FileWithMetadata } from "@/hooks/create/useMediaUpload";
-import { CreateFormSchema, type CreateFormSchemaTypes } from "@hobbyist/form-schemas";
-import type { components } from "@hobbyist/types";
+import { axiosInstance } from "@/api/axiosInstance";
 
-// DTOs
-type CreatePostResponse = components["schemas"]["CreatePostResponse"];
+// --- Small-screen step config ---
 
-// API function
-const createPostApi = async (formData: FormData) => {
-  return axiosInstance.post<CreatePostResponse>("posts/create", formData, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
-};
-
-// --- Mobile step configuration ---
-
-// Define which form fields belong to each mobile step
-const mobileStepFields: Record<number, (keyof CreateFormSchemaTypes)[]> = {
-  0: [], // Images — handled separately (not a zod field)
+const smallScreenStepFields: Record<number, (keyof CreateFormSchemaTypes)[]> = {
+  0: [],
   1: ["hobby", "title", "description", "availableForTrade", "lookingFor"],
 };
 
-const MOBILE_STEP_COUNT = Object.keys(mobileStepFields).length;
+const SMALL_SCREEN_STEP_COUNT = Object.keys(smallScreenStepFields).length;
 
-export function useCreate(onPostCreated: (postId: string) => void) {
-  const { serverErrorMessage, handleServerError, clearServerError } = useServerError();
+// --- Hook ---
 
-  // Initialize form methods
-  const methods = useForm<CreateFormSchemaTypes>({
-    mode: "onChange",
-    resolver: zodResolver(CreateFormSchema),
-    defaultValues: {
-      hobby: "",
-      availableForTrade: false,
-      lookingFor: "",
-    },
-  });
-
-  const createPostMutation = useMutation({
-    mutationFn: (formData: FormData) => createPostApi(formData),
-    onSuccess: (response) => {
-      const postId = response.data.postId;
-      onPostCreated(postId);
-    },
-    onError: (error: ServerError) => handleServerError(error),
-  });
-
-  // --- Mobile step logic ---
-
+export function useCreate(onPostCreated: () => void) {
+  const { methods, createPost, saveDraft, isSavingDraft } = useCreatePost(axiosInstance);
   const [activeStep, setActiveStep] = useState<number>(0);
+
+  // --- Small-screen step navigation ---
 
   const handleNext = useCallback(
     async (files: FileWithMetadata[], onFilesError: (message: string) => void) => {
-      const currentFields = mobileStepFields[activeStep];
-
-      // Step 0: images — no zod fields, just check we have files
       if (activeStep === 0) {
         if (files.length === 0) {
           onFilesError("Please upload at least one image or video before continuing.");
           return;
         }
-        setActiveStep((prev) => Math.min(prev + 1, MOBILE_STEP_COUNT - 1));
+        setActiveStep((prev) => Math.min(prev + 1, SMALL_SCREEN_STEP_COUNT - 1));
         return;
       }
 
-      // Validate the current step's fields
-      const isValid = await methods.trigger(currentFields);
+      const isValid = await methods.trigger(smallScreenStepFields[activeStep]);
       if (!isValid) return;
 
-      clearServerError();
-      setActiveStep((prev) => Math.min(prev + 1, MOBILE_STEP_COUNT - 1));
+      setActiveStep((prev) => Math.min(prev + 1, SMALL_SCREEN_STEP_COUNT - 1));
     },
-    [activeStep, clearServerError, methods],
+    [activeStep, methods],
   );
 
   const handleBack = useCallback(() => {
     setActiveStep((prev) => Math.max(prev - 1, 0));
   }, []);
 
-  // --- Shared submit logic ---
+  // --- Submit ---
 
   const handleSubmit = (
     values: CreateFormSchemaTypes,
     files: FileWithMetadata[],
     onFilesError: (message: string) => void,
   ) => {
-    clearServerError();
-
     if (files.length === 0) {
       onFilesError("Please upload at least one image or video before continuing.");
       return;
     }
 
     const formData = new FormData();
+    files.forEach((f) => formData.append("media", f.file));
+    appendPostFields(formData, values);
 
-    formData.append("title", values.title);
-    formData.append("hobby", values.hobby);
-    formData.append("description", values.description);
-    formData.append("availableForTrade", (values.availableForTrade ?? false).toString());
-
-    if (values.lookingFor) {
-      formData.append("lookingFor", values.lookingFor);
-    }
-
-    files.forEach((fileMetadata) => {
-      formData.append("media", fileMetadata.file);
-    });
-
-    createPostMutation.mutate(formData);
+    onPostCreated();
+    createPost(formData);
   };
 
-  return {
-    // Form
-    methods,
+  // --- Draft save (called by navigation blocker dialog) ---
 
-    // Mobile step navigation
+  const handleSaveDraft = useCallback(
+    (files: FileWithMetadata[]) => {
+      const formData = new FormData();
+      files.forEach((f) => formData.append("media", f.file));
+      appendDraftFields(formData, methods.getValues());
+      return saveDraft(formData);
+    },
+    [methods, saveDraft],
+  );
+
+  return {
+    methods,
     activeStep,
     handleNext,
     handleBack,
-
-    // Errors
-    serverErrorMessage,
-    clearServerError,
-
-    // Submit
     handleSubmit,
-
-    // Mutation state
-    isSubmitting: createPostMutation.isPending,
+    saveDraft: handleSaveDraft,
+    isSavingDraft,
   };
 }

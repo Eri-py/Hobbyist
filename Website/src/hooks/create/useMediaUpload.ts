@@ -1,11 +1,8 @@
-import { useCallback, useState, useEffect } from "react";
+import { useCallback, useState, useEffect, useRef } from "react";
 import { useDropzone, type FileRejection } from "react-dropzone";
 import { generateThumbnail } from "./generateThumbnail";
 import { compressImage } from "./compressImage";
-
-const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB per file
-const MAX_TOTAL_SIZE = 100 * 1024 * 1024; // 100MB total
-const MAX_FILES = 15;
+import { MAX_FILE_SIZE, MAX_TOTAL_SIZE, MAX_FILES } from "@hobbyist/hooks";
 
 export type FileWithMetadata = {
   id: string;
@@ -38,63 +35,73 @@ export function useMediaUpload() {
     return () => clearTimeout(timerId);
   }, [errors]);
 
-  // Clean up all object URLs when component unmounts
+  // Keep a ref in sync so the unmount cleanup always sees the latest files.
+  const filesRef = useRef(filesWithMetadata);
   useEffect(() => {
-    return () => {
-      filesWithMetadata.forEach((fileWithMetadata) => {
-        URL.revokeObjectURL(fileWithMetadata.preview);
-      });
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    filesRef.current = filesWithMetadata;
+  }, [filesWithMetadata]);
+
+  useEffect(() => {
+    return () => filesRef.current.forEach((f: FileWithMetadata) => URL.revokeObjectURL(f.preview));
   }, []);
 
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
-      if (acceptedFiles.length > 0) {
-        // Keep track of the original order before sorting
-        const filesWithIndex = acceptedFiles.map((file, index) => ({ file, originalIndex: index }));
+      if (acceptedFiles.length === 0) return;
 
-        // Sort by size for processing
-        const sortedFiles = filesWithIndex.sort((a, b) => a.file.size - b.file.size);
+      const withIndex = acceptedFiles.map((file, i) => ({ file, i }));
+      // Sort smallest-first so we fit as many files as possible within the total limit.
+      const sorted = [...withIndex].sort((a, b) => a.file.size - b.file.size);
 
-        // Get current size of all files stored
-        let currentTotal = 0;
-        filesWithMetadata.forEach((f) => (currentTotal += f.file.size));
+      const availableSlots = MAX_FILES - filesWithMetadata.length;
+      const candidates = sorted.slice(0, availableSlots);
+      const overflow = sorted.slice(availableSlots);
 
-        // Keep track of added files and rejected files.
-        const toAdd: { file: File; originalIndex: number }[] = [];
-        const rejected: string[] = [];
+      const rejected: string[] = overflow.map(
+        ({ file }) => `${file.name}: Maximum ${MAX_FILES} files allowed.`,
+      );
 
-        for (const { file, originalIndex } of sortedFiles) {
-          if (currentTotal + file.size > MAX_TOTAL_SIZE) {
-            rejected.push(
-              `${file.name}: Not enough space (${(currentTotal / 1024 / 1024).toFixed(2)}MB of ${(MAX_TOTAL_SIZE / 1024 / 1024).toFixed(2)}MB used)`,
-            );
-          } else {
-            currentTotal += file.size;
-            toAdd.push({ file, originalIndex });
-          }
+      // Compress all candidates in parallel, then size-check against compressed sizes.
+      const compressed = await Promise.all(
+        candidates.map(async ({ file, i }) => ({
+          file: await compressImage(file),
+          originalName: file.name,
+          i,
+        })),
+      );
+      // Restore original drop order before the size check.
+      compressed.sort((a, b) => a.i - b.i);
+
+      let currentTotal = filesWithMetadata.reduce((sum, f) => sum + f.file.size, 0);
+      const accepted: (typeof compressed)[number][] = [];
+
+      for (const entry of compressed) {
+        if (entry.file.size > MAX_FILE_SIZE) {
+          rejected.push(
+            `${entry.originalName}: Exceeds the ${MAX_FILE_SIZE / 1024 / 1024}MB per-file limit.`,
+          );
+        } else if (currentTotal + entry.file.size > MAX_TOTAL_SIZE) {
+          rejected.push(
+            `${entry.originalName}: Not enough space (${(currentTotal / 1024 / 1024).toFixed(2)}MB of ${(MAX_TOTAL_SIZE / 1024 / 1024).toFixed(2)}MB used)`,
+          );
+        } else {
+          currentTotal += entry.file.size;
+          accepted.push(entry);
         }
+      }
 
-        // Sort toAdd back to original upload order
-        toAdd.sort((a, b) => a.originalIndex - b.originalIndex);
+      const newFilesWithMetadata: FileWithMetadata[] = await Promise.all(
+        accepted.map(async ({ file }) => ({
+          id: crypto.randomUUID(),
+          file,
+          preview: await generateThumbnail(file),
+        })),
+      );
 
-        // Compress images and generate thumbnails
-        const newFilesWithMetadata: FileWithMetadata[] = await Promise.all(
-          toAdd.map(async ({ file }) => {
-            const processedFile = await compressImage(file);
-            return {
-              id: crypto.randomUUID(),
-              file: processedFile,
-              preview: await generateThumbnail(processedFile),
-            };
-          }),
-        );
+      setFilesWithMetadata((prev) => [...prev, ...newFilesWithMetadata]);
 
-        setFilesWithMetadata((prev) => [...prev, ...newFilesWithMetadata]);
-        if (rejected.length > 0) {
-          setErrors((prev) => [...prev, ...rejected.map(createMediaUploadError)]);
-        }
+      if (rejected.length > 0) {
+        setErrors((prev) => [...prev, ...rejected.map(createMediaUploadError)]);
       }
     },
     [filesWithMetadata],
@@ -105,16 +112,15 @@ export function useMediaUpload() {
 
     const errorMessages = fileRejections.map((rejection) => {
       const fileName = rejection.file.name;
-      const errorCode = rejection.errors[0]?.code;
-
-      switch (errorCode) {
-        case "file-invalid-type":
-          return `${fileName}: Invalid file type. Please upload image or video files only.`;
-        case "file-too-large":
-          return `${fileName}: File is too large. Maximum size is ${(MAX_FILE_SIZE / 1024 / 1024).toFixed(2)}MB per file.`;
-        default:
-          return `${fileName}: Failed to upload. ${rejection.errors[0]?.message || "Unknown error"}`;
+      const code = rejection.errors[0]?.code;
+      if (code === "file-invalid-type") {
+        return `${fileName}: Invalid file type. Please upload image or video files only.`;
       }
+      if (code === "file-too-large") {
+        const limitMB = (MAX_FILE_SIZE / 1024 / 1024).toFixed(2);
+        return `${fileName}: Failed to upload. File is too large (limit: ${limitMB}MB).`;
+      }
+      return `${fileName}: Failed to upload. ${rejection.errors[0]?.message || "Unknown error"}`;
     });
 
     setErrors((prev) => [...prev, ...errorMessages.map(createMediaUploadError)]);
@@ -136,18 +142,14 @@ export function useMediaUpload() {
       "video/x-msvideo": [".avi"],
     },
     multiple: true,
-    maxSize: MAX_FILE_SIZE,
     maxFiles: MAX_FILES,
   });
 
   const removeFile = useCallback((fileId: string) => {
     setFilesWithMetadata((prev) => {
       const fileToRemove = prev.find((f) => f.id === fileId);
-
       if (!fileToRemove) return prev;
-
       URL.revokeObjectURL(fileToRemove.preview);
-
       return prev.filter((f) => f.id !== fileId);
     });
   }, []);

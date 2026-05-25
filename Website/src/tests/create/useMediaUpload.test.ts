@@ -253,16 +253,19 @@ describe("useMediaUpload", () => {
       // Arrange
       const { result } = renderHook(() => useMediaUpload());
       const MB = 1024 * 1024;
-      const file1 = makeImageFile("big1.jpg", 60 * MB);
-      const file2 = makeImageFile("big2.jpg", 60 * MB); // total 120MB, over limit
+      // Three 40MB files: each is under the 50MB per-file limit, but the third
+      // pushes the running total over the 100MB cap (40 + 40 + 40 = 120MB).
+      const file1 = makeImageFile("big1.jpg", 40 * MB);
+      const file2 = makeImageFile("big2.jpg", 40 * MB);
+      const file3 = makeImageFile("big3.jpg", 40 * MB);
 
       // Act
       await act(async () => {
-        await capturedOnDrop!([file1, file2]);
+        await capturedOnDrop!([file1, file2, file3]);
       });
 
-      // Assert — only the first file should be accepted
-      expect(result.current.files).toHaveLength(1);
+      // Assert — first two files fit; the third is rejected for exceeding total space
+      expect(result.current.files).toHaveLength(2);
       expect(result.current.errors).toHaveLength(1);
       expect(result.current.errors[0].message).toContain("Not enough space");
     });

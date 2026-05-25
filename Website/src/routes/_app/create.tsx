@@ -1,9 +1,12 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useBlocker } from "@tanstack/react-router";
 import { FormProvider } from "react-hook-form";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 
 import Stack from "@mui/material/Stack";
+import BookmarkBorderOutlinedIcon from "@mui/icons-material/BookmarkBorderOutlined";
+
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 
 import { useMediaUpload } from "@/hooks/create/useMediaUpload";
 import { useDeviceType } from "@/hooks/shared/useDeviceType";
@@ -12,8 +15,6 @@ import { useCreate } from "@/hooks/create/useCreate";
 import { DesktopCreateForm } from "@/components/create/desktop/DesktopCreateForm";
 import { MobileCreateForm } from "@/components/create/mobile/MobileCreateForm";
 import { useAuth } from "@hobbyist/hooks";
-
-const SERVER_ERROR_ID = "create-server-error";
 
 export const Route = createFileRoute("/_app/create")({
   component: CreatePage,
@@ -24,12 +25,22 @@ function CreatePage() {
   const { isAuthenticated, user } = useAuth();
   const { isDesktop } = useDeviceType();
 
-  // Redirect unauthenticated users away from create page.
-  useEffect(() => {
-    if (!isAuthenticated) {
-      navigate({ to: "/" });
-    }
-  }, [isAuthenticated, navigate]);
+  const hasPostedRef = useRef(false);
+
+  const handlePostCreated = useCallback(() => {
+    hasPostedRef.current = true;
+    navigate({ to: user?.username ? `/profile/${user.username}` : "/profile" });
+  }, [navigate, user]);
+
+  const {
+    methods,
+    handleSubmit,
+    activeStep,
+    handleNext,
+    handleBack,
+    saveDraft,
+    isSavingDraft,
+  } = useCreate(handlePostCreated);
 
   const {
     files,
@@ -43,45 +54,38 @@ function CreatePage() {
     addError,
     clearFiles,
   } = useMediaUpload();
-  const handlePostCreated = useCallback(
-    (postId: string) => {
-      if (user?.username) {
-        navigate({ to: `/profile/${user.username}/${postId}` });
-        return;
-      }
 
-      navigate({ to: "/profile" });
-    },
-    [navigate, user],
-  );
+  const blocker = useBlocker({
+    shouldBlockFn: () => files.length > 0 && !hasPostedRef.current,
+    enableBeforeUnload: true,
+    withResolver: true,
+  });
 
-  const {
-    methods,
-    serverErrorMessage,
-    handleSubmit,
-    isSubmitting,
-    activeStep,
-    handleNext,
-    handleBack,
-    clearServerError,
-  } = useCreate(handlePostCreated);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
-  const allErrors = useMemo(() => {
-    if (serverErrorMessage) {
-      return [...errors, { id: SERVER_ERROR_ID, message: serverErrorMessage }];
+  const handleSaveDraftAndProceed = async () => {
+    setSaveError(null);
+    try {
+      await saveDraft(files);
+      blocker.proceed?.();
+    } catch {
+      setSaveError("Couldn't save your draft. Discard or try again.");
     }
-    return errors;
-  }, [errors, serverErrorMessage]);
+  };
 
-  const handleRemoveError = (errorId: string) => {
-    if (errorId === SERVER_ERROR_ID) return clearServerError();
-    removeError(errorId);
+  const handleDiscardAndProceed = () => {
+    setSaveError(null);
+    blocker.proceed?.();
+  };
+
+  const handleStay = () => {
+    setSaveError(null);
+    blocker.reset?.();
   };
 
   const handleClear = () => {
     methods.reset();
     clearFiles();
-    clearServerError();
   };
 
   const preventEnterSubmit = (event: KeyboardEvent<HTMLFormElement>) => {
@@ -90,56 +94,70 @@ function CreatePage() {
     }
   };
 
-  // Don't render the form if user is unauthenticated
   if (!isAuthenticated) {
     return null;
   }
 
   return (
-    <FormProvider {...methods}>
-      <form
-        onSubmit={methods.handleSubmit((data) => handleSubmit(data, files, addError))}
-        onKeyDown={preventEnterSubmit}
-        style={{ display: "flex", flex: 1 }}
-      >
-        <Stack
-          sx={{
-            gap: 3,
-            flex: 1,
-          }}
+    <>
+      <FormProvider {...methods}>
+        <form
+          onSubmit={methods.handleSubmit((data) => handleSubmit(data, files, addError))}
+          onKeyDown={preventEnterSubmit}
+          style={{ display: "flex", flex: 1 }}
         >
-          {isDesktop ? (
-            <DesktopCreateForm
-              files={files}
-              getRootProps={getRootProps}
-              isDragActive={isDragActive}
-              removeFile={removeFile}
-              reorderFiles={reorderFiles}
-              isSubmitting={isSubmitting}
-              onClear={handleClear}
-            />
-          ) : (
-            <MobileCreateForm
-              files={files}
-              getRootProps={getRootProps}
-              isDragActive={isDragActive}
-              removeFile={removeFile}
-              isSubmitting={isSubmitting}
-              activeStep={activeStep}
-              onNext={() => handleNext(files, addError)}
-              onBack={handleBack}
-            />
-          )}
+          <Stack sx={{ gap: 3, flex: 1 }}>
+            {isDesktop ? (
+              <DesktopCreateForm
+                files={files}
+                getRootProps={getRootProps}
+                isDragActive={isDragActive}
+                removeFile={removeFile}
+                reorderFiles={reorderFiles}
+                onClear={handleClear}
+              />
+            ) : (
+              <MobileCreateForm
+                files={files}
+                getRootProps={getRootProps}
+                isDragActive={isDragActive}
+                removeFile={removeFile}
+                activeStep={activeStep}
+                onNext={() => handleNext(files, addError)}
+                onBack={handleBack}
+              />
+            )}
 
-          <ErrorStack
-            errors={allErrors}
-            onRemoveError={handleRemoveError}
-            position={isDesktop ? "top-right" : "bottom-center"}
-          />
+            <ErrorStack
+              errors={errors}
+              onRemoveError={removeError}
+              position={isDesktop ? "top-right" : "bottom-center"}
+            />
 
-          <input {...getInputProps()} />
-        </Stack>
-      </form>
-    </FormProvider>
+            <input {...getInputProps()} />
+          </Stack>
+        </form>
+      </FormProvider>
+
+      <ConfirmDialog
+        open={blocker.status === "blocked"}
+        onClose={handleStay}
+        icon={<BookmarkBorderOutlinedIcon />}
+        iconColor="primary"
+        title="Save as draft?"
+        description={
+          saveError ?? "You have an unsaved post. Would you like to save it as a draft to finish later?"
+        }
+        primaryAction={{
+          label: "Save Draft",
+          onClick: handleSaveDraftAndProceed,
+          loading: isSavingDraft,
+        }}
+        secondaryAction={{
+          label: "Discard",
+          onClick: handleDiscardAndProceed,
+        }}
+      />
+    </>
   );
 }

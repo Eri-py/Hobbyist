@@ -50,6 +50,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /** Creates and publishes a post in one shot (mobile optimistic-post flow). */
         post: {
             parameters: {
                 query?: never;
@@ -84,6 +85,140 @@ export interface paths {
             };
         };
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/Posts/draft": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Saves a complete draft — all form fields and media in one request.
+         *     The draft sits on the server until the user chooses to publish it.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/x-www-form-urlencoded": {
+                        Hobby?: string;
+                        Title?: string;
+                        Description?: string;
+                        AvailableForTrade?: boolean;
+                        LookingFor?: string;
+                        Media?: components["schemas"]["IFormFile"][];
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["CreateDraftResponse"];
+                        "application/json": components["schemas"]["CreateDraftResponse"];
+                        "text/json": components["schemas"]["CreateDraftResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/Posts/{slug}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Publishes a saved draft. All required data is already on the draft;
+         *     no additional fields are needed from the caller.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    slug: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["CreatePostResponse"];
+                        "application/json": components["schemas"]["CreatePostResponse"];
+                        "text/json": components["schemas"]["CreatePostResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/Posts/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Discards a draft post. Deletes the database record and performs a
+         *     best-effort bulk deletion of all associated S3 objects.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    slug: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -142,7 +277,13 @@ export interface paths {
                 path?: never;
                 cookie?: never;
             };
-            requestBody?: never;
+            requestBody?: {
+                content: {
+                    "application/json": null | components["schemas"]["RefreshTokenRequest"];
+                    "text/json": null | components["schemas"]["RefreshTokenRequest"];
+                    "application/*+json": null | components["schemas"]["RefreshTokenRequest"];
+                };
+            };
             responses: {
                 /** @description OK */
                 200: {
@@ -476,10 +617,12 @@ export interface components {
             /** Format: date-time */
             refreshTokenExpiresAt: string;
         };
+        /** @description Request to complete login using received OTP code. */
         CompleteLoginRequest: {
             identifier: string;
             otp: string;
         };
+        /** @description Contains complete user profile information including personal details and password. */
         CompleteSignUpRequest: {
             username: string;
             email: string;
@@ -489,40 +632,55 @@ export interface components {
             dateOfBirth: string;
             interests: string[];
         };
-        CreatePostResponse: {
-            /** Format: uuid */
+        /** @description Returned after a draft post is successfully created. */
+        CreateDraftResponse: {
             postId: string;
         };
+        CreatePostResponse: {
+            postId: string;
+        };
+        /** @description Response containing the enabled/disabled state of every feature flag. */
         FeatureFlagsResponse: {
             flags: {
                 [key: string]: boolean;
             };
         };
+        /** @description Response containing current user authentication status and user data if authenticated. */
         GetUserResponse: {
             isAuthenticated: boolean;
             user?: null | components["schemas"]["UserDto"];
         };
         /** Format: binary */
         IFormFile: string;
+        /** @description Response containing OTP expiration timestamp. */
         OtpResponse: {
             /** Format: date-time */
             otpExpiresAt: string;
         };
+        /** @description Request containing refresh token for mobile token refresh. */
+        RefreshTokenRequest: {
+            refreshToken: string;
+        };
+        /** @description Request to resend OTP code to specified email address. */
         ResendOtpRequest: {
             email: string;
         };
+        /** @description Credentials for initiating the login process. */
         StartLoginRequest: {
             identifier: string;
             password: string;
         };
+        /** @description Response after initiating login, containing OTP expiration and destination email. */
         StartLoginResponse: {
             otpExpiresAt: string;
             email: string;
         };
+        /** @description Contains username and email to initiate the sign-up process. */
         StartSignUpRequest: {
             username: string;
             email: string;
         };
+        /** @description Defines a transferable user. Stores non-sensitive information like the username, and name of user. */
         UserDto: {
             id: string;
             username: string;
@@ -530,6 +688,7 @@ export interface components {
             firstname: string;
             lastname: string;
         };
+        /** @description Request to verify email address using OTP code during sign-up. */
         VerifyOtpRequest: {
             email: string;
             otp: string;

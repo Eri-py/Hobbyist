@@ -70,17 +70,16 @@ public class CreatePostServiceTests : DatabaseTestBase
     }
 
     [Test]
-    public async Task StorePostMediaAsync_WhenUploadFails_RollsBackPreviouslyUploadedOnly()
+    public async Task CreatePostAsync_WhenSecondUploadFails_RollsBackFirstUploadOnly()
     {
         // Arrange
-        var postId = Guid.NewGuid();
-        var userId = "user-123";
-        var uploadedObjectKeys = new List<string>();
+        var user = await CreateUserAsync();
         var files = new[]
         {
             BuildFile("one.png", "image/png", "file-one"),
             BuildFile("two.png", "image/png", "file-two"),
         };
+        var request = BuildCreatePostRequest(files);
 
         SetupBuildObjectKey();
 
@@ -89,16 +88,16 @@ public class CreatePostServiceTests : DatabaseTestBase
                 m.UploadAsync(It.IsAny<UploadMediaRequest>(), It.IsAny<CancellationToken>())
             )
             .Returns(
-                (UploadMediaRequest request, CancellationToken _) =>
+                (UploadMediaRequest req, CancellationToken _) =>
                     Task.FromResult(
-                        request.ObjectKey.EndsWith("/002.png", StringComparison.Ordinal)
+                        req.ObjectKey.EndsWith("/002.png", StringComparison.Ordinal)
                             ? Result<UploadMediaResponse>.InternalServerError("Upload failed")
                             : Result<UploadMediaResponse>.Success(
                                 new UploadMediaResponse
                                 {
-                                    ObjectKey = request.ObjectKey,
-                                    ContentType = request.ContentType,
-                                    SizeBytes = request.ContentLength,
+                                    ObjectKey = req.ObjectKey,
+                                    ContentType = req.ContentType,
+                                    SizeBytes = req.ContentLength,
                                 }
                             )
                     )
@@ -109,65 +108,76 @@ public class CreatePostServiceTests : DatabaseTestBase
             .ReturnsAsync(Result.NoContent());
 
         // Act
-        var result = await _service.StorePostMediaAsync(
-            files,
-            userId,
-            postId,
-            uploadedObjectKeys,
+        var result = await _service.CreatePostAsync(
+            request,
+            user.Id.ToString(),
             CancellationToken.None
         );
 
-        using (Assert.EnterMultipleScope())
-        {
-            // Assert
-            Assert.That(result.IsSuccess, Is.False);
-            Assert.That(uploadedObjectKeys, Has.Count.EqualTo(1));
-        }
+        // Assert
+        Assert.That(result.IsSuccess, Is.False);
         _mediaStorageServiceMock.Verify(
-            m => m.DeleteAsync($"{userId}/{postId:N}/001.png", It.IsAny<CancellationToken>()),
+            m =>
+                m.DeleteAsync(
+                    It.Is<string>(k => k.EndsWith("/001.png", StringComparison.Ordinal)),
+                    It.IsAny<CancellationToken>()
+                ),
             Times.Once
         );
         _mediaStorageServiceMock.Verify(
-            m => m.DeleteAsync($"{userId}/{postId:N}/002.png", It.IsAny<CancellationToken>()),
+            m =>
+                m.DeleteAsync(
+                    It.Is<string>(k => k.EndsWith("/002.png", StringComparison.Ordinal)),
+                    It.IsAny<CancellationToken>()
+                ),
             Times.Never
         );
     }
 
     [Test]
-    public async Task StorePostMediaAsync_WhenSuccessful_ReturnsNoContentAndTracksObjectKeys()
+    public async Task CreatePostAsync_WhenSuccessful_UploadsMediaWithIndexBasedKeys()
     {
         // Arrange
-        var postId = Guid.NewGuid();
-        var userId = "user-123";
-        var uploadedObjectKeys = new List<string>();
+        var user = await CreateUserAsync();
         var files = new[]
         {
             BuildFile("one.png", "image/png", "file-one"),
             BuildFile("two.jpg", "image/jpeg", "file-two"),
         };
+        var request = BuildCreatePostRequest(files);
 
         SetupBuildObjectKey();
         SetupUploadAlwaysSuccess();
 
         // Act
-        var result = await _service.StorePostMediaAsync(
-            files,
-            userId,
-            postId,
-            uploadedObjectKeys,
+        var result = await _service.CreatePostAsync(
+            request,
+            user.Id.ToString(),
             CancellationToken.None
         );
 
-        using (Assert.EnterMultipleScope())
-        {
-            // Assert
-            Assert.That(result.IsSuccess, Is.True);
-            Assert.That(result.ResultType, Is.EqualTo(ResultTypes.NoContent));
-            Assert.That(uploadedObjectKeys, Has.Count.EqualTo(2));
-        }
-
-        Assert.That(uploadedObjectKeys[0], Is.EqualTo($"{userId}/{postId:N}/001.png"));
-        Assert.That(uploadedObjectKeys[1], Is.EqualTo($"{userId}/{postId:N}/002.jpg"));
+        // Assert
+        Assert.That(result.IsSuccess, Is.True);
+        _mediaStorageServiceMock.Verify(
+            m =>
+                m.UploadAsync(
+                    It.Is<UploadMediaRequest>(r =>
+                        r.ObjectKey.EndsWith("/001.png", StringComparison.Ordinal)
+                    ),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Once
+        );
+        _mediaStorageServiceMock.Verify(
+            m =>
+                m.UploadAsync(
+                    It.Is<UploadMediaRequest>(r =>
+                        r.ObjectKey.EndsWith("/002.jpg", StringComparison.Ordinal)
+                    ),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Once
+        );
     }
 
     [Test]
@@ -204,7 +214,12 @@ public class CreatePostServiceTests : DatabaseTestBase
     {
         // Arrange
         var user = await CreateUserAsync();
-        var request = BuildCreatePostRequest([BuildFile("one.png", "image/png", "one")]);
+        var files = new[]
+        {
+            BuildFile("one.png", "image/png", "one"),
+            BuildFile("two.jpg", "image/jpeg", "two"),
+        };
+        var request = BuildCreatePostRequest(files);
 
         SetupBuildObjectKey();
         SetupUploadAlwaysSuccess();
@@ -222,16 +237,17 @@ public class CreatePostServiceTests : DatabaseTestBase
             Assert.That(result.IsSuccess, Is.True);
             Assert.That(result.Content, Is.Not.Null);
         }
+
+        var post = Context.Posts.SingleOrDefault(p => p.Id == result.Content!.PostId);
+
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(result.Content.PostId, Is.Not.EqualTo(Guid.Empty));
-            Assert.That(Context.Posts.Count(), Is.EqualTo(1));
+            Assert.That(result.Content!.PostId, Is.Not.Empty);
+            Assert.That(post, Is.Not.Null);
+            Assert.That(post!.UserId, Is.EqualTo(user.Id));
+            Assert.That(post.IsDraft, Is.False);
+            Assert.That(post.MediaCount, Is.EqualTo(2));
         }
-
-        Assert.That(
-            Context.Posts.Any(post => post.Id == result.Content!.PostId && post.UserId == user.Id),
-            Is.True
-        );
     }
 
     private void SetupBuildObjectKey()
@@ -240,14 +256,14 @@ public class CreatePostServiceTests : DatabaseTestBase
             .Setup(m =>
                 m.BuildObjectKey(
                     It.IsAny<string>(),
-                    It.IsAny<Guid>(),
+                    It.IsAny<string>(),
                     It.IsAny<int>(),
                     It.IsAny<string>()
                 )
             )
             .Returns(
-                (string id, Guid pid, int index, string fileName) =>
-                    $"{id}/{pid:N}/{index:D3}{Path.GetExtension(fileName)}"
+                (string id, string pid, int index, string fileName) =>
+                    $"{id}/{pid}/{index:D3}{Path.GetExtension(fileName)}"
             );
     }
 

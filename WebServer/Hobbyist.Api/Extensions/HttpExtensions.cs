@@ -34,7 +34,7 @@ public static class HttpExtensions
             .CreateLogger(nameof(HttpExtensions));
         logger.LogWarning(
             "Request received with unrecognised Origin '{Origin}'. Expected '{WebOrigin}'.",
-            origin,
+            origin.SanitizeForLog(),
             webOrigin
         );
 

@@ -1,42 +1,32 @@
-import { Stack, useRouter } from "expo-router";
-import { FormProvider } from "react-hook-form";
-import { Text, useTheme } from "react-native-paper";
+import { Stack } from "expo-router";
 
-import { useCreateContext } from "@/hooks/create/CreateContext";
+import { useCreateContext } from "@/hooks/create/useCreate";
 import { ThemedView } from "@/components/shared/views/ThemedView";
 import { MediaPicker } from "@/components/create/MediaPicker";
 import { CreateForm } from "@/components/create/CreateForm";
 
-export default function Create() {
-  const router = useRouter();
+export default function CreateScreen() {
   const {
     media,
     activeAlbum,
     setAlbum,
     selectedAssets,
     toggleAsset,
+    mediaError,
     activeStep,
     handleNext,
     handleBack,
+    handleClose,
     handleSubmit,
-    selectedHobby,
-    methods,
-    isSubmitting,
-    serverErrorMessage,
   } = useCreateContext();
-  const theme = useTheme();
 
   return (
     <>
       <Stack.Toolbar placement="left">
         {activeStep === 0 ? (
-          <Stack.Toolbar.Button icon="xmark" onPress={() => router.back()} />
+          <Stack.Toolbar.Button icon="xmark" onPress={handleClose} />
         ) : (
-          <Stack.Toolbar.Button
-            icon="chevron.backward"
-            onPress={handleBack}
-            disabled={isSubmitting}
-          />
+          <Stack.Toolbar.Button icon="chevron.backward" onPress={handleBack} />
         )}
       </Stack.Toolbar>
 
@@ -48,9 +38,7 @@ export default function Create() {
             onPress={handleNext}
           />
         ) : (
-          <Stack.Toolbar.Button variant="done" onPress={handleSubmit} disabled={isSubmitting}>
-            Post
-          </Stack.Toolbar.Button>
+          <Stack.Toolbar.Button variant="done" icon="checkmark" onPress={handleSubmit} />
         )}
       </Stack.Toolbar>
 
@@ -62,18 +50,10 @@ export default function Create() {
             activeAlbum={activeAlbum}
             onAlbumChange={setAlbum}
             onToggleAsset={toggleAsset}
+            mediaError={mediaError}
           />
         )}
-        {activeStep === 1 && (
-          <FormProvider {...methods}>
-            <CreateForm selectedAssets={selectedAssets} selectedHobby={selectedHobby} />
-            {serverErrorMessage && (
-              <Text style={{ color: theme.colors.error, paddingHorizontal: 16, paddingBottom: 12 }}>
-                {serverErrorMessage}
-              </Text>
-            )}
-          </FormProvider>
-        )}
+        {activeStep === 1 && <CreateForm selectedAssets={selectedAssets} />}
       </ThemedView>
     </>
   );

@@ -1,9 +1,9 @@
 import { Redirect, Stack } from "expo-router";
+import { FormProvider } from "react-hook-form";
 import { useTheme } from "react-native-paper";
 
 import { useAuth } from "@hobbyist/hooks";
-import { useCreate } from "@/hooks/create/useCreate";
-import { CreateContext } from "@/hooks/create/CreateContext";
+import { useCreate, CreateContext } from "@/hooks/create/useCreate";
 
 export default function CreateLayout() {
   const { isAuthenticated } = useAuth();
@@ -16,31 +16,33 @@ export default function CreateLayout() {
 
   return (
     <CreateContext.Provider value={createValue}>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen
-          name="index"
-          options={{
-            title: "New Post",
-            headerShown: true,
-            headerStyle: { backgroundColor: theme.colors.background },
-            headerTintColor: theme.colors.onSurface,
-            headerShadowVisible: false,
-          }}
-        />
-        <Stack.Screen
-          name="hobby"
-          options={{
-            presentation: "formSheet",
-            title: "Choose a hobby",
-            headerShown: true,
-            sheetGrabberVisible: true,
-            sheetAllowedDetents: [0.5, 1],
-            headerStyle: { backgroundColor: theme.colors.background },
-            headerTintColor: theme.colors.onSurface,
-            headerShadowVisible: false,
-          }}
-        />
-      </Stack>
+      <FormProvider {...createValue.methods}>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen
+            name="index"
+            options={{
+              title: "New Post",
+              headerShown: true,
+              headerStyle: { backgroundColor: theme.colors.background },
+              headerTintColor: theme.colors.onSurface,
+              headerShadowVisible: false,
+            }}
+          />
+          <Stack.Screen
+            name="hobby"
+            options={{
+              presentation: "formSheet",
+              title: "Choose a hobby",
+              headerShown: true,
+              sheetGrabberVisible: true,
+              sheetAllowedDetents: [1],
+              headerStyle: { backgroundColor: theme.colors.background },
+              headerTintColor: theme.colors.onSurface,
+              headerShadowVisible: false,
+            }}
+          />
+        </Stack>
+      </FormProvider>
     </CreateContext.Provider>
   );
 }

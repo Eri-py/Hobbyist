@@ -1,63 +1,69 @@
+import { Alert } from "react-native";
+import { createContext, useCallback, useContext, useState } from "react";
 import * as MediaLibrary from "expo-media-library";
-import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
-import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 
 import { axiosInstance } from "@/api/axiosInstance";
-import { CreateFormSchema, type CreateFormSchemaTypes } from "@hobbyist/form-schemas";
-import { useServerError, type ServerError } from "@hobbyist/hooks";
-import type { components } from "@hobbyist/types";
+import { useCreatePost, appendPostFields, appendDraftFields } from "@hobbyist/hooks";
 
-export type ValidActiveAlbumTypes = "Recents" | "Videos" | "Favorites";
+import { useMediaPicker, processMediaForUpload } from "./useMediaPicker";
 
-export const MAX_FILES = 15;
+// --- Context ---
+
+type CreateContextValue = ReturnType<typeof useCreate>;
+
+const CreateContext = createContext<CreateContextValue | null>(null);
+
+export { CreateContext };
+
+export function useCreateContext() {
+  const ctx = useContext(CreateContext);
+  if (!ctx) throw new Error("useCreateContext must be used within the create layout");
+  return ctx;
+}
+
+// --- Re-exports for consumers ---
+
+export type { ValidActiveAlbumTypes } from "./useMediaPicker";
+export { MAX_FILES } from "./useMediaPicker";
+
+// --- Constants ---
 
 export const USER_HOBBIES_QUERY_KEY = ["user-hobbies"] as const;
 
-type CreatePostResponse = components["schemas"]["CreatePostResponse"];
+// --- Types ---
 
-// TODO: replace with axiosInstance.get<string[]>("user/hobbies") once endpoint exists
-const getUserHobbiesApi = async (): Promise<string[]> => {
+export type Hobby = {
+  name: string;
+  count: number;
+};
+
+// --- API ---
+
+// TODO: replace with axiosInstance.get<Hobby[]>("user/hobbies") once endpoint exists
+const getUserHobbiesApi = async (): Promise<Hobby[]> => {
   return [
-    "Photography",
-    "Woodworking",
-    "Model Railways",
-    "Board Games",
-    "Knitting",
-    "Cycling",
-    "Painting",
-    "3D Printing",
+    { name: "Photography", count: 4821 },
+    { name: "Woodworking", count: 2340 },
+    { name: "Model Railways", count: 1876 },
+    { name: "Board Games", count: 3102 },
+    { name: "Knitting", count: 2567 },
+    { name: "Cycling", count: 1943 },
+    { name: "Painting", count: 3814 },
+    { name: "3D Printing", count: 1205 },
   ];
 };
 
-const createPostApi = (formData: FormData) =>
-  axiosInstance.post<CreatePostResponse>("posts/create", formData, {
-    headers: { "Content-Type": "multipart/form-data" },
-    timeout: 30_000,
-  });
+// --- Hook ---
 
 export function useCreate() {
   const router = useRouter();
-  const { serverErrorMessage, handleServerError, clearServerError } = useServerError();
-
-  const [permission] = MediaLibrary.usePermissions();
-  const [media, setMedia] = useState<MediaLibrary.Asset[]>();
-  const [activeAlbum, setAlbum] = useState<ValidActiveAlbumTypes>("Recents");
-  const [selectedAssets, setSelectedAssets] = useState<MediaLibrary.Asset[]>([]);
+  const mediaPicker = useMediaPicker();
+  const { methods, createPost, saveDraft } = useCreatePost(axiosInstance);
   const [activeStep, setActiveStep] = useState(0);
-  const [selectedHobby, setSelectedHobby] = useState<string | null>(null);
 
-  const methods = useForm<CreateFormSchemaTypes>({
-    resolver: zodResolver(CreateFormSchema),
-    defaultValues: {
-      hobby: "",
-      availableForTrade: false,
-      lookingFor: "",
-    },
-  });
+  // --- Queries ---
 
   const { data: hobbies = [], isLoading: isLoadingHobbies } = useQuery({
     queryKey: USER_HOBBIES_QUERY_KEY,
@@ -65,102 +71,104 @@ export function useCreate() {
     staleTime: 15 * 60 * 1000,
   });
 
-  const createPostMutation = useMutation({
-    mutationFn: createPostApi,
-    onSuccess: () => router.dismissAll(),
-    onError: (error: ServerError) => handleServerError(error),
-  });
+  // --- Step navigation ---
 
-  useEffect(() => {
-    methods.setValue("hobby", selectedHobby ?? "", { shouldValidate: !!selectedHobby });
-  }, [selectedHobby, methods]);
+  const handleNext = useCallback(() => {
+    if (mediaPicker.selectedAssets.length === 0) return;
+    setActiveStep(1);
+  }, [mediaPicker.selectedAssets.length]);
 
-  const handleNext = () => {
-    if (activeStep === 0 && selectedAssets.length === 0) return;
-    setActiveStep((prev) => Math.min(prev + 1, 1));
-  };
+  const handleBack = useCallback(() => {
+    setActiveStep(0);
+  }, []);
 
-  const handleBack = () => setActiveStep((prev) => Math.max(prev - 1, 0));
+  // --- Close with draft prompt ---
 
-  const toggleAsset = (asset: MediaLibrary.Asset) => {
-    const isSelected = selectedAssets.some((a) => a.id === asset.id);
-    if (isSelected) {
-      setSelectedAssets((prev) => prev.filter((a) => a.id !== asset.id));
+  const handleClose = useCallback(() => {
+    if (mediaPicker.selectedAssets.length === 0) {
+      router.back();
       return;
     }
-    if (selectedAssets.length >= MAX_FILES) return;
-    setSelectedAssets((prev) => [...prev, asset]);
-  };
 
-  const handleSubmit = methods.handleSubmit(async (values) => {
-    clearServerError();
-
-    const resolvedAssets = await Promise.all(
-      selectedAssets.map((asset) => MediaLibrary.getAssetInfoAsync(asset)),
+    Alert.alert(
+      "Save as draft?",
+      "Would you like to save your post as a draft to finish later?",
+      [
+        { text: "Discard", style: "destructive", onPress: () => router.back() },
+        {
+          text: "Save Draft",
+          onPress: () => {
+            const assets = mediaPicker.selectedAssets;
+            const values = methods.getValues();
+            router.back();
+            (async () => {
+              try {
+                const resolvedAssets = await Promise.all(
+                  assets.map((asset) => MediaLibrary.getAssetInfoAsync(asset)),
+                );
+                const mediaItems = await processMediaForUpload(resolvedAssets);
+                const formData = new FormData();
+                mediaItems.forEach((item) => {
+                  formData.append("media", item as unknown as Blob);
+                });
+                appendDraftFields(formData, values);
+                await saveDraft(formData);
+              } catch {
+                // silent — best-effort draft save
+              }
+            })();
+          },
+        },
+      ],
     );
+  }, [mediaPicker.selectedAssets, methods, router, saveDraft]);
 
-    const formData = new FormData();
-    formData.append("title", values.title);
-    formData.append("hobby", values.hobby);
-    formData.append("description", values.description);
-    formData.append("availableForTrade", (values.availableForTrade ?? false).toString());
-    if (values.lookingFor) {
-      formData.append("lookingFor", values.lookingFor);
-    }
+  // --- Submit ---
 
-    const mediaItems = await Promise.all(
-      resolvedAssets.map(async (asset, index) => {
-        const uri = asset.localUri ?? asset.uri;
-        if (asset.mediaType === MediaLibrary.MediaType.video) {
-          return { uri, name: asset.filename ?? `media_${index}.mp4`, type: "video/mp4" };
-        }
-        const context = ImageManipulator.manipulate(uri);
-        context.resize({ width: 1920 });
-        const image = await context.renderAsync();
-        const result = await image.saveAsync({ compress: 0.8, format: SaveFormat.JPEG });
-        return { uri: result.uri, name: `media_${index}.jpg`, type: "image/jpeg" };
-      }),
-    );
+  const handleSubmit = methods.handleSubmit((values) => {
+    const assets = mediaPicker.selectedAssets;
+    if (assets.length === 0) return;
 
-    mediaItems.forEach((item) => {
-      formData.append("media", item as unknown as Blob);
-    });
+    // Close the UI immediately — upload runs in the background
+    router.dismissAll();
 
-    createPostMutation.mutate(formData);
+    (async () => {
+      try {
+        const resolvedAssets = await Promise.all(
+          assets.map((asset) => MediaLibrary.getAssetInfoAsync(asset)),
+        );
+        const mediaItems = await processMediaForUpload(resolvedAssets);
+        const formData = new FormData();
+        mediaItems.forEach((item) => {
+          formData.append("media", item as unknown as Blob);
+        });
+        appendPostFields(formData, values);
+        createPost(formData);
+      } catch {
+        // silent — user will notice the post isn't on their profile
+      }
+    })();
   });
 
-  useEffect(() => {
-    if (!permission?.granted) return;
-    (async () => {
-      const albums = await MediaLibrary.getAlbumsAsync({ includeSmartAlbums: true });
-      const album = albums.find((a) => a.title === activeAlbum);
-      if (!album) return;
-      const { assets } = await MediaLibrary.getAssetsAsync({
-        mediaType: ["photo", "video"],
-        sortBy: MediaLibrary.SortBy.creationTime,
-        first: 1000,
-        album,
-      });
-      setMedia(assets);
-    })();
-  }, [activeAlbum, permission?.granted]);
-
   return {
-    media,
-    activeAlbum,
-    setAlbum,
-    selectedAssets,
-    toggleAsset,
+    // Media picker
+    media: mediaPicker.media,
+    activeAlbum: mediaPicker.activeAlbum,
+    setAlbum: mediaPicker.setAlbum,
+    selectedAssets: mediaPicker.selectedAssets,
+    toggleAsset: mediaPicker.toggleAsset,
+    mediaError: mediaPicker.mediaError,
+    // Step navigation
     activeStep,
     handleNext,
     handleBack,
-    handleSubmit,
+    handleClose,
+    // Form
+    methods,
+    // Hobby selection
     hobbies,
     isLoadingHobbies,
-    selectedHobby,
-    setSelectedHobby,
-    methods,
-    isSubmitting: createPostMutation.isPending,
-    serverErrorMessage,
+    // Submit
+    handleSubmit,
   };
 }
