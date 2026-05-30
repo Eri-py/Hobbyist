@@ -13,11 +13,11 @@
     "clean": "rimraf node_modules"
   },
   "peerDependencies": {
-    "date-fns": "^4.3.0",
+    "date-fns": "^4.4.0",
     "zod": "^4.0.0"
   },
   "devDependencies": {
-    "date-fns": "^4.3.0",
+    "date-fns": "^4.4.0",
     "zod": "^4.3.6"
   }
 }
