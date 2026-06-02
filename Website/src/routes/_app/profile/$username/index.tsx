@@ -10,10 +10,10 @@ import Tab from "@mui/material/Tab";
 import { useDeviceType } from "@/hooks/shared/useDeviceType";
 import { useMobileHeaderConfig } from "@/hooks/app/useMobileHeader";
 import { useAuth } from "@hobbyist/hooks";
-import { Header } from "@/components/profile/Header";
-import { Details } from "@/components/profile/Details";
-import { ProfileSettingsModal } from "@/components/profile/ProfileSettingsModal";
 import { seo } from "@/lib/seo";
+import { ProfileIdentity } from "@/components/profile/ProfileIdentity";
+import { ProfilePostGrid } from "@/components/profile/ProfilePostGrid";
+import { mockProfilePosts } from "@/components/profile/mockData";
 
 export const Route = createFileRoute("/_app/profile/$username/")({
   head: ({ params }) => seo({ title: `@${params.username}`, noindex: true }),

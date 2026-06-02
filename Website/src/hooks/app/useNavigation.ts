@@ -29,6 +29,7 @@ const ROUTE_TO_TAB_MAP: Record<string, string> = {
   "/create": "Create",
   "/messages": "Messages",
   "/search": "Search",
+  "/settings": "Settings",
 };
 
 export function useNavigation() {

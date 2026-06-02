@@ -3,36 +3,20 @@ import type { ReactElement } from "react";
 import HomeIcon from "@mui/icons-material/Home";
 import StoreIcon from "@mui/icons-material/Store";
 import EventIcon from "@mui/icons-material/Event";
-import SettingsIcon from "@mui/icons-material/Settings";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
-import ListItemIcon from "@mui/material/ListItemIcon";
 import { styled } from "@mui/material/styles";
 
-import { useSidebar } from "@/hooks/app/useSidebar";
 import { useNavigation, type DesktopNavbarItem } from "@/hooks/app/useNavigation";
 import List from "@mui/material/List";
 
-const NavItemButton = styled(ListItemButton, {
-  shouldForwardProp: (prop) => prop !== "isSidebarOpen",
-})<{ isSidebarOpen: boolean }>(({ isSidebarOpen }) => ({
-  borderRadius: isSidebarOpen ? 8 : 12,
-  gap: isSidebarOpen ? 12 : 0,
-  height: isSidebarOpen ? 40 : "auto",
-}));
-
-const ExpandedIcon = styled(ListItemIcon)({
-  minWidth: "fit-content",
+const NavItemButton = styled(ListItemButton)({
+  borderRadius: 12,
+  height: "auto",
+  justifyContent: "center",
 });
 
-const ExpandedLabel = styled(ListItemText)({
-  "& .MuiListItemText-primary": {
-    fontSize: 15,
-    fontWeight: 300,
-  },
-});
-
-const CollapsedLabel = styled(ListItemText)({
+const NavLabel = styled(ListItemText)({
   display: "flex",
   flexDirection: "column",
   alignItems: "center",
@@ -45,7 +29,6 @@ const CollapsedLabel = styled(ListItemText)({
 
 export function NavigationButtons() {
   const { desktopItems, getActiveTab } = useNavigation();
-  const { isSidebarOpen } = useSidebar();
 
   const getDesktopIcon = (item: DesktopNavbarItem): ReactElement => {
     switch (item.key) {
@@ -55,8 +38,6 @@ export function NavigationButtons() {
         return <StoreIcon />;
       case "events":
         return <EventIcon />;
-      case "settings":
-        return <SettingsIcon />;
     }
   };
 
@@ -64,23 +45,15 @@ export function NavigationButtons() {
     const isActive = getActiveTab(item.label);
 
     return (
-      <NavItemButton
-        key={item.label}
-        isSidebarOpen={isSidebarOpen}
-        selected={isActive}
-        onClick={item.handleClick}
-      >
-        {isSidebarOpen ? (
-          <>
-            <ExpandedIcon>{getDesktopIcon(item)}</ExpandedIcon>
-            <ExpandedLabel primary={item.label} />
-          </>
-        ) : (
-          <CollapsedLabel primary={getDesktopIcon(item)} secondary={item.label} />
-        )}
+      <NavItemButton key={item.label} selected={isActive} onClick={item.handleClick}>
+        <NavLabel primary={getDesktopIcon(item)} secondary={item.label} />
       </NavItemButton>
     );
   });
 
-  return <List disablePadding>{navigationButtons}</List>;
+  return (
+    <List disablePadding sx={{ width: "100%" }}>
+      {navigationButtons}
+    </List>
+  );
 }

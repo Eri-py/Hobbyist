@@ -35,7 +35,7 @@ export function ProfileIdentity({
     <Stack>
       <Stack
         sx={{
-          height: isDesktop ? 200 : 120,
+          height: isDesktop ? 240 : 120,
           backgroundImage: "url(https://picsum.photos/seed/profile-banner/1200/400)",
           backgroundSize: "cover",
           backgroundPosition: "center",

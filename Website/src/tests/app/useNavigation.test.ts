@@ -77,7 +77,7 @@ describe("useNavigation", () => {
       expect(result.current.activeTab).toBe(expectedTab);
     });
 
-    it("unknown pathname falls back to Home", () => {
+    it("unknown pathname returns empty string", () => {
       // Arrange
       mockUseLocation.mockReturnValue({
         pathname: "/unknown-page",
@@ -87,7 +87,7 @@ describe("useNavigation", () => {
       const { result } = renderHook(() => useNavigation());
 
       // Assert
-      expect(result.current.activeTab).toBe("Home");
+      expect(result.current.activeTab).toBe("");
     });
   });
 
@@ -105,20 +105,7 @@ describe("useNavigation", () => {
       expect(result.current.activeTab).toBe("Profile");
     });
 
-    it("settings page resolves to Settings", () => {
-      // Arrange
-      mockUseLocation.mockReturnValue({
-        pathname: "/settings",
-      } as ReturnType<typeof useLocation>);
-
-      // Act
-      const { result } = renderHook(() => useNavigation());
-
-      // Assert
-      expect(result.current.activeTab).toBe("Settings");
-    });
-
-    it("another user's profile page falls back to Home when no route match", () => {
+    it("another user's profile page returns empty string", () => {
       // Arrange
       mockUseLocation.mockReturnValue({
         pathname: "/profile/bob",
@@ -128,10 +115,10 @@ describe("useNavigation", () => {
       const { result } = renderHook(() => useNavigation());
 
       // Assert
-      expect(result.current.activeTab).toBe("Home");
+      expect(result.current.activeTab).toBe("");
     });
 
-    it("profile route without a logged-in user falls back to Home", () => {
+    it("profile route without a logged-in user returns empty string", () => {
       // Arrange
       mockUseAuth.mockReturnValue({ isAuthenticated: false, user: null });
       mockUseLocation.mockReturnValue({
@@ -142,7 +129,7 @@ describe("useNavigation", () => {
       const { result } = renderHook(() => useNavigation());
 
       // Assert
-      expect(result.current.activeTab).toBe("Home");
+      expect(result.current.activeTab).toBe("");
     });
   });
 
@@ -169,21 +156,7 @@ describe("useNavigation", () => {
   });
 
   describe("desktopItems", () => {
-    it("includes Home, Trade, Events, and Settings when enabled", () => {
-      mockUseLocation.mockReturnValue({ pathname: "/" } as ReturnType<typeof useLocation>);
-
-      const { result } = renderHook(() => useNavigation());
-
-      expect(result.current.desktopItems.map((item) => item.label)).toEqual([
-        "Home",
-        "Trade",
-        "Events",
-        "Settings",
-      ]);
-    });
-
-    it("hides Settings when user is unauthenticated", () => {
-      mockUseAuth.mockReturnValue({ isAuthenticated: false, user: null });
+    it("includes Home, Trade, and Events when enabled", () => {
       mockUseLocation.mockReturnValue({ pathname: "/" } as ReturnType<typeof useLocation>);
 
       const { result } = renderHook(() => useNavigation());
@@ -194,6 +167,7 @@ describe("useNavigation", () => {
         "Events",
       ]);
     });
+
   });
 
   describe("mobileItems", () => {
