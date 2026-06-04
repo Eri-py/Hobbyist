@@ -1,4 +1,5 @@
 using Hobbyist.Api.Data.Entities;
+using Hobbyist.Api.Data.Entities.PostEntities;
 using Hobbyist.Api.Dtos;
 using Hobbyist.Api.Extensions;
 using Hobbyist.Api.Services.MediaStorageServices;

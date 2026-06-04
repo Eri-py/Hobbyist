@@ -1,3 +1,4 @@
+using System.Net;
 using Amazon.S3;
 using Amazon.S3.Model;
 using Hobbyist.Api.Dtos;
@@ -144,6 +145,127 @@ public class MinIOMediaStorageService(
             return Task.FromResult(
                 Result<string>.InternalServerError(ErrorMessages.UnexpectedError)
             );
+        }
+    }
+
+    public Task<Result<PresignedPut>> CreateUploadUrlAsync(
+        string objectKey,
+        string contentType,
+        TimeSpan? ttl,
+        CancellationToken ct
+    )
+    {
+        if (string.IsNullOrWhiteSpace(objectKey))
+            return Task.FromResult(Result<PresignedPut>.BadRequest("Object key is required."));
+
+        if (string.IsNullOrWhiteSpace(contentType))
+            return Task.FromResult(Result<PresignedPut>.BadRequest("Content type is required."));
+
+        var effectiveTtl = ttl ?? TimeSpan.FromMinutes(15);
+        if (effectiveTtl <= TimeSpan.Zero)
+            return Task.FromResult(
+                Result<PresignedPut>.BadRequest("URL TTL must be greater than zero.")
+            );
+
+        // AWS-style pre-signed URLs support expiration up to 7 days.
+        if (effectiveTtl > TimeSpan.FromDays(7))
+            return Task.FromResult(
+                Result<PresignedPut>.BadRequest("URL TTL cannot exceed 7 days.")
+            );
+
+        try
+        {
+            ct.ThrowIfCancellationRequested();
+
+            var expiresAt = DateTimeOffset.UtcNow.Add(effectiveTtl);
+
+            // ContentType is part of the signed request, so the client must send the same
+            // Content-Type header on the PUT or storage rejects it.
+            var uploadUrl = s3Client.GetPreSignedURL(
+                new GetPreSignedUrlRequest
+                {
+                    BucketName = _bucketName,
+                    Key = objectKey,
+                    Verb = HttpVerb.PUT,
+                    ContentType = contentType,
+                    Expires = expiresAt.UtcDateTime,
+                }
+            );
+
+            return Task.FromResult(
+                Result<PresignedPut>.Success(
+                    new PresignedPut
+                    {
+                        Url = uploadUrl,
+                        RequiredHeaders = new Dictionary<string, string>
+                        {
+                            ["Content-Type"] = contentType,
+                        },
+                        ExpiresAt = expiresAt,
+                    }
+                )
+            );
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(
+                ex,
+                "Failed to generate upload URL for object key '{ObjectKey}'",
+                objectKey.SanitizeForLog()
+            );
+            return Task.FromResult(
+                Result<PresignedPut>.InternalServerError(ErrorMessages.UnexpectedError)
+            );
+        }
+    }
+
+    public async Task<Result<MediaObjectInfo>> HeadObjectAsync(
+        string objectKey,
+        CancellationToken ct
+    )
+    {
+        if (string.IsNullOrWhiteSpace(objectKey))
+            return Result<MediaObjectInfo>.BadRequest("Object key is required.");
+
+        try
+        {
+            var metadata = await s3Client.GetObjectMetadataAsync(
+                new GetObjectMetadataRequest { BucketName = _bucketName, Key = objectKey },
+                ct
+            );
+
+            return Result<MediaObjectInfo>.Success(
+                new MediaObjectInfo
+                {
+                    Exists = true,
+                    ContentLength = metadata.ContentLength,
+                    ContentType = metadata.Headers.ContentType,
+                }
+            );
+        }
+        catch (AmazonS3Exception ex) when (ex.StatusCode == HttpStatusCode.NotFound)
+        {
+            // A missing object is a normal answer ("not uploaded yet"), not a failure.
+            return Result<MediaObjectInfo>.Success(
+                new MediaObjectInfo { Exists = false, ContentLength = 0 }
+            );
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(
+                ex,
+                "Failed to read metadata for object key '{ObjectKey}'",
+                objectKey.SanitizeForLog()
+            );
+            return Result<MediaObjectInfo>.InternalServerError(ErrorMessages.UnexpectedError);
         }
     }
 

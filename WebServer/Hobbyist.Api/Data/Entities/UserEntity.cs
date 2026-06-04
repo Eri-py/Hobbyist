@@ -1,3 +1,5 @@
+using Hobbyist.Api.Data.Entities.PostEntities;
+
 namespace Hobbyist.Api.Data.Entities;
 
 public class UserEntity
