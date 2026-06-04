@@ -30,7 +30,7 @@ function HomePage() {
           gap: isDesktop ? 3 : 0,
           alignItems: "center",
           overflow: "auto",
-          padding: isDesktop ? 1 : 0,
+          padding: isDesktop ? 2 : 1,
         }}
       >
         {mockPosts.map((post: Post) => (

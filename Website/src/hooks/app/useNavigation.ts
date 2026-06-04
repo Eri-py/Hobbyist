@@ -6,10 +6,10 @@ import { useProfile } from "@/hooks/profile/useProfile";
 import { useAuth, useFeatureFlags } from "@hobbyist/hooks";
 import { FeatureFlags } from "@hobbyist/types";
 
-type AppNavLabel = "Home" | "Trade" | "Events" | "Settings" | "Create" | "Messages" | "Profile";
+type AppNavLabel = "Home" | "Trade" | "Events" | "Create" | "Messages" | "Profile";
 
 export type DesktopNavbarItem = {
-  key: "home" | "trade" | "events" | "settings";
+  key: "home" | "trade" | "events";
   label: AppNavLabel;
   handleClick: () => void;
 };
@@ -35,7 +35,7 @@ const ROUTE_TO_TAB_MAP: Record<string, string> = {
 export function useNavigation() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuth();
+  const { user } = useAuth();
   const flags = useFeatureFlags();
   const { handleProfileClick } = useProfile();
 
@@ -46,7 +46,7 @@ export function useNavigation() {
     }
 
     // Then check static routes
-    return ROUTE_TO_TAB_MAP[pathname] || "Home";
+    return ROUTE_TO_TAB_MAP[pathname] ?? "";
   };
 
   const activeTab = getActiveTabFromPath(location.pathname);
@@ -72,10 +72,6 @@ export function useNavigation() {
     navigate({ to: "/messages" });
   }, [navigate]);
 
-  const handleSettingsClick = useCallback(() => {
-    navigate({ to: "/settings" });
-  }, [navigate]);
-
   const desktopItems = useMemo<DesktopNavbarItem[]>(() => {
     const items: DesktopNavbarItem[] = [
       { key: "home", label: "Home", handleClick: handleHomeClick },
@@ -89,19 +85,8 @@ export function useNavigation() {
       items.push({ key: "events", label: "Events", handleClick: handleEventsClick });
     }
 
-    if (isAuthenticated && flags[FeatureFlags.Settings]) {
-      items.push({ key: "settings", label: "Settings", handleClick: handleSettingsClick });
-    }
-
     return items;
-  }, [
-    flags,
-    isAuthenticated,
-    handleHomeClick,
-    handleTradeClick,
-    handleEventsClick,
-    handleSettingsClick,
-  ]);
+  }, [flags, handleHomeClick, handleTradeClick, handleEventsClick]);
 
   const mobileItems = useMemo<MobileNavbarItem[]>(() => {
     const items: MobileNavbarItem[] = [

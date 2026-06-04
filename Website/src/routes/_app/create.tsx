@@ -34,15 +34,8 @@ function CreatePage() {
     navigate({ to: user?.username ? `/profile/${user.username}` : "/profile" });
   }, [navigate, user]);
 
-  const {
-    methods,
-    handleSubmit,
-    activeStep,
-    handleNext,
-    handleBack,
-    saveDraft,
-    isSavingDraft,
-  } = useCreate(handlePostCreated);
+  const { methods, handleSubmit, activeStep, handleNext, handleBack, saveDraft, isSavingDraft } =
+    useCreate(handlePostCreated);
 
   const {
     files,
@@ -108,7 +101,7 @@ function CreatePage() {
           onKeyDown={preventEnterSubmit}
           style={{ display: "flex", flex: 1 }}
         >
-          <Stack sx={{ gap: 3, flex: 1 }}>
+          <Stack sx={{ gap: 3, flex: 1, p: isDesktop ? 0 : 1 }}>
             {isDesktop ? (
               <DesktopCreateForm
                 files={files}
@@ -148,7 +141,8 @@ function CreatePage() {
         iconColor="primary"
         title="Save as draft?"
         description={
-          saveError ?? "You have an unsaved post. Would you like to save it as a draft to finish later?"
+          saveError ??
+          "You have an unsaved post. Would you like to save it as a draft to finish later?"
         }
         primaryAction={{
           label: "Save Draft",
