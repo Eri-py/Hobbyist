@@ -6,8 +6,15 @@ import { useAuth } from "@hobbyist/hooks";
 import { PostTile, type Post } from "@/components/home/PostTile";
 import { mockPosts } from "@/components/home/mockData";
 import { LoginSnackbar } from "@/components/home/LoginSnackbar";
+import { seo } from "@/lib/seo";
 
 export const Route = createFileRoute("/_app/")({
+  head: () =>
+    seo({
+      description:
+        "Hobbyist is a social trading platform for collectors. Browse posts, discover hobbies, and trade with trusted users.",
+      path: "/",
+    }),
   component: HomePage,
 });
 

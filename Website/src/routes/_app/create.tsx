@@ -15,8 +15,10 @@ import { useCreate } from "@/hooks/create/useCreate";
 import { DesktopCreateForm } from "@/components/create/desktop/DesktopCreateForm";
 import { MobileCreateForm } from "@/components/create/mobile/MobileCreateForm";
 import { useAuth } from "@hobbyist/hooks";
+import { seo } from "@/lib/seo";
 
 export const Route = createFileRoute("/_app/create")({
+  head: () => seo({ title: "Create post", noindex: true }),
   component: CreatePage,
 });
 
