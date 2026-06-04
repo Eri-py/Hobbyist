@@ -12,8 +12,10 @@ import { useAuth } from "@hobbyist/hooks";
 import { Header } from "@/components/profile/Header";
 import { Details } from "@/components/profile/Details";
 import { ProfileSettingsModal } from "@/components/profile/ProfileSettingsModal";
+import { seo } from "@/lib/seo";
 
 export const Route = createFileRoute("/_app/profile/$username/")({
+  head: ({ params }) => seo({ title: `@${params.username}`, noindex: true }),
   component: UserProfilePage,
 });
 
