@@ -1,3 +1,4 @@
+using System.Net;
 using Amazon.S3;
 using Amazon.S3.Model;
 using Hobbyist.Api.Dtos;
@@ -6,51 +7,45 @@ using Hobbyist.Common;
 
 namespace Hobbyist.Api.Services.MediaStorageServices;
 
-public class MinIOMediaStorageService(
+public class MinioMediaObjectStore(
     IAmazonS3 s3Client,
     IConfiguration configuration,
-    ILogger<MinIOMediaStorageService> logger
-) : IMediaStorageService
+    ILogger<MinioMediaObjectStore> logger
+) : IMediaObjectStore
 {
     private readonly string _bucketName =
         configuration["MediaStorage:BucketName"]
         ?? throw new InvalidOperationException("Missing 'MediaStorage:BucketName' configuration.");
 
-    public async Task<Result<UploadMediaResponse>> UploadAsync(
-        UploadMediaRequest request,
+    public async Task<Result<MediaObjectInfo>> HeadObjectAsync(
+        string objectKey,
         CancellationToken ct
     )
     {
-        if (string.IsNullOrWhiteSpace(request.ObjectKey))
-            return Result<UploadMediaResponse>.BadRequest("Object key is required.");
-
-        if (request.ContentLength <= 0)
-            return Result<UploadMediaResponse>.BadRequest(
-                "Content length must be greater than zero."
-            );
+        if (string.IsNullOrWhiteSpace(objectKey))
+            return Result<MediaObjectInfo>.BadRequest("Object key is required.");
 
         try
         {
-            // Upload raw content stream to object storage under the generated key.
-            await s3Client.PutObjectAsync(
-                new PutObjectRequest
-                {
-                    BucketName = _bucketName,
-                    Key = request.ObjectKey,
-                    InputStream = request.Content,
-                    ContentType = request.ContentType,
-                    AutoCloseStream = false,
-                },
+            var metadata = await s3Client.GetObjectMetadataAsync(
+                new GetObjectMetadataRequest { BucketName = _bucketName, Key = objectKey },
                 ct
             );
 
-            return Result<UploadMediaResponse>.Success(
-                new UploadMediaResponse
+            return Result<MediaObjectInfo>.Success(
+                new MediaObjectInfo
                 {
-                    ObjectKey = request.ObjectKey,
-                    ContentType = request.ContentType,
-                    SizeBytes = request.ContentLength,
+                    Exists = true,
+                    ContentLength = metadata.ContentLength,
+                    ContentType = metadata.Headers.ContentType,
                 }
+            );
+        }
+        catch (AmazonS3Exception ex) when (ex.StatusCode == HttpStatusCode.NotFound)
+        {
+            // A missing object is a normal answer ("not uploaded yet"), not a failure.
+            return Result<MediaObjectInfo>.Success(
+                new MediaObjectInfo { Exists = false, ContentLength = 0 }
             );
         }
         catch (OperationCanceledException)
@@ -61,10 +56,10 @@ public class MinIOMediaStorageService(
         {
             logger.LogError(
                 ex,
-                "Failed to upload media object with key '{ObjectKey}'",
-                request.ObjectKey.SanitizeForLog()
+                "Failed to read metadata for object key '{ObjectKey}'",
+                objectKey.SanitizeForLog()
             );
-            return Result<UploadMediaResponse>.InternalServerError(ErrorMessages.UnexpectedError);
+            return Result<MediaObjectInfo>.InternalServerError(ErrorMessages.UnexpectedError);
         }
     }
 
@@ -97,25 +92,6 @@ public class MinIOMediaStorageService(
         }
     }
 
-    /// <inheritdoc/>
-    public string BuildObjectKey(string userId, string postId, int mediaIndex, string fileName)
-    {
-        if (mediaIndex <= 0)
-            throw new ArgumentOutOfRangeException(
-                nameof(mediaIndex),
-                "Media index must be greater than zero."
-            );
-
-        var extension = Path.GetExtension(fileName);
-        var safeExtension = string.IsNullOrWhiteSpace(extension) ? string.Empty : extension;
-        return $"{userId}/{postId}/{mediaIndex:D3}{safeExtension}";
-    }
-
-    /// <inheritdoc/>
-    public string BuildPostMediaPrefix(string userId, string postId) =>
-        MediaObjectKeys.BuildPostMediaPrefix(userId, postId);
-
-    /// <inheritdoc/>
     public async Task<Result> DeleteByPrefixAsync(string prefix, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(prefix))

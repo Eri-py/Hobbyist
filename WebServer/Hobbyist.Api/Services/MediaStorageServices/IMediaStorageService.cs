@@ -20,37 +20,6 @@ public interface IMediaStorageService
     Task<Result> DeleteAsync(string objectKey, CancellationToken ct);
 
     /// <summary>
-    /// Generates a read URL for a stored media object key.
-    /// </summary>
-    /// <param name="objectKey">Storage object key</param>
-    /// <param name="ttl">Optional URL validity duration for pre-signed URLs</param>
-    /// <returns><see cref="Result{T}"/> where T is the generated URL</returns>
-    Task<Result<string>> GetReadUrlAsync(string objectKey, TimeSpan? ttl, CancellationToken ct);
-
-    /// <summary>
-    /// Generates a time-limited pre-signed PUT URL the client uploads bytes to directly.
-    /// The content type is baked into the signature, so the client must send it on the PUT.
-    /// </summary>
-    /// <param name="objectKey">Storage object key the bytes will be written to</param>
-    /// <param name="contentType">Content type signed into the URL and required on the PUT</param>
-    /// <param name="ttl">Optional URL validity duration (defaults to 15 minutes)</param>
-    /// <returns><see cref="Result{T}"/> where T is <see cref="PresignedPut"/></returns>
-    Task<Result<PresignedPut>> CreateUploadUrlAsync(
-        string objectKey,
-        string contentType,
-        TimeSpan? ttl,
-        CancellationToken ct
-    );
-
-    /// <summary>
-    /// Reads metadata for a stored object without downloading it. A missing object is reported
-    /// as <see cref="MediaObjectInfo.Exists"/> = false rather than an error.
-    /// </summary>
-    /// <param name="objectKey">Storage object key</param>
-    /// <returns><see cref="Result{T}"/> where T is <see cref="MediaObjectInfo"/></returns>
-    Task<Result<MediaObjectInfo>> HeadObjectAsync(string objectKey, CancellationToken ct);
-
-    /// <summary>
     /// Builds an object key for storing a post media file.
     /// </summary>
     string BuildObjectKey(string userId, string postId, int mediaIndex, string fileName);

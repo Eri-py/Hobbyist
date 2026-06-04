@@ -44,7 +44,7 @@ public class HobbyistDbContext(DbContextOptions<HobbyistDbContext> options) : Db
             .HasForeignKey(m => m.PostId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // A post cannot have two media files at the same index.
-        builder.Entity<PostMediaEntity>().HasIndex(m => new { m.PostId, m.Index }).IsUnique();
+        // Non-unique: Position is a mutable display order and may shift or briefly collide during edits.
+        builder.Entity<PostMediaEntity>().HasIndex(m => new { m.PostId, m.Position });
     }
 }

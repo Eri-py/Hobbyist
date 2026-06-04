@@ -1,6 +1,6 @@
-using Hobbyist.Api.Data.Entities;
 using Hobbyist.Api.Data.Entities.PostEntities;
 using Hobbyist.Api.Dtos;
+using Hobbyist.Api.Dtos.Posts;
 using Hobbyist.Api.Extensions;
 using Hobbyist.Api.Services.MediaStorageServices;
 using Hobbyist.Api.Services.PostServices.PostDraftServices;
@@ -10,9 +10,9 @@ namespace Hobbyist.Api.Services.PostServices;
 
 internal static class PostHelpers
 {
-    internal static string? ValidateDraftForPublish(PostEntity post)
+    internal static string? ValidateDraftForPublish(PostEntity post, int uploadedMediaCount)
     {
-        if (post.MediaCount == 0)
+        if (uploadedMediaCount == 0)
             return "At least one media file is required before publishing.";
 
         if (string.IsNullOrWhiteSpace(post.Hobby))
@@ -57,6 +57,45 @@ internal static class PostHelpers
         var totalSize = media.Sum(f => f.Length);
         if (totalSize > PostDraftConfig.MaxTotalSizeBytes)
             return $"Total upload size exceeds the {PostDraftConfig.MaxTotalSizeBytes / 1024 / 1024} MB limit.";
+
+        return null;
+    }
+
+    /// <summary>
+    /// Validates a client-declared upload manifest before issuing pre-signed URLs. Mirrors
+    /// <see cref="ValidateMedia"/> over declared metadata since the bytes aren't seen at this point.
+    /// </summary>
+    internal static string? ValidateManifest(
+        IReadOnlyList<MediaManifestItem> media,
+        IReadOnlySet<string> allowedContentTypes
+    )
+    {
+        if (media.Count == 0)
+            return "At least one media file is required.";
+
+        if (media.Count > PostDraftConfig.MaxMediaFiles)
+            return $"A post can contain at most {PostDraftConfig.MaxMediaFiles} media files.";
+
+        if (media.Any(m => m.Position <= 0))
+            return "Media position must be greater than zero.";
+
+        if (media.Select(m => m.Position).Distinct().Count() != media.Count)
+            return "Each media item must have a unique position.";
+
+        if (media.Any(m => m.ByteSize <= 0))
+            return "Uploaded files must not be empty.";
+
+        var oversized = media.FirstOrDefault(m => m.ByteSize > PostDraftConfig.MaxFileSizeBytes);
+        if (oversized is not null)
+            return $"\"{oversized.FileName}\" exceeds the {PostDraftConfig.MaxFileSizeBytes / 1024 / 1024} MB per-file limit.";
+
+        var totalSize = media.Sum(m => m.ByteSize);
+        if (totalSize > PostDraftConfig.MaxTotalSizeBytes)
+            return $"Total upload size exceeds the {PostDraftConfig.MaxTotalSizeBytes / 1024 / 1024} MB limit.";
+
+        var unsupported = media.FirstOrDefault(m => !allowedContentTypes.Contains(m.ContentType));
+        if (unsupported is not null)
+            return $"\"{unsupported.FileName}\" has an unsupported file type.";
 
         return null;
     }

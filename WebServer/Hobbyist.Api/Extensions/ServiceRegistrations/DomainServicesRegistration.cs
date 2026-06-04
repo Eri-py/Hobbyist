@@ -7,6 +7,7 @@ using Hobbyist.Api.Services.CacheRateLimiterServices;
 using Hobbyist.Api.Services.LoggingHashServices;
 using Hobbyist.Api.Services.PostServices.CreatePostServices;
 using Hobbyist.Api.Services.PostServices.PostDraftServices;
+using Hobbyist.Api.Services.PostServices.PostUploadServices;
 using Hobbyist.Api.Services.ReccommendationServices.OnboardingServices;
 
 namespace Hobbyist.Api.Extensions.ServiceRegistrations;
@@ -25,5 +26,6 @@ public static class DomainServicesRegistration
         services.AddScoped<IOnboardingService, OnboardingService>();
         services.AddScoped<ICreatePostService, CreatePostService>();
         services.AddScoped<IPostDraftService, PostDraftService>();
+        services.AddScoped<IPostUploadService, PostUploadService>();
     }
 }
