@@ -5,7 +5,7 @@ using Hobbyist.Api.Dtos;
 using Hobbyist.Api.Extensions;
 using Hobbyist.Common;
 
-namespace Hobbyist.Api.Services.MediaStorageServices;
+namespace Hobbyist.Api.Services.MediaStorageServices.ObjectStore;
 
 public class MinioMediaObjectStore(
     IAmazonS3 s3Client,

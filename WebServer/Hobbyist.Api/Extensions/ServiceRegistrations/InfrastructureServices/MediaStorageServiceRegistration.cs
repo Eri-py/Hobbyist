@@ -1,4 +1,6 @@
 using Hobbyist.Api.Services.MediaStorageServices;
+using Hobbyist.Api.Services.MediaStorageServices.ObjectStore;
+using Hobbyist.Api.Services.MediaStorageServices.UrlSigner;
 
 namespace Hobbyist.Api.Extensions.ServiceRegistrations.InfrastructureServices;
 
