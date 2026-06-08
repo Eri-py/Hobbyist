@@ -9,25 +9,25 @@ using Moq;
 namespace Hobbyist.Tests;
 
 [TestFixture]
-public class CacheRateLimiterTests
+public class CacheRateLimiterServiceTests
 {
-    private Mock<ICache> _mockCache = null!;
-    private Mock<ILogHasher> _logHasherMock = null!;
-    private CacheRateLimiter _rateLimiter = null!;
+    private Mock<ICacheService> _mockCache = null!;
+    private Mock<ILogHasherService> _logHasherMock = null!;
+    private CacheRateLimiterService _rateLimiter = null!;
 
     [SetUp]
     public void SetUp()
     {
-        _mockCache = new Mock<ICache>();
-        _logHasherMock = new Mock<ILogHasher>();
+        _mockCache = new Mock<ICacheService>();
+        _logHasherMock = new Mock<ILogHasherService>();
         _logHasherMock
             .Setup(x => x.Hash(It.IsAny<string?>()))
             .Returns((string? value) => $"hashed_{value}");
         LoggerExtensions.ConfigureHasher(_logHasherMock.Object);
 
-        _rateLimiter = new CacheRateLimiter(
+        _rateLimiter = new CacheRateLimiterService(
             _mockCache.Object,
-            NullLogger<CacheRateLimiter>.Instance
+            NullLogger<CacheRateLimiterService>.Instance
         );
     }
 

@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Hobbyist.Api.Data.Entities;
+namespace Hobbyist.Api.Data.Entities.PostEntities;
 
 public class PostEntity
 {
@@ -22,20 +22,18 @@ public class PostEntity
 
     public string? LookingFor { get; set; }
 
+    /// <summary>True creation time; never overwritten when a draft is published.</summary>
     public DateTimeOffset CreatedAt { get; set; }
+
+    /// <summary>Set when the post first becomes Published; null otherwise.</summary>
+    public DateTimeOffset? PublishedAt { get; set; }
 
     public int Likes { get; set; }
 
-    /// <summary>True until the user publishes. Published posts always have IsDraft = false.</summary>
-    public bool IsDraft { get; set; }
+    /// <summary>Lifecycle state. Replaces the old IsDraft flag.</summary>
+    public PostStatus Status { get; set; }
 
-    /// <summary>
-    /// Number of media files currently associated with this post.
-    /// Incremented on each successful upload, decremented on removal.
-    /// Validated to be greater than zero before publishing.
-    /// </summary>
-    public int MediaCount { get; set; }
-
-    // Navigation property
+    // Navigation properties
     public UserEntity? User { get; set; }
+    public ICollection<PostMediaEntity> Media { get; set; } = [];
 }

@@ -4,7 +4,8 @@ using Hobbyist.Common;
 
 namespace Hobbyist.Api.Services.CacheRateLimiterServices;
 
-public class CacheRateLimiter(ICache cache, ILogger<CacheRateLimiter> logger) : ICacheRateLimiter
+public class CacheRateLimiterService(ICacheService cache, ILogger<CacheRateLimiterService> logger)
+    : ICacheRateLimiterService
 {
     public Result CheckLimit(
         string scope,

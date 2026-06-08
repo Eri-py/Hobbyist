@@ -2,7 +2,7 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace Hobbyist.Api.Services.CacheServices;
 
-public class MemoryCache(IMemoryCache memoryCache) : ICache
+public class MemoryCacheService(IMemoryCache memoryCache) : ICacheService
 {
     public void Set<T>(string key, T value, TimeSpan expiration)
     {

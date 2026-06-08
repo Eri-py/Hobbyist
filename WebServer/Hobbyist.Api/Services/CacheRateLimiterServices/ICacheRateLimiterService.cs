@@ -4,7 +4,7 @@ namespace Hobbyist.Api.Services.CacheRateLimiterServices;
 
 public record RateLimitEntry(int Count, DateTimeOffset WindowExpiry);
 
-public interface ICacheRateLimiter
+public interface ICacheRateLimiterService
 {
     /// <summary>
     /// Checks whether requests are still allowed for a given scope/identifier pair.

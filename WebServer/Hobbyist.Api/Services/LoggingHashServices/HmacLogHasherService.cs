@@ -3,7 +3,7 @@ using System.Text;
 
 namespace Hobbyist.Api.Services.LoggingHashServices;
 
-public class HmacLogHasher(IConfiguration configuration) : ILogHasher
+public class HmacLogHasherService(IConfiguration configuration) : ILogHasherService
 {
     private readonly byte[] _keyBytes = Encoding.UTF8.GetBytes(
         configuration["Security:LogHashKey"]

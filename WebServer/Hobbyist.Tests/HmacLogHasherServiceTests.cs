@@ -4,7 +4,7 @@ using Microsoft.Extensions.Configuration;
 namespace Hobbyist.Tests;
 
 [TestFixture]
-public class HmacLogHasherTests
+public class HmacLogHasherServiceTests
 {
     [Test]
     public void Hash_WithSameNormalizedValue_IsDeterministic()
@@ -34,7 +34,7 @@ public class HmacLogHasherTests
         Assert.That(first, Is.Not.EqualTo(second));
     }
 
-    private static HmacLogHasher BuildHasher(string key)
+    private static HmacLogHasherService BuildHasher(string key)
     {
         var config = new ConfigurationBuilder()
             .AddInMemoryCollection(
@@ -42,6 +42,6 @@ public class HmacLogHasherTests
             )
             .Build();
 
-        return new HmacLogHasher(config);
+        return new HmacLogHasherService(config);
     }
 }

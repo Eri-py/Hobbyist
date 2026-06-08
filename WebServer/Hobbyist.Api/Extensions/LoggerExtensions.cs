@@ -4,9 +4,9 @@ namespace Hobbyist.Api.Extensions;
 
 public static class LoggerExtensions
 {
-    private static ILogHasher? _configuredHasher;
+    private static ILogHasherService? _configuredHasher;
 
-    public static void ConfigureHasher(ILogHasher hasher)
+    public static void ConfigureHasher(ILogHasherService hasher)
     {
         ArgumentNullException.ThrowIfNull(hasher);
         _configuredHasher = hasher;

@@ -24,6 +24,6 @@ public static class CacheServicesRegistration
             options.InstanceName = "hobbyist:";
         });
 
-        services.AddScoped<ICache, RedisCache>();
+        services.AddScoped<ICacheService, RedisCacheService>();
     }
 }

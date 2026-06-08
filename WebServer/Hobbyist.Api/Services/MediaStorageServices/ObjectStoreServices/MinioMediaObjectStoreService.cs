@@ -1,56 +1,51 @@
+using System.Net;
 using Amazon.S3;
 using Amazon.S3.Model;
 using Hobbyist.Api.Dtos;
 using Hobbyist.Api.Extensions;
 using Hobbyist.Common;
 
-namespace Hobbyist.Api.Services.MediaStorageServices;
+namespace Hobbyist.Api.Services.MediaStorageServices.ObjectStoreServices;
 
-public class MinIOMediaStorageService(
+public class MinioMediaObjectStoreService(
     IAmazonS3 s3Client,
     IConfiguration configuration,
-    ILogger<MinIOMediaStorageService> logger
-) : IMediaStorageService
+    ILogger<MinioMediaObjectStoreService> logger
+) : IMediaObjectStoreService
 {
     private readonly string _bucketName =
         configuration["MediaStorage:BucketName"]
         ?? throw new InvalidOperationException("Missing 'MediaStorage:BucketName' configuration.");
 
-    public async Task<Result<UploadMediaResponse>> UploadAsync(
-        UploadMediaRequest request,
+    public async Task<Result<MediaObjectInfo>> HeadObjectAsync(
+        string objectKey,
         CancellationToken ct
     )
     {
-        if (string.IsNullOrWhiteSpace(request.ObjectKey))
-            return Result<UploadMediaResponse>.BadRequest("Object key is required.");
-
-        if (request.ContentLength <= 0)
-            return Result<UploadMediaResponse>.BadRequest(
-                "Content length must be greater than zero."
-            );
+        if (string.IsNullOrWhiteSpace(objectKey))
+            return Result<MediaObjectInfo>.BadRequest("Object key is required.");
 
         try
         {
-            // Upload raw content stream to object storage under the generated key.
-            await s3Client.PutObjectAsync(
-                new PutObjectRequest
-                {
-                    BucketName = _bucketName,
-                    Key = request.ObjectKey,
-                    InputStream = request.Content,
-                    ContentType = request.ContentType,
-                    AutoCloseStream = false,
-                },
+            var metadata = await s3Client.GetObjectMetadataAsync(
+                new GetObjectMetadataRequest { BucketName = _bucketName, Key = objectKey },
                 ct
             );
 
-            return Result<UploadMediaResponse>.Success(
-                new UploadMediaResponse
+            return Result<MediaObjectInfo>.Success(
+                new MediaObjectInfo
                 {
-                    ObjectKey = request.ObjectKey,
-                    ContentType = request.ContentType,
-                    SizeBytes = request.ContentLength,
+                    Exists = true,
+                    ContentLength = metadata.ContentLength,
+                    ContentType = metadata.Headers.ContentType,
                 }
+            );
+        }
+        catch (AmazonS3Exception ex) when (ex.StatusCode == HttpStatusCode.NotFound)
+        {
+            // A missing object is a normal answer ("not uploaded yet"), not a failure.
+            return Result<MediaObjectInfo>.Success(
+                new MediaObjectInfo { Exists = false, ContentLength = 0 }
             );
         }
         catch (OperationCanceledException)
@@ -61,10 +56,10 @@ public class MinIOMediaStorageService(
         {
             logger.LogError(
                 ex,
-                "Failed to upload media object with key '{ObjectKey}'",
-                request.ObjectKey.SanitizeForLog()
+                "Failed to read metadata for object key '{ObjectKey}'",
+                objectKey.SanitizeForLog()
             );
-            return Result<UploadMediaResponse>.InternalServerError(ErrorMessages.UnexpectedError);
+            return Result<MediaObjectInfo>.InternalServerError(ErrorMessages.UnexpectedError);
         }
     }
 
@@ -97,73 +92,6 @@ public class MinIOMediaStorageService(
         }
     }
 
-    public Task<Result<string>> GetReadUrlAsync(
-        string objectKey,
-        TimeSpan? ttl,
-        CancellationToken ct
-    )
-    {
-        if (string.IsNullOrWhiteSpace(objectKey))
-            return Task.FromResult(Result<string>.BadRequest("Object key is required."));
-
-        var effectiveTtl = ttl ?? TimeSpan.FromMinutes(15);
-        if (effectiveTtl <= TimeSpan.Zero)
-            return Task.FromResult(Result<string>.BadRequest("URL TTL must be greater than zero."));
-
-        // AWS-style pre-signed URLs support expiration up to 7 days.
-        if (effectiveTtl > TimeSpan.FromDays(7))
-            return Task.FromResult(Result<string>.BadRequest("URL TTL cannot exceed 7 days."));
-
-        try
-        {
-            ct.ThrowIfCancellationRequested();
-
-            var readUrl = s3Client.GetPreSignedURL(
-                new GetPreSignedUrlRequest
-                {
-                    BucketName = _bucketName,
-                    Key = objectKey,
-                    Verb = HttpVerb.GET,
-                    Expires = DateTimeOffset.UtcNow.Add(effectiveTtl).UtcDateTime,
-                }
-            );
-
-            return Task.FromResult(Result<string>.Success(readUrl));
-        }
-        catch (OperationCanceledException)
-        {
-            throw;
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(
-                ex,
-                "Failed to generate read URL for object key '{ObjectKey}'",
-                objectKey.SanitizeForLog()
-            );
-            return Task.FromResult(
-                Result<string>.InternalServerError(ErrorMessages.UnexpectedError)
-            );
-        }
-    }
-
-    public string BuildObjectKey(string userId, string postId, int mediaIndex, string fileName)
-    {
-        if (mediaIndex <= 0)
-            throw new ArgumentOutOfRangeException(
-                nameof(mediaIndex),
-                "Media index must be greater than zero."
-            );
-
-        var extension = Path.GetExtension(fileName);
-        var safeExtension = string.IsNullOrWhiteSpace(extension) ? string.Empty : extension;
-        return $"{userId}/{postId}/{mediaIndex:D3}{safeExtension}";
-    }
-
-    /// <inheritdoc/>
-    public string BuildPostMediaPrefix(string userId, string postId) => $"{userId}/{postId}/";
-
-    /// <inheritdoc/>
     public async Task<Result> DeleteByPrefixAsync(string prefix, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(prefix))
