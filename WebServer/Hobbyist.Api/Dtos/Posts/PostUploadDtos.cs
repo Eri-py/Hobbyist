@@ -106,20 +106,7 @@ public record class FinalizeResponse
     /// <summary>True when every file was verified and the post is now live.</summary>
     public required bool Published { get; set; }
 
-    /// <summary>Positions whose object was not yet found in storage; the client re-uploads and finalizes again.</summary>
+    /// <summary>Positions whose object was not yet found in storage. A non-empty list means publish
+    /// did not complete; the client discards the post and recreates it from its local copy.</summary>
     public required int[] PendingPositions { get; set; }
-}
-
-/// <summary>Request to re-issue pre-signed upload URLs for files that are still pending (e.g. expired).</summary>
-public record class RefreshUploadsRequest
-{
-    [Required]
-    public required int[] Positions { get; set; }
-}
-
-/// <summary>Fresh pre-signed upload targets for the requested pending files.</summary>
-public record class RefreshUploadsResponse
-{
-    [Required]
-    public required PresignedUpload[] Uploads { get; set; }
 }

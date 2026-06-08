@@ -10,6 +10,14 @@ public static class PostMediaConfig
     public const int DraftLifetimeDays = 90;
 
     /// <summary>
+    /// How long a pre-signed upload URL stays valid. Sized to comfortably outlast a single upload
+    /// session — including a max-size post on a slow connection — so the client never needs fresh
+    /// URLs mid-session. If a session is interrupted for longer than this, the client recreates the
+    /// post rather than resuming.
+    /// </summary>
+    public const int UploadUrlLifetimeMinutes = 15;
+
+    /// <summary>
     /// Maximum number of media files allowed per post, enforced at init and publish time.
     /// </summary>
     public const int MaxMediaFiles = 15;

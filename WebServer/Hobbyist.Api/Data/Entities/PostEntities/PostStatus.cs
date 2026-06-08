@@ -11,7 +11,4 @@ public enum PostStatus
 
     /// <summary>Live and visible.</summary>
     Published = 2,
-
-    /// <summary>Upload never completed within the allowed window; media has been cleaned up.</summary>
-    Failed = 3,
 }

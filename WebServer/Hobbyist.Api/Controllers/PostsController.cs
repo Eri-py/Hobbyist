@@ -58,23 +58,7 @@ public class PostsController(IPostUploadService postUploadService) : ControllerB
     }
 
     /// <summary>
-    /// Re-issues pre-signed upload URLs for files that are still pending (e.g. the originals expired).
-    /// </summary>
-    [HttpPost("{slug}/uploads/refresh")]
-    [Authorize]
-    public async Task<ActionResult<RefreshUploadsResponse>> RefreshUploadsAsync(
-        string slug,
-        [FromBody] RefreshUploadsRequest request,
-        CancellationToken ct
-    )
-    {
-        var userId = User.GetUserId();
-        var result = await postUploadService.RefreshUploadsAsync(slug, request, userId, ct);
-        return result.ToActionResult();
-    }
-
-    /// <summary>
-    /// Discards a post and its uploaded media (drafts, in-progress or failed posts). Performs a
+    /// Discards a post and its uploaded media (drafts or in-progress posts). Performs a
     /// best-effort bulk deletion of the associated storage objects before removing the record.
     /// </summary>
     [HttpDelete("{slug}")]

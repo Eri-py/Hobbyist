@@ -49,7 +49,7 @@ public partial class PostUploadService(
         var presignResult = await urlSigner.CreateUploadUrlAsync(
             objectKey,
             contentType,
-            ttl: null,
+            ttl: TimeSpan.FromMinutes(PostMediaConfig.UploadUrlLifetimeMinutes),
             ct
         );
         if (!presignResult.IsSuccess)

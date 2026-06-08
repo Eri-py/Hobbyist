@@ -37,18 +37,7 @@ public interface IPostUploadService
     Task<Result<FinalizeResponse>> FinalizeAsync(string slug, string userId, CancellationToken ct);
 
     /// <summary>
-    /// Re-issues pre-signed upload URLs for the requested still-pending files (e.g. after the
-    /// original URLs expired).
-    /// </summary>
-    Task<Result<RefreshUploadsResponse>> RefreshUploadsAsync(
-        string slug,
-        RefreshUploadsRequest request,
-        string userId,
-        CancellationToken ct
-    );
-
-    /// <summary>
-    /// Discards a post and its uploaded media. Allowed for draft, in-progress and failed posts;
+    /// Discards a post and its uploaded media. Allowed for draft and in-progress posts;
     /// published posts cannot be discarded.
     /// </summary>
     Task<Result> DiscardAsync(string slug, string userId, CancellationToken ct);
