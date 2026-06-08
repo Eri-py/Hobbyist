@@ -14,8 +14,15 @@ import { useSignUp } from "@hobbyist/hooks";
 import { axiosInstance } from "@/api/axiosInstance";
 import { FormHeader } from "@/components/auth/FormHeader";
 import { FormContainer } from "@/components/auth/FormContainer";
+import { seo } from "@/lib/seo";
 
 export const Route = createFileRoute("/_auth/sign-up")({
+  head: () =>
+    seo({
+      title: "Sign up",
+      description: "Create a free Hobbyist account to share your collection and trade with the community.",
+      path: "/sign-up",
+    }),
   component: SignUp,
 });
 

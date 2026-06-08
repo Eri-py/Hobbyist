@@ -22,6 +22,10 @@ dist/
 dist-ssr/
 *.local
 
+# Generated at build time from VITE_SITE_URL (Website/scripts/generate-seo.mjs)
+Website/public/robots.txt
+Website/public/sitemap.xml
+
 # Logs
 logs
 *.log

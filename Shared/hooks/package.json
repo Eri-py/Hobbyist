@@ -15,10 +15,10 @@
     "test:watch": "vitest"
   },
   "peerDependencies": {
-    "@tanstack/react-query": "^5.100.14",
-    "axios": "^1.16.1",
+    "@tanstack/react-query": "^5.101.0",
+    "axios": "^1.17.0",
     "react": "^19.0.0",
-    "react-hook-form": "^7.77.0"
+    "react-hook-form": "^7.78.0"
   },
   "dependencies": {
     "@hobbyist/form-schemas": "workspace:*",
@@ -26,13 +26,13 @@
     "@hookform/resolvers": "^5.4.0"
   },
   "devDependencies": {
-    "@tanstack/react-query": "^5.100.14",
+    "@tanstack/react-query": "^5.101.0",
     "@testing-library/react": "^16.3.2",
-    "axios": "^1.16.1",
+    "axios": "^1.17.0",
     "jsdom": "^29.1.1",
     "react": "19.2.5",
-    "react-hook-form": "^7.77.0",
+    "react-hook-form": "^7.78.0",
     "typescript": "~5.9.3",
-    "vitest": "^4.1.7"
+    "vitest": "^4.1.8"
   }
 }

@@ -11,8 +11,15 @@ import { useLogin } from "@hobbyist/hooks";
 import { axiosInstance } from "@/api/axiosInstance";
 import { FormHeader } from "@/components/auth/FormHeader";
 import { FormContainer } from "@/components/auth/FormContainer";
+import { seo } from "@/lib/seo";
 
 export const Route = createFileRoute("/_auth/login")({
+  head: () =>
+    seo({
+      title: "Log in",
+      description: "Log in to your Hobbyist account to post, message, and trade with other collectors.",
+      path: "/login",
+    }),
   component: Login,
 });
 

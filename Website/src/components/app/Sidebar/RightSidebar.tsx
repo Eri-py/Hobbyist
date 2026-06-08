@@ -9,8 +9,8 @@ export function RightSidebar() {
         height: "100%",
         p: 2,
         gap: 2,
-        borderLeft: `1px solid ${alpha(theme.palette.divider, 0.25)}`
-      }}>This is empty for now
-          </Stack>
+        borderLeft: `1px solid ${alpha(theme.palette.divider, 0.25)}`,
+      }}
+    />
   );
 }

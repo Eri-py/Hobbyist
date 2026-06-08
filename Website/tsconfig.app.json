@@ -27,6 +27,7 @@
       "@/api/*": ["./src/api/*"],
       "@/components/*": ["./src/components/*"],
       "@/hooks/*": ["./src/hooks/*"],
+      "@/lib/*": ["./src/lib/*"],
       "@/providers/*": ["./src/providers/*"],
       "@/themes/*": ["./src/themes/*"]
     }
