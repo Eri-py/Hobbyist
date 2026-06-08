@@ -4,7 +4,7 @@ using Hobbyist.Api.Dtos;
 using Hobbyist.Api.Extensions;
 using Hobbyist.Common;
 
-namespace Hobbyist.Api.Services.MediaStorageServices.UrlSigner;
+namespace Hobbyist.Api.Services.MediaStorageServices.UrlSignerServices;
 
 public class MinioMediaUrlSigner(
     IAmazonS3 s3Client,

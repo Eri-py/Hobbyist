@@ -1,5 +1,5 @@
-using Hobbyist.Api.Services.MediaStorageServices.ObjectStore;
-using Hobbyist.Api.Services.MediaStorageServices.UrlSigner;
+using Hobbyist.Api.Services.MediaStorageServices.ObjectStoreServices;
+using Hobbyist.Api.Services.MediaStorageServices.UrlSignerServices;
 
 namespace Hobbyist.Api.Extensions.ServiceRegistrations.InfrastructureServices;
 

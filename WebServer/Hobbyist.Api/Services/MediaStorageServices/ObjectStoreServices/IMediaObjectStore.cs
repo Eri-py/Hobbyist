@@ -1,7 +1,7 @@
 using Hobbyist.Api.Dtos;
 using Hobbyist.Common;
 
-namespace Hobbyist.Api.Services.MediaStorageServices.ObjectStore;
+namespace Hobbyist.Api.Services.MediaStorageServices.ObjectStoreServices;
 
 /// <summary>Operations against stored media objects (metadata and deletion).</summary>
 public interface IMediaObjectStore

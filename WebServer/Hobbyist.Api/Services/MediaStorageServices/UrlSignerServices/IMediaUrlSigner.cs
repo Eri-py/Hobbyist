@@ -1,7 +1,7 @@
 using Hobbyist.Api.Dtos;
 using Hobbyist.Common;
 
-namespace Hobbyist.Api.Services.MediaStorageServices.UrlSigner;
+namespace Hobbyist.Api.Services.MediaStorageServices.UrlSignerServices;
 
 /// <summary>Generates pre-signed URLs for reading and uploading media objects.</summary>
 public interface IMediaUrlSigner

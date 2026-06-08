@@ -1,8 +1,8 @@
 using Hobbyist.Api.Data;
 using Hobbyist.Api.Data.Entities.PostEntities;
 using Hobbyist.Api.Dtos.Posts;
-using Hobbyist.Api.Services.MediaStorageServices.ObjectStore;
-using Hobbyist.Api.Services.MediaStorageServices.UrlSigner;
+using Hobbyist.Api.Services.MediaStorageServices.ObjectStoreServices;
+using Hobbyist.Api.Services.MediaStorageServices.UrlSignerServices;
 using Hobbyist.Common;
 using Microsoft.EntityFrameworkCore;
 
