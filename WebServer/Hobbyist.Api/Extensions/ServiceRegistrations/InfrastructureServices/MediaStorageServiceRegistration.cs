@@ -1,4 +1,3 @@
-using Hobbyist.Api.Services.MediaStorageServices;
 using Hobbyist.Api.Services.MediaStorageServices.ObjectStore;
 using Hobbyist.Api.Services.MediaStorageServices.UrlSigner;
 
@@ -15,8 +14,5 @@ public static class MediaStorageServiceRegistration
         // TODO: swap to production S3-backed implementations when ready.
         services.AddScoped<IMediaUrlSigner, MinioMediaUrlSigner>();
         services.AddScoped<IMediaObjectStore, MinioMediaObjectStore>();
-
-        // Legacy proxy-upload service; removed once its remaining callers migrate to the above.
-        services.AddScoped<IMediaStorageService, MinIOMediaStorageService>();
     }
 }

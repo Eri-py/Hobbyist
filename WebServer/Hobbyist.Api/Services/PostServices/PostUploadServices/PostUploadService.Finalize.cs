@@ -25,8 +25,8 @@ public partial class PostUploadService
                 new FinalizeResponse { Published = true, PendingPositions = [] }
             );
 
-        if (post.Status != PostStatus.Uploading)
-            return Result<FinalizeResponse>.BadRequest("This post is not awaiting finalization.");
+        if (post.Status is not (PostStatus.Uploading or PostStatus.Draft))
+            return Result<FinalizeResponse>.BadRequest("This post cannot be finalized.");
 
         var pendingPositions = new List<int>();
         foreach (var media in post.Media.Where(m => m.Status == PostMediaStatus.Pending).ToList())
@@ -52,7 +52,7 @@ public partial class PostUploadService
         var published = pendingPositions.Count == 0;
         if (published)
         {
-            // Metadata was required at init, but verify defensively before going live.
+            // Publishing requires complete metadata; drafts may be incomplete, so validate here.
             var validationError = PostHelpers.ValidateDraftForPublish(post, post.Media.Count);
             if (validationError is not null)
                 return Result<FinalizeResponse>.BadRequest(validationError);

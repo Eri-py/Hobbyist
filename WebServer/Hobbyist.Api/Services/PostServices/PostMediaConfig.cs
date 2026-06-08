@@ -1,18 +1,16 @@
-namespace Hobbyist.Api.Services.PostServices.PostDraftServices;
+namespace Hobbyist.Api.Services.PostServices;
 
 /// <summary>
-/// Compile-time constants that govern draft post behaviour.
+/// Compile-time limits that govern post media. The count/size limits must stay in sync with the
+/// clients (see MAX_FILES / MAX_FILE_SIZE / MAX_TOTAL_SIZE).
 /// </summary>
-public static class PostDraftConfig
+public static class PostMediaConfig
 {
-    /// <summary>
-    /// How many days a draft survives before it is eligible for cleanup.
-    /// </summary>
+    /// <summary>How many days a draft survives before it is eligible for cleanup.</summary>
     public const int DraftLifetimeDays = 90;
 
     /// <summary>
-    /// Maximum number of media files allowed per post, enforced at upload and publish time.
-    /// Must stay in sync with MAX_FILES on the mobile client.
+    /// Maximum number of media files allowed per post, enforced at init and publish time.
     /// </summary>
     public const int MaxMediaFiles = 15;
 

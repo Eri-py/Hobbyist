@@ -46,4 +46,10 @@ public interface IPostUploadService
         string userId,
         CancellationToken ct
     );
+
+    /// <summary>
+    /// Discards a post and its uploaded media. Allowed for draft, in-progress and failed posts;
+    /// published posts cannot be discarded.
+    /// </summary>
+    Task<Result> DiscardAsync(string slug, string userId, CancellationToken ct);
 }

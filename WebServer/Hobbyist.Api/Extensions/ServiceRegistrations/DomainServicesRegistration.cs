@@ -5,7 +5,6 @@ using Hobbyist.Api.Services.AuthServices.SignUpServices;
 using Hobbyist.Api.Services.AuthServices.TokenServices;
 using Hobbyist.Api.Services.CacheRateLimiterServices;
 using Hobbyist.Api.Services.LoggingHashServices;
-using Hobbyist.Api.Services.PostServices.PostDraftServices;
 using Hobbyist.Api.Services.PostServices.PostUploadServices;
 using Hobbyist.Api.Services.ReccommendationServices.OnboardingServices;
 
@@ -23,7 +22,6 @@ public static class DomainServicesRegistration
         services.AddSingleton<ILogHasher, HmacLogHasher>();
         services.AddScoped<IAuthSessionService, AuthSessionService>();
         services.AddScoped<IOnboardingService, OnboardingService>();
-        services.AddScoped<IPostDraftService, PostDraftService>();
         services.AddScoped<IPostUploadService, PostUploadService>();
     }
 }

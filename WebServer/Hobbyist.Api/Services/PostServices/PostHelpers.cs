@@ -1,10 +1,5 @@
 using Hobbyist.Api.Data.Entities.PostEntities;
-using Hobbyist.Api.Dtos;
 using Hobbyist.Api.Dtos.Posts;
-using Hobbyist.Api.Extensions;
-using Hobbyist.Api.Services.MediaStorageServices;
-using Hobbyist.Api.Services.PostServices.PostDraftServices;
-using Hobbyist.Common;
 
 namespace Hobbyist.Api.Services.PostServices;
 
@@ -39,31 +34,9 @@ internal static class PostHelpers
         return null;
     }
 
-    internal static string? ValidateMedia(IFormFile[] media)
-    {
-        if (media.Length == 0)
-            return "At least one media file is required.";
-
-        if (media.Any(f => f.Length <= 0))
-            return "Uploaded files must not be empty.";
-
-        if (media.Length > PostDraftConfig.MaxMediaFiles)
-            return $"A post can contain at most {PostDraftConfig.MaxMediaFiles} media files.";
-
-        var oversized = media.FirstOrDefault(f => f.Length > PostDraftConfig.MaxFileSizeBytes);
-        if (oversized is not null)
-            return $"\"{oversized.FileName}\" exceeds the {PostDraftConfig.MaxFileSizeBytes / 1024 / 1024} MB per-file limit.";
-
-        var totalSize = media.Sum(f => f.Length);
-        if (totalSize > PostDraftConfig.MaxTotalSizeBytes)
-            return $"Total upload size exceeds the {PostDraftConfig.MaxTotalSizeBytes / 1024 / 1024} MB limit.";
-
-        return null;
-    }
-
     /// <summary>
-    /// Validates a client-declared upload manifest before issuing pre-signed URLs. Mirrors
-    /// <see cref="ValidateMedia"/> over declared metadata since the bytes aren't seen at this point.
+    /// Validates a client-declared upload manifest before issuing pre-signed URLs. Operates over the
+    /// declared metadata since the bytes aren't seen at this point.
     /// </summary>
     internal static string? ValidateManifest(
         IReadOnlyList<MediaManifestItem> media,
@@ -73,8 +46,8 @@ internal static class PostHelpers
         if (media.Count == 0)
             return "At least one media file is required.";
 
-        if (media.Count > PostDraftConfig.MaxMediaFiles)
-            return $"A post can contain at most {PostDraftConfig.MaxMediaFiles} media files.";
+        if (media.Count > PostMediaConfig.MaxMediaFiles)
+            return $"A post can contain at most {PostMediaConfig.MaxMediaFiles} media files.";
 
         if (media.Any(m => m.Position <= 0))
             return "Media position must be greater than zero.";
@@ -85,97 +58,18 @@ internal static class PostHelpers
         if (media.Any(m => m.ByteSize <= 0))
             return "Uploaded files must not be empty.";
 
-        var oversized = media.FirstOrDefault(m => m.ByteSize > PostDraftConfig.MaxFileSizeBytes);
+        var oversized = media.FirstOrDefault(m => m.ByteSize > PostMediaConfig.MaxFileSizeBytes);
         if (oversized is not null)
-            return $"\"{oversized.FileName}\" exceeds the {PostDraftConfig.MaxFileSizeBytes / 1024 / 1024} MB per-file limit.";
+            return $"\"{oversized.FileName}\" exceeds the {PostMediaConfig.MaxFileSizeBytes / 1024 / 1024} MB per-file limit.";
 
         var totalSize = media.Sum(m => m.ByteSize);
-        if (totalSize > PostDraftConfig.MaxTotalSizeBytes)
-            return $"Total upload size exceeds the {PostDraftConfig.MaxTotalSizeBytes / 1024 / 1024} MB limit.";
+        if (totalSize > PostMediaConfig.MaxTotalSizeBytes)
+            return $"Total upload size exceeds the {PostMediaConfig.MaxTotalSizeBytes / 1024 / 1024} MB limit.";
 
         var unsupported = media.FirstOrDefault(m => !allowedContentTypes.Contains(m.ContentType));
         if (unsupported is not null)
             return $"\"{unsupported.FileName}\" has an unsupported file type.";
 
         return null;
-    }
-
-    internal static async Task<Result<IReadOnlyList<string>>> UploadPostMediaAsync(
-        IFormFile[] media,
-        string userId,
-        string postId,
-        IMediaStorageService mediaStorageService,
-        ILogger logger,
-        CancellationToken ct
-    )
-    {
-        var uploadedKeys = new List<string>(media.Length);
-
-        for (var i = 0; i < media.Length; i++)
-        {
-            var file = media[i];
-            var objectKey = mediaStorageService.BuildObjectKey(
-                userId,
-                postId,
-                i + 1,
-                file.FileName
-            );
-
-            await using var stream = file.OpenReadStream();
-            var uploadResult = await mediaStorageService.UploadAsync(
-                new UploadMediaRequest
-                {
-                    Content = stream,
-                    ObjectKey = objectKey,
-                    FileName = file.FileName,
-                    ContentType = file.ContentType,
-                    ContentLength = file.Length,
-                },
-                ct
-            );
-
-            if (!uploadResult.IsSuccess)
-            {
-                await CleanupUploadedObjectsAsync(uploadedKeys, mediaStorageService, logger, ct);
-                return Result<IReadOnlyList<string>>.FromError(uploadResult);
-            }
-
-            uploadedKeys.Add(objectKey);
-        }
-
-        return Result<IReadOnlyList<string>>.Success(uploadedKeys);
-    }
-
-    internal static async Task CleanupUploadedObjectsAsync(
-        IEnumerable<string> objectKeys,
-        IMediaStorageService mediaStorageService,
-        ILogger logger,
-        CancellationToken ct
-    )
-    {
-        foreach (var key in objectKeys)
-        {
-            try
-            {
-                var result = await mediaStorageService.DeleteAsync(key, ct);
-                if (!result.IsSuccess)
-                    logger.LogWarning(
-                        "Rollback: failed to delete uploaded object '{ObjectKey}'",
-                        key.SanitizeForLog()
-                    );
-            }
-            catch (OperationCanceledException)
-            {
-                throw;
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(
-                    ex,
-                    "Rollback: unexpected error deleting object '{ObjectKey}'",
-                    key.SanitizeForLog()
-                );
-            }
-        }
     }
 }
