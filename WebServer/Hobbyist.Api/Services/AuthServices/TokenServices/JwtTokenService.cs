@@ -25,8 +25,8 @@ public class JwtTokenService(
             new(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new(ClaimTypes.Name, user.Username),
             new(ClaimTypes.Email, user.Email),
-            new(ClaimTypes.GivenName, user.Firstname!),
-            new(ClaimTypes.Surname, user.Lastname!),
+            new(ClaimTypes.GivenName, user.Firstname),
+            new(ClaimTypes.Surname, user.Lastname),
         };
 
         // Generate signing credentials and set expiration
