@@ -8,9 +8,9 @@ using Hobbyist.Common;
 namespace Hobbyist.Api.Services.AuthServices.OtpServices;
 
 public class OtpService(
-    ICache cache,
+    ICacheService cache,
     IEmailService emailService,
-    ICacheRateLimiter rateLimiter,
+    ICacheRateLimiterService rateLimiter,
     ILogger<OtpService> logger
 ) : IOtpService
 {

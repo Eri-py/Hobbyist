@@ -4,7 +4,7 @@ using Hobbyist.Common;
 namespace Hobbyist.Api.Services.MediaStorageServices.ObjectStoreServices;
 
 /// <summary>Operations against stored media objects (metadata and deletion).</summary>
-public interface IMediaObjectStore
+public interface IMediaObjectStoreService
 {
     /// <summary>
     /// Reads metadata for a stored object without downloading it. A missing object is reported

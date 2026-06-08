@@ -8,7 +8,7 @@ public static class WebApplicationExtensions
     {
         ArgumentNullException.ThrowIfNull(app);
 
-        LoggerExtensions.ConfigureHasher(app.Services.GetRequiredService<ILogHasher>());
+        LoggerExtensions.ConfigureHasher(app.Services.GetRequiredService<ILogHasherService>());
         return app;
     }
 }

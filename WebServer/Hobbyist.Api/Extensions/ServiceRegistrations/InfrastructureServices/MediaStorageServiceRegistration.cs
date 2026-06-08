@@ -12,7 +12,7 @@ public static class MediaStorageServiceRegistration
     {
         // Segregated media storage services (MinIO-backed in every environment for now).
         // TODO: swap to production S3-backed implementations when ready.
-        services.AddScoped<IMediaUrlSigner, MinioMediaUrlSigner>();
-        services.AddScoped<IMediaObjectStore, MinioMediaObjectStore>();
+        services.AddScoped<IMediaUrlSignerService, MinioMediaUrlSignerService>();
+        services.AddScoped<IMediaObjectStoreService, MinioMediaObjectStoreService>();
     }
 }

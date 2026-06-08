@@ -12,16 +12,16 @@ namespace Hobbyist.Tests.AuthServicesTests;
 
 /// <summary>
 /// Unit tests for OtpService.
-/// All dependencies (ICache, IEmailService) are mocked.
+/// All dependencies (ICacheService, IEmailService) are mocked.
 /// These tests verify OTP generation, caching, verification, and email sending logic.
 /// </summary>
 [TestFixture]
 public class OtpServiceTests
 {
-    private Mock<ICache> _mockCache = null!;
+    private Mock<ICacheService> _mockCache = null!;
     private Mock<IEmailService> _mockEmailService = null!;
-    private Mock<ICacheRateLimiter> _mockRateLimiter = null!;
-    private Mock<ILogHasher> _logHasherMock = null!;
+    private Mock<ICacheRateLimiterService> _mockRateLimiter = null!;
+    private Mock<ILogHasherService> _logHasherMock = null!;
     private OtpService _otpService = null!;
 
     private const string TestEmail = "test@example.com";
@@ -32,10 +32,10 @@ public class OtpServiceTests
     [SetUp]
     public void SetUp()
     {
-        _mockCache = new Mock<ICache>();
+        _mockCache = new Mock<ICacheService>();
         _mockEmailService = new Mock<IEmailService>();
-        _mockRateLimiter = new Mock<ICacheRateLimiter>();
-        _logHasherMock = new Mock<ILogHasher>();
+        _mockRateLimiter = new Mock<ICacheRateLimiterService>();
+        _logHasherMock = new Mock<ILogHasherService>();
         _logHasherMock
             .Setup(x => x.Hash(It.IsAny<string?>()))
             .Returns((string? value) => $"hashed_{value}");

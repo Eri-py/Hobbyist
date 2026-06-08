@@ -6,11 +6,11 @@ using Hobbyist.Common;
 
 namespace Hobbyist.Api.Services.MediaStorageServices.UrlSignerServices;
 
-public class MinioMediaUrlSigner(
+public class MinioMediaUrlSignerService(
     IAmazonS3 s3Client,
     IConfiguration configuration,
-    ILogger<MinioMediaUrlSigner> logger
-) : IMediaUrlSigner
+    ILogger<MinioMediaUrlSignerService> logger
+) : IMediaUrlSignerService
 {
     private readonly string _bucketName =
         configuration["MediaStorage:BucketName"]

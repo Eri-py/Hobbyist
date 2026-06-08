@@ -3,7 +3,7 @@ using Microsoft.Extensions.Caching.Distributed;
 
 namespace Hobbyist.Api.Services.CacheServices;
 
-public class RedisCache(IDistributedCache distributedCache) : ICache
+public class RedisCacheService(IDistributedCache distributedCache) : ICacheService
 {
     public void Set<T>(string key, T value, TimeSpan expiration)
     {

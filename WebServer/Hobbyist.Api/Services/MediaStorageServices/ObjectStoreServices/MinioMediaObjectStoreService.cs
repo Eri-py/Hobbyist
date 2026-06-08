@@ -7,11 +7,11 @@ using Hobbyist.Common;
 
 namespace Hobbyist.Api.Services.MediaStorageServices.ObjectStoreServices;
 
-public class MinioMediaObjectStore(
+public class MinioMediaObjectStoreService(
     IAmazonS3 s3Client,
     IConfiguration configuration,
-    ILogger<MinioMediaObjectStore> logger
-) : IMediaObjectStore
+    ILogger<MinioMediaObjectStoreService> logger
+) : IMediaObjectStoreService
 {
     private readonly string _bucketName =
         configuration["MediaStorage:BucketName"]

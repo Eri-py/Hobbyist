@@ -10,9 +10,9 @@ using Microsoft.Extensions.Logging.Abstractions;
 namespace Hobbyist.Tests.AuthServicesTests;
 
 [TestFixture]
-public class JwtServiceTests : DatabaseTestBase
+public class JwtTokenServiceTests : DatabaseTestBase
 {
-    private JwtService _jwtService = null!;
+    private JwtTokenService _jwtService = null!;
     private IConfiguration _configuration = null!;
     private UserEntity _testUser = null!;
     private UserEntity _testUser2 = null!;
@@ -61,7 +61,7 @@ public class JwtServiceTests : DatabaseTestBase
             )
             .Build();
 
-        _jwtService = new JwtService(_configuration, Context, NullLogger<JwtService>.Instance);
+        _jwtService = new JwtTokenService(_configuration, Context, NullLogger<JwtTokenService>.Instance);
         return Task.CompletedTask;
     }
 

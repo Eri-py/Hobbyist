@@ -4,7 +4,7 @@ using Hobbyist.Common;
 namespace Hobbyist.Api.Services.MediaStorageServices.UrlSignerServices;
 
 /// <summary>Generates pre-signed URLs for reading and uploading media objects.</summary>
-public interface IMediaUrlSigner
+public interface IMediaUrlSignerService
 {
     /// <summary>
     /// Generates a read URL for a stored media object key.

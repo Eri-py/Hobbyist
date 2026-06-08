@@ -1,6 +1,6 @@
 namespace Hobbyist.Api.Services.LoggingHashServices;
 
-public interface ILogHasher
+public interface ILogHasherService
 {
     string Hash(string? value);
 }

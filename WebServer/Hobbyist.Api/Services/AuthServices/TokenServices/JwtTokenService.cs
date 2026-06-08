@@ -11,10 +11,10 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace Hobbyist.Api.Services.AuthServices.TokenServices;
 
-public class JwtService(
+public class JwtTokenService(
     IConfiguration configuration,
     HobbyistDbContext context,
-    ILogger<JwtService> logger
+    ILogger<JwtTokenService> logger
 ) : ITokenService
 {
     public AccessTokenDetails CreateAccessToken(UserEntity user, int tokenValidForMinutes)

@@ -14,8 +14,8 @@ namespace Hobbyist.Api.Services.PostServices.PostUploadServices;
 /// (finalize and refresh). This file holds construction and the helpers they share.
 /// </summary>
 public partial class PostUploadService(
-    IMediaUrlSigner urlSigner,
-    IMediaObjectStore objectStore,
+    IMediaUrlSignerService urlSigner,
+    IMediaObjectStoreService objectStore,
     HobbyistDbContext context,
     IConfiguration configuration,
     ILogger<PostUploadService> logger
