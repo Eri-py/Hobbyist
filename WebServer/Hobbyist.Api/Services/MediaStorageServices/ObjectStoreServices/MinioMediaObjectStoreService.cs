@@ -114,7 +114,10 @@ public class MinioMediaObjectStoreService(
                     ct
                 );
 
-                if (listResponse.S3Objects.Count == 0)
+                // SDK v4 returns a null collection (not empty) when nothing matches —
+                // common for a discard before any bytes were uploaded.
+                var s3Objects = listResponse.S3Objects;
+                if (s3Objects is null || s3Objects.Count == 0)
                     break;
 
                 // Batch-delete up to 1000 objects in a single request.
@@ -122,10 +125,7 @@ public class MinioMediaObjectStoreService(
                     new DeleteObjectsRequest
                     {
                         BucketName = _bucketName,
-                        Objects =
-                        [
-                            .. listResponse.S3Objects.Select(o => new KeyVersion { Key = o.Key }),
-                        ],
+                        Objects = [.. s3Objects.Select(o => new KeyVersion { Key = o.Key })],
                     },
                     ct
                 );

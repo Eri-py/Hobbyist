@@ -13,7 +13,7 @@ import {
   MAX_FILE_SIZE,
   MAX_TOTAL_SIZE,
   MAX_FILES,
-} from "../../app/useCreatePost";
+} from "../../create/useCreatePost";
 
 type PresignedUpload = components["schemas"]["PresignedUpload"];
 type FinalizeResponse = components["schemas"]["FinalizeResponse"];
