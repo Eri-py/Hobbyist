@@ -2,76 +2,113 @@ import { renderHook, act } from "@testing-library/react";
 import { type ReactNode } from "react";
 import { vi, beforeEach, describe, it, expect } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import type { AxiosInstance } from "axios";
 
-// ---------------------------------------------------------------------------
-// Module mocks
-// ---------------------------------------------------------------------------
-
-const capturedMutations: Array<{ mutationFn: (formData: FormData) => Promise<any> }> = [];
-
-vi.mock("@tanstack/react-query", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@tanstack/react-query")>();
-  return {
-    ...actual,
-    useMutation: vi.fn().mockImplementation((opts: any) => {
-      capturedMutations.push(opts);
-      return {
-        mutateAsync: vi.fn((formData: FormData) => opts.mutationFn(formData)),
-        isPending: false,
-      };
-    }),
-  };
-});
-
+import type { components } from "@hobbyist/types";
 import {
   useCreatePost,
-  appendPostFields,
-  appendDraftFields,
+  buildManifest,
+  type UploadSource,
+  type UploadTransport,
   MAX_FILE_SIZE,
   MAX_TOTAL_SIZE,
   MAX_FILES,
 } from "../../app/useCreatePost";
+
+type PresignedUpload = components["schemas"]["PresignedUpload"];
+type FinalizeResponse = components["schemas"]["FinalizeResponse"];
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
 const mockPost = vi.fn();
-const mockAxios = { post: mockPost } as any;
+const mockDelete = vi.fn();
+const mockAxios = { post: mockPost, delete: mockDelete } as unknown as AxiosInstance;
+
+const mockTransport = vi.fn<UploadTransport<File>>().mockResolvedValue(undefined);
+
+const SLUG = "my-slug";
 
 const makeWrapper = () => {
   const client = new QueryClient({
     defaultOptions: { mutations: { retry: false } },
   });
   return ({ children }: { children: ReactNode }) => (
-    // @ts-ignore — JSX in .ts is intentional for this test helper
     <QueryClientProvider client={client}>{children}</QueryClientProvider>
   );
 };
 
-const makeFormData = () => new FormData();
+const renderCreatePost = () =>
+  renderHook(() => useCreatePost(mockAxios, mockTransport), { wrapper: makeWrapper() }).result;
 
-const validValues = {
-  hobby: "Trading Cards",
-  title: "My Post",
-  description: "A description here.",
-  availableForTrade: false as boolean,
-  lookingFor: undefined as string | undefined,
+const makeSources = (count: number): UploadSource<File>[] =>
+  Array.from({ length: count }, (_, i) => ({
+    file: new File(["x"], `f${i}.jpg`, { type: "image/jpeg" }),
+    fileName: `f${i}.jpg`,
+    contentType: "image/jpeg",
+    byteSize: i + 1,
+  }));
+
+const makeUploads = (count: number): PresignedUpload[] =>
+  Array.from({ length: count }, (_, i) => ({
+    position: i + 1,
+    url: `https://storage.test/${i + 1}`,
+    requiredHeaders: { "Content-Type": "image/jpeg" },
+    expiresAt: "2026-01-01T00:00:00Z",
+  }));
+
+const PUBLISHED: FinalizeResponse = { published: true, pendingPositions: [] };
+const PENDING: FinalizeResponse = { published: false, pendingPositions: [1] };
+
+// Routes the shared `post` mock to init / init-draft / finalize by URL. The
+// finalize sequence is consumed one entry per call (last entry repeats).
+const wireApi = (opts: { uploads: PresignedUpload[]; finalize?: FinalizeResponse[] }) => {
+  let finalizeCall = 0;
+  mockPost.mockImplementation((url: string) => {
+    if (url === "posts/init" || url === "posts/init-draft") {
+      return Promise.resolve({ data: { slug: SLUG, uploads: opts.uploads } });
+    }
+    if (url.endsWith("/finalize")) {
+      const seq = opts.finalize ?? [PUBLISHED];
+      const result = seq[finalizeCall] ?? seq[seq.length - 1];
+      finalizeCall += 1;
+      return Promise.resolve({ data: result });
+    }
+    return Promise.reject(new Error(`unexpected post: ${url}`));
+  });
 };
+
+const initCalls = () => mockPost.mock.calls.filter((call) => call[0] === "posts/init");
+const finalizeCalls = () =>
+  mockPost.mock.calls.filter((call) => String(call[0]).endsWith("/finalize"));
 
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
 
+describe("buildManifest", () => {
+  it("maps ordered sources to 1-based positions with their metadata", () => {
+    const manifest = buildManifest(makeSources(3));
+
+    expect(manifest).toEqual([
+      { position: 1, fileName: "f0.jpg", contentType: "image/jpeg", byteSize: 1 },
+      { position: 2, fileName: "f1.jpg", contentType: "image/jpeg", byteSize: 2 },
+      { position: 3, fileName: "f2.jpg", contentType: "image/jpeg", byteSize: 3 },
+    ]);
+  });
+});
+
 describe("useCreatePost", () => {
   beforeEach(() => {
-    capturedMutations.length = 0;
     mockPost.mockReset();
+    mockDelete.mockReset().mockResolvedValue(undefined);
+    mockTransport.mockReset().mockResolvedValue(undefined);
   });
 
   describe("initial state", () => {
     it("returns methods, createPost, saveDraft, and isSavingDraft", () => {
-      const { result } = renderHook(() => useCreatePost(mockAxios), { wrapper: makeWrapper() });
+      const result = renderCreatePost();
 
       expect(result.current.methods).toBeDefined();
       expect(result.current.createPost).toBeTypeOf("function");
@@ -80,157 +117,118 @@ describe("useCreatePost", () => {
     });
   });
 
-  describe("createPost", () => {
-    it("calls posts/create with the provided FormData", async () => {
-      mockPost.mockResolvedValue({ data: { postId: "abc" } });
-      const { result } = renderHook(() => useCreatePost(mockAxios), { wrapper: makeWrapper() });
-      const formData = makeFormData();
+  describe("createPost (publish)", () => {
+    it("inits, uploads every file, then finalizes", async () => {
+      wireApi({ uploads: makeUploads(2) });
+      const result = renderCreatePost();
+      const sources = makeSources(2);
 
-      act(() => result.current.createPost(formData));
+      act(() => result.current.createPost(sources));
 
-      await vi.waitFor(() => {
-        expect(mockPost).toHaveBeenCalledWith("posts/create", formData, { timeout: 60_000 });
+      await vi.waitFor(() => expect(finalizeCalls()).toHaveLength(1));
+
+      expect(initCalls()).toHaveLength(1);
+      // Each file uploaded to its matching presigned target.
+      expect(mockTransport).toHaveBeenCalledTimes(2);
+      expect(mockTransport).toHaveBeenCalledWith({
+        file: sources[0].file,
+        upload: expect.objectContaining({ position: 1 }),
+      });
+      expect(mockTransport).toHaveBeenCalledWith({
+        file: sources[1].file,
+        upload: expect.objectContaining({ position: 2 }),
+      });
+      expect(finalizeCalls()[0][0]).toBe(`posts/${SLUG}/finalize`);
+      // Clean publish leaves nothing to discard.
+      expect(mockDelete).not.toHaveBeenCalled();
+    });
+
+    it("sends the manifest built from the sources in the init body", async () => {
+      wireApi({ uploads: makeUploads(1) });
+      const result = renderCreatePost();
+
+      act(() => result.current.createPost(makeSources(1)));
+
+      await vi.waitFor(() => expect(initCalls()).toHaveLength(1));
+      expect(initCalls()[0][1]).toMatchObject({
+        media: [{ position: 1, fileName: "f0.jpg", contentType: "image/jpeg", byteSize: 1 }],
       });
     });
 
-    it("fires and forgets — does not throw on API failure", async () => {
-      mockPost.mockRejectedValue(new Error("network error"));
-      const { result } = renderHook(() => useCreatePost(mockAxios), { wrapper: makeWrapper() });
+    it("recreates when finalize reports the post is not yet published", async () => {
+      wireApi({ uploads: makeUploads(1), finalize: [PENDING, PUBLISHED] });
+      const result = renderCreatePost();
 
-      expect(() => act(() => result.current.createPost(makeFormData()))).not.toThrow();
+      act(() => result.current.createPost(makeSources(1)));
+
+      // First attempt verified incomplete → discard, then a fresh init succeeds.
+      await vi.waitFor(() => expect(initCalls()).toHaveLength(2));
+      expect(mockDelete).toHaveBeenCalledTimes(1);
+      expect(mockDelete).toHaveBeenCalledWith(`posts/${SLUG}`);
+      expect(finalizeCalls()).toHaveLength(2);
+    });
+
+    it("recreates when an upload fails mid-flight", async () => {
+      wireApi({ uploads: makeUploads(1) });
+      mockTransport.mockRejectedValueOnce(new Error("PUT failed")).mockResolvedValue(undefined);
+      const result = renderCreatePost();
+
+      act(() => result.current.createPost(makeSources(1)));
+
+      await vi.waitFor(() => expect(initCalls()).toHaveLength(2));
+      // The failed attempt is discarded; the retry uploads and finalizes once.
+      expect(mockDelete).toHaveBeenCalledTimes(1);
+      expect(mockTransport).toHaveBeenCalledTimes(2);
+      expect(finalizeCalls()).toHaveLength(1);
+    });
+
+    it("gives up after the attempt limit, discarding each orphan, without throwing", async () => {
+      wireApi({ uploads: makeUploads(1), finalize: [PENDING] });
+      const result = renderCreatePost();
+
+      expect(() => act(() => result.current.createPost(makeSources(1)))).not.toThrow();
+
+      await vi.waitFor(() => expect(initCalls()).toHaveLength(2));
+      // Two attempts, each verified incomplete and discarded — never published.
+      expect(mockDelete).toHaveBeenCalledTimes(2);
     });
   });
 
-  describe("saveDraft", () => {
-    it("calls posts/draft with the provided FormData", async () => {
-      mockPost.mockResolvedValue({ data: { postId: "draft-abc" } });
-      const { result } = renderHook(() => useCreatePost(mockAxios), { wrapper: makeWrapper() });
-      const formData = makeFormData();
+  describe("saveDraft (draft)", () => {
+    it("inits a draft and uploads every file but never finalizes", async () => {
+      wireApi({ uploads: makeUploads(2) });
+      const result = renderCreatePost();
+      const sources = makeSources(2);
 
+      let slug: string | undefined;
       await act(async () => {
-        await result.current.saveDraft(formData);
+        slug = await result.current.saveDraft(sources);
       });
 
-      expect(mockPost).toHaveBeenCalledWith("posts/draft", formData, { timeout: 60_000 });
+      expect(mockPost).toHaveBeenCalledWith("posts/init-draft", expect.anything());
+      expect(mockTransport).toHaveBeenCalledTimes(2);
+      expect(finalizeCalls()).toHaveLength(0);
+      expect(mockDelete).not.toHaveBeenCalled();
+      expect(slug).toBe(SLUG);
     });
 
-    it("resolves with the API response on success", async () => {
-      mockPost.mockResolvedValue({ data: { postId: "draft-xyz" } });
-      const { result } = renderHook(() => useCreatePost(mockAxios), { wrapper: makeWrapper() });
-
-      let postId: string | undefined;
-      await act(async () => {
-        const response = await result.current.saveDraft(makeFormData());
-        postId = response.data.postId;
-      });
-
-      expect(postId).toBe("draft-xyz");
-    });
-
-    it("rejects when the API fails", async () => {
-      mockPost.mockRejectedValue(new Error("network error"));
-      const { result } = renderHook(() => useCreatePost(mockAxios), { wrapper: makeWrapper() });
+    it("discards the partial draft and rejects when an upload fails", async () => {
+      wireApi({ uploads: makeUploads(1) });
+      mockTransport.mockRejectedValue(new Error("PUT failed"));
+      const result = renderCreatePost();
 
       let threw = false;
       await act(async () => {
         try {
-          await result.current.saveDraft(makeFormData());
+          await result.current.saveDraft(makeSources(1));
         } catch {
           threw = true;
         }
       });
 
       expect(threw).toBe(true);
+      expect(mockDelete).toHaveBeenCalledWith(`posts/${SLUG}`);
     });
-  });
-});
-
-// ---------------------------------------------------------------------------
-// appendPostFields
-// ---------------------------------------------------------------------------
-
-describe("appendPostFields", () => {
-  it("appends all required text fields", () => {
-    const formData = new FormData();
-    appendPostFields(formData, validValues);
-
-    expect(formData.get("hobby")).toBe("Trading Cards");
-    expect(formData.get("title")).toBe("My Post");
-    expect(formData.get("description")).toBe("A description here.");
-    expect(formData.get("availableForTrade")).toBe("false");
-  });
-
-  it("does not append lookingFor when it is undefined", () => {
-    const formData = new FormData();
-    appendPostFields(formData, { ...validValues, lookingFor: undefined });
-
-    expect(formData.get("lookingFor")).toBeNull();
-  });
-
-  it("does not append lookingFor when it is an empty string", () => {
-    const formData = new FormData();
-    appendPostFields(formData, { ...validValues, lookingFor: "" });
-
-    expect(formData.get("lookingFor")).toBeNull();
-  });
-
-  it("appends lookingFor when it has a value", () => {
-    const formData = new FormData();
-    appendPostFields(formData, { ...validValues, lookingFor: "vintage cards" });
-
-    expect(formData.get("lookingFor")).toBe("vintage cards");
-  });
-
-  it("serialises availableForTrade as a string", () => {
-    const formData = new FormData();
-    appendPostFields(formData, { ...validValues, availableForTrade: true });
-
-    expect(formData.get("availableForTrade")).toBe("true");
-  });
-});
-
-// ---------------------------------------------------------------------------
-// appendDraftFields
-// ---------------------------------------------------------------------------
-
-describe("appendDraftFields", () => {
-  it("always appends availableForTrade", () => {
-    const formData = new FormData();
-    appendDraftFields(formData, { ...validValues, hobby: "", title: "", description: "" });
-
-    expect(formData.get("availableForTrade")).toBe("false");
-  });
-
-  it("skips hobby, title, and description when they are empty strings", () => {
-    const formData = new FormData();
-    appendDraftFields(formData, { ...validValues, hobby: "", title: "", description: "" });
-
-    expect(formData.get("hobby")).toBeNull();
-    expect(formData.get("title")).toBeNull();
-    expect(formData.get("description")).toBeNull();
-  });
-
-  it("appends hobby, title, and description when they are non-empty", () => {
-    const formData = new FormData();
-    appendDraftFields(formData, validValues);
-
-    expect(formData.get("hobby")).toBe("Trading Cards");
-    expect(formData.get("title")).toBe("My Post");
-    expect(formData.get("description")).toBe("A description here.");
-  });
-
-  it("does not append lookingFor when it is undefined or empty", () => {
-    const formData = new FormData();
-    appendDraftFields(formData, { ...validValues, lookingFor: undefined });
-
-    expect(formData.get("lookingFor")).toBeNull();
-  });
-
-  it("appends lookingFor when it has a value", () => {
-    const formData = new FormData();
-    appendDraftFields(formData, { ...validValues, lookingFor: "something rare" });
-
-    expect(formData.get("lookingFor")).toBe("something rare");
   });
 });
 
