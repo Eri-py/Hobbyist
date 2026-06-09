@@ -7,10 +7,18 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 // Module mocks
 // ---------------------------------------------------------------------------
 
-const { mockPost } = vi.hoisted(() => ({ mockPost: vi.fn() }));
+const { mockPost, mockDelete, mockUploadToStorage } = vi.hoisted(() => ({
+  mockPost: vi.fn(),
+  mockDelete: vi.fn(),
+  mockUploadToStorage: vi.fn(),
+}));
 
 vi.mock("@/api/axiosInstance", () => ({
-  axiosInstance: { post: mockPost },
+  axiosInstance: { post: mockPost, delete: mockDelete },
+}));
+
+vi.mock("@/api/uploadToStorage", () => ({
+  uploadToStorage: mockUploadToStorage,
 }));
 
 import { useCreate } from "@/hooks/create/useCreate";
@@ -38,24 +46,25 @@ const makeFile = (name = "photo.jpg"): FileWithMetadata => ({
 
 const noopOnPostCreated = vi.fn();
 
-const validValues = {
-  hobby: "Trading Cards",
-  title: "My Item",
-  description: "Some description here.",
-  availableForTrade: false as boolean,
-  lookingFor: "",
-};
+const SLUG = "my-post-slug";
 
-const PUBLISHED_POST_ID = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb";
-const DRAFT_POST_ID = "cccccccc-cccc-cccc-cccc-cccccccccccc";
-
-const setupPostMock = ({
-  publishedPostId = PUBLISHED_POST_ID,
-  draftPostId = DRAFT_POST_ID,
-}: { publishedPostId?: string; draftPostId?: string } = {}) => {
+// Routes init / init-draft / finalize through the shared axios mock. One upload
+// target per file (tests use a single file), and finalize publishes cleanly.
+const setupPostMock = () => {
   mockPost.mockImplementation((url: string) => {
-    if (url === "posts/create") return Promise.resolve({ data: { postId: publishedPostId } });
-    if (url === "posts/draft") return Promise.resolve({ data: { postId: draftPostId } });
+    if (url === "posts/init" || url === "posts/init-draft") {
+      return Promise.resolve({
+        data: {
+          slug: SLUG,
+          uploads: [
+            { position: 1, url: "https://storage.test/1", requiredHeaders: {}, expiresAt: "" },
+          ],
+        },
+      });
+    }
+    if (url.endsWith("/finalize")) {
+      return Promise.resolve({ data: { published: true, pendingPositions: [] } });
+    }
     return Promise.resolve({ data: {} });
   });
 };
@@ -68,6 +77,8 @@ describe("useCreate", () => {
   beforeEach(() => {
     noopOnPostCreated.mockReset();
     mockPost.mockReset();
+    mockDelete.mockReset().mockResolvedValue(undefined);
+    mockUploadToStorage.mockReset().mockResolvedValue(undefined);
   });
 
   // -------------------------------------------------------------------------
@@ -201,45 +212,51 @@ describe("useCreate", () => {
       const { result } = renderHook(() => useCreate(noopOnPostCreated), { wrapper: makeWrapper() });
       const onFilesError = vi.fn();
 
-      act(() => result.current.handleSubmit(validValues, [], onFilesError));
+      act(() => result.current.handleSubmit([], onFilesError));
 
       expect(onFilesError).toHaveBeenCalledOnce();
       expect(mockPost).not.toHaveBeenCalled();
     });
 
-    it("calls posts/create with files and form data when files are present", async () => {
+    it("inits a publish with the upload manifest when files are present", async () => {
       setupPostMock();
       const { result } = renderHook(() => useCreate(noopOnPostCreated), { wrapper: makeWrapper() });
       const onFilesError = vi.fn();
 
-      act(() => result.current.handleSubmit(validValues, [makeFile()], onFilesError));
+      act(() => result.current.handleSubmit([makeFile()], onFilesError));
 
       expect(onFilesError).not.toHaveBeenCalled();
       await waitFor(() => {
         expect(mockPost).toHaveBeenCalledWith(
-          "posts/create",
-          expect.any(FormData),
-          { timeout: 60_000 },
+          "posts/init",
+          expect.objectContaining({
+            media: [expect.objectContaining({ position: 1, fileName: "photo.jpg" })],
+          }),
         );
       });
+      // The bytes go straight to storage via the transport, then we finalize.
+      await waitFor(() => expect(mockUploadToStorage).toHaveBeenCalledTimes(1));
+      await waitFor(() =>
+        expect(mockPost).toHaveBeenCalledWith(`posts/${SLUG}/finalize`),
+      );
     });
 
-    it("calls onPostCreated immediately without waiting for the API", () => {
-      setupPostMock({ publishedPostId: PUBLISHED_POST_ID });
+    it("calls onPostCreated immediately without waiting for the upload", () => {
+      setupPostMock();
       const onPostCreated = vi.fn();
       const { result } = renderHook(() => useCreate(onPostCreated), { wrapper: makeWrapper() });
 
-      act(() => result.current.handleSubmit(validValues, [makeFile()], vi.fn()));
+      act(() => result.current.handleSubmit([makeFile()], vi.fn()));
 
       expect(onPostCreated).toHaveBeenCalledOnce();
       expect(onPostCreated).toHaveBeenCalledWith();
     });
 
-    it("fails silently when the API errors", async () => {
-      mockPost.mockRejectedValueOnce(new Error("server error"));
+    it("fails silently when the upload flow errors", async () => {
+      mockPost.mockRejectedValue(new Error("server error"));
       const { result } = renderHook(() => useCreate(noopOnPostCreated), { wrapper: makeWrapper() });
 
-      act(() => result.current.handleSubmit(validValues, [makeFile()], vi.fn()));
+      expect(() => act(() => result.current.handleSubmit([makeFile()], vi.fn()))).not.toThrow();
 
       await waitFor(() => expect(mockPost).toHaveBeenCalled());
     });
@@ -250,7 +267,7 @@ describe("useCreate", () => {
   // -------------------------------------------------------------------------
 
   describe("saveDraft", () => {
-    it("calls posts/draft with the provided files", async () => {
+    it("inits a draft with the provided files and never finalizes", async () => {
       setupPostMock();
       const { result } = renderHook(() => useCreate(noopOnPostCreated), { wrapper: makeWrapper() });
 
@@ -258,20 +275,21 @@ describe("useCreate", () => {
         await result.current.saveDraft([makeFile()]);
       });
 
-      expect(mockPost).toHaveBeenCalledWith("posts/draft", expect.any(FormData), { timeout: 60_000 });
+      expect(mockPost).toHaveBeenCalledWith("posts/init-draft", expect.anything());
+      expect(mockUploadToStorage).toHaveBeenCalledTimes(1);
+      expect(mockPost).not.toHaveBeenCalledWith(`posts/${SLUG}/finalize`);
     });
 
-    it("resolves with the draft post id on success", async () => {
-      setupPostMock({ draftPostId: DRAFT_POST_ID });
+    it("resolves with the draft slug on success", async () => {
+      setupPostMock();
       const { result } = renderHook(() => useCreate(noopOnPostCreated), { wrapper: makeWrapper() });
 
-      let postId: string | undefined;
+      let slug: string | undefined;
       await act(async () => {
-        const response = await result.current.saveDraft([makeFile()]);
-        postId = response.data.postId;
+        slug = await result.current.saveDraft([makeFile()]);
       });
 
-      expect(postId).toBe(DRAFT_POST_ID);
+      expect(slug).toBe(SLUG);
     });
 
     it("rejects when the API fails", async () => {

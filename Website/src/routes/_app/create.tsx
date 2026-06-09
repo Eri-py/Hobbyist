@@ -97,7 +97,7 @@ function CreatePage() {
     <>
       <FormProvider {...methods}>
         <form
-          onSubmit={methods.handleSubmit((data) => handleSubmit(data, files, addError))}
+          onSubmit={methods.handleSubmit(() => handleSubmit(files, addError))}
           onKeyDown={preventEnterSubmit}
           style={{ display: "flex", flex: 1 }}
         >
