@@ -8,55 +8,83 @@
 Re-architecting post creation from a fire-and-forget multipart upload into a **media-first, presigned, optimistic-with-background-upload** model. The client declares a media manifest, the server hands back pre-signed PUT URLs, the client uploads bytes **directly to storage**, then calls `finalize` (HEAD-verify → publish).
 
 - **Branch:** `create-post-presigned-upload` (off `main`).
-- **Backend + service-naming standardization** already merged to `main` via PR #1024 (2026-06-08). Subsequent work is on this branch.
 - **DB:** Postgres. **Storage:** MinIO (S3-compatible) behind `IMediaUrlSignerService` + `IMediaObjectStoreService`.
 
-## Backend state (done, on this branch)
+## Where we are now (2026-06-10)
 
-- `PostMedia` table + `PostStatus` enum (**Draft / Uploading / Published**). `Status` + `PublishedAt` replaced the old `IsDraft` / `MediaCount`.
-- Media keyed by a stable **GUID `Id`** with a mutable `Position`; storage object key = `{userId}/{postId}/{mediaId}{ext}` (single source of truth: `Hobbyist.Common/MediaObjectKeys.cs`).
-- `PostUploadService` owns the lifecycle — partial classes under `WebServer/Hobbyist.Api/Services/PostServices/PostUploadServices/`:
-  - `init` (`InitPublishAsync`) / `init-draft` (`InitDraftAsync`) — `PostUploadService.Init.cs`
-  - `{slug}/finalize` (`FinalizeAsync`) — `PostUploadService.Finalize.cs`
-  - `DELETE {slug}` (`DiscardAsync`) — `PostUploadService.Discard.cs`
-  - shared helpers (`LoadOwnedPostAsync`, `BuildUploadAsync`) — `PostUploadService.cs`
-- Controller: `WebServer/Hobbyist.Api/Controllers/PostsController.cs`. DTOs: `WebServer/Hobbyist.Api/Dtos/Posts/PostUploadDtos.cs`. Limits/config: `PostServices/PostMediaConfig.cs`.
-- Migration `AddPostMediaAndStatus` applied (hand-edited to drop+add `Status`, not rename).
+**The web upload flow works end-to-end** — submit → init → direct PUTs to MinIO → finalize → published. Verified live in the browser.
+
+Client-migration plan status (original 5-step plan):
+1. ✅ **OpenAPI type regen** — `@hobbyist/types` has `InitPublishRequest`, `InitDraftRequest`, `InitPostResponse`, `PresignedUpload`, `FinalizeResponse`, `MediaManifestItem`.
+2. ✅ **Shared upload engine** — `useCreatePost` (now in `Shared/hooks/src/create/`, **not** `app/`).
+3. ✅ **Web client rewire** — `useCreate` + `uploadToStorage` transport.
+4. ⏳ **Mobile client** — NOT done; **currently broken** (still calls the old `createPost(formData)` / `appendPostFields`). Left broken on purpose until we get to it. OS background upload (iOS `URLSession` / Android `WorkManager`) is the real work.
+5. ✅ **Test rewrite** — done alongside 2 & 3.
+
+## Commits this session (on top of `d1037f8`)
+
+- `23a1111` Rewrite useCreatePost onto the presigned upload flow (regen + shared engine + tests).
+- `37f45f6` Rewire the web create flow onto the presigned upload engine.
+- `4ce267c` Fix presigned URL scheme and empty-prefix discard; move useCreatePost to create/.
+
+## How the shared engine works
+
+`Shared/hooks/src/create/useCreatePost.ts` — `useCreatePost<TFile = File>(axiosInstance, transport)`:
+- Inline API fns (`initApi`/`initDraftApi`/`finalizeApi`/`discardApi`), `useLogin`-style.
+- `buildManifest` (exported, pure): array order → 1-based `position`.
+- `uploadAll`: parallel PUT of each source to its matching `PresignedUpload` via the injected `transport` (position N → `sources[N-1]`).
+- `attemptPublish`: `init → uploadAll → finalize`; discards on incomplete/error so no orphan from our own retries.
+- `createPost` (publish): fire-and-forget, optimistic; up to `MAX_PUBLISH_ATTEMPTS = 2` (one recreate). **Finalize is called automatically right after `await uploadAll` resolves** — plain sequential await, the web never references finalize.
+- `saveDraft` (draft): `init-draft → uploadAll`, **no finalize** (stays Draft; finalize happens in the future "open draft → publish" flow). Awaited via mutation so the blocker dialog shows `isSavingDraft`.
+- Exported seams: `UploadSource<TFile>`, `UploadTransport<TFile>` (generic, default `File`).
+
+Web glue:
+- `Website/src/api/uploadToStorage.ts` — `uploadToStorage`: raw `fetch` PUT to the presigned URL with `requiredHeaders`. **Deliberately bypasses axiosInstance** (storage, not our API: no cookies/baseURL/refresh interceptor). Reusable for profile pics / banners later — lives in `api/`, not `create/`, for that reason.
+- `Website/src/hooks/create/useCreate.ts` — injects `uploadToStorage`, maps `FileWithMetadata[]` → `UploadSource[]`, drops FormData.
+- `Website/src/routes/_app/create.tsx` — pre-submit `useBlocker` (Save-draft/Discard dialog) unchanged; submit drops the redundant validated-values arg.
 
 ## Decisions made this session (don't relitigate)
 
-- **Always-recreate model; client owns retry (Instagram-style).** `finalize` is verified by whoever calls it and is idempotent (already-Published → `Published:true`; discarded → `NotFound`), so any client that returns self-heals.
-- **Removed `RefreshUploadsAsync`** (interface, `Finalize.cs`, `{slug}/uploads/refresh` endpoint, and its DTOs). **No resume-from-partial** — retry = client `Discard`s the stuck post and `init`s a fresh one from its local copy. Justification: realistic payloads are small (compress client-side), so re-uploading on the rare retry is cheap and beats maintaining resume + partial-state logic. Reversible (adding resume back is additive).
-- **Upload-URL TTL** is now an explicit constant `PostMediaConfig.UploadUrlLifetimeMinutes` (currently 15) instead of relying on the signer's implicit default. The real expiry risk is session interruption (app backgrounded/killed), not bandwidth — bump it if that proves to bite.
-- **Removed `PostStatus.Failed`** — vestigial; failure lives as the client's local pending post, not a server state. No migration needed (plain `int` column, no check constraint).
-- **Reconciliation sweep DROPPED** (deleted the `UploadReconciliationService` skeleton). Its only unique job was GC'ing uploads from clients that *never* return (orphaned storage + zombie `Uploading` rows — invisible to users since feeds show only `Published`). Deferred as YAGNI with no user base; revisit when storage cost matters. Without a sweep, a stuck post is never server-deleted, so a returning client can always discard+recreate.
-- **`mediaId` stays a GUID.** It lives only in the internal storage key, surfaced solely in img-src presigned URLs — never in a page URL. Viewing route is `/profile/{username}/{postId}` (`Website/src/routeTree.gen.ts`, no media segment); public URLs use `username` (unique), not `userId`. A media slug buys nothing.
-- **`Position` kept.** It's the client↔server correlation handle (manifest item ↔ returned upload URL; `mediaId` is never sent to the client) and the future "share a specific slide" handle (`?slide=N`, Instagram `img_index`-style — positional, follows the slot if posts ever become reorderable).
+- **No progress UI — truly fire-and-forget.** Submit → navigate away → upload runs in-page → done. Mobile gets real OS background upload; web can't, so we mitigate at close-time (see next milestone).
+- **Reconciliation REVERSED back in** — but trivially: it's NOT a new service. It's a scheduled job that queries `Status == Uploading && CreatedAt < now - TTL` (grace ~5 min, TBD) and calls the **existing `DiscardAsync`** (which already deletes S3 + DB row). This is the cleanup mechanism for web zombies (tab closed mid-upload) and any client that never returns. Still deferred — backend, independent of client work.
+- **Web mid-upload close = leave the zombie + GC sweep reclaims it.** Client carries ZERO cleanup logic. We chose this over `sendBeacon`-on-close (unreliable, races the PUTs).
+- **Local MinIO stays HTTP** (`UseSsl: false`, `http://localhost:9000`). Prod parity via mkcert was considered and declined (per-machine cert chore). `http://localhost` is mixed-content-exempt so the browser PUT works even though the site is HTTPS (Tailscale).
+- **Always-recreate; client owns retry.** No resume-from-partial. `finalize` idempotent.
 
-## Recent commits on this branch
+## Backend fixes this session
 
-- `Adopt always-recreate upload model; drop reconciliation.`
-- `Drop null-forgiving operators on user name claims.`
+- **Pre-signed URL scheme** (`MinioMediaUrlSignerService`): the AWS SDK defaults `GetPreSignedUrlRequest.Protocol` to HTTPS regardless of `ServiceURL`, so local HTTP MinIO got `https://` URLs → `ERR_SSL_PROTOCOL_ERROR` on every PUT. Now driven by `MediaStorage:UseSsl` and set on both the read (GET) and upload (PUT) requests.
+- **`DeleteByPrefixAsync` NRE** (`MinioMediaObjectStoreService`): AWS SDK v4 returns `S3Objects = null` (not empty) when nothing matches; `.Count` threw. Null-guarded → discarding a never-uploaded post is a clean no-op, not a 500. (This was firing constantly because the failing PUTs drove the discard+recreate retry.)
+- Tests added: `WebServer/Hobbyist.Tests/MediaStorageServicesTests/` (signer scheme + objectstore empty/happy-path). Starts the deferred storage-service test pass.
 
-## Next milestone — migrate the CLIENT onto the presigned flow
+## NEXT MILESTONE — reusable background-tasks system (web)
 
-The client is still on the **old flow**: `Shared/hooks/src/app/useCreatePost.ts` posts `FormData` to the now-deleted `posts/create` / `posts/draft`, typed against stale generated types (`CreatePostResponse` / `CreateDraftResponse`, which no longer exist). The website route (`Website/src/routes/_app/create.tsx`) drives off website-local hooks `@/hooks/create/useCreate` + `@/hooks/create/useMediaUpload` (dropzone, reorder, errors) — and **already has the `beforeunload`/blocker + draft-or-discard dialog wired** (`useBlocker`). Nothing calls the new endpoints yet.
+Goal: a **generic "fire and keep tracking" registry** any web feature can use (post upload first; profile pics / banners later) + one app-level `beforeunload` guard. Not a one-off for posts. Web uses React Context providers (no Zustand); pattern = context+hook in `hooks/app/`, provider in `providers/app/`, composed in `AppProvider`, mounted at `__root.tsx`.
 
-Dependency-ordered plan:
+Plan (stop at the provider for review before wiring `useCreate`):
 
-1. **OpenAPI type regen** *(prerequisite)* — get `InitPublishRequest`, `InitPostResponse`, `PresignedUpload`, `FinalizeResponse` into the generated `@hobbyist/types`. **Confirm how types are generated here** (committed `openapi.json` + an `openapi-typescript` script, vs. emitting the spec from the app — and whether the Tailscale-cert wrinkle blocks running the app).
-2. **Shared upload engine** — orchestrates `init` → presigned `PUT` per file (with progress) → `finalize`; retry = `discard` + re-`init`. Platform-agnostic core, transport injected (browser `fetch`/XHR vs. native background upload).
-3. **Web client rewire** — point `useCreate` / `useMediaUpload` at the engine; optimistic submit; blocker/draft dialog already present.
-4. **Mobile client** — OS background uploads (iOS `URLSession` / Android `WorkManager`); background-relaunch to call `finalize` is invisible (no app pop-up).
-5. **Test rewrite** — replace the old silent-failure `Shared/hooks/src/tests/create/useCreatePost.test.tsx`.
+1. **`Website/src/hooks/app/useBackgroundTasks.ts`** — context + `useBackgroundTasks` hook + types:
+   ```ts
+   type BackgroundTask = { id: string; label?: string; startedAt: number };
+   type BackgroundTasksContextTypes = {
+     pending: BackgroundTask[];
+     hasPending: boolean;
+     run: <T>(task: () => Promise<T>, meta?: { label?: string }) => Promise<T>;
+   };
+   ```
+2. **`Website/src/providers/app/BackgroundTasksProvider.tsx`** — holds `pending`; `run` adds an entry, invokes the thunk, removes it in `.finally`; a single `beforeunload` listener (read pending via a ref, no re-bind) calls `preventDefault()` while pending is non-empty. Add to `AppProvider`.
+3. **Shared engine tweak:** make `createPost` **return** its promise instead of `void`-ing it (the retry loop never rejects, so exposing it is safe; mobile keeps ignoring the return). That makes it trackable without the engine knowing about the web tracker.
+4. **`useCreate.ts`:** `const { run } = useBackgroundTasks();` then `onPostCreated(); void run(() => createPost(sources), { label: "Publishing your post" });`
 
-Recommended start: **#1 (OpenAPI regen) → web first.**
+Why `beforeunload` alone (no TanStack `useBlocker`): in-app nav keeps the SPA — and the in-page upload — alive, so we only care about real tab close/reload, which is exactly what `beforeunload` catches. Accept the browser limitation: `beforeunload` shows only the generic "Leave site?" prompt, not a custom dialog. The pre-submit blocker in `create.tsx` is separate and unchanged; after submit `hasPostedRef` flips it off and this guard takes over.
+
+Tests: `BackgroundTasksProvider` — `run` adds then removes on settle (success AND failure), `hasPending` reflects state, `beforeunload` prevented only while pending; update `useCreate` test to assert publish dispatches through `run`.
 
 ## Other remaining backend tail
 
-- MinIO bucket CORS (so the web client can PUT directly).
-- The deferred test pass (new `PostUploadService` / `MediaObjectKeys` tests).
-- Deferred: orphan-GC sweep (the dropped reconcile), if/when storage leak matters.
+- **MinIO bucket CORS** — needed for prod (cross-origin browser PUT). Not yet hit locally because `http://localhost` same-ish origin works; prod will need it.
+- **GC sweep** (the reinstated reconciliation) — scheduled `DiscardAsync` over `Uploading`-past-TTL. Backend, deferred.
+- Remaining storage/`PostUploadService`/`MediaObjectKeys` tests (signer + objectstore done).
 
 ## Working-style reminders (this repo)
 
@@ -64,11 +92,11 @@ Recommended start: **#1 (OpenAPI regen) → web first.**
 - **Stop at each major logic milestone** for review; keep diffs small; explain unfamiliar concepts.
 - **No backwards compatibility** — no real users yet, so overhauls delete old code outright.
 - **Commits:** capitalized subject ending in a period, then `- ` bullets; end with the `Co-Authored-By` trailer.
-- Naming/structure: folders under `Services/` end in `Services`; DI types are `I{Name}Service` / `{Name}Service`; config = `*Config`.
+- Naming/structure: folders under `Services/` end in `Services`; DI types are `I{Name}Service` / `{Name}Service`; config = `*Config`. Web: context+hook in `hooks/`, provider in `providers/`.
 - `gh` CLI is **not installed** — open PRs via the push URL + a ready-to-paste title/body.
-- The app **can't run locally without Tailscale** (Kestrel binds the Tailscale host cert). `dotnet build` / `dotnet ef` / `dotnet test` work without it.
+- The app **can't run locally without Tailscale** (Kestrel binds the Tailscale host cert). `dotnet build` / `dotnet ef` / `dotnet test` work without it. MinIO runs via `Setup/WebServer/docker-compose.yml` (storage profile).
 
 ## Deep references (machine-local, did NOT travel with git)
 
-- Memory: `~/.claude/projects/.../memory/create-post-overhaul.md` and `hobbyist-working-style.md`.
+- Memory: `~/.claude/projects/.../memory/` — `project-draft-post-backend` is STALE (describes the old FormData flow); trust this HANDOFF over it.
 - Plan: `~/.claude/plans/the-create-post-logic-groovy-scroll.md`.
