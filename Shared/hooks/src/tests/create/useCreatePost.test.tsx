@@ -60,13 +60,15 @@ const makeUploads = (count: number): PresignedUpload[] =>
 
 const PUBLISHED: FinalizeResponse = { published: true, pendingPositions: [] };
 const PENDING: FinalizeResponse = { published: false, pendingPositions: [1] };
+// A draft finalize verifies the bytes but stays Draft: published is false, nothing pending.
+const DRAFT_OK: FinalizeResponse = { published: false, pendingPositions: [] };
 
-// Routes the shared `post` mock to init / init-draft / finalize by URL. The
-// finalize sequence is consumed one entry per call (last entry repeats).
+// Routes the shared `post` mock to init / finalize by URL. The finalize sequence is consumed one
+// entry per call (last entry repeats).
 const wireApi = (opts: { uploads: PresignedUpload[]; finalize?: FinalizeResponse[] }) => {
   let finalizeCall = 0;
   mockPost.mockImplementation((url: string) => {
-    if (url === "posts/init" || url === "posts/init-draft") {
+    if (url === "posts/init") {
       return Promise.resolve({ data: { slug: SLUG, uploads: opts.uploads } });
     }
     if (url.endsWith("/finalize")) {
@@ -139,6 +141,7 @@ describe("useCreatePost", () => {
         upload: expect.objectContaining({ position: 2 }),
       });
       expect(finalizeCalls()[0][0]).toBe(`posts/${SLUG}/finalize`);
+      expect(finalizeCalls()[0][1]).toEqual({ publish: true });
       // Clean publish leaves nothing to discard.
       expect(mockDelete).not.toHaveBeenCalled();
     });
@@ -195,8 +198,8 @@ describe("useCreatePost", () => {
   });
 
   describe("saveDraft (draft)", () => {
-    it("inits a draft and uploads every file but never finalizes", async () => {
-      wireApi({ uploads: makeUploads(2) });
+    it("inits, uploads every file, then finalizes as a draft (publish: false)", async () => {
+      wireApi({ uploads: makeUploads(2), finalize: [DRAFT_OK] });
       const result = renderCreatePost();
       const sources = makeSources(2);
 
@@ -205,9 +208,11 @@ describe("useCreatePost", () => {
         slug = await result.current.saveDraft(sources);
       });
 
-      expect(mockPost).toHaveBeenCalledWith("posts/init-draft", expect.anything());
+      expect(mockPost).toHaveBeenCalledWith("posts/init", expect.anything());
       expect(mockTransport).toHaveBeenCalledTimes(2);
-      expect(finalizeCalls()).toHaveLength(0);
+      expect(finalizeCalls()).toHaveLength(1);
+      expect(finalizeCalls()[0][1]).toEqual({ publish: false });
+      // A verified draft is kept, not discarded.
       expect(mockDelete).not.toHaveBeenCalled();
       expect(slug).toBe(SLUG);
     });
@@ -227,6 +232,24 @@ describe("useCreatePost", () => {
       });
 
       expect(threw).toBe(true);
+      expect(mockDelete).toHaveBeenCalledWith(`posts/${SLUG}`);
+    });
+
+    it("discards and rejects when finalize reports a file never landed", async () => {
+      wireApi({ uploads: makeUploads(1), finalize: [PENDING] });
+      const result = renderCreatePost();
+
+      let threw = false;
+      await act(async () => {
+        try {
+          await result.current.saveDraft(makeSources(1));
+        } catch {
+          threw = true;
+        }
+      });
+
+      expect(threw).toBe(true);
+      expect(finalizeCalls()).toHaveLength(1);
       expect(mockDelete).toHaveBeenCalledWith(`posts/${SLUG}`);
     });
   });

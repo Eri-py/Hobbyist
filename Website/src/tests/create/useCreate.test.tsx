@@ -52,7 +52,7 @@ const SLUG = "my-post-slug";
 // target per file (tests use a single file), and finalize publishes cleanly.
 const setupPostMock = () => {
   mockPost.mockImplementation((url: string) => {
-    if (url === "posts/init" || url === "posts/init-draft") {
+    if (url === "posts/init") {
       return Promise.resolve({
         data: {
           slug: SLUG,
@@ -234,10 +234,10 @@ describe("useCreate", () => {
           }),
         );
       });
-      // The bytes go straight to storage via the transport, then we finalize.
+      // The bytes go straight to storage via the transport, then we finalize to publish.
       await waitFor(() => expect(mockUploadToStorage).toHaveBeenCalledTimes(1));
       await waitFor(() =>
-        expect(mockPost).toHaveBeenCalledWith(`posts/${SLUG}/finalize`),
+        expect(mockPost).toHaveBeenCalledWith(`posts/${SLUG}/finalize`, { publish: true }),
       );
     });
 
@@ -267,7 +267,7 @@ describe("useCreate", () => {
   // -------------------------------------------------------------------------
 
   describe("saveDraft", () => {
-    it("inits a draft with the provided files and never finalizes", async () => {
+    it("inits a draft, uploads, then finalizes it with publish:false", async () => {
       setupPostMock();
       const { result } = renderHook(() => useCreate(noopOnPostCreated), { wrapper: makeWrapper() });
 
@@ -275,9 +275,9 @@ describe("useCreate", () => {
         await result.current.saveDraft([makeFile()]);
       });
 
-      expect(mockPost).toHaveBeenCalledWith("posts/init-draft", expect.anything());
+      expect(mockPost).toHaveBeenCalledWith("posts/init", expect.anything());
       expect(mockUploadToStorage).toHaveBeenCalledTimes(1);
-      expect(mockPost).not.toHaveBeenCalledWith(`posts/${SLUG}/finalize`);
+      expect(mockPost).toHaveBeenCalledWith(`posts/${SLUG}/finalize`, { publish: false });
     });
 
     it("resolves with the draft slug on success", async () => {

@@ -10,11 +10,11 @@ import type { components } from "@hobbyist/types";
 // DTOs
 // ---------------------------------------------------------------------------
 
-type InitPublishRequest = components["schemas"]["InitPublishRequest"];
-type InitDraftRequest = components["schemas"]["InitDraftRequest"];
+type InitPostRequest = components["schemas"]["InitPostRequest"];
 type InitPostResponse = components["schemas"]["InitPostResponse"];
 type PresignedUpload = components["schemas"]["PresignedUpload"];
 type FinalizeResponse = components["schemas"]["FinalizeResponse"];
+type FinalizeRequest = components["schemas"]["FinalizeRequest"];
 type MediaManifestItem = components["schemas"]["MediaManifestItem"];
 
 // ---------------------------------------------------------------------------
@@ -93,16 +93,27 @@ export function useCreatePost<TFile = File>(
   });
 
   // API functions
-  const initApi = (body: InitPublishRequest) =>
+  const initApi = (body: InitPostRequest) =>
     axiosInstance.post<InitPostResponse>("posts/init", body);
 
-  const initDraftApi = (body: InitDraftRequest) =>
-    axiosInstance.post<InitPostResponse>("posts/init-draft", body);
-
-  const finalizeApi = (slug: string) =>
-    axiosInstance.post<FinalizeResponse>(`posts/${slug}/finalize`);
+  const finalizeApi = (slug: string, publish: boolean) =>
+    axiosInstance.post<FinalizeResponse>(`posts/${slug}/finalize`, {
+      publish,
+    } satisfies FinalizeRequest);
 
   const discardApi = (slug: string) => axiosInstance.delete(`posts/${slug}`);
+
+  // Maps the current form values + ordered sources into the init request. Both publish and draft
+  // share this one shape; optional metadata becomes null when empty, and publish completeness is
+  // enforced server-side at finalize.
+  const buildInitBody = (sources: UploadSource<TFile>[]): InitPostRequest => ({
+    hobby: methods.getValues("hobby") || null,
+    title: methods.getValues("title") || null,
+    description: methods.getValues("description") || null,
+    availableForTrade: methods.getValues("availableForTrade"),
+    lookingFor: methods.getValues("lookingFor") || null,
+    media: buildManifest(sources),
+  });
 
   // Uploads every file to its matching pre-signed target in parallel. Sources
   // are position-ordered, so position N maps to sources[N - 1].
@@ -120,13 +131,13 @@ export function useCreatePost<TFile = File>(
   // One full publish round. Leaves no orphan behind: any incomplete or failed
   // attempt discards its post so the next attempt recreates cleanly.
   const attemptPublish = async (
-    body: InitPublishRequest,
+    body: InitPostRequest,
     sources: UploadSource<TFile>[],
   ): Promise<FinalizeResponse> => {
     const { slug, uploads } = (await initApi(body)).data;
     try {
       await uploadAll(uploads, sources);
-      const result = (await finalizeApi(slug)).data;
+      const result = (await finalizeApi(slug, true)).data;
       if (!result.published) {
         await discardApi(slug).catch(() => {});
       }
@@ -139,17 +150,10 @@ export function useCreatePost<TFile = File>(
 
   // Publish: fire-and-forget and optimistic. The caller navigates away
   // immediately; the upload runs in-page. On failure we recreate from the
-  // local copy (Instagram-style), then give up — a never-published post is an
+  // local copy, then give up — a never-published post is an
   // invisible draft-state row the server GC sweep reclaims.
   const createPost = (sources: UploadSource<TFile>[]) => {
-    const body: InitPublishRequest = {
-      hobby: methods.getValues("hobby"),
-      title: methods.getValues("title"),
-      description: methods.getValues("description"),
-      availableForTrade: methods.getValues("availableForTrade"),
-      lookingFor: methods.getValues("lookingFor") || null,
-      media: buildManifest(sources),
-    };
+    const body = buildInitBody(sources);
 
     void (async () => {
       for (let attempt = 1; attempt <= MAX_PUBLISH_ATTEMPTS; attempt++) {
@@ -163,29 +167,25 @@ export function useCreatePost<TFile = File>(
     })();
   };
 
-  // Draft save: awaited so the blocker dialog can show progress and surface
-  // failure. Unlike publish there's no finalize — the post stays Draft for the
-  // user to publish later. A failed upload discards the partial draft so a
-  // retry starts clean (the form still holds everything locally).
+  // Draft save: awaited so the blocker dialog can show progress and surface failure. Finalizes
+  // with publish:false — it verifies the bytes landed but leaves the post Draft for the user to
+  // publish later. A failed or incomplete upload discards the partial draft so a retry starts clean
+  // (the form still holds everything locally), and so a resting draft never carries pending media —
+  // the invariant the server GC sweep relies on.
   const saveDraftMutation = useMutation({
     mutationFn: async (sources: UploadSource<TFile>[]) => {
-      const body: InitDraftRequest = {
-        hobby: methods.getValues("hobby") || null,
-        title: methods.getValues("title") || null,
-        description: methods.getValues("description") || null,
-        availableForTrade: methods.getValues("availableForTrade"),
-        lookingFor: methods.getValues("lookingFor") || null,
-        media: buildManifest(sources),
-      };
-
-      const { slug, uploads } = (await initDraftApi(body)).data;
+      const { slug, uploads } = (await initApi(buildInitBody(sources))).data;
       try {
         await uploadAll(uploads, sources);
+        const result = (await finalizeApi(slug, false)).data;
+        if (result.pendingPositions.length > 0) {
+          throw new Error("Some files didn't finish uploading. Please try again.");
+        }
+        return slug;
       } catch (error) {
         await discardApi(slug).catch(() => {});
         throw error;
       }
-      return slug;
     },
   });
 

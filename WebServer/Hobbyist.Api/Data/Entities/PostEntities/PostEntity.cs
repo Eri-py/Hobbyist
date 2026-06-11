@@ -9,13 +9,13 @@ public class PostEntity
     [ForeignKey("User")]
     public required Guid UserId { get; set; }
 
-    /// <summary>Null while the post is a draft; required before publishing.</summary>
+    /// <summary>Optional while in draft, required before publishing.</summary>
     public string? Hobby { get; set; }
 
-    /// <summary>Null while the post is a draft; required before publishing.</summary>
+    /// <summary>Optional while in draft, required before publishing.</summary>
     public string? Title { get; set; }
 
-    /// <summary>Null while the post is a draft; required before publishing.</summary>
+    /// <summary>Optional while in draft, required before publishing.</summary>
     public string? Description { get; set; }
 
     public bool AvailableForTrade { get; set; }

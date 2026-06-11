@@ -51,8 +51,9 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Starts publishing a post: validates the manifest and returns a pre-signed upload URL per file.
-         *     The client uploads the bytes directly to storage, then calls finalize.
+         * Starts a post: validates the manifest and returns a pre-signed upload URL per file. The post
+         *     is created as a Draft; the client uploads the bytes directly to storage, then calls finalize
+         *     (with `publish: true` to go live, or `false` to keep it a draft).
          */
         post: {
             parameters: {
@@ -63,53 +64,9 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/json": components["schemas"]["InitPublishRequest"];
-                    "text/json": components["schemas"]["InitPublishRequest"];
-                    "application/*+json": components["schemas"]["InitPublishRequest"];
-                };
-            };
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "text/plain": components["schemas"]["InitPostResponse"];
-                        "application/json": components["schemas"]["InitPostResponse"];
-                        "text/json": components["schemas"]["InitPostResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/Posts/init-draft": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Starts a draft. Like `init` but the post is saved in the Draft state and metadata may be incomplete. */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["InitDraftRequest"];
-                    "text/json": components["schemas"]["InitDraftRequest"];
-                    "application/*+json": components["schemas"]["InitDraftRequest"];
+                    "application/json": components["schemas"]["InitPostRequest"];
+                    "text/json": components["schemas"]["InitPostRequest"];
+                    "application/*+json": components["schemas"]["InitPostRequest"];
                 };
             };
             responses: {
@@ -142,8 +99,9 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Verifies that a post's uploads have landed in storage and publishes it (works for an
-         *     in-progress post or a completed draft). Returns the positions still missing if any are incomplete.
+         * Verifies that a post's uploads have landed in storage. Publishes it when
+         *     bool FinalizeRequest.Publish is true and all files are present; otherwise leaves it
+         *     a draft. Returns the positions still missing if any are incomplete.
          */
         post: {
             parameters: {
@@ -154,7 +112,13 @@ export interface paths {
                 };
                 cookie?: never;
             };
-            requestBody?: never;
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["FinalizeRequest"];
+                    "text/json": components["schemas"]["FinalizeRequest"];
+                    "application/*+json": components["schemas"]["FinalizeRequest"];
+                };
+            };
             responses: {
                 /** @description OK */
                 200: {
@@ -628,13 +592,20 @@ export interface components {
                 [key: string]: boolean;
             };
         };
+        /** @description Request body for finalize: whether to publish the post or leave it a draft. */
+        FinalizeRequest: {
+            /** @description True to publish once all media is verified; false to verify and keep it a draft. */
+            publish: boolean;
+        };
         /** @description Outcome of finalizing a post. */
         FinalizeResponse: {
-            /** @description True when every file was verified and the post is now live. */
+            /** @description True when every file was verified and a publish was requested, so the post is now live. */
             published: boolean;
             /**
-             * @description Positions whose object was not yet found in storage. A non-empty list means publish
-             *         did not complete; the client discards the post and recreates it from its local copy.
+             * @description Positions whose object was not yet found in storage. Empty means every file landed
+             *         (the post is published when publish was requested, or a verified draft otherwise). Non-empty
+             *         means the upload is incomplete: the web client discards and recreates; a future mobile client
+             *         can re-upload just these positions.
              */
             pendingPositions: (number | string)[];
         };
@@ -644,10 +615,12 @@ export interface components {
             user?: null | components["schemas"]["UserDto"];
         };
         /**
-         * @description Request to start a draft. Metadata is optional so the user can save at any point; only the
-         *     media manifest is required. The server creates the post in the Draft state.
+         * @description Request to start a post. Metadata is optional so the user can save at any point; only the media
+         *     manifest is required. The server always creates the post in the Draft state and returns a
+         *     pre-signed upload URL per manifest item — whether it ends up published is decided at finalize,
+         *     so publish and draft share this one request shape.
          */
-        InitDraftRequest: {
+        InitPostRequest: {
             hobby?: null | string;
             title?: null | string;
             description?: null | string;
@@ -659,18 +632,6 @@ export interface components {
         InitPostResponse: {
             slug: string;
             uploads: components["schemas"]["PresignedUpload"][];
-        };
-        /**
-         * @description Request to start publishing a post. Metadata is required; the server creates the post in the
-         *     Uploading state and returns a pre-signed upload URL per manifest item.
-         */
-        InitPublishRequest: {
-            hobby: string;
-            title: string;
-            description: string;
-            availableForTrade: boolean;
-            lookingFor?: null | string;
-            media: components["schemas"]["MediaManifestItem"][];
         };
         /** @description One entry in the upload manifest — describes a file the client intends to upload. */
         MediaManifestItem: {

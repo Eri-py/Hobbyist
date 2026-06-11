@@ -57,9 +57,9 @@ Web glue:
 - **`DeleteByPrefixAsync` NRE** (`MinioMediaObjectStoreService`): AWS SDK v4 returns `S3Objects = null` (not empty) when nothing matches; `.Count` threw. Null-guarded → discarding a never-uploaded post is a clean no-op, not a 500. (This was firing constantly because the failing PUTs drove the discard+recreate retry.)
 - Tests added: `WebServer/Hobbyist.Tests/MediaStorageServicesTests/` (signer scheme + objectstore empty/happy-path). Starts the deferred storage-service test pass.
 
-## Backend two-state redesign (2026-06-10, session 2) — DONE, client sync pending
+## Two-state redesign (2026-06-10, session 2) — DONE (backend + web client)
 
-Reworked the post lifecycle. `dotnet build` + `dotnet test` green (142 tests, incl. new `Hobbyist.Tests/PostUploadServicesTests/PostUploadServiceTests.cs` — 24 cases over init/finalize/discard).
+Reworked the post lifecycle. Backend: `dotnet build` + `dotnet test` green (142 tests, incl. new `Hobbyist.Tests/PostUploadServicesTests/PostUploadServiceTests.cs` — 24 cases over init/finalize/discard). Web client: `@hobbyist/types` regenerated, shared engine rewired, `pnpm --filter @hobbyist/hooks test` (113) + `pnpm --filter website test` (101) + web/shared `typecheck` all green. **Mobile is still intentionally broken** (old FormData flow — step 4 below).
 
 What changed (backend only):
 - **Two-state `PostStatus`:** `Draft = 0`, `Published = 1` — `Uploading` is gone. Status is *intent*, not byte progress; byte progress stays per-file on `PostMediaStatus` (`Pending`/`Uploaded`). A post is **always born Draft** (whether Post or Save draft). Migration `PostStatusTwoState` remaps existing rows (1→0, 2→1; Down is lossy, fine pre-launch).
@@ -69,14 +69,11 @@ What changed (backend only):
 - **Rename:** `IMediaObjectStoreService.HeadObjectAsync` → `GetObjectInfoAsync`. Finalize's verify loop extracted to `PostUploadService.VerifyUploadedMediaAsync`.
 - **Draft invariant:** a *resting* Draft must have zero `Pending` media (the GC discriminator). So Save-draft must discard if its finalize comes back with non-empty `pendingPositions` — enforced **client-side in Phase 7**, not in the service.
 
-⚠️ **The web client is now BROKEN against this backend until Phase 7.** It still calls `posts/init-draft` (gone → 404) and `finalize` with no body. Fixing that is the immediate next step:
+Web client sync (done): `@hobbyist/types` regenerated; `useCreatePost.ts` now uses a single `posts/init` (`buildInitBody` for both flows), `finalizeApi(slug, publish)` posting `{ publish }`, publish → `finalize(true)`, draft → `finalize(false)` and discard+throw on non-empty `pendingPositions`. Tests updated accordingly.
 
-### Phase 7 — client contract sync (do this next; needs Tailscale for type regen)
-1. Regen `@hobbyist/types`: `cd Shared/types && npm run generate-types` — **requires the API running** (`generate-openapi-types.js` fetches `/openapi/v1.json`), so it needs Tailscale.
-2. `Shared/hooks/src/create/useCreatePost.ts`: single `posts/init` for both flows; `finalizeApi(slug, publish)` posts `{ publish }`; publish path → `finalize(true)`; draft path → `finalize(false)` and, on non-empty `pendingPositions`, discard + throw so the awaited mutation rejects.
-3. Update shared-engine tests + the `Website useCreate` test (drop the `init-draft` mock; assert draft now finalizes with `publish:false`).
+**Still to do for mobile (the original step 4):** rewire `Mobile/src/hooks/create/useCreate.ts` off the deleted `appendPostFields`/`appendDraftFields` + FormData onto the presigned engine, with real OS background upload (iOS `URLSession` / Android `WorkManager`) — that's where partial-retry via `pendingPositions` finally gets consumed.
 
-Then resume the original milestone below (web background-tasks hook).
+Next up after this: the web background-tasks hook (milestone below).
 
 ## NEXT MILESTONE — reusable background-tasks system (web)
 
