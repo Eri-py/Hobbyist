@@ -46,7 +46,7 @@ Web glue:
 ## Decisions made this session (don't relitigate)
 
 - **No progress UI — truly fire-and-forget.** Submit → navigate away → upload runs in-page → done. Mobile gets real OS background upload; web can't, so we mitigate at close-time (see next milestone).
-- **Reconciliation REVERSED back in** — but trivially: it's NOT a new service. It's a scheduled job that queries `Status == Uploading && CreatedAt < now - TTL` (grace ~5 min, TBD) and calls the **existing `DiscardAsync`** (which already deletes S3 + DB row). This is the cleanup mechanism for web zombies (tab closed mid-upload) and any client that never returns. Still deferred — backend, independent of client work.
+- **Reconciliation REVERSED back in** — but trivially: it's NOT a new service. It's a scheduled job that queries `Status == Draft && Media.Any(Pending) && CreatedAt < now - TTL` (grace ~5 min, TBD) and calls the **existing `DiscardAsync`** (which already deletes S3 + DB row). This is the cleanup mechanism for web zombies (tab closed mid-upload) and any client that never returns. Still deferred — backend, independent of client work. (Query updated for the two-state model — see the redesign section below.)
 - **Web mid-upload close = leave the zombie + GC sweep reclaims it.** Client carries ZERO cleanup logic. We chose this over `sendBeacon`-on-close (unreliable, races the PUTs).
 - **Local MinIO stays HTTP** (`UseSsl: false`, `http://localhost:9000`). Prod parity via mkcert was considered and declined (per-machine cert chore). `http://localhost` is mixed-content-exempt so the browser PUT works even though the site is HTTPS (Tailscale).
 - **Always-recreate; client owns retry.** No resume-from-partial. `finalize` idempotent.
@@ -56,6 +56,27 @@ Web glue:
 - **Pre-signed URL scheme** (`MinioMediaUrlSignerService`): the AWS SDK defaults `GetPreSignedUrlRequest.Protocol` to HTTPS regardless of `ServiceURL`, so local HTTP MinIO got `https://` URLs → `ERR_SSL_PROTOCOL_ERROR` on every PUT. Now driven by `MediaStorage:UseSsl` and set on both the read (GET) and upload (PUT) requests.
 - **`DeleteByPrefixAsync` NRE** (`MinioMediaObjectStoreService`): AWS SDK v4 returns `S3Objects = null` (not empty) when nothing matches; `.Count` threw. Null-guarded → discarding a never-uploaded post is a clean no-op, not a 500. (This was firing constantly because the failing PUTs drove the discard+recreate retry.)
 - Tests added: `WebServer/Hobbyist.Tests/MediaStorageServicesTests/` (signer scheme + objectstore empty/happy-path). Starts the deferred storage-service test pass.
+
+## Backend two-state redesign (2026-06-10, session 2) — DONE, client sync pending
+
+Reworked the post lifecycle. `dotnet build` + `dotnet test` green (142 tests, incl. new `Hobbyist.Tests/PostUploadServicesTests/PostUploadServiceTests.cs` — 24 cases over init/finalize/discard).
+
+What changed (backend only):
+- **Two-state `PostStatus`:** `Draft = 0`, `Published = 1` — `Uploading` is gone. Status is *intent*, not byte progress; byte progress stays per-file on `PostMediaStatus` (`Pending`/`Uploaded`). A post is **always born Draft** (whether Post or Save draft). Migration `PostStatusTwoState` remaps existing rows (1→0, 2→1; Down is lossy, fine pre-launch).
+- **One `init` endpoint.** `POST posts/init` takes the unified `InitPostRequest` (metadata optional, media required). `posts/init-draft` is **deleted**. `InitPublishRequest`/`InitDraftRequest` merged into `InitPostRequest`.
+- **Intent-driven finalize.** `POST posts/{slug}/finalize` now takes a body `FinalizeRequest { bool Publish }`. `publish:true` + all media verified + metadata complete → `Published`; otherwise stays `Draft`. Idempotent on already-published. The client supplies intent — **no stored "publish-intent" bit** (that's the whole point of two states).
+- **`pendingPositions` STAYS** in `FinalizeResponse` (it's the "all verified?" signal both clients read; mobile's future partial-retry seam). Partial-retry *client logic* deferred to the mobile milestone; web still does full delete-and-recreate.
+- **Rename:** `IMediaObjectStoreService.HeadObjectAsync` → `GetObjectInfoAsync`. Finalize's verify loop extracted to `PostUploadService.VerifyUploadedMediaAsync`.
+- **Draft invariant:** a *resting* Draft must have zero `Pending` media (the GC discriminator). So Save-draft must discard if its finalize comes back with non-empty `pendingPositions` — enforced **client-side in Phase 7**, not in the service.
+
+⚠️ **The web client is now BROKEN against this backend until Phase 7.** It still calls `posts/init-draft` (gone → 404) and `finalize` with no body. Fixing that is the immediate next step:
+
+### Phase 7 — client contract sync (do this next; needs Tailscale for type regen)
+1. Regen `@hobbyist/types`: `cd Shared/types && npm run generate-types` — **requires the API running** (`generate-openapi-types.js` fetches `/openapi/v1.json`), so it needs Tailscale.
+2. `Shared/hooks/src/create/useCreatePost.ts`: single `posts/init` for both flows; `finalizeApi(slug, publish)` posts `{ publish }`; publish path → `finalize(true)`; draft path → `finalize(false)` and, on non-empty `pendingPositions`, discard + throw so the awaited mutation rejects.
+3. Update shared-engine tests + the `Website useCreate` test (drop the `init-draft` mock; assert draft now finalizes with `publish:false`).
+
+Then resume the original milestone below (web background-tasks hook).
 
 ## NEXT MILESTONE — reusable background-tasks system (web)
 
@@ -83,7 +104,7 @@ Tests: `BackgroundTasksProvider` — `run` adds then removes on settle (success 
 ## Other remaining backend tail
 
 - **MinIO bucket CORS** — needed for prod (cross-origin browser PUT). Not yet hit locally because `http://localhost` same-ish origin works; prod will need it.
-- **GC sweep** (the reinstated reconciliation) — scheduled `DiscardAsync` over `Uploading`-past-TTL. Backend, deferred.
+- **GC sweep** (the reinstated reconciliation) — scheduled `DiscardAsync` over `Draft && Media.Any(Pending)`-past-TTL. Backend, deferred. (Relies on the invariant that a resting draft has zero Pending media — see redesign section.)
 - Remaining storage/`PostUploadService`/`MediaObjectKeys` tests (signer + objectstore done).
 
 ## Working-style reminders (this repo)

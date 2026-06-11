@@ -1,14 +1,16 @@
 namespace Hobbyist.Api.Data.Entities.PostEntities;
 
-/// <summary>Lifecycle of a post.</summary>
+/// <summary>
+/// Lifecycle of a post. Status is about user intent, not byte-transfer progress — whether the
+/// media has landed is tracked per file by <see cref="PostMediaStatus"/>. A post is born Draft
+/// (whether the user pressed Post or Save draft) and only becomes Published when finalize verifies
+/// every file is in storage and the caller asked to publish.
+/// </summary>
 public enum PostStatus
 {
-    /// <summary>Saved for later; intentionally incomplete. Not shown publicly.</summary>
+    /// <summary>Not live. Either a user-saved draft or a publish whose media hasn't all landed yet.</summary>
     Draft = 0,
 
-    /// <summary>Publish requested; media is uploading. Flips to Published once all media lands.</summary>
-    Uploading = 1,
-
-    /// <summary>Live and visible.</summary>
-    Published = 2,
+    /// <summary>Live and visible. Set by finalize once all media is verified.</summary>
+    Published = 1,
 }

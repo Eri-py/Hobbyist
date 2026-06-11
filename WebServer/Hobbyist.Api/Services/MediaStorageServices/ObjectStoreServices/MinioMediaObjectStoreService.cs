@@ -17,7 +17,7 @@ public class MinioMediaObjectStoreService(
         configuration["MediaStorage:BucketName"]
         ?? throw new InvalidOperationException("Missing 'MediaStorage:BucketName' configuration.");
 
-    public async Task<Result<MediaObjectInfo>> HeadObjectAsync(
+    public async Task<Result<MediaObjectInfo>> GetObjectInfoAsync(
         string objectKey,
         CancellationToken ct
     )

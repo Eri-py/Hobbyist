@@ -11,49 +11,37 @@ namespace Hobbyist.Api.Controllers;
 public class PostsController(IPostUploadService postUploadService) : ControllerBase
 {
     /// <summary>
-    /// Starts publishing a post: validates the manifest and returns a pre-signed upload URL per file.
-    /// The client uploads the bytes directly to storage, then calls finalize.
+    /// Starts a post: validates the manifest and returns a pre-signed upload URL per file. The post
+    /// is created as a Draft; the client uploads the bytes directly to storage, then calls finalize
+    /// (with <c>publish: true</c> to go live, or <c>false</c> to keep it a draft).
     /// </summary>
     [HttpPost("init")]
     [Authorize]
-    public async Task<ActionResult<InitPostResponse>> InitPublishAsync(
-        [FromBody] InitPublishRequest request,
+    public async Task<ActionResult<InitPostResponse>> InitAsync(
+        [FromBody] InitPostRequest request,
         CancellationToken ct
     )
     {
         var userId = User.GetUserId();
-        var result = await postUploadService.InitPublishAsync(request, userId, ct);
+        var result = await postUploadService.InitAsync(request, userId, ct);
         return result.ToActionResult();
     }
 
     /// <summary>
-    /// Starts a draft. Like <c>init</c> but the post is saved in the Draft state and metadata may be incomplete.
-    /// </summary>
-    [HttpPost("init-draft")]
-    [Authorize]
-    public async Task<ActionResult<InitPostResponse>> InitDraftAsync(
-        [FromBody] InitDraftRequest request,
-        CancellationToken ct
-    )
-    {
-        var userId = User.GetUserId();
-        var result = await postUploadService.InitDraftAsync(request, userId, ct);
-        return result.ToActionResult();
-    }
-
-    /// <summary>
-    /// Verifies that a post's uploads have landed in storage and publishes it (works for an
-    /// in-progress post or a completed draft). Returns the positions still missing if any are incomplete.
+    /// Verifies that a post's uploads have landed in storage. Publishes it when
+    /// <see cref="FinalizeRequest.Publish"/> is true and all files are present; otherwise leaves it
+    /// a draft. Returns the positions still missing if any are incomplete.
     /// </summary>
     [HttpPost("{slug}/finalize")]
     [Authorize]
     public async Task<ActionResult<FinalizeResponse>> FinalizeAsync(
         string slug,
+        [FromBody] FinalizeRequest request,
         CancellationToken ct
     )
     {
         var userId = User.GetUserId();
-        var result = await postUploadService.FinalizeAsync(slug, userId, ct);
+        var result = await postUploadService.FinalizeAsync(slug, request.Publish, userId, ct);
         return result.ToActionResult();
     }
 

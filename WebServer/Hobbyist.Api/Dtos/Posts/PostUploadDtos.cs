@@ -20,40 +20,12 @@ public record class MediaManifestItem
 }
 
 /// <summary>
-/// Request to start publishing a post. Metadata is required; the server creates the post in the
-/// Uploading state and returns a pre-signed upload URL per manifest item.
+/// Request to start a post. Metadata is optional so the user can save at any point; only the media
+/// manifest is required. The server always creates the post in the Draft state and returns a
+/// pre-signed upload URL per manifest item — whether it ends up published is decided at finalize,
+/// so publish and draft share this one request shape.
 /// </summary>
-public record class InitPublishRequest
-{
-    [Required]
-    [MinLength(2)]
-    [MaxLength(50)]
-    public required string Hobby { get; set; }
-
-    [Required]
-    [MinLength(3)]
-    [MaxLength(100)]
-    public required string Title { get; set; }
-
-    [Required]
-    [MinLength(10)]
-    [MaxLength(2000)]
-    public required string Description { get; set; }
-
-    public required bool AvailableForTrade { get; set; }
-
-    [MaxLength(500)]
-    public string? LookingFor { get; set; }
-
-    [Required]
-    public required MediaManifestItem[] Media { get; set; }
-}
-
-/// <summary>
-/// Request to start a draft. Metadata is optional so the user can save at any point; only the
-/// media manifest is required. The server creates the post in the Draft state.
-/// </summary>
-public record class InitDraftRequest
+public record class InitPostRequest
 {
     [MinLength(2)]
     [MaxLength(50)]
@@ -73,6 +45,13 @@ public record class InitDraftRequest
 
     [Required]
     public required MediaManifestItem[] Media { get; set; }
+}
+
+/// <summary>Request body for finalize: whether to publish the post or leave it a draft.</summary>
+public record class FinalizeRequest
+{
+    /// <summary>True to publish once all media is verified; false to verify and keep it a draft.</summary>
+    public required bool Publish { get; set; }
 }
 
 /// <summary>A single pre-signed upload target returned to the client, paired with its manifest position.</summary>
@@ -103,10 +82,12 @@ public record class InitPostResponse
 /// <summary>Outcome of finalizing a post.</summary>
 public record class FinalizeResponse
 {
-    /// <summary>True when every file was verified and the post is now live.</summary>
+    /// <summary>True when every file was verified and a publish was requested, so the post is now live.</summary>
     public required bool Published { get; set; }
 
-    /// <summary>Positions whose object was not yet found in storage. A non-empty list means publish
-    /// did not complete; the client discards the post and recreates it from its local copy.</summary>
+    /// <summary>Positions whose object was not yet found in storage. Empty means every file landed
+    /// (the post is published when publish was requested, or a verified draft otherwise). Non-empty
+    /// means the upload is incomplete: the web client discards and recreates; a future mobile client
+    /// can re-upload just these positions.</summary>
     public required int[] PendingPositions { get; set; }
 }

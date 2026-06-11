@@ -7,12 +7,12 @@ namespace Hobbyist.Api.Services.MediaStorageServices.ObjectStoreServices;
 public interface IMediaObjectStoreService
 {
     /// <summary>
-    /// Reads metadata for a stored object without downloading it. A missing object is reported
-    /// as <see cref="MediaObjectInfo.Exists"/> = false rather than an error.
+    /// Reads metadata (existence + size) for a stored object without downloading it. A missing
+    /// object is reported as <see cref="MediaObjectInfo.Exists"/> = false rather than an error.
     /// </summary>
     /// <param name="objectKey">Storage object key</param>
     /// <returns><see cref="Result{T}"/> where T is <see cref="MediaObjectInfo"/></returns>
-    Task<Result<MediaObjectInfo>> HeadObjectAsync(string objectKey, CancellationToken ct);
+    Task<Result<MediaObjectInfo>> GetObjectInfoAsync(string objectKey, CancellationToken ct);
 
     /// <summary>
     /// Deletes a media object from storage by key.

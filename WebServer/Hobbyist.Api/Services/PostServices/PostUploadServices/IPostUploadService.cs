@@ -10,31 +10,28 @@ namespace Hobbyist.Api.Services.PostServices.PostUploadServices;
 public interface IPostUploadService
 {
     /// <summary>
-    /// Starts publishing a post. Validates the manifest, creates the post in the Uploading state
-    /// with one Pending media row per item, and returns a pre-signed upload URL per item.
+    /// Starts a post. Validates the manifest, creates the post in the Draft state with one Pending
+    /// media row per item, and returns a pre-signed upload URL per item. Metadata may be incomplete;
+    /// completeness is enforced at finalize when publishing.
     /// </summary>
-    Task<Result<InitPostResponse>> InitPublishAsync(
-        InitPublishRequest request,
+    Task<Result<InitPostResponse>> InitAsync(
+        InitPostRequest request,
         string userId,
         CancellationToken ct
     );
 
     /// <summary>
-    /// Starts a draft. Like <see cref="InitPublishAsync"/> but the post is created in the Draft
-    /// state and incomplete metadata is allowed.
+    /// Verifies that every pending file has landed in storage, flipping each to Uploaded. When
+    /// <paramref name="publish"/> is true and all files are present (and metadata is complete) the
+    /// post is published; otherwise it stays a Draft. The still-missing positions are returned in
+    /// either case. Idempotent: finalizing an already-published post succeeds.
     /// </summary>
-    Task<Result<InitPostResponse>> InitDraftAsync(
-        InitDraftRequest request,
+    Task<Result<FinalizeResponse>> FinalizeAsync(
+        string slug,
+        bool publish,
         string userId,
         CancellationToken ct
     );
-
-    /// <summary>
-    /// Verifies that every pending file of an Uploading post has landed in storage. When all are
-    /// present the post is published; otherwise the still-missing indexes are returned to retry.
-    /// Idempotent: finalizing an already-published post succeeds.
-    /// </summary>
-    Task<Result<FinalizeResponse>> FinalizeAsync(string slug, string userId, CancellationToken ct);
 
     /// <summary>
     /// Discards a post and its uploaded media. Allowed for draft and in-progress posts;
