@@ -6,7 +6,7 @@ import type { AxiosInstance } from "axios";
 
 import { SignUpFormSchema, type SignUpFormSchemaTypes } from "@hobbyist/form-schemas";
 import type { components } from "@hobbyist/types";
-import { type ServerError, useServerError } from "../shared/useServerError";
+import { getServerErrorMessage } from "../shared/getServerErrorMessage";
 import { USER_DETAILS_QUERY_KEY } from "../app/useAuth";
 
 // DTOs
@@ -37,6 +37,9 @@ export function useSignUp(
   router: { replace: (path: string) => void },
   axiosInstance: AxiosInstance,
   onAuthSuccess?: (authResult: AuthResult) => Promise<void>,
+  // Platform-supplied error sink: web routes it to the notification system, mobile to its own
+  // inline display. The hook just hands over a normalized message.
+  onError?: (message: string) => void,
 ) {
   // Constants
   const SIGNUP_TOTAL_STEPS = 5;
@@ -65,7 +68,6 @@ export function useSignUp(
     },
   };
 
-  const { serverErrorMessage, handleServerError, clearServerError } = useServerError();
   const [step, setStep] = useState<number>(0);
   const [otpExpiresAt, setOtpExpiresAt] = useState<Date | null>(null);
   const [popularInterests, setPopularInterests] = useState<string[]>([]);
@@ -107,7 +109,7 @@ export function useSignUp(
       setOtpExpiresAt(new Date(response.data.otpExpiresAt));
       setStep(1);
     },
-    onError: (error: ServerError) => handleServerError(error),
+    onError: (error) => onError?.(getServerErrorMessage(error)),
   });
 
   const verifyOtpMutation = useMutation({
@@ -116,7 +118,7 @@ export function useSignUp(
       setPopularInterests(response.data.popularInterests);
       setStep(2);
     },
-    onError: (error: ServerError) => handleServerError(error),
+    onError: (error) => onError?.(getServerErrorMessage(error)),
   });
 
   const completeSignUpMutation = useMutation({
@@ -131,7 +133,7 @@ export function useSignUp(
       await queryClient.invalidateQueries({ queryKey: USER_DETAILS_QUERY_KEY });
       router.replace("/");
     },
-    onError: (error: ServerError) => handleServerError(error),
+    onError: (error) => onError?.(getServerErrorMessage(error)),
   });
 
   // Handle next step with validation
@@ -140,7 +142,6 @@ export function useSignUp(
     const isValid = await methods.trigger(currentStep);
 
     if (isValid) {
-      clearServerError();
       switch (step) {
         case 0: {
           const username = methods.getValues("username");
@@ -185,7 +186,6 @@ export function useSignUp(
 
   // Handle form submission
   const onSubmit = (formData: SignUpFormSchemaTypes) => {
-    clearServerError();
     completeSignUpMutation.mutate({
       username: formData.username,
       email: formData.email,
@@ -209,10 +209,6 @@ export function useSignUp(
     // Header config
     signUpHeaderConfig,
     SIGNUP_TOTAL_STEPS,
-
-    // Server error handling
-    serverErrorMessage,
-    clearServerError,
 
     // Actions
     handleNext,

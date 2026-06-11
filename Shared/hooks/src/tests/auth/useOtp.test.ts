@@ -22,18 +22,8 @@ vi.mock("@tanstack/react-query", () => ({
   }),
 }));
 
-const { mockHandleServerError, mockClearServerError } = vi.hoisted(() => ({
-  mockHandleServerError: vi.fn(),
-  mockClearServerError: vi.fn(),
-}));
-
-vi.mock("../../shared/useServerError", () => ({
-  useServerError: vi.fn().mockReturnValue({
-    serverErrorMessage: null,
-    handleServerError: mockHandleServerError,
-    clearServerError: mockClearServerError,
-  }),
-}));
+// Platform-supplied error sink injected into the hook (web would pass notify).
+const mockOnError = vi.fn();
 
 import { useOtp } from "../../auth";
 
@@ -54,8 +44,7 @@ describe("useOtp", () => {
   beforeEach(() => {
     capturedMutations.length = 0;
     capturedMutates.length = 0;
-    mockHandleServerError.mockReset();
-    mockClearServerError.mockReset();
+    mockOnError.mockReset();
     mockAxios.post.mockReset();
     futureDate = new Date(Date.now() + FIVE_MINUTES_MS);
   });
@@ -75,14 +64,6 @@ describe("useOtp", () => {
 
       // Assert
       expect(result.current.endTime).toBe(futureDate.getTime());
-    });
-
-    it("exposes server error state from useServerError", () => {
-      // Act
-      const { result } = renderHook(() => useOtp(futureDate, mockAxios));
-
-      // Assert
-      expect(result.current.serverErrorMessage).toBeNull();
     });
   });
 
@@ -247,16 +228,15 @@ describe("useOtp", () => {
   });
 
   describe("onError", () => {
-    it("calls handleServerError with the error", () => {
+    it("forwards a normalized message to the error sink", () => {
       // Arrange
-      renderHook(() => useOtp(futureDate, mockAxios));
-      const error = new Error("Network error") as any;
+      renderHook(() => useOtp(futureDate, mockAxios, mockOnError));
 
       // Act
-      act(() => capturedMutations[0].onError(error));
+      act(() => capturedMutations[0].onError(new Error("Network error")));
 
-      // Assert
-      expect(mockHandleServerError).toHaveBeenCalledWith(error);
+      // Assert — a plain Error normalizes to the generic message.
+      expect(mockOnError).toHaveBeenCalledWith("An unexpected error occurred.");
     });
   });
 });

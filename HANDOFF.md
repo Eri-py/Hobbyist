@@ -75,28 +75,26 @@ Web client sync (done): `@hobbyist/types` regenerated; `useCreatePost.ts` now us
 
 Next up after this: the web background-tasks hook (milestone below).
 
-## NEXT MILESTONE — reusable background-tasks system (web)
+## Background-tasks + notification system (2026-06-11/12, session 2) — DONE (web)
 
-Goal: a **generic "fire and keep tracking" registry** any web feature can use (post upload first; profile pics / banners later) + one app-level `beforeunload` guard. Not a one-off for posts. Web uses React Context providers (no Zustand); pattern = context+hook in `hooks/app/`, provider in `providers/app/`, composed in `AppProvider`, mounted at `__root.tsx`.
+What started as the background-tasks hook grew into a full app-level notification system. All web + shared green (`pnpm --filter website test` 113, `pnpm --filter @hobbyist/hooks test` 108, web/shared typecheck clean). Committed as `a8ef249` (create-flow rewire), `814636a` (notification system + migrations), and the auth DI commit.
 
-Plan (stop at the provider for review before wiring `useCreate`):
+- **`useBackgroundTasks` + `BackgroundTasksProvider`** (`hooks/app/` + `providers/app/`, in `AppProvider`): `run(task, {label})` tracks in-flight fire-and-forget work for a single `beforeunload` guard (attached only while pending), and surfaces terminal failures through `notify` (the task owns its own retries; `run` never rejects → safe to `void`).
+- **`NotificationProvider`** (mounted at `__root.tsx`, above the router so it persists across in-app nav): `notify({ message, severity, duration?, action?, key? })` / `dismiss(id)`. `action` ⇒ sticky; `key` replaces instead of stacking. Responsive `NotificationViewport`: desktop top-right stack (≤3), mobile single top slide-down banner, faster drain under backlog. `NotificationBanner` = MUI `Alert` + `Slide`.
+- **All toasts migrated → `notify`, old components deleted:** background-tasks failures, create media-validation errors (`useMediaUpload`, `ErrorStack` deleted), home login prompt (`LoginSnackbar` deleted).
+- **Server-error handling reworked:** shared pure `getServerErrorMessage` normalizer (network/no-response, status fallbacks, `data.message`, default). **`useServerError` removed.** `useLogin`/`useSignUp`/`useOtp` now take an injected `onError(message)` (DI) called in each mutation's `onError` with the normalized message — web passes `notify({severity:"error", key:"auth-error"})` (auto-hide, no linger), mobile passes a local `setState` for inline display. Field validation (RHF) stays inline, untouched.
 
-1. **`Website/src/hooks/app/useBackgroundTasks.ts`** — context + `useBackgroundTasks` hook + types:
-   ```ts
-   type BackgroundTask = { id: string; label?: string; startedAt: number };
-   type BackgroundTasksContextTypes = {
-     pending: BackgroundTask[];
-     hasPending: boolean;
-     run: <T>(task: () => Promise<T>, meta?: { label?: string }) => Promise<T>;
-   };
-   ```
-2. **`Website/src/providers/app/BackgroundTasksProvider.tsx`** — holds `pending`; `run` adds an entry, invokes the thunk, removes it in `.finally`; a single `beforeunload` listener (read pending via a ref, no re-bind) calls `preventDefault()` while pending is non-empty. Add to `AppProvider`.
-3. **Shared engine tweak:** make `createPost` **return** its promise instead of `void`-ing it (the retry loop never rejects, so exposing it is safe; mobile keeps ignoring the return). That makes it trackable without the engine knowing about the web tracker.
-4. **`useCreate.ts`:** `const { run } = useBackgroundTasks();` then `onPostCreated(); void run(() => createPost(sources), { label: "Publishing your post" });`
+Why `beforeunload` alone (no TanStack `useBlocker`): in-app nav keeps the SPA — and the in-page upload — alive, so we only care about real tab close/reload. The pre-submit blocker in `create.tsx` is separate and unchanged; after submit `hasPostedRef` flips it off and this guard takes over.
 
-Why `beforeunload` alone (no TanStack `useBlocker`): in-app nav keeps the SPA — and the in-page upload — alive, so we only care about real tab close/reload, which is exactly what `beforeunload` catches. Accept the browser limitation: `beforeunload` shows only the generic "Leave site?" prompt, not a custom dialog. The pre-submit blocker in `create.tsx` is separate and unchanged; after submit `hasPostedRef` flips it off and this guard takes over.
+## NEXT MILESTONE — wire the create flow through `run()` (the original goal)
 
-Tests: `BackgroundTasksProvider` — `run` adds then removes on settle (success AND failure), `hasPending` reflects state, `beforeunload` prevented only while pending; update `useCreate` test to assert publish dispatches through `run`.
+Now that `run` + notifications exist, finish the optimistic create flow:
+
+1. **Shared engine:** collapse `createPost`/`saveDraft` into one `submit(sources, publish)` that owns the retry loop and **rejects on terminal failure** (so `run` notifies). Decided: both Post and Save-draft are fire-and-forget + optimistic; the leave-dialog "Save draft" fires `submit(false)` and proceeds. (See the draft-vs-publish discussion — the only difference is the `publish` flag.)
+2. **`useCreate.ts` / `create.tsx`:** `const { run } = useBackgroundTasks();` then for both paths `onPostCreated(); void run(() => submit(sources, publish), { label: "Publishing your post" | "Saving your draft" });`. Drop `isSavingDraft`/the dialog spinner.
+3. Tests: assert both paths dispatch through `run`.
+
+Then **mobile** (the original step 4): rewire `Mobile/src/hooks/create/useCreate.ts` off FormData onto the presigned engine + OS background upload — where partial-retry via `pendingPositions` finally gets used.
 
 ## Other remaining backend tail
 

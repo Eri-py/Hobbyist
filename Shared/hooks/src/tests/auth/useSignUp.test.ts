@@ -14,21 +14,15 @@ const capturedMutations: Array<{
 const capturedMutates: ReturnType<typeof vi.fn>[] = new Array(3);
 let _mutationSlot = 0;
 
-const {
-  mockInvalidateQueries,
-  mockTrigger,
-  mockGetValues,
-  mockSetError,
-  mockHandleServerError,
-  mockClearServerError,
-} = vi.hoisted(() => ({
+const { mockInvalidateQueries, mockTrigger, mockGetValues, mockSetError } = vi.hoisted(() => ({
   mockInvalidateQueries: vi.fn(),
   mockTrigger: vi.fn(),
   mockGetValues: vi.fn(),
   mockSetError: vi.fn(),
-  mockHandleServerError: vi.fn(),
-  mockClearServerError: vi.fn(),
 }));
+
+// Platform-supplied error sink injected into the hook (web would pass notify).
+const mockOnError = vi.fn();
 
 vi.mock("@tanstack/react-query", () => ({
   useMutation: vi.fn().mockImplementation((opts: any) => {
@@ -53,14 +47,6 @@ vi.mock("react-hook-form", () => ({
     handleSubmit: vi.fn(),
     register: vi.fn(),
     formState: { errors: {} },
-  }),
-}));
-
-vi.mock("../../shared/useServerError", () => ({
-  useServerError: vi.fn().mockReturnValue({
-    serverErrorMessage: null,
-    handleServerError: mockHandleServerError,
-    clearServerError: mockClearServerError,
   }),
 }));
 
@@ -96,8 +82,7 @@ describe("useSignUp", () => {
     mockTrigger.mockImplementation(() => Promise.resolve(mockTriggerResult));
     mockReplace.mockReset();
     mockInvalidateQueries.mockReset();
-    mockHandleServerError.mockReset();
-    mockClearServerError.mockReset();
+    mockOnError.mockReset();
     mockTrigger.mockClear();
     mockGetValues.mockReset();
     mockSetError.mockReset();
@@ -172,18 +157,6 @@ describe("useSignUp", () => {
       // Assert
       expect(capturedMutates[0]).not.toHaveBeenCalled();
     });
-
-    it("clears server error before firing the mutation", async () => {
-      // Arrange
-      const { result } = renderHook(() => useSignUp(mockNavigate, mockAxios));
-      mockGetValues.mockReturnValue("anyvalue");
-
-      // Act
-      await act(async () => result.current.handleNext());
-
-      // Assert
-      expect(mockClearServerError).toHaveBeenCalled();
-    });
   });
 
   describe("startSignUpMutation callbacks", () => {
@@ -209,16 +182,15 @@ describe("useSignUp", () => {
       expect(result.current.otpExpiresAt).toEqual(new Date("2026-03-09T12:00:00.000Z"));
     });
 
-    it("onError calls handleServerError", () => {
+    it("onError forwards a normalized message to the error sink", () => {
       // Arrange
-      renderHook(() => useSignUp(mockNavigate, mockAxios));
-      const error = new Error("Username taken") as any;
+      renderHook(() => useSignUp(mockNavigate, mockAxios, undefined, mockOnError));
 
       // Act
-      act(() => capturedMutations[0].onError(error));
+      act(() => capturedMutations[0].onError(new Error("Username taken")));
 
-      // Assert
-      expect(mockHandleServerError).toHaveBeenCalledWith(error);
+      // Assert — a plain Error normalizes to the generic message.
+      expect(mockOnError).toHaveBeenCalledWith("An unexpected error occurred.");
     });
   });
 
@@ -274,16 +246,15 @@ describe("useSignUp", () => {
       expect(result.current.popularInterests).toEqual(["cards", "coins"]);
     });
 
-    it("onError calls handleServerError", () => {
+    it("onError forwards a normalized message to the error sink", () => {
       // Arrange
-      renderHook(() => useSignUp(mockNavigate, mockAxios));
-      const error = new Error("Invalid OTP") as any;
+      renderHook(() => useSignUp(mockNavigate, mockAxios, undefined, mockOnError));
 
       // Act
-      act(() => capturedMutations[1].onError(error));
+      act(() => capturedMutations[1].onError(new Error("Invalid OTP")));
 
       // Assert
-      expect(mockHandleServerError).toHaveBeenCalledWith(error);
+      expect(mockOnError).toHaveBeenCalledWith("An unexpected error occurred.");
     });
   });
 
@@ -364,28 +335,6 @@ describe("useSignUp", () => {
         interests: ["cards", "coins"],
       });
     });
-
-    it("clears server error before submitting", () => {
-      // Arrange
-      const { result } = renderHook(() => useSignUp(mockNavigate, mockAxios));
-      const formData = {
-        username: "testuser",
-        email: "test@example.com",
-        password: "Test1234!",
-        confirmPassword: "Test1234!",
-        otp: "ABC123",
-        firstname: "Test",
-        lastname: "User",
-        dateOfBirth: "1990-01-01",
-        interests: ["cards", "coins"],
-      };
-
-      // Act
-      act(() => result.current.onSubmit(formData));
-
-      // Assert
-      expect(mockClearServerError).toHaveBeenCalled();
-    });
   });
 
   describe("completeSignUpMutation callbacks", () => {
@@ -428,16 +377,15 @@ describe("useSignUp", () => {
       expect(mockOnAuthSuccess).toHaveBeenCalledWith(mockAuthResult.data);
     });
 
-    it("onError calls handleServerError", () => {
+    it("onError forwards a normalized message to the error sink", () => {
       // Arrange
-      renderHook(() => useSignUp(mockNavigate, mockAxios));
-      const error = new Error("Sign-up failed") as any;
+      renderHook(() => useSignUp(mockNavigate, mockAxios, undefined, mockOnError));
 
       // Act
-      act(() => capturedMutations[2].onError(error));
+      act(() => capturedMutations[2].onError(new Error("Sign-up failed")));
 
       // Assert
-      expect(mockHandleServerError).toHaveBeenCalledWith(error);
+      expect(mockOnError).toHaveBeenCalledWith("An unexpected error occurred.");
     });
   });
 
