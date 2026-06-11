@@ -4,36 +4,25 @@ import { generateThumbnail } from "./generateThumbnail";
 import { compressImage } from "./compressImage";
 import { MAX_FILE_SIZE, MAX_TOTAL_SIZE, MAX_FILES } from "@hobbyist/hooks";
 
+import { useNotifications } from "@/hooks/app/useNotifications";
+
 export type FileWithMetadata = {
   id: string;
   file: File;
   preview: string;
 };
 
-export type MediaUploadError = {
-  id: string;
-  message: string;
-};
-
-const createMediaUploadError = (message: string): MediaUploadError => ({
-  id: crypto.randomUUID(),
-  message,
-});
-
 export function useMediaUpload() {
   const [filesWithMetadata, setFilesWithMetadata] = useState<FileWithMetadata[]>([]);
-  const [errors, setErrors] = useState<MediaUploadError[]>([]);
+  const { notify } = useNotifications();
 
-  // Auto-clear errors after 20 seconds
-  useEffect(() => {
-    if (errors.length === 0) return;
-
-    const timerId = setTimeout(() => {
-      setErrors([]);
-    }, 20000);
-
-    return () => clearTimeout(timerId);
-  }, [errors]);
+  // Surface a validation problem through the central notification system.
+  const addError = useCallback(
+    (message: string) => {
+      notify({ severity: "error", message });
+    },
+    [notify],
+  );
 
   // Keep a ref in sync so the unmount cleanup always sees the latest files.
   const filesRef = useRef(filesWithMetadata);
@@ -100,31 +89,32 @@ export function useMediaUpload() {
 
       setFilesWithMetadata((prev) => [...prev, ...newFilesWithMetadata]);
 
-      if (rejected.length > 0) {
-        setErrors((prev) => [...prev, ...rejected.map(createMediaUploadError)]);
-      }
+      rejected.forEach((message) => notify({ severity: "error", message }));
     },
-    [filesWithMetadata],
+    [filesWithMetadata, notify],
   );
 
-  const onDropRejected = useCallback((fileRejections: FileRejection[]) => {
-    if (fileRejections.length === 0) return;
+  const onDropRejected = useCallback(
+    (fileRejections: FileRejection[]) => {
+      if (fileRejections.length === 0) return;
 
-    const errorMessages = fileRejections.map((rejection) => {
-      const fileName = rejection.file.name;
-      const code = rejection.errors[0]?.code;
-      if (code === "file-invalid-type") {
-        return `${fileName}: Invalid file type. Please upload image or video files only.`;
-      }
-      if (code === "file-too-large") {
-        const limitMB = (MAX_FILE_SIZE / 1024 / 1024).toFixed(2);
-        return `${fileName}: Failed to upload. File is too large (limit: ${limitMB}MB).`;
-      }
-      return `${fileName}: Failed to upload. ${rejection.errors[0]?.message || "Unknown error"}`;
-    });
-
-    setErrors((prev) => [...prev, ...errorMessages.map(createMediaUploadError)]);
-  }, []);
+      fileRejections.forEach((rejection) => {
+        const fileName = rejection.file.name;
+        const code = rejection.errors[0]?.code;
+        let message: string;
+        if (code === "file-invalid-type") {
+          message = `${fileName}: Invalid file type. Please upload image or video files only.`;
+        } else if (code === "file-too-large") {
+          const limitMB = (MAX_FILE_SIZE / 1024 / 1024).toFixed(2);
+          message = `${fileName}: Failed to upload. File is too large (limit: ${limitMB}MB).`;
+        } else {
+          message = `${fileName}: Failed to upload. ${rejection.errors[0]?.message || "Unknown error"}`;
+        }
+        notify({ severity: "error", message });
+      });
+    },
+    [notify],
+  );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -154,14 +144,6 @@ export function useMediaUpload() {
     });
   }, []);
 
-  const removeError = useCallback((errorId: string) => {
-    setErrors((prev) => prev.filter((error) => error.id !== errorId));
-  }, []);
-
-  const addError = useCallback((message: string) => {
-    setErrors((prev) => [...prev, createMediaUploadError(message)]);
-  }, []);
-
   const reorderFiles = useCallback((newOrder: FileWithMetadata[]) => {
     setFilesWithMetadata(newOrder);
   }, []);
@@ -175,12 +157,10 @@ export function useMediaUpload() {
 
   return {
     files: filesWithMetadata,
-    errors,
     getRootProps,
     getInputProps,
     isDragActive,
     removeFile,
-    removeError,
     addError,
     reorderFiles,
     clearFiles,

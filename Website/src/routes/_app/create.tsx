@@ -10,7 +10,6 @@ import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 
 import { useMediaUpload } from "@/hooks/create/useMediaUpload";
 import { useDeviceType } from "@/hooks/shared/useDeviceType";
-import { ErrorStack } from "@/components/shared/ErrorStack";
 import { useCreate } from "@/hooks/create/useCreate";
 import { DesktopCreateForm } from "@/components/create/desktop/DesktopCreateForm";
 import { MobileCreateForm } from "@/components/create/mobile/MobileCreateForm";
@@ -44,8 +43,6 @@ function CreatePage() {
     isDragActive,
     removeFile,
     reorderFiles,
-    errors,
-    removeError,
     addError,
     clearFiles,
   } = useMediaUpload();
@@ -122,12 +119,6 @@ function CreatePage() {
                 onBack={handleBack}
               />
             )}
-
-            <ErrorStack
-              errors={errors}
-              onRemoveError={removeError}
-              position={isDesktop ? "top-right" : "bottom-center"}
-            />
 
             <input {...getInputProps()} />
           </Stack>
