@@ -44,14 +44,36 @@ export function NotificationBanner({
     >
       <Alert
         severity={notification.severity}
-        variant="filled"
-        sx={{ width: "100%", boxShadow: 6, alignItems: "center" }}
+        sx={(theme) => {
+          const accent =
+            notification.severity === "info"
+              ? theme.palette.primary.main
+              : theme.palette[notification.severity].main;
+          return {
+            width: "100%",
+            maxHeight: 70,
+            alignItems: "center",
+            borderRadius: 2,
+            boxShadow: 6,
+            py: 1,
+            backgroundColor: theme.palette.background.paper,
+            color: theme.palette.text.primary,
+            border: `1px solid ${theme.palette.divider}`,
+            borderLeft: `4px solid ${accent}`,
+            "& .MuiAlert-icon": { alignItems: "center" },
+            "& .MuiAlert-icon .MuiSvgIcon-root": {
+              color: accent,
+              fontSize: 24,
+            },
+            "& .MuiAlert-message": { fontSize: 16 },
+          };
+        }}
         action={
           <Stack direction="row" sx={{ alignItems: "center", gap: 0.5 }}>
             {action && (
               <Button
                 color="inherit"
-                size="small"
+                size="large"
                 sx={{ fontWeight: 700 }}
                 onClick={() => {
                   action.onClick();

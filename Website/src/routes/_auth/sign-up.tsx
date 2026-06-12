@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { FormProvider } from "react-hook-form";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
@@ -15,6 +16,10 @@ import { FormHeader } from "@/components/auth/FormHeader";
 import { FormContainer } from "@/components/auth/FormContainer";
 import { seo } from "@/lib/seo";
 
+// Single key for the auth-failure notification: a new failure replaces the old rather than
+// stacking, and advancing a step can retire it via dismissKey.
+const AUTH_ERROR_KEY = "auth-error";
+
 export const Route = createFileRoute("/_auth/sign-up")({
   head: () =>
     seo({
@@ -27,7 +32,7 @@ export const Route = createFileRoute("/_auth/sign-up")({
 
 function SignUp() {
   const navigate = useNavigate();
-  const { notify } = useNotifications();
+  const { notify, dismissKey } = useNotifications();
 
   const {
     methods,
@@ -46,8 +51,14 @@ function SignUp() {
     { replace: (path) => navigate({ to: path, replace: true }) },
     axiosInstance,
     undefined,
-    (message) => notify({ severity: "error", message, key: "auth-error" }),
+    (message) => notify({ severity: "error", message, key: AUTH_ERROR_KEY }),
   );
+
+  // An auth error only keeps you on the current step; advancing means the failure is stale, so
+  // retire it rather than let it linger into the next step.
+  useEffect(() => {
+    dismissKey(AUTH_ERROR_KEY);
+  }, [step, dismissKey]);
 
   return (
     <FormContainer step={step}>

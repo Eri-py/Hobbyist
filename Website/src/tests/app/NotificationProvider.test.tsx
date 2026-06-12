@@ -71,6 +71,35 @@ describe("NotificationProvider", () => {
     await waitFor(() => expect(screen.queryByText("Bye")).toBeNull());
   });
 
+  it("removes a keyed notification via dismissKey", async () => {
+    const { result } = renderProvider();
+
+    act(() => {
+      result.current.notify({
+        message: "Login failed.",
+        severity: "error",
+        duration: null,
+        key: "auth-error",
+      });
+    });
+    await screen.findByText("Login failed.");
+
+    act(() => result.current.dismissKey("auth-error"));
+    await waitFor(() => expect(screen.queryByText("Login failed.")).toBeNull());
+  });
+
+  it("dismissKey leaves notifications carrying a different key untouched", async () => {
+    const { result } = renderProvider();
+
+    act(() => {
+      result.current.notify({ message: "Keep me", severity: "info", duration: null, key: "other" });
+    });
+    await screen.findByText("Keep me");
+
+    act(() => result.current.dismissKey("auth-error"));
+    expect(screen.getByText("Keep me")).toBeTruthy();
+  });
+
   it("auto-hides after its duration", async () => {
     const { result } = renderProvider();
 

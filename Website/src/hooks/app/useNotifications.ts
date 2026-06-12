@@ -35,6 +35,8 @@ export type NotificationsContextTypes = {
   notify: (options: NotifyOptions) => string;
   /** Removes a notification by id. */
   dismiss: (id: string) => void;
+  //  Removes the notification carrying the given key, if any. Lets a caller clear a keyed notification
+  dismissKey: (key: string) => void;
 };
 
 export const NotificationsContext = createContext<NotificationsContextTypes | null>(null);

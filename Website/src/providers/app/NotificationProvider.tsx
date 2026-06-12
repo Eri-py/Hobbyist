@@ -55,9 +55,16 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     setNotifications((prev) => prev.filter((n) => n.id !== id));
   }, []);
 
+  const dismissKey = useCallback((key: string) => {
+    setNotifications((prev) => prev.filter((n) => n.key !== key));
+  }, []);
+
   // Only notify/dismiss go through context (stable), so consumers don't re-render as the list
   // changes — the viewport owns the list.
-  const value: NotificationsContextTypes = useMemo(() => ({ notify, dismiss }), [notify, dismiss]);
+  const value: NotificationsContextTypes = useMemo(
+    () => ({ notify, dismiss, dismissKey }),
+    [notify, dismiss, dismissKey],
+  );
 
   return (
     <NotificationsContext.Provider value={value}>
