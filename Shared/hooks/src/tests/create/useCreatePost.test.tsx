@@ -1,7 +1,5 @@
 import { renderHook, act } from "@testing-library/react";
-import { type ReactNode } from "react";
 import { vi, beforeEach, describe, it, expect } from "vitest";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { AxiosInstance } from "axios";
 
 import type { components } from "@hobbyist/types";
@@ -23,24 +21,26 @@ type FinalizeResponse = components["schemas"]["FinalizeResponse"];
 // ---------------------------------------------------------------------------
 
 const mockPost = vi.fn();
-const mockDelete = vi.fn();
-const mockAxios = { post: mockPost, delete: mockDelete } as unknown as AxiosInstance;
+const mockAxios = { post: mockPost } as unknown as AxiosInstance;
 
 const mockTransport = vi.fn<UploadTransport<File>>().mockResolvedValue(undefined);
 
 const SLUG = "my-slug";
 
-const makeWrapper = () => {
-  const client = new QueryClient({
-    defaultOptions: { mutations: { retry: false } },
-  });
-  return ({ children }: { children: ReactNode }) => (
-    <QueryClientProvider client={client}>{children}</QueryClientProvider>
-  );
-};
+const renderCreatePost = () => renderHook(() => useCreatePost(mockAxios, mockTransport)).result;
 
-const renderCreatePost = () =>
-  renderHook(() => useCreatePost(mockAxios, mockTransport), { wrapper: makeWrapper() }).result;
+type Result = ReturnType<typeof renderCreatePost>;
+
+const submit = (result: Result, sources: UploadSource<File>[], publish: boolean, onSlug?: (s: string) => void) =>
+  result.current.submit(result.current.buildPayload(sources, publish), onSlug);
+
+const resume = (
+  result: Result,
+  slug: string,
+  sources: UploadSource<File>[],
+  publish: boolean,
+  onSlug?: (s: string) => void,
+) => result.current.resume(slug, result.current.buildPayload(sources, publish), onSlug);
 
 const makeSources = (count: number): UploadSource<File>[] =>
   Array.from({ length: count }, (_, i) => ({
@@ -58,24 +58,37 @@ const makeUploads = (count: number): PresignedUpload[] =>
     expiresAt: "2026-01-01T00:00:00Z",
   }));
 
-const PUBLISHED: FinalizeResponse = { published: true, pendingPositions: [] };
-const PENDING: FinalizeResponse = { published: false, pendingPositions: [1] };
-// A draft finalize verifies the bytes but stays Draft: published is false, nothing pending.
-const DRAFT_OK: FinalizeResponse = { published: false, pendingPositions: [] };
+const published = (): FinalizeResponse => ({ published: true, pendingUploads: [] });
+// A draft finalize verifies the bytes but stays Draft.
+const draftOk = (): FinalizeResponse => ({ published: false, pendingUploads: [] });
+// Finalize reporting incomplete: each pending position comes back with a fresh re-signed target.
+const pending = (positions: number[]): FinalizeResponse => ({
+  published: false,
+  pendingUploads: positions.map((p) => ({
+    position: p,
+    url: `https://storage.test/resign/${p}`,
+    requiredHeaders: { "Content-Type": "image/jpeg" },
+    expiresAt: "2026-01-01T00:00:00Z",
+  })),
+});
+
+// An axios-shaped 404 (a post the server GC reclaimed).
+const axios404 = () =>
+  Object.assign(new Error("not found"), { isAxiosError: true, response: { status: 404 } });
 
 // Routes the shared `post` mock to init / finalize by URL. The finalize sequence is consumed one
-// entry per call (last entry repeats).
-const wireApi = (opts: { uploads: PresignedUpload[]; finalize?: FinalizeResponse[] }) => {
+// entry per call (last entry repeats); an Error entry rejects (e.g. a 404).
+const wireApi = (opts: { uploads?: PresignedUpload[]; finalize?: (FinalizeResponse | Error)[] }) => {
   let finalizeCall = 0;
   mockPost.mockImplementation((url: string) => {
     if (url === "posts/init") {
-      return Promise.resolve({ data: { slug: SLUG, uploads: opts.uploads } });
+      return Promise.resolve({ data: { slug: SLUG, uploads: opts.uploads ?? [] } });
     }
     if (url.endsWith("/finalize")) {
-      const seq = opts.finalize ?? [PUBLISHED];
+      const seq = opts.finalize ?? [published()];
       const result = seq[finalizeCall] ?? seq[seq.length - 1];
       finalizeCall += 1;
-      return Promise.resolve({ data: result });
+      return result instanceof Error ? Promise.reject(result) : Promise.resolve({ data: result });
     }
     return Promise.reject(new Error(`unexpected post: ${url}`));
   });
@@ -84,6 +97,7 @@ const wireApi = (opts: { uploads: PresignedUpload[]; finalize?: FinalizeResponse
 const initCalls = () => mockPost.mock.calls.filter((call) => call[0] === "posts/init");
 const finalizeCalls = () =>
   mockPost.mock.calls.filter((call) => String(call[0]).endsWith("/finalize"));
+const uploadedPositions = () => mockTransport.mock.calls.map((call) => call[0].upload.position);
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -104,153 +118,166 @@ describe("buildManifest", () => {
 describe("useCreatePost", () => {
   beforeEach(() => {
     mockPost.mockReset();
-    mockDelete.mockReset().mockResolvedValue(undefined);
     mockTransport.mockReset().mockResolvedValue(undefined);
   });
 
   describe("initial state", () => {
-    it("returns methods, createPost, saveDraft, and isSavingDraft", () => {
+    it("returns methods, buildPayload, submit, and resume", () => {
       const result = renderCreatePost();
 
       expect(result.current.methods).toBeDefined();
-      expect(result.current.createPost).toBeTypeOf("function");
-      expect(result.current.saveDraft).toBeTypeOf("function");
-      expect(result.current.isSavingDraft).toBe(false);
+      expect(result.current.buildPayload).toBeTypeOf("function");
+      expect(result.current.submit).toBeTypeOf("function");
+      expect(result.current.resume).toBeTypeOf("function");
     });
   });
 
-  describe("createPost (publish)", () => {
-    it("inits, uploads every file, then finalizes", async () => {
+  describe("submit (publish)", () => {
+    it("inits, uploads every file, then finalizes with publish:true", async () => {
       wireApi({ uploads: makeUploads(2) });
       const result = renderCreatePost();
-      const sources = makeSources(2);
 
-      act(() => result.current.createPost(sources));
-
-      await vi.waitFor(() => expect(finalizeCalls()).toHaveLength(1));
+      await act(async () => {
+        await submit(result, makeSources(2), true);
+      });
 
       expect(initCalls()).toHaveLength(1);
-      // Each file uploaded to its matching presigned target.
-      expect(mockTransport).toHaveBeenCalledTimes(2);
-      expect(mockTransport).toHaveBeenCalledWith({
-        file: sources[0].file,
-        upload: expect.objectContaining({ position: 1 }),
-      });
-      expect(mockTransport).toHaveBeenCalledWith({
-        file: sources[1].file,
-        upload: expect.objectContaining({ position: 2 }),
-      });
-      expect(finalizeCalls()[0][0]).toBe(`posts/${SLUG}/finalize`);
+      expect(uploadedPositions()).toEqual([1, 2]);
+      expect(finalizeCalls()).toHaveLength(1);
       expect(finalizeCalls()[0][1]).toEqual({ publish: true });
-      // Clean publish leaves nothing to discard.
-      expect(mockDelete).not.toHaveBeenCalled();
     });
 
     it("sends the manifest built from the sources in the init body", async () => {
       wireApi({ uploads: makeUploads(1) });
       const result = renderCreatePost();
 
-      act(() => result.current.createPost(makeSources(1)));
+      await act(async () => {
+        await submit(result, makeSources(1), true);
+      });
 
-      await vi.waitFor(() => expect(initCalls()).toHaveLength(1));
       expect(initCalls()[0][1]).toMatchObject({
         media: [{ position: 1, fileName: "f0.jpg", contentType: "image/jpeg", byteSize: 1 }],
       });
     });
 
-    it("recreates when finalize reports the post is not yet published", async () => {
-      wireApi({ uploads: makeUploads(1), finalize: [PENDING, PUBLISHED] });
+    it("hands the slug to onSlug once the post exists", async () => {
+      wireApi({ uploads: makeUploads(1) });
+      const result = renderCreatePost();
+      const onSlug = vi.fn();
+
+      await act(async () => {
+        await submit(result, makeSources(1), true, onSlug);
+      });
+
+      expect(onSlug).toHaveBeenCalledWith(SLUG);
+    });
+
+    it("re-uploads only the still-pending files on retry, without re-initing", async () => {
+      wireApi({ uploads: makeUploads(2), finalize: [pending([2]), published()] });
       const result = renderCreatePost();
 
-      act(() => result.current.createPost(makeSources(1)));
+      await act(async () => {
+        await submit(result, makeSources(2), true);
+      });
 
-      // First attempt verified incomplete → discard, then a fresh init succeeds.
-      await vi.waitFor(() => expect(initCalls()).toHaveLength(2));
-      expect(mockDelete).toHaveBeenCalledTimes(1);
-      expect(mockDelete).toHaveBeenCalledWith(`posts/${SLUG}`);
+      // One post; position 2 re-uploaded after finalize reported it missing, position 1 left alone.
+      expect(initCalls()).toHaveLength(1);
+      expect(uploadedPositions()).toEqual([1, 2, 2]);
       expect(finalizeCalls()).toHaveLength(2);
     });
 
-    it("recreates when an upload fails mid-flight", async () => {
-      wireApi({ uploads: makeUploads(1) });
-      mockTransport.mockRejectedValueOnce(new Error("PUT failed")).mockResolvedValue(undefined);
+    it("rejects after the attempt limit when a file never lands", async () => {
+      wireApi({ uploads: makeUploads(1), finalize: [pending([1])] });
       const result = renderCreatePost();
 
-      act(() => result.current.createPost(makeSources(1)));
+      let threw = false;
+      await act(async () => {
+        try {
+          await submit(result, makeSources(1), true);
+        } catch {
+          threw = true;
+        }
+      });
 
-      await vi.waitFor(() => expect(initCalls()).toHaveLength(2));
-      // The failed attempt is discarded; the retry uploads and finalizes once.
-      expect(mockDelete).toHaveBeenCalledTimes(1);
-      expect(mockTransport).toHaveBeenCalledTimes(2);
-      expect(finalizeCalls()).toHaveLength(1);
-    });
-
-    it("gives up after the attempt limit, discarding each orphan, without throwing", async () => {
-      wireApi({ uploads: makeUploads(1), finalize: [PENDING] });
-      const result = renderCreatePost();
-
-      expect(() => act(() => result.current.createPost(makeSources(1)))).not.toThrow();
-
-      await vi.waitFor(() => expect(initCalls()).toHaveLength(2));
-      // Two attempts, each verified incomplete and discarded — never published.
-      expect(mockDelete).toHaveBeenCalledTimes(2);
+      expect(threw).toBe(true);
+      // Init once (no recreate), finalize once per attempt; the orphan is left for the server GC.
+      expect(initCalls()).toHaveLength(1);
+      expect(finalizeCalls()).toHaveLength(2);
     });
   });
 
-  describe("saveDraft (draft)", () => {
-    it("inits, uploads every file, then finalizes as a draft (publish: false)", async () => {
-      wireApi({ uploads: makeUploads(2), finalize: [DRAFT_OK] });
+  describe("submit (draft)", () => {
+    it("finalizes as a draft (publish:false) and resolves once verified", async () => {
+      wireApi({ uploads: makeUploads(2), finalize: [draftOk()] });
       const result = renderCreatePost();
-      const sources = makeSources(2);
 
-      let slug: string | undefined;
       await act(async () => {
-        slug = await result.current.saveDraft(sources);
+        await submit(result, makeSources(2), false);
       });
 
-      expect(mockPost).toHaveBeenCalledWith("posts/init", expect.anything());
-      expect(mockTransport).toHaveBeenCalledTimes(2);
+      expect(uploadedPositions()).toEqual([1, 2]);
       expect(finalizeCalls()).toHaveLength(1);
       expect(finalizeCalls()[0][1]).toEqual({ publish: false });
-      // A verified draft is kept, not discarded.
-      expect(mockDelete).not.toHaveBeenCalled();
-      expect(slug).toBe(SLUG);
     });
 
-    it("discards the partial draft and rejects when an upload fails", async () => {
-      wireApi({ uploads: makeUploads(1) });
-      mockTransport.mockRejectedValue(new Error("PUT failed"));
+    it("rejects when a draft file never finishes uploading", async () => {
+      wireApi({ uploads: makeUploads(1), finalize: [pending([1])] });
       const result = renderCreatePost();
 
       let threw = false;
       await act(async () => {
         try {
-          await result.current.saveDraft(makeSources(1));
+          await submit(result, makeSources(1), false);
         } catch {
           threw = true;
         }
       });
 
       expect(threw).toBe(true);
-      expect(mockDelete).toHaveBeenCalledWith(`posts/${SLUG}`);
     });
+  });
 
-    it("discards and rejects when finalize reports a file never landed", async () => {
-      wireApi({ uploads: makeUploads(1), finalize: [PENDING] });
+  describe("resume", () => {
+    it("skips init and re-uploads only what finalize reports missing", async () => {
+      wireApi({ finalize: [pending([1, 2]), published()] });
       const result = renderCreatePost();
 
-      let threw = false;
       await act(async () => {
-        try {
-          await result.current.saveDraft(makeSources(1));
-        } catch {
-          threw = true;
-        }
+        await resume(result, SLUG, makeSources(2), true);
       });
 
-      expect(threw).toBe(true);
+      // No new post — it picks up the existing one and uploads the gaps.
+      expect(initCalls()).toHaveLength(0);
+      expect(uploadedPositions()).toEqual([1, 2]);
+      expect(finalizeCalls()).toHaveLength(2);
+    });
+
+    it("returns immediately when the post is already complete", async () => {
+      wireApi({ finalize: [published()] });
+      const result = renderCreatePost();
+
+      await act(async () => {
+        await resume(result, SLUG, makeSources(1), true);
+      });
+
+      expect(initCalls()).toHaveLength(0);
+      expect(mockTransport).not.toHaveBeenCalled();
       expect(finalizeCalls()).toHaveLength(1);
-      expect(mockDelete).toHaveBeenCalledWith(`posts/${SLUG}`);
+    });
+
+    it("recreates from scratch when the post is gone (404)", async () => {
+      wireApi({ uploads: makeUploads(1), finalize: [axios404(), published()] });
+      const result = renderCreatePost();
+      const onSlug = vi.fn();
+
+      await act(async () => {
+        await resume(result, SLUG, makeSources(1), true, onSlug);
+      });
+
+      // The probe 404s, so it falls back to a fresh init + upload + finalize.
+      expect(initCalls()).toHaveLength(1);
+      expect(onSlug).toHaveBeenCalledWith(SLUG);
+      expect(uploadedPositions()).toEqual([1]);
     });
   });
 });

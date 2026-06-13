@@ -1,7 +1,6 @@
-import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { AxiosInstance } from "axios";
+import { isAxiosError, type AxiosInstance } from "axios";
 
 import { CreateFormSchema, type CreateFormSchemaTypes } from "@hobbyist/form-schemas";
 import type { components } from "@hobbyist/types";
@@ -25,8 +24,8 @@ export const MAX_FILE_SIZE = 50 * 1024 * 1024;
 export const MAX_TOTAL_SIZE = 100 * 1024 * 1024;
 export const MAX_FILES = 15;
 
-// One init → upload → finalize round, plus a single recreate on failure.
-const MAX_PUBLISH_ATTEMPTS = 2;
+// Upload + finalize rounds per dispatch; each retry re-sends only what's still pending.
+const MAX_SUBMIT_ATTEMPTS = 2;
 
 // ---------------------------------------------------------------------------
 // Upload seams (platform-specific bits injected by each client)
@@ -54,6 +53,26 @@ export type UploadTransport<TFile = File> = (args: {
   upload: PresignedUpload;
 }) => Promise<void>;
 
+/** Post fields minus the media manifest (which is derived from the sources). */
+export type PostMetadata = Omit<InitPostRequest, "media">;
+
+/**
+ * Everything `submit` needs to run a create round, with no dependency on the live form. Self-
+ * contained so it can be persisted and re-run later (background upload / resume after a crash).
+ */
+export type UploadPayload<TFile = File> = {
+  metadata: PostMetadata;
+  sources: UploadSource<TFile>[];
+  publish: boolean;
+};
+
+/** Receives the slug once a post exists, so the client can persist it for resume. */
+export type SlugSink = (slug: string) => void | Promise<void>;
+
+// A gone post (server GC reclaimed it) — resume falls back to recreating from scratch.
+const isNotFound = (error: unknown): boolean =>
+  isAxiosError(error) && error.response?.status === 404;
+
 // ---------------------------------------------------------------------------
 // Manifest
 // ---------------------------------------------------------------------------
@@ -73,7 +92,110 @@ export function buildManifest(sources: UploadSource<unknown>[]): MediaManifestIt
 }
 
 // ---------------------------------------------------------------------------
-// Hook
+// Upload engine (form-independent — drives a self-contained payload)
+// ---------------------------------------------------------------------------
+
+export function createUploadEngine<TFile = File>(
+  axiosInstance: AxiosInstance,
+  transport: UploadTransport<TFile>,
+) {
+  const initApi = (body: InitPostRequest) =>
+    axiosInstance.post<InitPostResponse>("posts/init", body);
+
+  const finalizeApi = (slug: string, publish: boolean) =>
+    axiosInstance.post<FinalizeResponse>(`posts/${slug}/finalize`, {
+      publish,
+    } satisfies FinalizeRequest);
+
+  const buildInitBody = (payload: UploadPayload<TFile>): InitPostRequest => ({
+    ...payload.metadata,
+    media: buildManifest(payload.sources),
+  });
+
+  // PUTs each target to storage (position N → sources[N - 1]). allSettled so one failed PUT doesn't
+  // abort the rest — finalize is the source of truth for what landed and re-signs the gaps.
+  const uploadTargets = async (
+    targets: PresignedUpload[],
+    sources: UploadSource<TFile>[],
+  ): Promise<void> => {
+    await Promise.allSettled(
+      targets.map((upload) => {
+        const source = sources[Number(upload.position) - 1];
+        if (!source) {
+          return Promise.reject(new Error(`No file for upload position ${upload.position}`));
+        }
+        return transport({ file: source.file, upload });
+      }),
+    );
+  };
+
+  // Publish wants a published post; a draft only needs every byte verified (zero pending).
+  const isDone = (payload: UploadPayload<TFile>, result: FinalizeResponse): boolean =>
+    payload.publish ? result.published : result.pendingUploads.length === 0;
+
+  // Upload the current targets and finalize, looping on whatever stays pending so each retry re-sends
+  // only the gaps. Rejects on terminal failure — the caller persists/notifies/resumes.
+  const uploadAndFinalize = async (
+    slug: string,
+    payload: UploadPayload<TFile>,
+    firstTargets: PresignedUpload[],
+  ): Promise<void> => {
+    let targets = firstTargets;
+    let lastError: unknown;
+    for (let attempt = 1; attempt <= MAX_SUBMIT_ATTEMPTS; attempt++) {
+      try {
+        if (targets.length > 0) {
+          await uploadTargets(targets, payload.sources);
+        }
+        const result = (await finalizeApi(slug, payload.publish)).data;
+        if (isDone(payload, result)) return;
+        targets = result.pendingUploads;
+        lastError = new Error("Some files didn't finish uploading.");
+      } catch (error) {
+        lastError = error;
+      }
+    }
+    throw (
+      lastError ??
+      new Error(
+        payload.publish
+          ? "We couldn't publish your post. Please try again."
+          : "We couldn't save your draft. Please try again.",
+      )
+    );
+  };
+
+  // Create from scratch: init the post, hand the slug to onSlug (so the client can persist it for
+  // resume), then upload + finalize. Runs from a self-contained payload — no live form needed.
+  const submit = async (payload: UploadPayload<TFile>, onSlug?: SlugSink): Promise<void> => {
+    const { slug, uploads } = (await initApi(buildInitBody(payload))).data;
+    await onSlug?.(slug);
+    await uploadAndFinalize(slug, payload, uploads);
+  };
+
+  // Resume a persisted post: ask finalize what's still missing and re-upload only those. If the post
+  // is gone (GC reclaimed it), start over from init.
+  const resume = async (
+    slug: string,
+    payload: UploadPayload<TFile>,
+    onSlug?: SlugSink,
+  ): Promise<void> => {
+    let result: FinalizeResponse;
+    try {
+      result = (await finalizeApi(slug, payload.publish)).data;
+    } catch (error) {
+      if (isNotFound(error)) return submit(payload, onSlug);
+      throw error;
+    }
+    if (isDone(payload, result)) return;
+    await uploadAndFinalize(slug, payload, result.pendingUploads);
+  };
+
+  return { submit, resume };
+}
+
+// ---------------------------------------------------------------------------
+// Hook (form + payload builder over the engine)
 // ---------------------------------------------------------------------------
 
 export function useCreatePost<TFile = File>(
@@ -92,107 +214,23 @@ export function useCreatePost<TFile = File>(
     },
   });
 
-  // API functions
-  const initApi = (body: InitPostRequest) =>
-    axiosInstance.post<InitPostResponse>("posts/init", body);
+  const { submit, resume } = createUploadEngine<TFile>(axiosInstance, transport);
 
-  const finalizeApi = (slug: string, publish: boolean) =>
-    axiosInstance.post<FinalizeResponse>(`posts/${slug}/finalize`, {
-      publish,
-    } satisfies FinalizeRequest);
-
-  const discardApi = (slug: string) => axiosInstance.delete(`posts/${slug}`);
-
-  // Maps the current form values + ordered sources into the init request. Both publish and draft
-  // share this one shape; optional metadata becomes null when empty, and publish completeness is
-  // enforced server-side at finalize.
-  const buildInitBody = (sources: UploadSource<TFile>[]): InitPostRequest => ({
-    hobby: methods.getValues("hobby") || null,
-    title: methods.getValues("title") || null,
-    description: methods.getValues("description") || null,
-    availableForTrade: methods.getValues("availableForTrade"),
-    lookingFor: methods.getValues("lookingFor") || null,
-    media: buildManifest(sources),
-  });
-
-  // Uploads every file to its matching pre-signed target in parallel. Sources
-  // are position-ordered, so position N maps to sources[N - 1].
-  const uploadAll = (uploads: PresignedUpload[], sources: UploadSource<TFile>[]) =>
-    Promise.all(
-      uploads.map((upload) => {
-        const source = sources[Number(upload.position) - 1];
-        if (!source) {
-          throw new Error(`No file for upload position ${upload.position}`);
-        }
-        return transport({ file: source.file, upload });
-      }),
-    );
-
-  // One full publish round. Leaves no orphan behind: any incomplete or failed
-  // attempt discards its post so the next attempt recreates cleanly.
-  const attemptPublish = async (
-    body: InitPostRequest,
+  // Snapshots the live form + ordered sources into a self-contained payload (empty metadata -> null).
+  const buildPayload = (
     sources: UploadSource<TFile>[],
-  ): Promise<FinalizeResponse> => {
-    const { slug, uploads } = (await initApi(body)).data;
-    try {
-      await uploadAll(uploads, sources);
-      const result = (await finalizeApi(slug, true)).data;
-      if (!result.published) {
-        await discardApi(slug).catch(() => {});
-      }
-      return result;
-    } catch (error) {
-      await discardApi(slug).catch(() => {});
-      throw error;
-    }
-  };
-
-  // Publish: fire-and-forget and optimistic. The caller navigates away
-  // immediately; the upload runs in-page. On failure we recreate from the
-  // local copy, then give up — a never-published post is an
-  // invisible draft-state row the server GC sweep reclaims.
-  const createPost = (sources: UploadSource<TFile>[]) => {
-    const body = buildInitBody(sources);
-
-    void (async () => {
-      for (let attempt = 1; attempt <= MAX_PUBLISH_ATTEMPTS; attempt++) {
-        try {
-          const result = await attemptPublish(body, sources);
-          if (result.published) return;
-        } catch {
-          // Network/upload failure — recreate on the next attempt.
-        }
-      }
-    })();
-  };
-
-  // Draft save: awaited so the blocker dialog can show progress and surface failure. Finalizes
-  // with publish:false — it verifies the bytes landed but leaves the post Draft for the user to
-  // publish later. A failed or incomplete upload discards the partial draft so a retry starts clean
-  // (the form still holds everything locally), and so a resting draft never carries pending media —
-  // the invariant the server GC sweep relies on.
-  const saveDraftMutation = useMutation({
-    mutationFn: async (sources: UploadSource<TFile>[]) => {
-      const { slug, uploads } = (await initApi(buildInitBody(sources))).data;
-      try {
-        await uploadAll(uploads, sources);
-        const result = (await finalizeApi(slug, false)).data;
-        if (result.pendingPositions.length > 0) {
-          throw new Error("Some files didn't finish uploading. Please try again.");
-        }
-        return slug;
-      } catch (error) {
-        await discardApi(slug).catch(() => {});
-        throw error;
-      }
+    publish: boolean,
+  ): UploadPayload<TFile> => ({
+    metadata: {
+      hobby: methods.getValues("hobby") || null,
+      title: methods.getValues("title") || null,
+      description: methods.getValues("description") || null,
+      availableForTrade: methods.getValues("availableForTrade"),
+      lookingFor: methods.getValues("lookingFor") || null,
     },
+    sources,
+    publish,
   });
 
-  return {
-    methods,
-    createPost,
-    saveDraft: (sources: UploadSource<TFile>[]) => saveDraftMutation.mutateAsync(sources),
-    isSavingDraft: saveDraftMutation.isPending,
-  };
+  return { methods, buildPayload, submit, resume };
 }
