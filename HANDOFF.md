@@ -47,7 +47,7 @@ Web glue:
 
 - **No progress UI — truly fire-and-forget.** Submit → navigate away → upload runs in-page → done. Mobile gets real OS background upload; web can't, so we mitigate at close-time (see next milestone).
 - **Reconciliation REVERSED back in** — but trivially: it's NOT a new service. It's a scheduled job that queries `Status == Draft && Media.Any(Pending) && CreatedAt < now - TTL` (grace ~5 min, TBD) and calls the **existing `DiscardAsync`** (which already deletes S3 + DB row). This is the cleanup mechanism for web zombies (tab closed mid-upload) and any client that never returns. Still deferred — backend, independent of client work. (Query updated for the two-state model — see the redesign section below.)
-- **Web mid-upload close = leave the zombie + GC sweep reclaims it.** Client carries ZERO cleanup logic. We chose this over `sendBeacon`-on-close (unreliable, races the PUTs).
+- **Web mid-upload close = leave the zombie + GC sweep reclaims it.** Client carries ZERO cleanup logic. We chose this over `sendBeacon`-on-close (unreliable, races the PUTs). **⚠️ PARTIALLY SUPERSEDED (session 3):** the server GC still reclaims orphans, but the client is no longer zero-logic — we're adding durable local persistence + resume (see the "optimistic background upload" milestone). GC and client-resume are complementary: GC cleans the *server* row, persistence preserves the *user's work*.
 - **Local MinIO stays HTTP** (`UseSsl: false`, `http://localhost:9000`). Prod parity via mkcert was considered and declined (per-machine cert chore). `http://localhost` is mixed-content-exempt so the browser PUT works even though the site is HTTPS (Tailscale).
 - **Always-recreate; client owns retry.** No resume-from-partial. `finalize` idempotent.
 
@@ -88,15 +88,39 @@ What started as the background-tasks hook grew into a full app-level notificatio
 
 Why `beforeunload` alone (no TanStack `useBlocker`): in-app nav keeps the SPA — and the in-page upload — alive, so we only care about real tab close/reload. The pre-submit blocker in `create.tsx` is separate and unchanged; after submit `hasPostedRef` flips it off and this guard takes over.
 
-## NEXT MILESTONE — wire the create flow through `run()` (the original goal)
+## Wire the create flow through `run()` (2026-06-12, session 3) — DONE (web)
 
-Now that `run` + notifications exist, finish the optimistic create flow. **Current state of the gap:** `createPost` (`useCreatePost.ts:155`) returns `void` and **swallows all failures** (the retry loop gives up silently), and `useCreate.handleSubmit` (`useCreate.ts:72`) calls it **bare** — so today there's no `beforeunload` guard and no failure surfacing for publish. `run` is built but unused.
+The create flow now routes through the background-task runner. Shared 108 + website 114 green, both typechecks clean.
 
-1. **Shared engine:** collapse `createPost`/`saveDraft` into one `submit(sources, publish)` that owns the retry loop and **rejects on terminal failure** (so `run` notifies — right now it can't, because the loop never rejects). Decided: both Post and Save-draft are fire-and-forget + optimistic; the leave-dialog "Save draft" fires `submit(false)` and proceeds. (See the draft-vs-publish discussion — the only difference is the `publish` flag.)
-2. **`useCreate.ts` / `create.tsx`:** `const { run } = useBackgroundTasks();` then for both paths `onPostCreated(); void run(() => submit(sources, publish), { label: "Publishing your post" | "Saving your draft" });`. Drop `isSavingDraft`/the dialog spinner.
-3. Tests: assert both paths dispatch through `run`.
+- **Shared engine:** `createPost`/`saveDraftMutation` collapsed into one `submit(sources, publish)` (`useCreatePost.ts`). Generalized `attemptPublish` → `attemptSubmit(body, sources, publish)` (success = `publish ? published : pendingPositions.length === 0`; self-discards its orphan). `submit` owns the retry loop (`MAX_SUBMIT_ATTEMPTS = 2`) and **rejects on terminal failure**. `useMutation`/`isSavingDraft`/slug-return all gone — the draft is no longer "tracked." Returns just `{ methods, submit }`.
+- **`useCreate.ts`:** pulls `run` from `useBackgroundTasks`; publish = `onPostCreated(); void run(() => submit(sources, true), { label: "Publishing your post" })`; draft = `void run(() => submit(sources, false), { label: "Saving your draft" })` (+ an empty-files guard, since a draft is still media-first). Draft does **not** call `onPostCreated` — the caller proceeds.
+- **`create.tsx`:** `handleSaveDraftAndProceed` is now synchronous fire-and-forget (`saveDraft(files); blocker.proceed?.()`); `saveError` state, the try/catch, and the dialog spinner removed. Draft failures surface via the notification banner.
+- **`hasPostedRef` kept** — it suppresses the leave-dialog on the optimistic publish-navigation; unrelated to `run`.
 
-Then **mobile** (the original step 4): rewire `Mobile/src/hooks/create/useCreate.ts` off FormData onto the presigned engine + OS background upload — where partial-retry via `pendingPositions` finally gets used.
+## Optimistic *background upload* (durable + partial-resume) (2026-06-13, session 3) — DONE (web)
+
+Renamed the pattern **"fire-and-forget" → "background upload"** (it persists, retries, and resumes). The web create flow now survives a tab close / crash / connection drop and resumes **only the files that didn't land** (per-file, not byte-offset). All green: backend 143, shared 110, website 124, all typechecks + web lint clean.
+
+**Architecture (reuse primitives, keep our engine):** the shared engine stays the orchestrator; persistence + transport are the platform seam. We did **not** adopt Uppy (would re-fork web from the shared engine). Reused `idb-keyval` (web blob store) only.
+
+Pipeline: **click → persist snapshot to IndexedDB → `init` (persist slug) → upload → `finalize` (re-signs anything still missing) → loop on the gaps → delete snapshot.** Failure leaves the snapshot; on next load the resume sweep continues it; past TTL it's dropped and the server GC reclaims the orphan.
+
+What shipped:
+- **Backend — `finalize` returns `PendingUploads`** (`PostUploadService.Finalize.cs`): `VerifyUploadedMediaAsync` now re-signs a fresh upload target (via the existing `BuildUploadAsync`, same object key) for each still-`Pending` file and returns them. `FinalizeResponse.PendingPositions` (int[]) was **replaced** by `PendingUploads: PresignedUpload[]` (positions live inside). `finalize` already flips landed files to `Uploaded` and persists incrementally, so uploaded files stay uploaded across calls — that's what makes partial resume work. New test `FinalizeAsync_AcrossCalls_KeepsLandedFilesAndResignsOnlyMissing`.
+- **Shared engine reworked** (`useCreatePost.ts`): discard-and-recreate → **`init → loop(upload → finalize)`** on `pendingUploads` (`uploadAndFinalize`). `uploadTargets` uses `Promise.allSettled` (a failed PUT doesn't abort the rest; finalize is the truth). Added `resume(slug, payload, onSlug)` (finalize-discover → upload gaps; **404 ⇒ recreate via `submit`**) and a `SlugSink` (`onSlug`) so the client persists the slug. **No more client discard** — a give-up leaves a Draft+pending post for resume/GC. Extracted **`createUploadEngine(axios, transport)`** (form-free `{ submit, resume }`); `useCreatePost` composes it with the form + `buildPayload`.
+- **Web persistence** (`Website/src/lib/uploadStore.ts`, `idb-keyval`): `PersistedUpload { id, createdAt, slug?, payload }`; `saveUpload`/`deleteUpload`/`listUploads`. **No `fake-indexeddb`** — tests mock `idb-keyval` in-memory.
+- **Web wiring**: `useCreate.dispatch` persists the snapshot, runs `submit(payload, onSlug)` (onSlug persists the slug), deletes on success — all best-effort (`.catch`). `hooks/create/useResumeUploads` (create-domain; mounted via a tiny `ResumeUploadsOnLoad` inline in `AppProvider`, since it must render inside `BackgroundTasksProvider`; gated on auth, runs once) sweeps `listUploads()`: resumes records with a slug, recreates those without, drops records older than `RESUME_TTL_MS` (1h). NB: the sweep is web glue (idb-keyval + web `run()`), so it lives in the web app, not the shared engine — the shared engine only exposes the `resume()` primitive.
+- **Test infra**: added `test.server.deps.inline: ["@mui/material"]` to `vite.config.ts` (MUI v9 ESM directory-import of `react-transition-group` breaks under vitest externalization — see that file's comment).
+
+**Reversed decisions (don't relitigate):** always-recreate → partial resume; discard-on-failure → leave for resume/GC. The GC sweep is now the primary server cleanup.
+
+### Still to do here
+- **W5 — notification "Retry" action**: a failed `run()` could surface a sticky `action` that re-dispatches, instead of a dead-end error. (`notify` already supports `action`; not wired.)
+- **Browser verification**: confirm real-browser IndexedDB blob byte-fidelity + a true close-tab-then-reopen resume (untestable in jsdom).
+- **GC sweep + grace** (server, deferred): must be set against `RESUME_TTL_MS` (1h) and presigned-URL `expiresAt`.
+- **Mobile** (separate, big): currently *broken* (imports deleted `appendPostFields`/`appendDraftFields` + old `useCreatePost(axios)` signature). Rewire onto `createUploadEngine` + a native transport: `expo-file-system` (persist asset to disk — iOS background upload *requires* a file, not in-memory data) + `react-native-background-upload` (NSURLSession-background / Android service, survives termination). **Risk: native-module compat on RN 0.83 / Expo 55 — spike first.** Partial resume + the `pendingUploads` seam are now ready for it.
+
+**Research precedents (verified):** Uppy *Golden Retriever* (web crash recovery via IndexedDB/ServiceWorker), *tus* (resume-from-offset), iOS `URLSession` background + Android `WorkManager`.
 
 ## Other remaining backend tail
 
