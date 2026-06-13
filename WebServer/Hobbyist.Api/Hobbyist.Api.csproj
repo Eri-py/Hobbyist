@@ -25,7 +25,7 @@
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.2" />
     <PackageReference Include="Scalar.AspNetCore" Version="2.14.14" />
     <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.18.0" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.19.1" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Hobbyist.Common\Hobbyist.Common.csproj" />
