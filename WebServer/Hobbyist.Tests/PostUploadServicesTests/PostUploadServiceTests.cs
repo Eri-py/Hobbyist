@@ -322,7 +322,7 @@ public class PostUploadServiceTests : DatabaseTestBase
 
         Assert.That(result.IsSuccess, Is.True);
         Assert.That(result.Content!.Published, Is.True);
-        Assert.That(result.Content.PendingPositions, Is.Empty);
+        Assert.That(result.Content.PendingUploads, Is.Empty);
 
         var post = await ReloadPostAsync(slug);
         Assert.That(post!.Status, Is.EqualTo(PostStatus.Published));
@@ -340,7 +340,12 @@ public class PostUploadServiceTests : DatabaseTestBase
 
         Assert.That(result.IsSuccess, Is.True);
         Assert.That(result.Content!.Published, Is.False);
-        Assert.That(result.Content.PendingPositions, Is.EquivalentTo(new[] { 2 }));
+        Assert.That(
+            result.Content.PendingUploads.Select(u => u.Position),
+            Is.EquivalentTo(new[] { 2 })
+        );
+        // The pending position comes back with a fresh, actionable upload target.
+        Assert.That(result.Content.PendingUploads[0].Url, Is.Not.Empty);
 
         var post = await ReloadPostAsync(slug);
         Assert.That(post!.Status, Is.EqualTo(PostStatus.Draft));
@@ -377,7 +382,7 @@ public class PostUploadServiceTests : DatabaseTestBase
 
         Assert.That(result.IsSuccess, Is.True);
         Assert.That(result.Content!.Published, Is.False);
-        Assert.That(result.Content.PendingPositions, Is.Empty);
+        Assert.That(result.Content.PendingUploads, Is.Empty);
 
         var post = await ReloadPostAsync(slug);
         Assert.That(post!.Status, Is.EqualTo(PostStatus.Draft));
@@ -399,7 +404,10 @@ public class PostUploadServiceTests : DatabaseTestBase
         );
 
         Assert.That(result.IsSuccess, Is.True);
-        Assert.That(result.Content!.PendingPositions, Is.EquivalentTo(new[] { 1 }));
+        Assert.That(
+            result.Content!.PendingUploads.Select(u => u.Position),
+            Is.EquivalentTo(new[] { 1 })
+        );
 
         var post = await ReloadPostAsync(slug);
         Assert.That(post!.Status, Is.EqualTo(PostStatus.Draft));
@@ -415,7 +423,34 @@ public class PostUploadServiceTests : DatabaseTestBase
 
         Assert.That(result.IsSuccess, Is.True);
         Assert.That(result.Content!.Published, Is.False);
-        Assert.That(result.Content.PendingPositions, Is.EquivalentTo(new[] { 1 }));
+        Assert.That(
+            result.Content.PendingUploads.Select(u => u.Position),
+            Is.EquivalentTo(new[] { 1 })
+        );
+    }
+
+    [Test]
+    public async Task FinalizeAsync_AcrossCalls_KeepsLandedFilesAndResignsOnlyMissing()
+    {
+        var slug = await InitPostAsync(2);
+        await SetupStorageAsync(slug, presentPositions: [1]); // position 2 missing
+
+        var first = await _service.FinalizeAsync(slug, publish: true, UserId, CancellationToken.None);
+        Assert.That(first.Content!.Published, Is.False);
+        Assert.That(
+            first.Content.PendingUploads.Select(u => u.Position),
+            Is.EquivalentTo(new[] { 2 })
+        );
+
+        // The client uploads the missing file and finalizes again; position 1 stays Uploaded.
+        await SetupStorageAsync(slug, presentPositions: [1, 2]);
+        var second = await _service.FinalizeAsync(slug, publish: true, UserId, CancellationToken.None);
+
+        Assert.That(second.Content!.Published, Is.True);
+        Assert.That(second.Content.PendingUploads, Is.Empty);
+
+        var post = await ReloadPostAsync(slug);
+        Assert.That(post!.Media.All(m => m.Status == PostMediaStatus.Uploaded), Is.True);
     }
 
     [Test]
@@ -435,7 +470,7 @@ public class PostUploadServiceTests : DatabaseTestBase
 
         Assert.That(result.IsSuccess, Is.True);
         Assert.That(result.Content!.Published, Is.True);
-        Assert.That(result.Content.PendingPositions, Is.Empty);
+        Assert.That(result.Content.PendingUploads, Is.Empty);
 
         var post = await ReloadPostAsync(slug);
         Assert.That(post!.Status, Is.EqualTo(PostStatus.Published));

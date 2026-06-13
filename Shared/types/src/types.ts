@@ -602,12 +602,11 @@ export interface components {
             /** @description True when every file was verified and a publish was requested, so the post is now live. */
             published: boolean;
             /**
-             * @description Positions whose object was not yet found in storage. Empty means every file landed
-             *         (the post is published when publish was requested, or a verified draft otherwise). Non-empty
-             *         means the upload is incomplete: the web client discards and recreates; a future mobile client
-             *         can re-upload just these positions.
+             * @description Re-signed upload targets for the positions whose object was not yet found in storage.
+             *         Empty means every file landed (published when publish was requested, else a verified draft).
+             *         Non-empty means the upload is incomplete: the client re-uploads just these and finalizes again.
              */
-            pendingPositions: (number | string)[];
+            pendingUploads: components["schemas"]["PresignedUpload"][];
         };
         /** @description Response containing current user authentication status and user data if authenticated. */
         GetUserResponse: {

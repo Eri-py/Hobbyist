@@ -85,9 +85,8 @@ public record class FinalizeResponse
     /// <summary>True when every file was verified and a publish was requested, so the post is now live.</summary>
     public required bool Published { get; set; }
 
-    /// <summary>Positions whose object was not yet found in storage. Empty means every file landed
-    /// (the post is published when publish was requested, or a verified draft otherwise). Non-empty
-    /// means the upload is incomplete: the web client discards and recreates; a future mobile client
-    /// can re-upload just these positions.</summary>
-    public required int[] PendingPositions { get; set; }
+    /// <summary>Re-signed upload targets for the positions whose object was not yet found in storage.
+    /// Empty means every file landed (published when publish was requested, else a verified draft).
+    /// Non-empty means the upload is incomplete: the client re-uploads just these and finalizes again.</summary>
+    public required PresignedUpload[] PendingUploads { get; set; }
 }

@@ -23,16 +23,17 @@ public partial class PostUploadService
         // Idempotent: a post that's already live finalizes successfully whatever the caller asks for.
         if (post.Status == PostStatus.Published)
             return Result<FinalizeResponse>.Success(
-                new FinalizeResponse { Published = true, PendingPositions = [] }
+                new FinalizeResponse { Published = true, PendingUploads = [] }
             );
 
-        // Verify the bytes against the manifest, flipping each landed file to Uploaded.
+        // Verify the bytes against the manifest, flipping each landed file to Uploaded and re-signing
+        // a fresh upload target for any still missing.
         var verifyResult = await VerifyUploadedMediaAsync(post, userId, ct);
         if (!verifyResult.IsSuccess)
             return Result<FinalizeResponse>.FromError(verifyResult);
 
-        var pendingPositions = verifyResult.Content!;
-        var allLanded = pendingPositions.Count == 0;
+        var pendingUploads = verifyResult.Content!;
+        var allLanded = pendingUploads.Count == 0;
 
         // Only a publish request promotes the post; a draft finalize just verifies and stays Draft.
         var published = false;
@@ -62,21 +63,22 @@ public partial class PostUploadService
         }
 
         return Result<FinalizeResponse>.Success(
-            new FinalizeResponse { Published = published, PendingPositions = [.. pendingPositions] }
+            new FinalizeResponse { Published = published, PendingUploads = [.. pendingUploads] }
         );
     }
 
     /// <summary>
     /// HEADs each still-Pending file, flipping it to Uploaded when the stored object matches the
-    /// manifest's byte size. Returns the positions still missing (does not persist; the caller saves).
+    /// manifest's byte size. For each file still missing, re-signs a fresh upload target so the
+    /// client can retry just that one. Does not persist; the caller saves.
     /// </summary>
-    private async Task<Result<List<int>>> VerifyUploadedMediaAsync(
+    private async Task<Result<List<PresignedUpload>>> VerifyUploadedMediaAsync(
         PostEntity post,
         string userId,
         CancellationToken ct
     )
     {
-        var pendingPositions = new List<int>();
+        var pendingUploads = new List<PresignedUpload>();
         foreach (var media in post.Media.Where(m => m.Status == PostMediaStatus.Pending).ToList())
         {
             var objectKey = MediaObjectKeys.BuildObjectKey(
@@ -88,15 +90,30 @@ public partial class PostUploadService
 
             var infoResult = await objectStore.GetObjectInfoAsync(objectKey, ct);
             if (!infoResult.IsSuccess)
-                return Result<List<int>>.FromError(infoResult);
+                return Result<List<PresignedUpload>>.FromError(infoResult);
 
             var info = infoResult.Content!;
             if (info.Exists && info.ContentLength == media.ByteSize)
+            {
                 media.Status = PostMediaStatus.Uploaded;
-            else
-                pendingPositions.Add(media.Position);
+                continue;
+            }
+
+            var uploadResult = await BuildUploadAsync(
+                userId,
+                post.Id,
+                media.Id,
+                media.Position,
+                media.ContentType,
+                media.FileExtension,
+                ct
+            );
+            if (!uploadResult.IsSuccess)
+                return Result<List<PresignedUpload>>.FromError(uploadResult);
+
+            pendingUploads.Add(uploadResult.Content!);
         }
 
-        return Result<List<int>>.Success(pendingPositions);
+        return Result<List<PresignedUpload>>.Success(pendingUploads);
     }
 }
