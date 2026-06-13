@@ -1,8 +1,10 @@
 import { useCallback, useState } from "react";
 
-import { useCreatePost, type UploadSource } from "@hobbyist/hooks";
+import { useCreatePost, type UploadSource, type UploadPayload } from "@hobbyist/hooks";
 import type { CreateFormSchemaTypes } from "@hobbyist/form-schemas";
 import type { FileWithMetadata } from "@/hooks/create/useMediaUpload";
+import { useBackgroundTasks } from "@/hooks/app/useBackgroundTasks";
+import { saveUpload, deleteUpload, type PersistedUpload } from "@/lib/uploadStore";
 import { axiosInstance } from "@/api/axiosInstance";
 import { uploadToStorage } from "@/api/uploadToStorage";
 
@@ -28,10 +30,8 @@ const toUploadSources = (files: FileWithMetadata[]): UploadSource<File>[] =>
 // --- Hook ---
 
 export function useCreate(onPostCreated: () => void) {
-  const { methods, createPost, saveDraft, isSavingDraft } = useCreatePost(
-    axiosInstance,
-    uploadToStorage,
-  );
+  const { methods, buildPayload, submit } = useCreatePost(axiosInstance, uploadToStorage);
+  const { run } = useBackgroundTasks();
   const [activeStep, setActiveStep] = useState<number>(0);
 
   // --- Small-screen step navigation ---
@@ -59,6 +59,21 @@ export function useCreate(onPostCreated: () => void) {
     setActiveStep((prev) => Math.max(prev - 1, 0));
   }, []);
 
+  // --- Background upload dispatch ---
+
+  // Persist the payload, then upload off it, so a tab close / crash mid-upload is recoverable on
+  // next load. The slug is persisted once init succeeds (so resume can continue the same post);
+  // success drops the snapshot, failure leaves it for resume. Persistence is best-effort — if
+  // IndexedDB is unavailable we still attempt the upload, just without the safety net.
+  const dispatch = (payload: UploadPayload<File>, label: string) => {
+    const record: PersistedUpload = { id: crypto.randomUUID(), createdAt: Date.now(), payload };
+    void run(async () => {
+      await saveUpload(record).catch(() => {});
+      await submit(payload, (slug) => saveUpload({ ...record, slug }).catch(() => {}));
+      await deleteUpload(record.id).catch(() => {});
+    }, { label });
+  };
+
   // --- Submit ---
 
   const handleSubmit = (files: FileWithMetadata[], onFilesError: (message: string) => void) => {
@@ -67,17 +82,19 @@ export function useCreate(onPostCreated: () => void) {
       return;
     }
 
-    // Optimistic: navigate away now; the upload runs fire-and-forget in-page.
+    // Optimistic: navigate to the profile now; the upload runs in the background.
     onPostCreated();
-    createPost(toUploadSources(files));
+    dispatch(buildPayload(toUploadSources(files), true), "Publishing your post");
   };
 
   // --- Draft save (called by navigation blocker dialog) ---
 
-  const handleSaveDraft = useCallback(
-    (files: FileWithMetadata[]) => saveDraft(toUploadSources(files)),
-    [saveDraft],
-  );
+  // Background upload like publish; the caller proceeds to its own destination. A draft is still
+  // media-first, so an empty set is nothing to save.
+  const handleSaveDraft = (files: FileWithMetadata[]) => {
+    if (files.length === 0) return;
+    dispatch(buildPayload(toUploadSources(files), false), "Saving your draft");
+  };
 
   return {
     methods,
@@ -86,6 +103,5 @@ export function useCreate(onPostCreated: () => void) {
     handleBack,
     handleSubmit,
     saveDraft: handleSaveDraft,
-    isSavingDraft,
   };
 }

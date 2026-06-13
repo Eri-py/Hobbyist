@@ -7,11 +7,26 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 // Module mocks
 // ---------------------------------------------------------------------------
 
-const { mockPost, mockDelete, mockUploadToStorage } = vi.hoisted(() => ({
-  mockPost: vi.fn(),
-  mockDelete: vi.fn(),
-  mockUploadToStorage: vi.fn(),
-}));
+const { mockPost, mockDelete, mockUploadToStorage, mockRun, mockSaveUpload, mockDeleteUpload } =
+  vi.hoisted(() => {
+    // Swallows after running the task, mirroring the real run() (it notifies + swallows on failure),
+    // so a voided dispatch can't raise an unhandled rejection in tests.
+    const run = vi.fn(async (task: () => Promise<unknown>) => {
+      try {
+        return await task();
+      } catch {
+        return undefined;
+      }
+    });
+    return {
+      mockPost: vi.fn(),
+      mockDelete: vi.fn(),
+      mockUploadToStorage: vi.fn(),
+      mockRun: run,
+      mockSaveUpload: vi.fn(),
+      mockDeleteUpload: vi.fn(),
+    };
+  });
 
 vi.mock("@/api/axiosInstance", () => ({
   axiosInstance: { post: mockPost, delete: mockDelete },
@@ -19,6 +34,15 @@ vi.mock("@/api/axiosInstance", () => ({
 
 vi.mock("@/api/uploadToStorage", () => ({
   uploadToStorage: mockUploadToStorage,
+}));
+
+vi.mock("@/hooks/app/useBackgroundTasks", () => ({
+  useBackgroundTasks: () => ({ run: mockRun, pending: [], hasPending: false }),
+}));
+
+vi.mock("@/lib/uploadStore", () => ({
+  saveUpload: mockSaveUpload,
+  deleteUpload: mockDeleteUpload,
 }));
 
 import { useCreate } from "@/hooks/create/useCreate";
@@ -48,8 +72,8 @@ const noopOnPostCreated = vi.fn();
 
 const SLUG = "my-post-slug";
 
-// Routes init / init-draft / finalize through the shared axios mock. One upload
-// target per file (tests use a single file), and finalize publishes cleanly.
+// Routes init / finalize through the shared axios mock. One upload target per file (tests use a
+// single file), and finalize publishes cleanly.
 const setupPostMock = () => {
   mockPost.mockImplementation((url: string) => {
     if (url === "posts/init") {
@@ -63,7 +87,7 @@ const setupPostMock = () => {
       });
     }
     if (url.endsWith("/finalize")) {
-      return Promise.resolve({ data: { published: true, pendingPositions: [] } });
+      return Promise.resolve({ data: { published: true, pendingUploads: [] } });
     }
     return Promise.resolve({ data: {} });
   });
@@ -79,6 +103,15 @@ describe("useCreate", () => {
     mockPost.mockReset();
     mockDelete.mockReset().mockResolvedValue(undefined);
     mockUploadToStorage.mockReset().mockResolvedValue(undefined);
+    mockSaveUpload.mockReset().mockResolvedValue(undefined);
+    mockDeleteUpload.mockReset().mockResolvedValue(undefined);
+    mockRun.mockReset().mockImplementation(async (task: () => Promise<unknown>) => {
+      try {
+        return await task();
+      } catch {
+        return undefined;
+      }
+    });
   });
 
   // -------------------------------------------------------------------------
@@ -91,18 +124,13 @@ describe("useCreate", () => {
       expect(result.current.activeStep).toBe(0);
     });
 
-    it("exposes all required callbacks and state", () => {
+    it("exposes all required callbacks", () => {
       const { result } = renderHook(() => useCreate(noopOnPostCreated), { wrapper: makeWrapper() });
       expect(result.current.methods).toBeDefined();
       expect(result.current.handleNext).toBeTypeOf("function");
       expect(result.current.handleBack).toBeTypeOf("function");
       expect(result.current.handleSubmit).toBeTypeOf("function");
       expect(result.current.saveDraft).toBeTypeOf("function");
-    });
-
-    it("isSavingDraft starts as false", () => {
-      const { result } = renderHook(() => useCreate(noopOnPostCreated), { wrapper: makeWrapper() });
-      expect(result.current.isSavingDraft).toBe(false);
     });
   });
 
@@ -204,21 +232,23 @@ describe("useCreate", () => {
   });
 
   // -------------------------------------------------------------------------
-  // handleSubmit
+  // handleSubmit (publish)
   // -------------------------------------------------------------------------
 
   describe("handleSubmit", () => {
-    it("calls onFilesError and does not call the API when files array is empty", () => {
+    it("calls onFilesError and dispatches nothing when files array is empty", () => {
       const { result } = renderHook(() => useCreate(noopOnPostCreated), { wrapper: makeWrapper() });
       const onFilesError = vi.fn();
 
       act(() => result.current.handleSubmit([], onFilesError));
 
       expect(onFilesError).toHaveBeenCalledOnce();
+      expect(mockRun).not.toHaveBeenCalled();
+      expect(mockSaveUpload).not.toHaveBeenCalled();
       expect(mockPost).not.toHaveBeenCalled();
     });
 
-    it("inits a publish with the upload manifest when files are present", async () => {
+    it("dispatches a publish through run, then inits/uploads/finalizes", async () => {
       setupPostMock();
       const { result } = renderHook(() => useCreate(noopOnPostCreated), { wrapper: makeWrapper() });
       const onFilesError = vi.fn();
@@ -226,6 +256,10 @@ describe("useCreate", () => {
       act(() => result.current.handleSubmit([makeFile()], onFilesError));
 
       expect(onFilesError).not.toHaveBeenCalled();
+      // The work is dispatched through the background-task runner with a publish label.
+      expect(mockRun).toHaveBeenCalledTimes(1);
+      expect(mockRun).toHaveBeenCalledWith(expect.any(Function), { label: "Publishing your post" });
+
       await waitFor(() => {
         expect(mockPost).toHaveBeenCalledWith(
           "posts/init",
@@ -234,7 +268,6 @@ describe("useCreate", () => {
           }),
         );
       });
-      // The bytes go straight to storage via the transport, then we finalize to publish.
       await waitFor(() => expect(mockUploadToStorage).toHaveBeenCalledTimes(1));
       await waitFor(() =>
         expect(mockPost).toHaveBeenCalledWith(`posts/${SLUG}/finalize`, { publish: true }),
@@ -252,13 +285,34 @@ describe("useCreate", () => {
       expect(onPostCreated).toHaveBeenCalledWith();
     });
 
-    it("fails silently when the upload flow errors", async () => {
+    it("persists the payload before uploading and clears it once published", async () => {
+      setupPostMock();
+      const { result } = renderHook(() => useCreate(noopOnPostCreated), { wrapper: makeWrapper() });
+
+      act(() => result.current.handleSubmit([makeFile()], vi.fn()));
+
+      // Snapshot saved up front with the publish payload...
+      await waitFor(() => expect(mockSaveUpload).toHaveBeenCalledTimes(1));
+      const record = mockSaveUpload.mock.calls[0][0];
+      expect(record).toMatchObject({
+        id: expect.any(String),
+        createdAt: expect.any(Number),
+        payload: expect.objectContaining({ publish: true }),
+      });
+      // ...then removed once finalize publishes, keyed by the same id.
+      await waitFor(() => expect(mockDeleteUpload).toHaveBeenCalledWith(record.id));
+    });
+
+    it("does not throw on upload error, and keeps the persisted snapshot for resume", async () => {
       mockPost.mockRejectedValue(new Error("server error"));
       const { result } = renderHook(() => useCreate(noopOnPostCreated), { wrapper: makeWrapper() });
 
       expect(() => act(() => result.current.handleSubmit([makeFile()], vi.fn()))).not.toThrow();
 
+      // Snapshot persisted but never deleted — so resume-on-load can retry it.
+      await waitFor(() => expect(mockSaveUpload).toHaveBeenCalled());
       await waitFor(() => expect(mockPost).toHaveBeenCalled());
+      expect(mockDeleteUpload).not.toHaveBeenCalled();
     });
   });
 
@@ -267,45 +321,40 @@ describe("useCreate", () => {
   // -------------------------------------------------------------------------
 
   describe("saveDraft", () => {
-    it("inits a draft, uploads, then finalizes it with publish:false", async () => {
+    it("dispatches a draft through run, then inits/uploads/finalizes with publish:false", async () => {
       setupPostMock();
       const { result } = renderHook(() => useCreate(noopOnPostCreated), { wrapper: makeWrapper() });
 
-      await act(async () => {
-        await result.current.saveDraft([makeFile()]);
-      });
+      act(() => result.current.saveDraft([makeFile()]));
 
-      expect(mockPost).toHaveBeenCalledWith("posts/init", expect.anything());
-      expect(mockUploadToStorage).toHaveBeenCalledTimes(1);
-      expect(mockPost).toHaveBeenCalledWith(`posts/${SLUG}/finalize`, { publish: false });
+      expect(mockRun).toHaveBeenCalledTimes(1);
+      expect(mockRun).toHaveBeenCalledWith(expect.any(Function), { label: "Saving your draft" });
+
+      await waitFor(() => expect(mockPost).toHaveBeenCalledWith("posts/init", expect.anything()));
+      await waitFor(() => expect(mockUploadToStorage).toHaveBeenCalledTimes(1));
+      await waitFor(() =>
+        expect(mockPost).toHaveBeenCalledWith(`posts/${SLUG}/finalize`, { publish: false }),
+      );
     });
 
-    it("resolves with the draft slug on success", async () => {
+    it("does not navigate (no onPostCreated) — the caller proceeds itself", () => {
       setupPostMock();
-      const { result } = renderHook(() => useCreate(noopOnPostCreated), { wrapper: makeWrapper() });
+      const onPostCreated = vi.fn();
+      const { result } = renderHook(() => useCreate(onPostCreated), { wrapper: makeWrapper() });
 
-      let slug: string | undefined;
-      await act(async () => {
-        slug = await result.current.saveDraft([makeFile()]);
-      });
+      act(() => result.current.saveDraft([makeFile()]));
 
-      expect(slug).toBe(SLUG);
+      expect(onPostCreated).not.toHaveBeenCalled();
     });
 
-    it("rejects when the API fails", async () => {
-      mockPost.mockRejectedValueOnce(new Error("network error"));
+    it("dispatches nothing for an empty set — a draft is still media-first", () => {
       const { result } = renderHook(() => useCreate(noopOnPostCreated), { wrapper: makeWrapper() });
 
-      let threw = false;
-      await act(async () => {
-        try {
-          await result.current.saveDraft([makeFile()]);
-        } catch {
-          threw = true;
-        }
-      });
+      act(() => result.current.saveDraft([]));
 
-      expect(threw).toBe(true);
+      expect(mockRun).not.toHaveBeenCalled();
+      expect(mockSaveUpload).not.toHaveBeenCalled();
+      expect(mockPost).not.toHaveBeenCalled();
     });
   });
 });

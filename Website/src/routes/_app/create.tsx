@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, useBlocker } from "@tanstack/react-router";
 import { FormProvider } from "react-hook-form";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useRef } from "react";
 import type { KeyboardEvent } from "react";
 
 import Stack from "@mui/material/Stack";
@@ -33,7 +33,7 @@ function CreatePage() {
     navigate({ to: user?.username ? `/profile/${user.username}` : "/profile" });
   }, [navigate, user]);
 
-  const { methods, handleSubmit, activeStep, handleNext, handleBack, saveDraft, isSavingDraft } =
+  const { methods, handleSubmit, activeStep, handleNext, handleBack, saveDraft } =
     useCreate(handlePostCreated);
 
   const {
@@ -53,25 +53,18 @@ function CreatePage() {
     withResolver: true,
   });
 
-  const [saveError, setSaveError] = useState<string | null>(null);
-
-  const handleSaveDraftAndProceed = async () => {
-    setSaveError(null);
-    try {
-      await saveDraft(files);
-      blocker.proceed?.();
-    } catch {
-      setSaveError("Couldn't save your draft. Discard or try again.");
-    }
+  // Fire-and-forget: dispatch the draft save, then proceed to wherever the user was headed. Failure
+  // surfaces via the global notification banner, not here.
+  const handleSaveDraftAndProceed = () => {
+    saveDraft(files);
+    blocker.proceed?.();
   };
 
   const handleDiscardAndProceed = () => {
-    setSaveError(null);
     blocker.proceed?.();
   };
 
   const handleStay = () => {
-    setSaveError(null);
     blocker.reset?.();
   };
 
@@ -131,14 +124,10 @@ function CreatePage() {
         icon={<BookmarkBorderOutlinedIcon />}
         iconColor="primary"
         title="Save as draft?"
-        description={
-          saveError ??
-          "You have an unsaved post. Would you like to save it as a draft to finish later?"
-        }
+        description="You have an unsaved post. Would you like to save it as a draft to finish later?"
         primaryAction={{
           label: "Save Draft",
           onClick: handleSaveDraftAndProceed,
-          loading: isSavingDraft,
         }}
         secondaryAction={{
           label: "Discard",
