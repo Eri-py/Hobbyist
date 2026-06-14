@@ -24,8 +24,7 @@ public partial class PostUploadService
         // Server-owned identifiers/timestamps generated once so all writes stay consistent.
         var slug = SlugGenerator.Generate();
 
-        // Always born a Draft, whether the user pressed Post or Save draft; finalize decides if it
-        // becomes Published. The publish-vs-draft intent isn't stored — the client supplies it at finalize.
+        // Always born Draft; publish intent isn't stored — the client supplies it at finalize.
         var post = new PostEntity
         {
             Id = slug,
@@ -40,9 +39,8 @@ public partial class PostUploadService
             Likes = 0,
         };
 
-        // Sign an upload URL per file and stage a Pending media row for each. Presigning is local
-        // (no storage write) and happens before SaveChanges, so a failure leaves nothing persisted
-        // and no objects in storage to clean up.
+        // Sign a URL + stage a Pending row per file. Presigning is local and pre-SaveChanges, so a
+        // failure leaves nothing persisted and no objects to clean up.
         var uploads = new List<PresignedUpload>(media.Length);
         foreach (var item in media)
         {

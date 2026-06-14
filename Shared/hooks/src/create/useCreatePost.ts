@@ -31,11 +31,7 @@ const MAX_SUBMIT_ATTEMPTS = 2;
 // Upload seams (platform-specific bits injected by each client)
 // ---------------------------------------------------------------------------
 
-/**
- * A file the client wants uploaded, paired with the metadata the server needs
- * to sign it. `TFile` is the platform's raw handle — a `File` on web, an asset
- * descriptor on native — and is forwarded untouched to the transport.
- */
+/** A file to upload + the metadata to sign it. `TFile` is the platform handle (web File / native asset). */
 export type UploadSource<TFile = File> = {
   file: TFile;
   fileName: string;
@@ -43,11 +39,7 @@ export type UploadSource<TFile = File> = {
   byteSize: number;
 };
 
-/**
- * PUTs one file's bytes directly to storage using its pre-signed target. Web
- * uses fetch/XHR; native uses an OS background-upload task. Must send every
- * header in `upload.requiredHeaders` or the signature won't match.
- */
+/** PUTs one file's bytes to its pre-signed target; must send every `upload.requiredHeaders` or the sig fails. */
 export type UploadTransport<TFile = File> = (args: {
   file: TFile;
   upload: PresignedUpload;
@@ -56,10 +48,7 @@ export type UploadTransport<TFile = File> = (args: {
 /** Post fields minus the media manifest (which is derived from the sources). */
 export type PostMetadata = Omit<InitPostRequest, "media">;
 
-/**
- * Everything `submit` needs to run a create round, with no dependency on the live form. Self-
- * contained so it can be persisted and re-run later (background upload / resume after a crash).
- */
+/** Everything `submit` needs, form-independent — so it can be persisted and re-run later (resume/crash). */
 export type UploadPayload<TFile = File> = {
   metadata: PostMetadata;
   sources: UploadSource<TFile>[];
@@ -77,11 +66,7 @@ const isNotFound = (error: unknown): boolean =>
 // Manifest
 // ---------------------------------------------------------------------------
 
-/**
- * Turns the ordered sources into the upload manifest. Array order is the source
- * of truth for display order — position is 1-based and doubles as the handle
- * that pairs a returned PresignedUpload back to its file.
- */
+/** Ordered sources → manifest; 1-based position is display order and the handle pairing a PresignedUpload to its file. */
 export function buildManifest(sources: UploadSource<unknown>[]): MediaManifestItem[] {
   return sources.map((source, index) => ({
     position: index + 1,
@@ -112,8 +97,7 @@ export function createUploadEngine<TFile = File>(
     media: buildManifest(payload.sources),
   });
 
-  // PUTs each target to storage (position N → sources[N - 1]). allSettled so one failed PUT doesn't
-  // abort the rest — finalize is the source of truth for what landed and re-signs the gaps.
+  // PUTs each target (position N → sources[N-1]); allSettled so one failure doesn't abort the rest.
   const uploadTargets = async (
     targets: PresignedUpload[],
     sources: UploadSource<TFile>[],
@@ -133,8 +117,7 @@ export function createUploadEngine<TFile = File>(
   const isDone = (payload: UploadPayload<TFile>, result: FinalizeResponse): boolean =>
     payload.publish ? result.published : result.pendingUploads.length === 0;
 
-  // Upload the current targets and finalize, looping on whatever stays pending so each retry re-sends
-  // only the gaps. Rejects on terminal failure — the caller persists/notifies/resumes.
+  // Upload + finalize, looping on what stays pending so each retry re-sends only the gaps. Rejects on giving up.
   const uploadAndFinalize = async (
     slug: string,
     payload: UploadPayload<TFile>,
@@ -165,16 +148,14 @@ export function createUploadEngine<TFile = File>(
     );
   };
 
-  // Create from scratch: init the post, hand the slug to onSlug (so the client can persist it for
-  // resume), then upload + finalize. Runs from a self-contained payload — no live form needed.
+  // Create from scratch: init, hand the slug to onSlug (for resume persistence), then upload + finalize.
   const submit = async (payload: UploadPayload<TFile>, onSlug?: SlugSink): Promise<void> => {
     const { slug, uploads } = (await initApi(buildInitBody(payload))).data;
     await onSlug?.(slug);
     await uploadAndFinalize(slug, payload, uploads);
   };
 
-  // Resume a persisted post: ask finalize what's still missing and re-upload only those. If the post
-  // is gone (GC reclaimed it), start over from init.
+  // Resume a persisted post: finalize reports what's missing, re-upload only those; 404 (GC'd) ⇒ recreate.
   const resume = async (
     slug: string,
     payload: UploadPayload<TFile>,

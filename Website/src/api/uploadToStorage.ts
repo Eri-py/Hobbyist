@@ -1,12 +1,6 @@
 import type { UploadTransport } from "@hobbyist/hooks";
 
-/**
- * Sends a file's bytes straight to object storage using its pre-signed PUT
- * URL. This deliberately bypasses axiosInstance: the request goes to storage,
- * not our API, so it must carry no cookies or baseURL and must skip the auth
- * refresh interceptor. Every signed header has to be sent verbatim or the
- * signature check fails.
- */
+/** PUTs file bytes to storage's pre-signed URL; bypasses axiosInstance (no cookies/auth) — headers verbatim or the sig fails. */
 export const uploadToStorage: UploadTransport<File> = async ({ file, upload }) => {
   const response = await fetch(upload.url, {
     method: "PUT",

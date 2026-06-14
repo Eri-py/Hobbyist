@@ -26,8 +26,7 @@ public partial class PostUploadService
                 new FinalizeResponse { Published = true, PendingUploads = [] }
             );
 
-        // Verify the bytes against the manifest, flipping each landed file to Uploaded and re-signing
-        // a fresh upload target for any still missing.
+        // Flip landed files to Uploaded and re-sign a fresh target for any still missing.
         var verifyResult = await VerifyUploadedMediaAsync(post, userId, ct);
         if (!verifyResult.IsSuccess)
             return Result<FinalizeResponse>.FromError(verifyResult);
@@ -67,11 +66,7 @@ public partial class PostUploadService
         );
     }
 
-    /// <summary>
-    /// HEADs each still-Pending file, flipping it to Uploaded when the stored object matches the
-    /// manifest's byte size. For each file still missing, re-signs a fresh upload target so the
-    /// client can retry just that one. Does not persist; the caller saves.
-    /// </summary>
+    /// <summary>HEADs each Pending file: flips to Uploaded if the stored size matches, else re-signs a fresh target. Doesn't persist.</summary>
     private async Task<Result<List<PresignedUpload>>> VerifyUploadedMediaAsync(
         PostEntity post,
         string userId,

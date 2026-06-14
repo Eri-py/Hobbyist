@@ -5,8 +5,7 @@ namespace Hobbyist.Api.Dtos.Posts;
 /// <summary>One entry in the upload manifest — describes a file the client intends to upload.</summary>
 public record class MediaManifestItem
 {
-    /// <summary>Display order within the post (1-based). Also the handle the client uses to match
-    /// a returned upload URL back to its file.</summary>
+    /// <summary>Display order (1-based); also the handle matching a returned upload URL back to its file.</summary>
     public required int Position { get; set; }
 
     /// <summary>Original file name; the server derives the stored extension from this.</summary>
@@ -19,12 +18,7 @@ public record class MediaManifestItem
     public required long ByteSize { get; set; }
 }
 
-/// <summary>
-/// Request to start a post. Metadata is optional so the user can save at any point; only the media
-/// manifest is required. The server always creates the post in the Draft state and returns a
-/// pre-signed upload URL per manifest item — whether it ends up published is decided at finalize,
-/// so publish and draft share this one request shape.
-/// </summary>
+/// <summary>Request to start a post (always Draft); metadata optional, only media required. Publish/draft share this shape — decided at finalize.</summary>
 public record class InitPostRequest
 {
     [MinLength(2)]
@@ -85,8 +79,6 @@ public record class FinalizeResponse
     /// <summary>True when every file was verified and a publish was requested, so the post is now live.</summary>
     public required bool Published { get; set; }
 
-    /// <summary>Re-signed upload targets for the positions whose object was not yet found in storage.
-    /// Empty means every file landed (published when publish was requested, else a verified draft).
-    /// Non-empty means the upload is incomplete: the client re-uploads just these and finalizes again.</summary>
+    /// <summary>Re-signed targets for files not yet in storage; empty = all landed, non-empty = re-upload these and finalize again.</summary>
     public required PresignedUpload[] PendingUploads { get; set; }
 }

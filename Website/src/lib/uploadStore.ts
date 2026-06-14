@@ -2,13 +2,11 @@ import { createStore, set, del, entries } from "idb-keyval";
 
 import type { UploadPayload } from "@hobbyist/hooks";
 
-// A create round persisted to IndexedDB so it survives a tab close / crash and can be re-run.
-// `File` blobs ride along via structured clone — IndexedDB stores the bytes, not a reference.
+// A create round persisted to IndexedDB so it survives tab close/crash; File bytes ride along via structured clone.
 export type PersistedUpload = {
   id: string;
   createdAt: number;
-  // Set once init succeeds; its presence means resume can continue the existing post rather than
-  // recreating it.
+  // Set once init succeeds; presence lets resume continue the existing post instead of recreating it.
   slug?: string;
   payload: UploadPayload<File>;
 };

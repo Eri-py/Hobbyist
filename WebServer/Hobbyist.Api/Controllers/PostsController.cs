@@ -10,11 +10,7 @@ namespace Hobbyist.Api.Controllers;
 [ApiController]
 public class PostsController(IPostUploadService postUploadService) : ControllerBase
 {
-    /// <summary>
-    /// Starts a post: validates the manifest and returns a pre-signed upload URL per file. The post
-    /// is created as a Draft; the client uploads the bytes directly to storage, then calls finalize
-    /// (with <c>publish: true</c> to go live, or <c>false</c> to keep it a draft).
-    /// </summary>
+    /// <summary>Starts a Draft post and returns a pre-signed upload URL per file; client uploads then calls finalize.</summary>
     [HttpPost("init")]
     [Authorize]
     public async Task<ActionResult<InitPostResponse>> InitAsync(
@@ -27,11 +23,7 @@ public class PostsController(IPostUploadService postUploadService) : ControllerB
         return result.ToActionResult();
     }
 
-    /// <summary>
-    /// Verifies that a post's uploads have landed in storage. Publishes it when
-    /// <see cref="FinalizeRequest.Publish"/> is true and all files are present; otherwise leaves it
-    /// a draft. Returns the positions still missing if any are incomplete.
-    /// </summary>
+    /// <summary>Verifies uploads landed; publishes when <see cref="FinalizeRequest.Publish"/> and all present, else stays draft. Returns any still missing.</summary>
     [HttpPost("{slug}/finalize")]
     [Authorize]
     public async Task<ActionResult<FinalizeResponse>> FinalizeAsync(
@@ -45,10 +37,7 @@ public class PostsController(IPostUploadService postUploadService) : ControllerB
         return result.ToActionResult();
     }
 
-    /// <summary>
-    /// Discards a post and its uploaded media (drafts or in-progress posts). Performs a
-    /// best-effort bulk deletion of the associated storage objects before removing the record.
-    /// </summary>
+    /// <summary>Discards a draft/in-progress post: best-effort bulk-delete of storage objects, then the record.</summary>
     [HttpDelete("{slug}")]
     [Authorize]
     public async Task<ActionResult> DiscardAsync(string slug, CancellationToken ct)

@@ -1,15 +1,11 @@
-// Builds the meta/links payload for TanStack Router's `head` route option.
-// Used together with <HeadContent /> (rendered in __root.tsx) to give each
-// route its own <title>, description, canonical URL and social tags.
+// Builds meta/links for TanStack Router's `head` option; pairs with <HeadContent/> in __root.tsx.
 
 const SITE_NAME = "Hobbyist";
 const DEFAULT_TITLE = "Hobbyist — Social Trading for Collectors";
 const DEFAULT_DESCRIPTION =
   "Hobbyist is a social trading platform for collectors. Share posts, list hobbies, and trade with trusted users.";
 
-// Canonical/OG URLs need an absolute origin. Prefer the build-time VITE_SITE_URL
-// (the single source of truth, also used by scripts/generate-seo.mjs); fall back
-// to the runtime origin so canonicals are still correct when the env var is unset.
+// Canonical/OG need an absolute origin; prefer build-time VITE_SITE_URL, fall back to runtime origin.
 function getOrigin(): string {
   const envUrl = import.meta.env.VITE_SITE_URL as string | undefined;
   if (envUrl) return envUrl.replace(/\/+$/, "");

@@ -3,29 +3,17 @@ using Hobbyist.Common;
 
 namespace Hobbyist.Api.Services.PostServices.PostUploadServices;
 
-/// <summary>
-/// Orchestrates the media-first upload flow: clients declare a manifest, receive pre-signed URLs,
-/// upload bytes directly to storage, then finalize.
-/// </summary>
+/// <summary>Orchestrates the media-first upload flow: declare manifest → pre-signed URLs → direct upload → finalize.</summary>
 public interface IPostUploadService
 {
-    /// <summary>
-    /// Starts a post. Validates the manifest, creates the post in the Draft state with one Pending
-    /// media row per item, and returns a pre-signed upload URL per item. Metadata may be incomplete;
-    /// completeness is enforced at finalize when publishing.
-    /// </summary>
+    /// <summary>Starts a Draft post with a Pending media row + pre-signed URL per item; metadata checked at finalize.</summary>
     Task<Result<InitPostResponse>> InitAsync(
         InitPostRequest request,
         string userId,
         CancellationToken ct
     );
 
-    /// <summary>
-    /// Verifies that every pending file has landed in storage, flipping each to Uploaded. When
-    /// <paramref name="publish"/> is true and all files are present (and metadata is complete) the
-    /// post is published; otherwise it stays a Draft. The still-missing positions are returned in
-    /// either case. Idempotent: finalizing an already-published post succeeds.
-    /// </summary>
+    /// <summary>Verifies pending files landed (→ Uploaded); publishes if <paramref name="publish"/> and all present + metadata complete, else stays Draft. Returns still-missing positions; idempotent.</summary>
     Task<Result<FinalizeResponse>> FinalizeAsync(
         string slug,
         bool publish,
@@ -33,9 +21,6 @@ public interface IPostUploadService
         CancellationToken ct
     );
 
-    /// <summary>
-    /// Discards a post and its uploaded media. Allowed for draft and in-progress posts;
-    /// published posts cannot be discarded.
-    /// </summary>
+    /// <summary>Discards a post and its media; allowed for draft/in-progress, not published.</summary>
     Task<Result> DiscardAsync(string slug, string userId, CancellationToken ct);
 }

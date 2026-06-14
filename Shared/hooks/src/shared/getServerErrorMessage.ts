@@ -8,14 +8,7 @@ export type ServerError = AxiosError<ServerErrorResponse>;
 
 const GENERIC_MESSAGE = "An unexpected error occurred.";
 
-/**
- * Turns any thrown error (typically an Axios error from a failed request) into a single
- * user-facing message. The one place "error → human string" lives, shared by web and mobile and by
- * both the notification system and any inline display.
- *
- * Resolution order: the API's own `message`, then a status-based fallback, then network/connection
- * failures (no response), then a generic default.
- */
+/** The one place "error → user-facing string" lives (web + mobile): API message, then status, then generic. */
 export function getServerErrorMessage(error: unknown): string {
   if (!(error instanceof AxiosError)) {
     return GENERIC_MESSAGE;

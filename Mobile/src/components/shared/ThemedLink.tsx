@@ -22,7 +22,6 @@ export function ThemedLink({ style, children, href, onPress, ...props }: ThemedL
 
   const linkStyle = [{ color: theme.colors.primary }, style];
 
-  // If href is provided, use Link component
   if (href) {
     return (
       <Link style={linkStyle} href={href} {...props}>
@@ -31,7 +30,6 @@ export function ThemedLink({ style, children, href, onPress, ...props }: ThemedL
     );
   }
 
-  // If onPress is provided, use Text with onPress
   if (onPress) {
     return (
       <Text style={linkStyle} onPress={onPress} {...props}>
@@ -40,6 +38,5 @@ export function ThemedLink({ style, children, href, onPress, ...props }: ThemedL
     );
   }
 
-  // Fallback to just styled text if neither is provided
   return <Text style={linkStyle}>{children}</Text>;
 }

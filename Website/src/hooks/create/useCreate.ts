@@ -61,10 +61,8 @@ export function useCreate(onPostCreated: () => void) {
 
   // --- Background upload dispatch ---
 
-  // Persist the payload, then upload off it, so a tab close / crash mid-upload is recoverable on
-  // next load. The slug is persisted once init succeeds (so resume can continue the same post);
-  // success drops the snapshot, failure leaves it for resume. Persistence is best-effort — if
-  // IndexedDB is unavailable we still attempt the upload, just without the safety net.
+  // Persist the payload before uploading so a tab close/crash is recoverable; slug saved once init
+  // succeeds, success drops the snapshot, failure leaves it for resume. Persistence is best-effort.
   const dispatch = (payload: UploadPayload<File>, label: string) => {
     const record: PersistedUpload = { id: crypto.randomUUID(), createdAt: Date.now(), payload };
     void run(async () => {

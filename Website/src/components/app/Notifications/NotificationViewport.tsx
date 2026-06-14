@@ -14,11 +14,7 @@ type NotificationViewportProps = {
   onRemove: (id: string) => void;
 };
 
-/**
- * Renders the notification queue. Desktop stacks up to three at the top-right; mobile shows one at
- * a time at the top, with the rest queued behind it. Sliced visibility means the same list drives
- * both presentations — the renderer just decides how many to show.
- */
+/** Renders the notification queue: desktop stacks up to three top-right, mobile shows one at a time. */
 export function NotificationViewport({ notifications, onRemove }: NotificationViewportProps) {
   const { isDesktop } = useDeviceType();
   const maxVisible = isDesktop ? DESKTOP_MAX_VISIBLE : MOBILE_MAX_VISIBLE;

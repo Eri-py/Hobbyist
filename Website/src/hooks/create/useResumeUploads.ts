@@ -6,15 +6,10 @@ import { uploadToStorage } from "@/api/uploadToStorage";
 import { useBackgroundTasks } from "@/hooks/app/useBackgroundTasks";
 import { listUploads, saveUpload, deleteUpload } from "@/lib/uploadStore";
 
-// Older snapshots are dropped rather than resumed — the server GC has likely reclaimed the post by
-// then, and the user has moved on. Kept loose against the (longer) GC grace.
+// Older snapshots are dropped, not resumed — the server GC has likely reclaimed the post by then.
 const RESUME_TTL_MS = 60 * 60 * 1000;
 
-/**
- * On load, picks up any uploads that were persisted but never finished (tab closed / crashed
- * mid-upload) and continues them in the background — resuming the existing post when we got far
- * enough to have a slug, otherwise recreating it. Runs once, only while authenticated.
- */
+/** On load, continues persisted-but-unfinished uploads: resume if we have a slug, else recreate. Once, while authed. */
 export function useResumeUploads() {
   const { isAuthenticated } = useAuth();
   const { run } = useBackgroundTasks();

@@ -16,10 +16,8 @@ public class MinioMediaUrlSignerService(
         configuration["MediaStorage:BucketName"]
         ?? throw new InvalidOperationException("Missing 'MediaStorage:BucketName' configuration.");
 
-    // The pre-signed URL scheme. The SDK defaults this to HTTPS regardless of the
-    // client's ServiceURL, so we drive it explicitly from the same UseSsl config
-    // the S3 client uses — otherwise local HTTP MinIO gets HTTPS URLs the browser
-    // can't reach.
+    // The SDK defaults the URL scheme to HTTPS regardless of ServiceURL, so drive it from UseSsl —
+    // else local HTTP MinIO gets unreachable HTTPS URLs.
     private readonly Protocol _protocol =
         bool.TryParse(configuration["MediaStorage:UseSsl"], out var useSsl) && useSsl
             ? Protocol.HTTPS
@@ -107,8 +105,7 @@ public class MinioMediaUrlSignerService(
 
             var expiresAt = DateTimeOffset.UtcNow.Add(effectiveTtl);
 
-            // ContentType is part of the signed request, so the client must send the same
-            // Content-Type header on the PUT or storage rejects it.
+            // ContentType is signed in, so the client must send the same Content-Type on the PUT.
             var uploadUrl = s3Client.GetPreSignedURL(
                 new GetPreSignedUrlRequest
                 {

@@ -10,17 +10,10 @@ export type NotificationAction = {
 export type NotifyOptions = {
   message: string;
   severity: NotificationSeverity;
-  /**
-   * Auto-hide delay in ms. Omit for a sensible default; pass `null` to make it sticky (stays until
-   * dismissed). A notification with an `action` is sticky by default so it can't vanish before the
-   * user acts.
-   */
+  /** Auto-hide delay in ms; omit for default, `null` for sticky. An `action` is sticky by default. */
   duration?: number | null;
   action?: NotificationAction;
-  /**
-   * When set, a new notification with the same key replaces the existing one instead of stacking.
-   * Use for repeatable events (e.g. a login that keeps failing) so they don't pile up.
-   */
+  /** A new notification with the same key replaces the existing one instead of stacking. */
   key?: string;
 };
 
