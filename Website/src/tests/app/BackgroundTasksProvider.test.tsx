@@ -90,7 +90,7 @@ describe("BackgroundTasksProvider", () => {
     expect(mockNotify).toHaveBeenCalledWith(
       expect.objectContaining({
         severity: "error",
-        message: "Publishing your post failed. Please try again.",
+        message: "Publishing your post failed.",
       }),
     );
   });
@@ -103,7 +103,33 @@ describe("BackgroundTasksProvider", () => {
     });
 
     expect(mockNotify).toHaveBeenCalledWith(
-      expect.objectContaining({ message: "Something went wrong. Please try again." }),
+      expect.objectContaining({ message: "Something went wrong." }),
+    );
+  });
+
+  it("offers a Retry action that re-runs the failed task as a fresh tracked attempt", async () => {
+    const result = renderTasks();
+    const task = vi.fn(() => Promise.reject(new Error("gave up")));
+
+    await act(async () => {
+      await result.current.run(task, { label: "Publishing your post" });
+    });
+
+    expect(task).toHaveBeenCalledTimes(1);
+    expect(result.current.hasPending).toBe(false);
+
+    const { action } = mockNotify.mock.calls[0][0];
+    expect(action.label).toBe("Retry");
+
+    await act(async () => {
+      action.onClick();
+      await Promise.resolve();
+    });
+
+    expect(task).toHaveBeenCalledTimes(2);
+    await waitFor(() => expect(result.current.hasPending).toBe(false));
+    expect(mockNotify).toHaveBeenLastCalledWith(
+      expect.objectContaining({ action: expect.objectContaining({ label: "Retry" }) }),
     );
   });
 

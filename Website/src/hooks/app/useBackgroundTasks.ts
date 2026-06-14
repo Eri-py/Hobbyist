@@ -11,11 +11,8 @@ export type BackgroundTasksContextTypes = {
   pending: BackgroundTask[];
   hasPending: boolean;
   /**
-   * Runs a fire-and-forget task: registers it so the beforeunload guard can warn while it's in
-   * flight, and surfaces a notification if it ultimately fails. The task is expected to handle its
-   * own retries — reaching a rejection here means it gave up. `run` never rejects (it swallows
-   * after notifying), so callers can safely `void` it; it resolves to the task's value on success
-   * or `undefined` on failure.
+   * Runs a fire-and-forget task: guarded by beforeunload while in flight, and on failure surfaces a
+   * notification with a Retry action. Never rejects (safe to `void`) — resolves to the value or undefined.
    */
   run: <T>(task: () => Promise<T>, meta?: { label?: string }) => Promise<T | undefined>;
 };

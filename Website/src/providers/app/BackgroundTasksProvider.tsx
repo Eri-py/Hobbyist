@@ -23,17 +23,17 @@ export function BackgroundTasksProvider({ children }: { children: ReactNode }) {
       const id = nextTaskId();
       setPending((prev) => [...prev, { id, label: meta?.label, startedAt: Date.now() }]);
 
-      // The task owns its retries; a rejection here means it gave up. Surface it through the central
-      // notification system, then swallow so a voided call can't raise an unhandled rejection. Clear
-      // the pending entry whatever the outcome.
+      // A rejection means the task gave up; notify with a Retry action that re-runs it, then swallow
+      // so a voided call can't raise an unhandled rejection. Clear the pending entry either way.
       try {
         return await task();
       } catch {
         notify({
           severity: "error",
           message: meta?.label
-            ? `${meta.label} failed. Please try again.`
-            : "Something went wrong. Please try again.",
+            ? `${meta.label} failed.`
+            : "Something went wrong.",
+          action: { label: "Retry", onClick: () => void run(task, meta) },
         });
         return undefined;
       } finally {
@@ -43,9 +43,8 @@ export function BackgroundTasksProvider({ children }: { children: ReactNode }) {
     [notify],
   );
 
-  // A guard for the whole app: warn on a real tab close/reload while work is in flight. The listener
-  // is attached only while something is pending. In-app navigation keeps the SPA — and the in-page
-  // upload — alive, so it's intentionally not guarded (the browser only allows the generic prompt).
+  // Warn on a real tab close/reload while work is in flight; attached only while pending. In-app nav
+  // keeps the SPA (and the upload) alive, so it's intentionally not guarded.
   const hasPending = pending.length > 0;
   useEffect(() => {
     if (!hasPending) return;
