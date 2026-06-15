@@ -1,6 +1,6 @@
 import { createStore, set, del, entries } from "idb-keyval";
 
-import type { UploadPayload } from "@hobbyist/hooks";
+import type { CreatePostPayload } from "@hobbyist/hooks";
 
 // A create round persisted to IndexedDB so it survives tab close/crash; File bytes ride along via structured clone.
 export type PersistedUpload = {
@@ -8,7 +8,7 @@ export type PersistedUpload = {
   createdAt: number;
   // Set once init succeeds; presence lets resume continue the existing post instead of recreating it.
   slug?: string;
-  payload: UploadPayload<File>;
+  payload: CreatePostPayload<File>;
 };
 
 // Dedicated store so pending uploads never collide with other app state.

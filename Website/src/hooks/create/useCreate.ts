@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 
-import { useCreatePost, type UploadSource, type UploadPayload } from "@hobbyist/hooks";
+import { useCreatePost, type UploadSource, type CreatePostPayload } from "@hobbyist/hooks";
 import type { CreateFormSchemaTypes } from "@hobbyist/form-schemas";
 import type { FileWithMetadata } from "@/hooks/create/useMediaUpload";
 import { useBackgroundTasks } from "@/hooks/app/useBackgroundTasks";
@@ -63,7 +63,7 @@ export function useCreate(onPostCreated: () => void) {
 
   // Persist the payload before uploading so a tab close/crash is recoverable; slug saved once init
   // succeeds, success drops the snapshot, failure leaves it for resume. Persistence is best-effort.
-  const dispatch = (payload: UploadPayload<File>, label: string) => {
+  const dispatch = (payload: CreatePostPayload<File>, label: string) => {
     const record: PersistedUpload = { id: crypto.randomUUID(), createdAt: Date.now(), payload };
     void run(async () => {
       await saveUpload(record).catch(() => {});

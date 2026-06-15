@@ -51,7 +51,7 @@ vi.mock("@/lib/uploadStore", () => ({
 vi.mock("@/api/axiosInstance", () => ({ axiosInstance: {} }));
 vi.mock("@/api/uploadToStorage", () => ({ uploadToStorage: vi.fn() }));
 
-import { useResumeUploads } from "@/hooks/create/useResumeUploads";
+import { useResumeUploads } from "@/hooks/upload/useResumeUploads";
 import type { PersistedUpload } from "@/lib/uploadStore";
 
 // ---------------------------------------------------------------------------

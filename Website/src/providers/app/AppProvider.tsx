@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import { useResumeUploads } from "@/hooks/create/useResumeUploads";
+import { useResumeUploads } from "@/hooks/upload/useResumeUploads";
 import { BackgroundTasksProvider } from "./BackgroundTasksProvider";
 import { MobileHeaderProvider } from "./MobileHeaderProvider";
 

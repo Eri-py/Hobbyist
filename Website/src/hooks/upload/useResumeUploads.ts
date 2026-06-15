@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-import { createUploadEngine, useAuth } from "@hobbyist/hooks";
+import { createUploadEngine, createPostUploadResource, useAuth } from "@hobbyist/hooks";
 import { axiosInstance } from "@/api/axiosInstance";
 import { uploadToStorage } from "@/api/uploadToStorage";
 import { useBackgroundTasks } from "@/hooks/app/useBackgroundTasks";
@@ -19,7 +19,10 @@ export function useResumeUploads() {
     if (!isAuthenticated || sweptRef.current) return;
     sweptRef.current = true;
 
-    const { submit, resume } = createUploadEngine(axiosInstance, uploadToStorage);
+    const { submit, resume } = createUploadEngine(
+      createPostUploadResource<File>(axiosInstance),
+      uploadToStorage,
+    );
 
     void (async () => {
       const records = await listUploads().catch(() => []);

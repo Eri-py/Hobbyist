@@ -14,13 +14,13 @@ vi.mock("idb-keyval", () => {
 });
 
 import { saveUpload, deleteUpload, listUploads, type PersistedUpload } from "@/lib/uploadStore";
-import type { UploadPayload } from "@hobbyist/hooks";
+import type { CreatePostPayload } from "@hobbyist/hooks";
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-const makePayload = (publish: boolean, fileBody = "hello"): UploadPayload<File> => ({
+const makePayload = (publish: boolean, fileBody = "hello"): CreatePostPayload<File> => ({
   metadata: {
     hobby: "Painting",
     title: "A title",
