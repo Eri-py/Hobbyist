@@ -75,6 +75,6 @@
     "eslint-import-resolver-typescript": "^4.4.5",
     "jsdom": "^29.1.1",
     "typescript": "~5.9.3",
-    "vitest": "^4.1.8"
+    "vitest": "^4.1.9"
   }
 }
