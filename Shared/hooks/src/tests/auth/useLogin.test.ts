@@ -13,21 +13,15 @@ const capturedMutations: Array<{
 
 const capturedMutates: ReturnType<typeof vi.fn>[] = [];
 
-const {
-  mockInvalidateQueries,
-  mockTrigger,
-  mockGetValues,
-  mockSetError,
-  mockHandleServerError,
-  mockClearServerError,
-} = vi.hoisted(() => ({
+const { mockInvalidateQueries, mockTrigger, mockGetValues, mockSetError } = vi.hoisted(() => ({
   mockInvalidateQueries: vi.fn(),
   mockTrigger: vi.fn(),
   mockGetValues: vi.fn(),
   mockSetError: vi.fn(),
-  mockHandleServerError: vi.fn(),
-  mockClearServerError: vi.fn(),
 }));
+
+// Platform-supplied error sink injected into the hook (web would pass notify).
+const mockOnError = vi.fn();
 
 vi.mock("@tanstack/react-query", () => ({
   useMutation: vi.fn().mockImplementation((opts: any) => {
@@ -51,14 +45,6 @@ vi.mock("react-hook-form", () => ({
     handleSubmit: vi.fn(),
     register: vi.fn(),
     formState: { errors: {} },
-  }),
-}));
-
-vi.mock("../../shared/useServerError", () => ({
-  useServerError: vi.fn().mockReturnValue({
-    serverErrorMessage: null,
-    handleServerError: mockHandleServerError,
-    clearServerError: mockClearServerError,
   }),
 }));
 
@@ -93,8 +79,7 @@ describe("useLogin", () => {
     mockTrigger.mockImplementation(() => Promise.resolve(mockTriggerResult));
     mockReplace.mockReset();
     mockInvalidateQueries.mockReset();
-    mockHandleServerError.mockReset();
-    mockClearServerError.mockReset();
+    mockOnError.mockReset();
     mockTrigger.mockClear();
     mockGetValues.mockReset();
     mockSetError.mockReset();
@@ -182,18 +167,6 @@ describe("useLogin", () => {
       // Assert
       expect(capturedMutates[0]).not.toHaveBeenCalled();
     });
-
-    it("clears server error before firing the mutation", async () => {
-      // Arrange
-      const { result } = renderHook(() => useLogin(mockNavigate, mockAxios));
-      mockGetValues.mockReturnValue("anyvalue");
-
-      // Act
-      await act(async () => result.current.handleNext());
-
-      // Assert
-      expect(mockClearServerError).toHaveBeenCalled();
-    });
   });
 
   describe("startLoginMutation callbacks", () => {
@@ -222,16 +195,15 @@ describe("useLogin", () => {
       });
     });
 
-    it("onError calls handleServerError", () => {
+    it("onError forwards a normalized message to the error sink", () => {
       // Arrange
-      renderHook(() => useLogin(mockNavigate, mockAxios));
-      const error = new Error("Invalid credentials") as any;
+      renderHook(() => useLogin(mockNavigate, mockAxios, undefined, mockOnError));
 
       // Act
-      act(() => capturedMutations[0].onError(error));
+      act(() => capturedMutations[0].onError(new Error("Invalid credentials")));
 
-      // Assert
-      expect(mockHandleServerError).toHaveBeenCalledWith(error);
+      // Assert — a plain Error normalizes to the generic message.
+      expect(mockOnError).toHaveBeenCalledWith("An unexpected error occurred.");
     });
   });
 
@@ -249,18 +221,6 @@ describe("useLogin", () => {
         identifier: "testuser",
         otp: "ABC123",
       });
-    });
-
-    it("clears server error before submitting", () => {
-      // Arrange
-      const { result } = renderHook(() => useLogin(mockNavigate, mockAxios));
-      const formData = { identifier: "testuser", password: "Test1234!", otp: "ABC123" };
-
-      // Act
-      act(() => result.current.onSubmit(formData));
-
-      // Assert
-      expect(mockClearServerError).toHaveBeenCalled();
     });
   });
 
@@ -304,16 +264,15 @@ describe("useLogin", () => {
       expect(mockOnAuthSuccess).toHaveBeenCalledWith(mockAuthResult.data);
     });
 
-    it("onError calls handleServerError", () => {
+    it("onError forwards a normalized message to the error sink", () => {
       // Arrange
-      renderHook(() => useLogin(mockNavigate, mockAxios));
-      const error = new Error("Bad OTP") as any;
+      renderHook(() => useLogin(mockNavigate, mockAxios, undefined, mockOnError));
 
       // Act
-      act(() => capturedMutations[1].onError(error));
+      act(() => capturedMutations[1].onError(new Error("Bad OTP")));
 
       // Assert
-      expect(mockHandleServerError).toHaveBeenCalledWith(error);
+      expect(mockOnError).toHaveBeenCalledWith("An unexpected error occurred.");
     });
   });
 

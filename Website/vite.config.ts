@@ -39,6 +39,13 @@ export default defineConfig(({ mode }) => {
     test: {
       globals: true,
       environment: "jsdom",
+      server: {
+        deps: {
+          // Test-only: MUI's ESM build directory-imports react-transition-group/TransitionGroupContext,
+          // which Node-ESM rejects when MUI is externalized. Inlining MUI lets vite resolve it.
+          inline: ["@mui/material"],
+        },
+      },
     },
   };
 });

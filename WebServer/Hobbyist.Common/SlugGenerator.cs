@@ -1,10 +1,6 @@
 namespace Hobbyist.Common;
 
-/// <summary>
-/// Generates short, URL-safe slugs for use as public-facing identifiers.
-/// 12 base-62 characters gives ~3.2 × 10²¹ possible values —
-/// statistically equivalent to a UUID and safe without a retry loop.
-/// </summary>
+/// <summary>Short URL-safe slugs; 12 base-62 chars (~3.2×10²¹) is UUID-equivalent, so no retry loop.</summary>
 public static class SlugGenerator
 {
     private const string Alphabet =

@@ -41,56 +41,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/Posts/create": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Creates and publishes a post in one shot (mobile optimistic-post flow). */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/x-www-form-urlencoded": {
-                        Hobby?: string;
-                        Title?: string;
-                        Description?: string;
-                        AvailableForTrade?: boolean;
-                        LookingFor?: string;
-                        Media?: components["schemas"]["IFormFile"][];
-                    };
-                };
-            };
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "text/plain": components["schemas"]["CreatePostResponse"];
-                        "application/json": components["schemas"]["CreatePostResponse"];
-                        "text/json": components["schemas"]["CreatePostResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/Posts/draft": {
+    "/api/Posts/init": {
         parameters: {
             query?: never;
             header?: never;
@@ -100,8 +51,9 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Saves a complete draft — all form fields and media in one request.
-         *     The draft sits on the server until the user chooses to publish it.
+         * Starts a post: validates the manifest and returns a pre-signed upload URL per file. The post
+         *     is created as a Draft; the client uploads the bytes directly to storage, then calls finalize
+         *     (with `publish: true` to go live, or `false` to keep it a draft).
          */
         post: {
             parameters: {
@@ -112,14 +64,9 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/x-www-form-urlencoded": {
-                        Hobby?: string;
-                        Title?: string;
-                        Description?: string;
-                        AvailableForTrade?: boolean;
-                        LookingFor?: string;
-                        Media?: components["schemas"]["IFormFile"][];
-                    };
+                    "application/json": components["schemas"]["InitPostRequest"];
+                    "text/json": components["schemas"]["InitPostRequest"];
+                    "application/*+json": components["schemas"]["InitPostRequest"];
                 };
             };
             responses: {
@@ -129,9 +76,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["CreateDraftResponse"];
-                        "application/json": components["schemas"]["CreateDraftResponse"];
-                        "text/json": components["schemas"]["CreateDraftResponse"];
+                        "text/plain": components["schemas"]["InitPostResponse"];
+                        "application/json": components["schemas"]["InitPostResponse"];
+                        "text/json": components["schemas"]["InitPostResponse"];
                     };
                 };
             };
@@ -142,7 +89,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/Posts/{slug}/publish": {
+    "/api/Posts/{slug}/finalize": {
         parameters: {
             query?: never;
             header?: never;
@@ -152,8 +99,9 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Publishes a saved draft. All required data is already on the draft;
-         *     no additional fields are needed from the caller.
+         * Verifies that a post's uploads have landed in storage. Publishes it when
+         *     bool FinalizeRequest.Publish is true and all files are present; otherwise leaves it
+         *     a draft. Returns the positions still missing if any are incomplete.
          */
         post: {
             parameters: {
@@ -164,7 +112,13 @@ export interface paths {
                 };
                 cookie?: never;
             };
-            requestBody?: never;
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["FinalizeRequest"];
+                    "text/json": components["schemas"]["FinalizeRequest"];
+                    "application/*+json": components["schemas"]["FinalizeRequest"];
+                };
+            };
             responses: {
                 /** @description OK */
                 200: {
@@ -172,9 +126,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["CreatePostResponse"];
-                        "application/json": components["schemas"]["CreatePostResponse"];
-                        "text/json": components["schemas"]["CreatePostResponse"];
+                        "text/plain": components["schemas"]["FinalizeResponse"];
+                        "application/json": components["schemas"]["FinalizeResponse"];
+                        "text/json": components["schemas"]["FinalizeResponse"];
                     };
                 };
             };
@@ -196,8 +150,8 @@ export interface paths {
         put?: never;
         post?: never;
         /**
-         * Discards a draft post. Deletes the database record and performs a
-         *     best-effort bulk deletion of all associated S3 objects.
+         * Discards a post and its uploaded media (drafts or in-progress posts). Performs a
+         *     best-effort bulk deletion of the associated storage objects before removing the record.
          */
         delete: {
             parameters: {
@@ -632,30 +586,82 @@ export interface components {
             dateOfBirth: string;
             interests: string[];
         };
-        /** @description Returned after a draft post is successfully created. */
-        CreateDraftResponse: {
-            postId: string;
-        };
-        CreatePostResponse: {
-            postId: string;
-        };
         /** @description Response containing the enabled/disabled state of every feature flag. */
         FeatureFlagsResponse: {
             flags: {
                 [key: string]: boolean;
             };
         };
+        /** @description Request body for finalize: whether to publish the post or leave it a draft. */
+        FinalizeRequest: {
+            /** @description True to publish once all media is verified; false to verify and keep it a draft. */
+            publish: boolean;
+        };
+        /** @description Outcome of finalizing a post. */
+        FinalizeResponse: {
+            /** @description True when every file was verified and a publish was requested, so the post is now live. */
+            published: boolean;
+            /**
+             * @description Re-signed upload targets for the positions whose object was not yet found in storage.
+             *         Empty means every file landed (published when publish was requested, else a verified draft).
+             *         Non-empty means the upload is incomplete: the client re-uploads just these and finalizes again.
+             */
+            pendingUploads: components["schemas"]["PresignedUpload"][];
+        };
         /** @description Response containing current user authentication status and user data if authenticated. */
         GetUserResponse: {
             isAuthenticated: boolean;
             user?: null | components["schemas"]["UserDto"];
         };
-        /** Format: binary */
-        IFormFile: string;
+        /**
+         * @description Request to start a post. Metadata is optional so the user can save at any point; only the media
+         *     manifest is required. The server always creates the post in the Draft state and returns a
+         *     pre-signed upload URL per manifest item — whether it ends up published is decided at finalize,
+         *     so publish and draft share this one request shape.
+         */
+        InitPostRequest: {
+            hobby?: null | string;
+            title?: null | string;
+            description?: null | string;
+            availableForTrade?: boolean;
+            lookingFor?: null | string;
+            media: components["schemas"]["MediaManifestItem"][];
+        };
+        /** @description Returned from init: the new post slug and the per-file upload targets. */
+        InitPostResponse: {
+            slug: string;
+            uploads: components["schemas"]["PresignedUpload"][];
+        };
+        /** @description One entry in the upload manifest — describes a file the client intends to upload. */
+        MediaManifestItem: {
+            /**
+             * Format: int32
+             * @description Display order within the post (1-based). Also the handle the client uses to match
+             *         a returned upload URL back to its file.
+             */
+            position: number | string;
+            /** @description Original file name; the server derives the stored extension from this. */
+            fileName: string;
+            contentType: string;
+            /** Format: int64 */
+            byteSize: number | string;
+        };
         /** @description Response containing OTP expiration timestamp. */
         OtpResponse: {
             /** Format: date-time */
             otpExpiresAt: string;
+        };
+        /** @description A single pre-signed upload target returned to the client, paired with its manifest position. */
+        PresignedUpload: {
+            /** Format: int32 */
+            position: number | string;
+            url: string;
+            /** @description Headers the client must send on the PUT for the signature to match (e.g. Content-Type). */
+            requiredHeaders: {
+                [key: string]: string;
+            };
+            /** Format: date-time */
+            expiresAt: string;
         };
         /** @description Request containing refresh token for mobile token refresh. */
         RefreshTokenRequest: {

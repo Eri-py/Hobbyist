@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { StyleSheet } from "react-native";
 import { useRouter, Href } from "expo-router";
 import { FormProvider } from "react-hook-form";
@@ -20,6 +20,7 @@ export default function Login() {
     await TokenManager.storeTokens(authResult);
   }, []);
   const router = useRouter();
+  const [serverError, setServerError] = useState<string | null>(null);
   const {
     methods,
     step,
@@ -30,8 +31,12 @@ export default function Login() {
     otpData,
     onSubmit,
     isCompleting,
-    serverErrorMessage,
-  } = useLogin({ replace: (path: string) => router.replace(path as Href) }, axiosInstance, handleAuthSuccess);
+  } = useLogin(
+    { replace: (path: string) => router.replace(path as Href) },
+    axiosInstance,
+    handleAuthSuccess,
+    (message) => setServerError(message),
+  );
 
   return (
     <ThemedKeyboardView safeArea contentContainerStyle={styles.container}>
@@ -45,7 +50,7 @@ export default function Login() {
 
       {/* Form content */}
       <FormProvider {...methods}>
-        {serverErrorMessage && <ErrorMessage>{serverErrorMessage}</ErrorMessage>}
+        {serverError && <ErrorMessage>{serverError}</ErrorMessage>}
 
         {step === 0 && <UsernameAndPasswordStep handleNext={handleNext} isPending={isStarting} />}
         {step === 1 && otpData && (

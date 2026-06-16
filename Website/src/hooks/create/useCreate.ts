@@ -1,9 +1,12 @@
 import { useCallback, useState } from "react";
 
-import { useCreatePost, appendPostFields, appendDraftFields } from "@hobbyist/hooks";
+import { useCreatePost, type UploadSource, type CreatePostPayload } from "@hobbyist/hooks";
 import type { CreateFormSchemaTypes } from "@hobbyist/form-schemas";
 import type { FileWithMetadata } from "@/hooks/create/useMediaUpload";
+import { useBackgroundTasks } from "@/hooks/app/useBackgroundTasks";
+import { saveUpload, deleteUpload, type PersistedUpload } from "@/lib/uploadStore";
 import { axiosInstance } from "@/api/axiosInstance";
+import { uploadToStorage } from "@/api/uploadToStorage";
 
 // --- Small-screen step config ---
 
@@ -14,10 +17,21 @@ const smallScreenStepFields: Record<number, (keyof CreateFormSchemaTypes)[]> = {
 
 const SMALL_SCREEN_STEP_COUNT = Object.keys(smallScreenStepFields).length;
 
+// Carousel order is the array order; the upload manifest's position derives
+// from it in the shared engine.
+const toUploadSources = (files: FileWithMetadata[]): UploadSource<File>[] =>
+  files.map((f) => ({
+    file: f.file,
+    fileName: f.file.name,
+    contentType: f.file.type,
+    byteSize: f.file.size,
+  }));
+
 // --- Hook ---
 
 export function useCreate(onPostCreated: () => void) {
-  const { methods, createPost, saveDraft, isSavingDraft } = useCreatePost(axiosInstance);
+  const { methods, buildPayload, submit } = useCreatePost(axiosInstance, uploadToStorage);
+  const { run } = useBackgroundTasks();
   const [activeStep, setActiveStep] = useState<number>(0);
 
   // --- Small-screen step navigation ---
@@ -45,37 +59,44 @@ export function useCreate(onPostCreated: () => void) {
     setActiveStep((prev) => Math.max(prev - 1, 0));
   }, []);
 
+  // --- Background upload dispatch ---
+
+  // Persist the payload before uploading so a tab close/crash is recoverable; slug saved once init
+  // succeeds, success drops the snapshot, failure leaves it for resume. Persistence is best-effort.
+  const dispatch = (payload: CreatePostPayload<File>, label: string) => {
+    const record: PersistedUpload<CreatePostPayload<File>> = {
+      id: crypto.randomUUID(),
+      createdAt: Date.now(),
+      payload,
+    };
+    void run(async () => {
+      await saveUpload(record).catch(() => {});
+      await submit(payload, (slug) => saveUpload({ ...record, slug }).catch(() => {}));
+      await deleteUpload(record.id).catch(() => {});
+    }, { label });
+  };
+
   // --- Submit ---
 
-  const handleSubmit = (
-    values: CreateFormSchemaTypes,
-    files: FileWithMetadata[],
-    onFilesError: (message: string) => void,
-  ) => {
+  const handleSubmit = (files: FileWithMetadata[], onFilesError: (message: string) => void) => {
     if (files.length === 0) {
       onFilesError("Please upload at least one image or video before continuing.");
       return;
     }
 
-    const formData = new FormData();
-    files.forEach((f) => formData.append("media", f.file));
-    appendPostFields(formData, values);
-
+    // Optimistic: navigate to the profile now; the upload runs in the background.
     onPostCreated();
-    createPost(formData);
+    dispatch(buildPayload(toUploadSources(files), true), "Publishing your post");
   };
 
   // --- Draft save (called by navigation blocker dialog) ---
 
-  const handleSaveDraft = useCallback(
-    (files: FileWithMetadata[]) => {
-      const formData = new FormData();
-      files.forEach((f) => formData.append("media", f.file));
-      appendDraftFields(formData, methods.getValues());
-      return saveDraft(formData);
-    },
-    [methods, saveDraft],
-  );
+  // Background upload like publish; the caller proceeds to its own destination. A draft is still
+  // media-first, so an empty set is nothing to save.
+  const handleSaveDraft = (files: FileWithMetadata[]) => {
+    if (files.length === 0) return;
+    dispatch(buildPayload(toUploadSources(files), false), "Saving your draft");
+  };
 
   return {
     methods,
@@ -84,6 +105,5 @@ export function useCreate(onPostCreated: () => void) {
     handleBack,
     handleSubmit,
     saveDraft: handleSaveDraft,
-    isSavingDraft,
   };
 }

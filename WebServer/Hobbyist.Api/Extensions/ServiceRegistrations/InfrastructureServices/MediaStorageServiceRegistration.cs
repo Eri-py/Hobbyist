@@ -1,4 +1,5 @@
-using Hobbyist.Api.Services.MediaStorageServices;
+using Hobbyist.Api.Services.MediaStorageServices.ObjectStoreServices;
+using Hobbyist.Api.Services.MediaStorageServices.UrlSignerServices;
 
 namespace Hobbyist.Api.Extensions.ServiceRegistrations.InfrastructureServices;
 
@@ -9,14 +10,9 @@ public static class MediaStorageServiceRegistration
         IHostEnvironment environment
     )
     {
-        if (environment.IsDevelopment())
-        {
-            services.AddScoped<IMediaStorageService, MinIOMediaStorageService>();
-        }
-        else if (environment.IsProduction())
-        {
-            // TODO: Replace with production S3 storage service
-            services.AddScoped<IMediaStorageService, MinIOMediaStorageService>();
-        }
+        // Segregated media storage services (MinIO-backed in every environment for now).
+        // TODO: swap to production S3-backed implementations when ready.
+        services.AddScoped<IMediaUrlSignerService, MinioMediaUrlSignerService>();
+        services.AddScoped<IMediaObjectStoreService, MinioMediaObjectStoreService>();
     }
 }

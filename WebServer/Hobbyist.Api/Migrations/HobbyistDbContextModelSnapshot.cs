@@ -129,7 +129,7 @@ namespace Hobbyist.Api.Migrations
                         });
                 });
 
-            modelBuilder.Entity("Hobbyist.Api.Data.Entities.PostEntity", b =>
+            modelBuilder.Entity("Hobbyist.Api.Data.Entities.PostEntities.PostEntity", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("text");
@@ -146,16 +146,16 @@ namespace Hobbyist.Api.Migrations
                     b.Property<string>("Hobby")
                         .HasColumnType("text");
 
-                    b.Property<bool>("IsDraft")
-                        .HasColumnType("boolean");
-
                     b.Property<int>("Likes")
                         .HasColumnType("integer");
 
                     b.Property<string>("LookingFor")
                         .HasColumnType("text");
 
-                    b.Property<int>("MediaCount")
+                    b.Property<DateTimeOffset?>("PublishedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Status")
                         .HasColumnType("integer");
 
                     b.Property<string>("Title")
@@ -169,6 +169,40 @@ namespace Hobbyist.Api.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Posts");
+                });
+
+            modelBuilder.Entity("Hobbyist.Api.Data.Entities.PostEntities.PostMediaEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<long>("ByteSize")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("FileExtension")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("PostId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PostId", "Position");
+
+                    b.ToTable("PostMedia");
                 });
 
             modelBuilder.Entity("Hobbyist.Api.Data.Entities.RefreshTokenEntity", b =>
@@ -255,7 +289,7 @@ namespace Hobbyist.Api.Migrations
                     b.ToTable("UserHobbies");
                 });
 
-            modelBuilder.Entity("Hobbyist.Api.Data.Entities.PostEntity", b =>
+            modelBuilder.Entity("Hobbyist.Api.Data.Entities.PostEntities.PostEntity", b =>
                 {
                     b.HasOne("Hobbyist.Api.Data.Entities.UserEntity", "User")
                         .WithMany("Posts")
@@ -264,6 +298,17 @@ namespace Hobbyist.Api.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Hobbyist.Api.Data.Entities.PostEntities.PostMediaEntity", b =>
+                {
+                    b.HasOne("Hobbyist.Api.Data.Entities.PostEntities.PostEntity", "Post")
+                        .WithMany("Media")
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Post");
                 });
 
             modelBuilder.Entity("Hobbyist.Api.Data.Entities.RefreshTokenEntity", b =>
@@ -290,6 +335,11 @@ namespace Hobbyist.Api.Migrations
                         .HasForeignKey("UsersId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Hobbyist.Api.Data.Entities.PostEntities.PostEntity", b =>
+                {
+                    b.Navigation("Media");
                 });
 
             modelBuilder.Entity("Hobbyist.Api.Data.Entities.UserEntity", b =>

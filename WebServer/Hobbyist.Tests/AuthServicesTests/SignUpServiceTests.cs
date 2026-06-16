@@ -18,13 +18,13 @@ public class SignUpServiceTests : DatabaseTestBase
     private SignUpService _signUpService = null!;
     private Mock<IOtpService> _otpServiceMock = null!;
     private Mock<ITokenService> _tokenServiceMock = null!;
-    private Mock<ILogHasher> _logHasherMock = null!;
+    private Mock<ILogHasherService> _logHasherMock = null!;
 
     protected override Task OnSetUpAsync()
     {
         _otpServiceMock = new Mock<IOtpService>();
         _tokenServiceMock = new Mock<ITokenService>();
-        _logHasherMock = new Mock<ILogHasher>();
+        _logHasherMock = new Mock<ILogHasherService>();
         _logHasherMock.Setup(x => x.Hash(It.IsAny<string?>())).Returns("hashed");
         LoggerExtensions.ConfigureHasher(_logHasherMock.Object);
 

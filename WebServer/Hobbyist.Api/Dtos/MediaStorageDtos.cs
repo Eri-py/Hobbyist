@@ -2,30 +2,26 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Hobbyist.Api.Dtos;
 
-public record class UploadMediaRequest
+public record class PresignedPut
 {
+    /// <summary>Time-limited, single-key PUT URL the client uploads the bytes to.</summary>
     [Required]
-    public required Stream Content { get; set; }
+    public required string Url { get; set; }
 
+    /// <summary>Headers the client must send on the PUT for the signature to match (e.g. Content-Type).</summary>
     [Required]
-    public required string ObjectKey { get; set; }
+    public required IReadOnlyDictionary<string, string> RequiredHeaders { get; set; }
 
-    [Required]
-    public required string FileName { get; set; }
-
-    [Required]
-    public required string ContentType { get; set; }
-
-    public required long ContentLength { get; set; }
+    public required DateTimeOffset ExpiresAt { get; set; }
 }
 
-public record class UploadMediaResponse
+public record class MediaObjectInfo
 {
-    [Required]
-    public required string ObjectKey { get; set; }
+    /// <summary>False when the object is not present in storage (e.g. not uploaded yet).</summary>
+    public required bool Exists { get; set; }
 
-    [Required]
-    public required string ContentType { get; set; }
+    /// <summary>Size of the stored object in bytes; 0 when <see cref="Exists"/> is false.</summary>
+    public required long ContentLength { get; set; }
 
-    public required long SizeBytes { get; set; }
+    public string? ContentType { get; set; }
 }

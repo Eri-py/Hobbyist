@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { View, StyleSheet } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 import { Controller, useFormContext, get } from "react-hook-form";
@@ -30,9 +31,11 @@ export function OtpStep({
   const theme = useTheme();
   const { control } = useFormContext();
   const { isTablet } = useDeviceType();
-  const { endTime, isResendDisabled, handleResend, isResending, serverErrorMessage } = useOtp(
+  const [serverError, setServerError] = useState<string | null>(null);
+  const { endTime, isResendDisabled, handleResend, isResending } = useOtp(
     intitialOtpExpiresAt,
     axiosInstance,
+    (message) => setServerError(message),
   );
 
   const onResend = () => {
@@ -41,7 +44,7 @@ export function OtpStep({
 
   return (
     <View style={styles.container}>
-      {serverErrorMessage && <ErrorMessage>{serverErrorMessage}</ErrorMessage>}
+      {serverError && <ErrorMessage>{serverError}</ErrorMessage>}
 
       <Controller
         name="otp"
