@@ -64,7 +64,11 @@ export function useCreate(onPostCreated: () => void) {
   // Persist the payload before uploading so a tab close/crash is recoverable; slug saved once init
   // succeeds, success drops the snapshot, failure leaves it for resume. Persistence is best-effort.
   const dispatch = (payload: CreatePostPayload<File>, label: string) => {
-    const record: PersistedUpload = { id: crypto.randomUUID(), createdAt: Date.now(), payload };
+    const record: PersistedUpload<CreatePostPayload<File>> = {
+      id: crypto.randomUUID(),
+      createdAt: Date.now(),
+      payload,
+    };
     void run(async () => {
       await saveUpload(record).catch(() => {});
       await submit(payload, (slug) => saveUpload({ ...record, slug }).catch(() => {}));

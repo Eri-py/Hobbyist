@@ -58,6 +58,12 @@ export type UploadResource<TPayload> = {
   finalize: (slug: string, payload: TPayload) => Promise<FinalizeResult>;
 };
 
+/** What the engine exposes: create from scratch, or resume a persisted session by slug. */
+export type UploadEngine<TPayload> = {
+  submit: (payload: TPayload, onSlug?: SlugSink) => Promise<void>;
+  resume: (slug: string, payload: TPayload, onSlug?: SlugSink) => Promise<void>;
+};
+
 // A gone session (server GC reclaimed it) — resume falls back to recreating from scratch.
 const isNotFound = (error: unknown): boolean =>
   isAxiosError(error) && error.response?.status === 404;
@@ -83,7 +89,7 @@ export function buildManifest(sources: UploadSource<unknown>[]): MediaManifestIt
 export function createUploadEngine<TFile, TPayload extends UploadPayloadBase<TFile>>(
   resource: UploadResource<TPayload>,
   transport: UploadTransport<TFile>,
-) {
+): UploadEngine<TPayload> {
   // PUTs each target (position N → sources[N-1]); allSettled so one failure doesn't abort the rest.
   const uploadTargets = async (
     targets: PresignedUpload[],

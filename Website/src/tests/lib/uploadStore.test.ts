@@ -39,7 +39,11 @@ const makePayload = (publish: boolean, fileBody = "hello"): CreatePostPayload<Fi
   publish,
 });
 
-const makeRecord = (id: string, createdAt: number, publish = true): PersistedUpload => ({
+const makeRecord = (
+  id: string,
+  createdAt: number,
+  publish = true,
+): PersistedUpload<CreatePostPayload<File>> => ({
   id,
   createdAt,
   payload: makePayload(publish),
@@ -63,7 +67,7 @@ describe("uploadStore", () => {
   it("persists an upload under its id and lists it back", async () => {
     await saveUpload(makeRecord("a", 1, false));
 
-    const [stored] = await listUploads();
+    const [stored] = await listUploads<CreatePostPayload<File>>();
     expect(stored.id).toBe("a");
     expect(stored.payload.publish).toBe(false);
     expect(stored.payload.metadata.title).toBe("A title");
@@ -95,7 +99,7 @@ describe("uploadStore", () => {
     await saveUpload(makeRecord("a", 1, true));
     await saveUpload(makeRecord("a", 1, false));
 
-    const all = await listUploads();
+    const all = await listUploads<CreatePostPayload<File>>();
     expect(all).toHaveLength(1);
     expect(all[0].payload.publish).toBe(false);
   });

@@ -1,26 +1,25 @@
 import { createStore, set, del, entries } from "idb-keyval";
 
-import type { CreatePostPayload } from "@hobbyist/hooks";
-
-// A create round persisted to IndexedDB so it survives tab close/crash; File bytes ride along via structured clone.
-export type PersistedUpload = {
+// An upload session persisted to IndexedDB so it survives tab close/crash; file bytes ride along via
+// structured clone. `TPayload` is whatever the feature needs to re-run the upload (engine-agnostic).
+export type PersistedUpload<TPayload> = {
   id: string;
   createdAt: number;
-  // Set once init succeeds; presence lets resume continue the existing post instead of recreating it.
+  // Set once init succeeds; presence lets resume continue the existing session instead of recreating it.
   slug?: string;
-  payload: CreatePostPayload<File>;
+  payload: TPayload;
 };
 
 // Dedicated store so pending uploads never collide with other app state.
 const store = createStore("hobbyist-uploads", "pending");
 
-export const saveUpload = (record: PersistedUpload): Promise<void> =>
+export const saveUpload = <TPayload>(record: PersistedUpload<TPayload>): Promise<void> =>
   set(record.id, record, store);
 
 export const deleteUpload = (id: string): Promise<void> => del(id, store);
 
 // Oldest first, so a resume sweep replays them in the order they were queued.
-export const listUploads = async (): Promise<PersistedUpload[]> => {
-  const records = (await entries<string, PersistedUpload>(store)).map(([, value]) => value);
+export const listUploads = async <TPayload>(): Promise<PersistedUpload<TPayload>[]> => {
+  const records = (await entries<string, PersistedUpload<TPayload>>(store)).map(([, value]) => value);
   return records.sort((a, b) => a.createdAt - b.createdAt);
 };

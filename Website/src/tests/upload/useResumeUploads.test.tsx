@@ -5,17 +5,7 @@ import { vi, beforeEach, describe, it, expect } from "vitest";
 // Module mocks
 // ---------------------------------------------------------------------------
 
-const {
-  mockSubmit,
-  mockResume,
-  mockRun,
-  mockListUploads,
-  mockSaveUpload,
-  mockDeleteUpload,
-  authState,
-} = vi.hoisted(() => ({
-  mockSubmit: vi.fn(),
-  mockResume: vi.fn(),
+const { mockRun, mockListUploads, mockSaveUpload, mockDeleteUpload, authState } = vi.hoisted(() => ({
   mockRun: vi.fn(async (task: () => Promise<unknown>) => {
     try {
       return await task();
@@ -31,11 +21,7 @@ const {
 
 vi.mock("@hobbyist/hooks", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@hobbyist/hooks")>();
-  return {
-    ...actual,
-    createUploadEngine: () => ({ submit: mockSubmit, resume: mockResume }),
-    useAuth: () => authState,
-  };
+  return { ...actual, useAuth: () => authState };
 });
 
 vi.mock("@/hooks/app/useBackgroundTasks", () => ({
@@ -48,9 +34,6 @@ vi.mock("@/lib/uploadStore", () => ({
   deleteUpload: mockDeleteUpload,
 }));
 
-vi.mock("@/api/axiosInstance", () => ({ axiosInstance: {} }));
-vi.mock("@/api/uploadToStorage", () => ({ uploadToStorage: vi.fn() }));
-
 import { useResumeUploads } from "@/hooks/upload/useResumeUploads";
 import type { PersistedUpload } from "@/lib/uploadStore";
 
@@ -58,20 +41,23 @@ import type { PersistedUpload } from "@/lib/uploadStore";
 // Helpers
 // ---------------------------------------------------------------------------
 
-const makeRecord = (over: Partial<PersistedUpload> = {}): PersistedUpload => ({
+type TestPayload = { publish: boolean };
+
+// Injected engine + label, stable across renders so the sweep's effect runs once.
+const mockSubmit = vi.fn();
+const mockResume = vi.fn();
+const buildEngine = () => ({ submit: mockSubmit, resume: mockResume });
+const label = (payload: TestPayload) => (payload.publish ? "Resuming your post" : "Resuming your draft");
+
+const renderResume = () =>
+  renderHook(() => useResumeUploads<TestPayload>({ buildEngine, label }));
+
+const makeRecord = (
+  over: Partial<PersistedUpload<TestPayload>> = {},
+): PersistedUpload<TestPayload> => ({
   id: "rec-1",
   createdAt: Date.now(),
-  payload: {
-    metadata: {
-      hobby: null,
-      title: null,
-      description: null,
-      availableForTrade: false,
-      lookingFor: null,
-    },
-    sources: [],
-    publish: true,
-  },
+  payload: { publish: true },
   ...over,
 });
 
@@ -99,7 +85,7 @@ describe("useResumeUploads", () => {
   it("resumes a record that already has a slug, then clears it", async () => {
     mockListUploads.mockResolvedValue([makeRecord({ id: "a", slug: "slug-a" })]);
 
-    renderHook(() => useResumeUploads());
+    renderResume();
 
     await waitFor(() =>
       expect(mockResume).toHaveBeenCalledWith(
@@ -115,7 +101,7 @@ describe("useResumeUploads", () => {
   it("recreates a record that never got a slug", async () => {
     mockListUploads.mockResolvedValue([makeRecord({ id: "b" })]); // no slug
 
-    renderHook(() => useResumeUploads());
+    renderResume();
 
     await waitFor(() =>
       expect(mockSubmit).toHaveBeenCalledWith(
@@ -131,7 +117,7 @@ describe("useResumeUploads", () => {
     const stale = makeRecord({ id: "old", createdAt: Date.now() - 2 * 60 * 60 * 1000 });
     mockListUploads.mockResolvedValue([stale]);
 
-    renderHook(() => useResumeUploads());
+    renderResume();
 
     await waitFor(() => expect(mockDeleteUpload).toHaveBeenCalledWith("old"));
     expect(mockResume).not.toHaveBeenCalled();
@@ -143,7 +129,7 @@ describe("useResumeUploads", () => {
     authState.isAuthenticated = false;
     mockListUploads.mockResolvedValue([makeRecord({ id: "a", slug: "slug-a" })]);
 
-    renderHook(() => useResumeUploads());
+    renderResume();
     await Promise.resolve();
 
     expect(mockListUploads).not.toHaveBeenCalled();

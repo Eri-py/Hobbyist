@@ -1,13 +1,13 @@
 import type { ReactNode } from "react";
 
-import { useResumeUploads } from "@/hooks/upload/useResumeUploads";
+import { useResumePostUploads } from "@/hooks/create/useResumePostUploads";
 import { BackgroundTasksProvider } from "./BackgroundTasksProvider";
 import { MobileHeaderProvider } from "./MobileHeaderProvider";
 
 // Kicks off the resume sweep once on load. It has to sit inside BackgroundTasksProvider (it needs
 // run()), which AppProvider's own body is outside of — hence this tiny mount. Renders nothing.
 function ResumeUploadsOnLoad() {
-  useResumeUploads();
+  useResumePostUploads();
   return null;
 }
 
