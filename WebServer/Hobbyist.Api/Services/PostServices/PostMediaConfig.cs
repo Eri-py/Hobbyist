@@ -1,17 +1,15 @@
 namespace Hobbyist.Api.Services.PostServices;
 
-/// <summary>
-/// Compile-time limits that govern post media. The count/size limits must stay in sync with the
-/// clients (see MAX_FILES / MAX_FILE_SIZE / MAX_TOTAL_SIZE).
-/// </summary>
+/// <summary>Compile-time media limits; count/size must stay in sync with the clients (MAX_FILES etc.).</summary>
 public static class PostMediaConfig
 {
     /// <summary>How many days a draft survives before it is eligible for cleanup.</summary>
     public const int DraftLifetimeDays = 90;
 
-    /// <summary>
-    /// Maximum number of media files allowed per post, enforced at init and publish time.
-    /// </summary>
+    /// <summary>Pre-signed upload URL validity; sized to outlast one upload session so URLs never expire mid-session.</summary>
+    public const int UploadUrlLifetimeMinutes = 15;
+
+    /// <summary>Max media files per post, enforced at init and publish.</summary>
     public const int MaxMediaFiles = 15;
 
     /// <summary>Maximum size in bytes for a single media file (50 MB).</summary>

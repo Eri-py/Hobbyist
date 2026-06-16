@@ -34,10 +34,7 @@ internal static class PostHelpers
         return null;
     }
 
-    /// <summary>
-    /// Validates a client-declared upload manifest before issuing pre-signed URLs. Operates over the
-    /// declared metadata since the bytes aren't seen at this point.
-    /// </summary>
+    /// <summary>Validates the client-declared manifest (metadata only — no bytes yet) before signing URLs.</summary>
     internal static string? ValidateManifest(
         IReadOnlyList<MediaManifestItem> media,
         IReadOnlySet<string> allowedContentTypes

@@ -6,6 +6,12 @@ import type { FileRejection } from "react-dropzone";
 // Module mocks — must be declared before the imports they affect
 // ---------------------------------------------------------------------------
 
+// Validation problems are surfaced through the central notification system; spy on it.
+const { mockNotify } = vi.hoisted(() => ({ mockNotify: vi.fn() }));
+vi.mock("@/hooks/app/useNotifications", () => ({
+  useNotifications: () => ({ notify: mockNotify, dismiss: vi.fn() }),
+}));
+
 // generateThumbnail is async; mock it to resolve immediately
 vi.mock("@/hooks/create/generateThumbnail", () => ({
   generateThumbnail: vi.fn().mockResolvedValue("data:image/jpeg;base64,thumbnail"),
@@ -59,6 +65,7 @@ beforeEach(() => {
   uuidCounter = 0;
   capturedOnDrop = undefined;
   capturedOnDropRejected = undefined;
+  mockNotify.mockClear();
   vi.mocked(URL.revokeObjectURL).mockClear();
   vi.mocked(URL.createObjectURL).mockClear();
 });
@@ -77,79 +84,32 @@ const makeRejection = (file: File, code: string, message: string): FileRejection
   errors: [{ code, message }],
 });
 
+// Pulls the message out of the nth notify({ severity, message }) call.
+const notifiedMessage = (call = 0): string => mockNotify.mock.calls[call][0].message;
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
 describe("useMediaUpload", () => {
   describe("initial state", () => {
-    it("starts with no files and no errors", () => {
-      // Act
+    it("starts with no files", () => {
       const { result } = renderHook(() => useMediaUpload());
-
-      // Assert
       expect(result.current.files).toHaveLength(0);
-      expect(result.current.errors).toHaveLength(0);
     });
   });
 
-  // --- Error management ----------------------------------------------------
+  // --- Error reporting -----------------------------------------------------
 
-  describe("addError / removeError", () => {
-    it("addError appends a new error with a unique id", () => {
-      // Arrange
+  describe("addError", () => {
+    it("notifies an error with the given message", () => {
       const { result } = renderHook(() => useMediaUpload());
 
-      // Act
       act(() => result.current.addError("Something went wrong"));
 
-      // Assert
-      expect(result.current.errors).toHaveLength(1);
-      expect(result.current.errors[0].message).toBe("Something went wrong");
-      expect(result.current.errors[0].id).toBeTruthy();
-    });
-
-    it("removeError removes the error with the matching id", () => {
-      // Arrange
-      const { result } = renderHook(() => useMediaUpload());
-      act(() => result.current.addError("Error A"));
-      act(() => result.current.addError("Error B"));
-      const idToRemove = result.current.errors[0].id;
-
-      // Act
-      act(() => result.current.removeError(idToRemove));
-
-      // Assert
-      expect(result.current.errors).toHaveLength(1);
-      expect(result.current.errors[0].message).toBe("Error B");
-    });
-
-    it("errors auto-clear after 20 seconds", () => {
-      // Arrange
-      vi.useFakeTimers();
-      const { result } = renderHook(() => useMediaUpload());
-      act(() => result.current.addError("Timed error"));
-      expect(result.current.errors).toHaveLength(1);
-
-      // Act
-      act(() => vi.advanceTimersByTime(20000));
-
-      // Assert
-      expect(result.current.errors).toHaveLength(0);
-      vi.useRealTimers();
-    });
-
-    it("errors do not clear before the 20-second window", () => {
-      // Arrange
-      vi.useFakeTimers();
-      const { result } = renderHook(() => useMediaUpload());
-      act(() => result.current.addError("Timed error"));
-
-      // Act
-      act(() => vi.advanceTimersByTime(19999));
-
-      // Assert
-      expect(result.current.errors).toHaveLength(1);
-      vi.useRealTimers();
+      expect(mockNotify).toHaveBeenCalledWith({
+        severity: "error",
+        message: "Something went wrong",
+      });
     });
   });
 
@@ -157,7 +117,6 @@ describe("useMediaUpload", () => {
 
   describe("removeFile", () => {
     it("removes the file with the matching id and revokes its URL", async () => {
-      // Arrange
       const { result } = renderHook(() => useMediaUpload());
       const file = makeImageFile();
       await act(async () => {
@@ -165,33 +124,27 @@ describe("useMediaUpload", () => {
       });
       const fileId = result.current.files[0].id;
 
-      // Act
       act(() => result.current.removeFile(fileId));
 
-      // Assert
       expect(result.current.files).toHaveLength(0);
       expect(URL.revokeObjectURL).toHaveBeenCalledWith("data:image/jpeg;base64,thumbnail");
     });
 
     it("does nothing when no file matches the given id", async () => {
-      // Arrange
       const { result } = renderHook(() => useMediaUpload());
       const file = makeImageFile();
       await act(async () => {
         await capturedOnDrop!([file]);
       });
 
-      // Act
       act(() => result.current.removeFile("non-existent-id"));
 
-      // Assert
       expect(result.current.files).toHaveLength(1);
     });
   });
 
   describe("reorderFiles", () => {
     it("replaces the file list with the provided order", async () => {
-      // Arrange
       const { result } = renderHook(() => useMediaUpload());
       const fileA = makeImageFile("a.jpg");
       const fileB = makeImageFile("b.jpg");
@@ -200,10 +153,8 @@ describe("useMediaUpload", () => {
       });
       const [first, second] = result.current.files;
 
-      // Act
       act(() => result.current.reorderFiles([second, first]));
 
-      // Assert
       expect(result.current.files[0]).toBe(second);
       expect(result.current.files[1]).toBe(first);
     });
@@ -211,7 +162,6 @@ describe("useMediaUpload", () => {
 
   describe("clearFiles", () => {
     it("removes all files and revokes their URLs", async () => {
-      // Arrange
       const { result } = renderHook(() => useMediaUpload());
       const fileA = makeImageFile("a.jpg");
       const fileB = makeImageFile("b.jpg");
@@ -220,10 +170,8 @@ describe("useMediaUpload", () => {
       });
       expect(result.current.files).toHaveLength(2);
 
-      // Act
       act(() => result.current.clearFiles());
 
-      // Assert
       expect(result.current.files).toHaveLength(0);
       expect(URL.revokeObjectURL).toHaveBeenCalledTimes(2);
     });
@@ -233,50 +181,41 @@ describe("useMediaUpload", () => {
 
   describe("onDrop", () => {
     it("adds an accepted file with id, file ref, and thumbnail preview", async () => {
-      // Arrange
       const { result } = renderHook(() => useMediaUpload());
       const file = makeImageFile("photo.jpg");
 
-      // Act
       await act(async () => {
         await capturedOnDrop!([file]);
       });
 
-      // Assert
       expect(result.current.files).toHaveLength(1);
       expect(result.current.files[0].file).toBe(file);
       expect(result.current.files[0].preview).toBe("data:image/jpeg;base64,thumbnail");
       expect(result.current.files[0].id).toBeTruthy();
     });
 
-    it("rejects files that would push the total over 100MB", async () => {
-      // Arrange
+    it("notifies and rejects files that would push the total over 100MB", async () => {
       const { result } = renderHook(() => useMediaUpload());
       const MB = 1024 * 1024;
-      // Three 40MB files: each is under the 50MB per-file limit, but the third
-      // pushes the running total over the 100MB cap (40 + 40 + 40 = 120MB).
       const file1 = makeImageFile("big1.jpg", 40 * MB);
       const file2 = makeImageFile("big2.jpg", 40 * MB);
       const file3 = makeImageFile("big3.jpg", 40 * MB);
 
-      // Act
       await act(async () => {
         await capturedOnDrop!([file1, file2, file3]);
       });
 
-      // Assert — first two files fit; the third is rejected for exceeding total space
+      // First two files fit; the third is rejected for exceeding total space.
       expect(result.current.files).toHaveLength(2);
-      expect(result.current.errors).toHaveLength(1);
-      expect(result.current.errors[0].message).toContain("Not enough space");
+      expect(mockNotify).toHaveBeenCalledTimes(1);
+      expect(notifiedMessage()).toContain("Not enough space");
     });
 
     it("appends new files to any already-uploaded files", async () => {
-      // Arrange
       const { result } = renderHook(() => useMediaUpload());
       const fileA = makeImageFile("a.jpg");
       const fileB = makeImageFile("b.jpg");
 
-      // Act
       await act(async () => {
         await capturedOnDrop!([fileA]);
       });
@@ -284,7 +223,6 @@ describe("useMediaUpload", () => {
         await capturedOnDrop!([fileB]);
       });
 
-      // Assert
       expect(result.current.files).toHaveLength(2);
     });
   });
@@ -292,83 +230,66 @@ describe("useMediaUpload", () => {
   // --- onDropRejected (file validation failures) ---------------------------
 
   describe("onDropRejected", () => {
-    it("adds an error for an invalid file type", () => {
-      // Arrange
-      const { result } = renderHook(() => useMediaUpload());
+    it("notifies an error for an invalid file type", () => {
+      renderHook(() => useMediaUpload());
       const rejection = makeRejection(
         new File([], "doc.pdf"),
         "file-invalid-type",
         "File type not accepted",
       );
 
-      // Act
       act(() => capturedOnDropRejected!([rejection]));
 
-      // Assert
-      expect(result.current.errors).toHaveLength(1);
-      expect(result.current.errors[0].message).toContain("Invalid file type");
-      expect(result.current.errors[0].message).toContain("doc.pdf");
+      expect(mockNotify).toHaveBeenCalledTimes(1);
+      expect(notifiedMessage()).toContain("Invalid file type");
+      expect(notifiedMessage()).toContain("doc.pdf");
     });
 
-    it("adds an error for a file that exceeds the per-file size limit", () => {
-      // Arrange
-      const { result } = renderHook(() => useMediaUpload());
+    it("notifies an error for a file that exceeds the per-file size limit", () => {
+      renderHook(() => useMediaUpload());
       const rejection = makeRejection(
         new File([], "giant.mp4"),
         "file-too-large",
         "File is too large",
       );
 
-      // Act
       act(() => capturedOnDropRejected!([rejection]));
 
-      // Assert
-      expect(result.current.errors).toHaveLength(1);
-      expect(result.current.errors[0].message).toContain("too large");
-      expect(result.current.errors[0].message).toContain("50.00MB");
+      expect(notifiedMessage()).toContain("too large");
+      expect(notifiedMessage()).toContain("50.00MB");
     });
 
-    it("adds a generic error for unknown rejection codes", () => {
-      // Arrange
-      const { result } = renderHook(() => useMediaUpload());
+    it("notifies a generic error for unknown rejection codes", () => {
+      renderHook(() => useMediaUpload());
       const rejection = makeRejection(
         new File([], "weird.xyz"),
         "unknown-code",
         "Mysterious failure",
       );
 
-      // Act
       act(() => capturedOnDropRejected!([rejection]));
 
-      // Assert
-      expect(result.current.errors).toHaveLength(1);
-      expect(result.current.errors[0].message).toContain("Mysterious failure");
+      expect(notifiedMessage()).toContain("Mysterious failure");
     });
 
     it("does nothing when the rejections array is empty", () => {
-      // Arrange
-      const { result } = renderHook(() => useMediaUpload());
+      renderHook(() => useMediaUpload());
 
-      // Act
       act(() => capturedOnDropRejected!([]));
 
-      // Assert
-      expect(result.current.errors).toHaveLength(0);
+      expect(mockNotify).not.toHaveBeenCalled();
     });
 
-    it("adds one error per rejected file", () => {
-      // Arrange
-      const { result } = renderHook(() => useMediaUpload());
+    it("notifies one error per rejected file", () => {
+      renderHook(() => useMediaUpload());
       const rejections = [
         makeRejection(new File([], "a.pdf"), "file-invalid-type", "Invalid type"),
         makeRejection(new File([], "b.pdf"), "file-invalid-type", "Invalid type"),
       ];
 
-      // Act
       act(() => capturedOnDropRejected!(rejections));
 
-      // Assert
-      expect(result.current.errors).toHaveLength(2);
+      expect(mockNotify).toHaveBeenCalledTimes(2);
     });
   });
 });

@@ -6,7 +6,7 @@ import type { AxiosInstance } from "axios";
 
 import type { components } from "@hobbyist/types";
 import { LoginFormSchema, type LoginFormSchemaTypes } from "@hobbyist/form-schemas";
-import { type ServerError, useServerError } from "../shared/useServerError";
+import { getServerErrorMessage } from "../shared/getServerErrorMessage";
 import { USER_DETAILS_QUERY_KEY } from "../app/useAuth";
 
 // DTOs
@@ -26,6 +26,9 @@ export function useLogin(
   router: { replace: (path: string) => void },
   axiosInstance: AxiosInstance,
   onAuthSuccess?: (authResult: AuthResult) => Promise<void>,
+  // Platform-supplied error sink: web routes it to the notification system, mobile to its own
+  // inline display. The hook just hands over a normalized message.
+  onError?: (message: string) => void,
 ) {
   // Constants
   const LOGIN_TOTAL_STEPS = 2;
@@ -47,7 +50,6 @@ export function useLogin(
     email: string;
     otpExpiresAt: string;
   } | null>(null);
-  const { serverErrorMessage, handleServerError, clearServerError } = useServerError();
   const queryClient = useQueryClient();
 
   // API functions
@@ -80,7 +82,7 @@ export function useLogin(
       });
       setStep(1);
     },
-    onError: (error: ServerError) => handleServerError(error),
+    onError: (error) => onError?.(getServerErrorMessage(error)),
   });
 
   const completeLoginMutation = useMutation({
@@ -94,14 +96,13 @@ export function useLogin(
       await queryClient.invalidateQueries({ queryKey: USER_DETAILS_QUERY_KEY });
       router.replace("/");
     },
-    onError: (error: ServerError) => handleServerError(error),
+    onError: (error) => onError?.(getServerErrorMessage(error)),
   });
 
   const handleNext = async () => {
     const isValid = await methods.trigger(["identifier", "password"]);
 
     if (isValid) {
-      clearServerError();
       const identifier = methods.getValues("identifier");
       const password = methods.getValues("password");
       startLoginMutation.mutate({ identifier, password });
@@ -121,7 +122,6 @@ export function useLogin(
 
   // Handle form submission
   const onSubmit = (formData: LoginFormSchemaTypes) => {
-    clearServerError();
     completeLoginMutation.mutate({
       identifier: formData.identifier,
       otp: formData.otp,
@@ -139,10 +139,6 @@ export function useLogin(
     // Header config
     loginHeaderConfig,
     LOGIN_TOTAL_STEPS,
-
-    // Server error handling
-    serverErrorMessage,
-    clearServerError,
 
     // Actions
     handleNext,

@@ -5,8 +5,7 @@ namespace Hobbyist.Api.Dtos.Posts;
 /// <summary>One entry in the upload manifest — describes a file the client intends to upload.</summary>
 public record class MediaManifestItem
 {
-    /// <summary>Display order within the post (1-based). Also the handle the client uses to match
-    /// a returned upload URL back to its file.</summary>
+    /// <summary>Display order (1-based); also the handle matching a returned upload URL back to its file.</summary>
     public required int Position { get; set; }
 
     /// <summary>Original file name; the server derives the stored extension from this.</summary>
@@ -19,41 +18,8 @@ public record class MediaManifestItem
     public required long ByteSize { get; set; }
 }
 
-/// <summary>
-/// Request to start publishing a post. Metadata is required; the server creates the post in the
-/// Uploading state and returns a pre-signed upload URL per manifest item.
-/// </summary>
-public record class InitPublishRequest
-{
-    [Required]
-    [MinLength(2)]
-    [MaxLength(50)]
-    public required string Hobby { get; set; }
-
-    [Required]
-    [MinLength(3)]
-    [MaxLength(100)]
-    public required string Title { get; set; }
-
-    [Required]
-    [MinLength(10)]
-    [MaxLength(2000)]
-    public required string Description { get; set; }
-
-    public required bool AvailableForTrade { get; set; }
-
-    [MaxLength(500)]
-    public string? LookingFor { get; set; }
-
-    [Required]
-    public required MediaManifestItem[] Media { get; set; }
-}
-
-/// <summary>
-/// Request to start a draft. Metadata is optional so the user can save at any point; only the
-/// media manifest is required. The server creates the post in the Draft state.
-/// </summary>
-public record class InitDraftRequest
+/// <summary>Request to start a post (always Draft); metadata optional, only media required. Publish/draft share this shape — decided at finalize.</summary>
+public record class InitPostRequest
 {
     [MinLength(2)]
     [MaxLength(50)]
@@ -73,6 +39,13 @@ public record class InitDraftRequest
 
     [Required]
     public required MediaManifestItem[] Media { get; set; }
+}
+
+/// <summary>Request body for finalize: whether to publish the post or leave it a draft.</summary>
+public record class FinalizeRequest
+{
+    /// <summary>True to publish once all media is verified; false to verify and keep it a draft.</summary>
+    public required bool Publish { get; set; }
 }
 
 /// <summary>A single pre-signed upload target returned to the client, paired with its manifest position.</summary>
@@ -103,23 +76,9 @@ public record class InitPostResponse
 /// <summary>Outcome of finalizing a post.</summary>
 public record class FinalizeResponse
 {
-    /// <summary>True when every file was verified and the post is now live.</summary>
+    /// <summary>True when every file was verified and a publish was requested, so the post is now live.</summary>
     public required bool Published { get; set; }
 
-    /// <summary>Positions whose object was not yet found in storage; the client re-uploads and finalizes again.</summary>
-    public required int[] PendingPositions { get; set; }
-}
-
-/// <summary>Request to re-issue pre-signed upload URLs for files that are still pending (e.g. expired).</summary>
-public record class RefreshUploadsRequest
-{
-    [Required]
-    public required int[] Positions { get; set; }
-}
-
-/// <summary>Fresh pre-signed upload targets for the requested pending files.</summary>
-public record class RefreshUploadsResponse
-{
-    [Required]
-    public required PresignedUpload[] Uploads { get; set; }
+    /// <summary>Re-signed targets for files not yet in storage; empty = all landed, non-empty = re-upload these and finalize again.</summary>
+    public required PresignedUpload[] PendingUploads { get; set; }
 }

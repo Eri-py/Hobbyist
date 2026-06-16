@@ -3,7 +3,6 @@ import type { components } from "@hobbyist/types";
 
 type AuthResult = components["schemas"]["AuthResult"];
 
-// Centralized key constants
 export const ACCESS_TOKEN_KEY = "access_token";
 export const ACCESS_TOKEN_EXPIRES_KEY = "access_token_expires";
 export const REFRESH_TOKEN_KEY = "refresh_token";
@@ -18,7 +17,6 @@ export const getAccessToken = async (): Promise<string | null> => {
       return null;
     }
 
-    // Check if token is expired
     if (expiresAt && new Date(expiresAt) <= new Date()) {
       await SecureStore.deleteItemAsync(ACCESS_TOKEN_KEY);
       await SecureStore.deleteItemAsync(ACCESS_TOKEN_EXPIRES_KEY);
@@ -27,8 +25,7 @@ export const getAccessToken = async (): Promise<string | null> => {
 
     return accessToken;
   } catch {
-    // SecureStore unavailable — treat as unauthenticated; the interceptor will
-    // handle the resulting 401 and attempt a refresh.
+    // SecureStore unavailable — treat as unauthenticated; the interceptor handles the 401.
     return null;
   }
 };
@@ -40,7 +37,6 @@ export const getRefreshToken = async (): Promise<string | null> => {
 
     if (!token) return null;
 
-    // Check if token is expired
     if (expiresAt && new Date(expiresAt) <= new Date()) {
       await SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY);
       await SecureStore.deleteItemAsync(REFRESH_TOKEN_EXPIRES_KEY);
@@ -60,8 +56,7 @@ export const storeTokens = async (authResult: AuthResult): Promise<void> => {
     await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, authResult.refreshToken);
     await SecureStore.setItemAsync(REFRESH_TOKEN_EXPIRES_KEY, authResult.refreshTokenExpiresAt);
   } catch (error) {
-    // Re-throw so the axios interceptor can reject queued requests rather than
-    // leaving them with a silently missing token.
+    // Re-throw so the interceptor can reject queued requests instead of using a missing token.
     throw new Error("Failed to persist authentication tokens", { cause: error });
   }
 };
@@ -73,7 +68,6 @@ export const clearTokens = async (): Promise<void> => {
     await SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY);
     await SecureStore.deleteItemAsync(REFRESH_TOKEN_EXPIRES_KEY);
   } catch {
-    // Best-effort cleanup; stale tokens will be rejected by the server on next
-    // use and cleared when the subsequent 401 triggers a failed refresh.
+    // Best-effort; stale tokens get rejected server-side and cleared on the next failed refresh.
   }
 };

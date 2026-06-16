@@ -14,9 +14,8 @@ export function DatePicker({ value, onChange, error }: SegmentedDatePickerProps)
   const theme = useTheme();
   const [open, setOpen] = useState(false);
 
-  // Parse the date from YYYY-MM-DD string
   const parseDate = (dateString: string): Date => {
-    if (!dateString) return new Date(2000, 0, 1); // Default to Jan 1, 2000
+    if (!dateString) return new Date(2000, 0, 1);
     const parsed = parse(dateString, "yyyy-MM-dd", new Date());
     return isValid(parsed) ? parsed : new Date(2000, 0, 1);
   };
@@ -24,7 +23,6 @@ export function DatePicker({ value, onChange, error }: SegmentedDatePickerProps)
   const selectedDate = value ? parseDate(value) : new Date(2000, 0, 1);
   const [tempDate, setTempDate] = useState<Date>(selectedDate);
 
-  // Format for display
   const displayValue = value ? format(parseDate(value), "MMMM d, yyyy") : "";
 
   const handleOpen = () => {

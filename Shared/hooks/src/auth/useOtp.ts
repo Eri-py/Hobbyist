@@ -3,14 +3,18 @@ import { useMutation } from "@tanstack/react-query";
 import type { AxiosInstance } from "axios";
 
 import type { components } from "@hobbyist/types";
-import { type ServerError, useServerError } from "../shared/useServerError";
+import { getServerErrorMessage } from "../shared/getServerErrorMessage";
 
 // DTOs
 type ResendOtpRequest = components["schemas"]["ResendOtpRequest"];
 type ResendOtpResponse = components["schemas"]["OtpResponse"];
 
-export function useOtp(initialOtpExpiresAt: Date, axiosInstance: AxiosInstance) {
-  const { serverErrorMessage, handleServerError, clearServerError } = useServerError();
+export function useOtp(
+  initialOtpExpiresAt: Date,
+  axiosInstance: AxiosInstance,
+  // Platform-supplied error sink (web -> notifications, mobile -> inline). Normalized message in.
+  onError?: (message: string) => void,
+) {
   const [endTime, setEndTime] = useState<number>(initialOtpExpiresAt.getTime());
   const [isResendDisabled, setIsResendDisabled] = useState<boolean>(true);
   const resendTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -59,7 +63,7 @@ export function useOtp(initialOtpExpiresAt: Date, axiosInstance: AxiosInstance) 
       setEndTime(newEndTime);
       setIsResendDisabled(true);
     },
-    onError: (error: ServerError) => handleServerError(error),
+    onError: (error) => onError?.(getServerErrorMessage(error)),
   });
 
   const handleResend = (data: ResendOtpRequest, mode: "login" | "signup") => {
@@ -70,10 +74,6 @@ export function useOtp(initialOtpExpiresAt: Date, axiosInstance: AxiosInstance) 
     // State
     endTime,
     isResendDisabled,
-
-    // Server error handling
-    serverErrorMessage,
-    clearServerError,
 
     // Actions
     handleResend,

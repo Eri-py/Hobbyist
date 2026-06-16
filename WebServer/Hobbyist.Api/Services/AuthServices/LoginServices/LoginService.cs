@@ -22,11 +22,9 @@ public class LoginService(
         CancellationToken ct
     )
     {
-        // Normalize identifier for case-insensitive lookup
         var identifier = request.Identifier.ToLower();
         var password = request.Password;
 
-        // Find user by username or email
         var user = await context.Users.FirstOrDefaultAsync(
             u => u.Username == identifier || u.Email == identifier,
             ct
@@ -40,7 +38,6 @@ public class LoginService(
             return Result<StartLoginResponse>.NotFound(ErrorMessages.InvalidLoginCredentials);
         }
 
-        // Verify password against stored hash
         var verifyPasswordResult = new PasswordHasher<UserEntity>().VerifyHashedPassword(
             user,
             user.PasswordHash!,
@@ -56,7 +53,6 @@ public class LoginService(
             return Result<StartLoginResponse>.NotFound(ErrorMessages.InvalidLoginCredentials);
         }
 
-        // Send OTP for email verification
         var otpResult = await otpService.SendOtpAsync(user.Email!, LoginConfig.LoginPurpose, ct);
         if (!otpResult.IsSuccess)
         {
@@ -76,11 +72,9 @@ public class LoginService(
         CancellationToken ct
     )
     {
-        // Normalize identifier and get OTP
         var identifier = request.Identifier.ToLower();
         var otp = request.Otp;
 
-        // Find user by username or email
         var user = await context.Users.FirstOrDefaultAsync(
             u => u.Email == identifier || u.Username == identifier,
             ct
@@ -89,22 +83,19 @@ public class LoginService(
         if (user is null)
             return Result<AuthResult>.BadRequest(ErrorMessages.InvalidOrExpiredOtp);
 
-        // Verify OTP against stored verification
         var verifyResult = otpService.VerifyOtp(user.Email!, otp, LoginConfig.LoginPurpose);
         if (!verifyResult.IsSuccess)
         {
             return Result<AuthResult>.FromError(verifyResult);
         }
 
-        // Use transaction for atomic token creation
+        // Atomic: refresh-token write + commit together.
         using var transaction = await context.Database.BeginTransactionAsync(ct);
         try
         {
-            // Create refresh token and store in database
             var refreshTokenDetails = tokenService.CreateRefreshToken(user.Id);
             user.RefreshTokens.Add(refreshTokenDetails.Entry);
 
-            // Save changes and commit transaction
             await context.SaveChangesAsync(ct);
             await transaction.CommitAsync(ct);
 
@@ -139,14 +130,12 @@ public class LoginService(
         CancellationToken ct
     )
     {
-        // Normalize email and find user
         var email = request.Email.ToLower();
         var user = await context.Users.FirstOrDefaultAsync(u => u.Email == email, ct);
 
         if (user is null)
             return Result<OtpResponse>.NotFound(ErrorMessages.UserNotFound);
 
-        // Resend OTP to user's email
         var otpResult = await otpService.SendOtpAsync(user.Email!, LoginConfig.LoginPurpose, ct);
         return otpResult;
     }

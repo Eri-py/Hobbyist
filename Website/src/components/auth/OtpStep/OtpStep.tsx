@@ -8,6 +8,7 @@ import Typography from "@mui/material/Typography";
 import Link from "@mui/material/Link";
 
 import { useOtp } from "@hobbyist/hooks";
+import { useNotifications } from "@/hooks/app/useNotifications";
 import { axiosInstance } from "@/api/axiosInstance";
 import { OtpInput } from "./OtpInput";
 import { OtpCountdown } from "./OtpCountdown";
@@ -29,9 +30,11 @@ export function OtpStep({
 }: OtpStepProps) {
   const theme = useTheme();
   const { control } = useFormContext();
-  const { endTime, isResendDisabled, handleResend, isResending, serverErrorMessage } = useOtp(
+  const { notify } = useNotifications();
+  const { endTime, isResendDisabled, handleResend, isResending } = useOtp(
     intitialOtpExpiresAt,
     axiosInstance,
+    (message) => notify({ severity: "error", message, key: "auth-error" }),
   );
 
   const onResend = () => {
@@ -44,17 +47,6 @@ export function OtpStep({
         gap: 1.5,
       }}
     >
-      {serverErrorMessage && (
-        <Typography
-          color="error"
-          sx={{
-            textAlign: "center",
-            fontSize: 14,
-          }}
-        >
-          {serverErrorMessage}
-        </Typography>
-      )}
       <Controller
         name="otp"
         control={control}

@@ -8,11 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Hobbyist.Api.Services.PostServices.PostUploadServices;
 
-/// <summary>
-/// Orchestrates the media-first upload lifecycle. The public operations live in partial files:
-/// <c>PostUploadService.Init.cs</c> (start a publish/draft) and <c>PostUploadService.Finalize.cs</c>
-/// (finalize and refresh). This file holds construction and the helpers they share.
-/// </summary>
+/// <summary>Media-first upload lifecycle; public ops live in the Init/Finalize partials, this file holds shared helpers.</summary>
 public partial class PostUploadService(
     IMediaUrlSignerService urlSigner,
     IMediaObjectStoreService objectStore,
@@ -49,7 +45,7 @@ public partial class PostUploadService(
         var presignResult = await urlSigner.CreateUploadUrlAsync(
             objectKey,
             contentType,
-            ttl: null,
+            ttl: TimeSpan.FromMinutes(PostMediaConfig.UploadUrlLifetimeMinutes),
             ct
         );
         if (!presignResult.IsSuccess)

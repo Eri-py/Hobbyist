@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { FormProvider } from "react-hook-form";
 import { type Href, useRouter } from "expo-router";
 import { StyleSheet } from "react-native";
@@ -24,11 +24,11 @@ export default function SignUp() {
     await TokenManager.storeTokens(authResult);
   }, []);
 
+  const [serverError, setServerError] = useState<string | null>(null);
   const {
     methods,
     step,
     otpExpiresAt,
-    serverErrorMessage,
     handleNext,
     onSubmit,
     isStarting,
@@ -37,7 +37,12 @@ export default function SignUp() {
     popularInterests,
     signUpHeaderConfig,
     SIGNUP_TOTAL_STEPS,
-  } = useSignUp({ replace: (path: string) => router.replace(path as Href) }, axiosInstance, handleAuthSuccess);
+  } = useSignUp(
+    { replace: (path: string) => router.replace(path as Href) },
+    axiosInstance,
+    handleAuthSuccess,
+    (message) => setServerError(message),
+  );
 
   return (
     <ThemedKeyboardView safeArea contentContainerStyle={styles.container}>
@@ -50,7 +55,7 @@ export default function SignUp() {
       />
 
       <FormProvider {...methods}>
-        {serverErrorMessage && <ErrorMessage>{serverErrorMessage}</ErrorMessage>}
+        {serverError && <ErrorMessage>{serverError}</ErrorMessage>}
 
         {step === 0 && <UsernameAndEmailStep handleNext={handleNext} isPending={isStarting} />}
         {step === 1 && otpExpiresAt && (

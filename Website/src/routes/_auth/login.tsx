@@ -1,17 +1,21 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { FormProvider } from "react-hook-form";
 
-import { useTheme } from "@mui/material/styles";
 import Stack from "@mui/material/Stack";
-import Alert from "@mui/material/Alert";
 
 import { UsernameAndPassword } from "@/components/auth/login/UsernameAndPasswordStep";
 import { OtpStep } from "@/components/auth/OtpStep/OtpStep";
 import { useLogin } from "@hobbyist/hooks";
+import { useNotifications } from "@/hooks/app/useNotifications";
 import { axiosInstance } from "@/api/axiosInstance";
 import { FormHeader } from "@/components/auth/FormHeader";
 import { FormContainer } from "@/components/auth/FormContainer";
 import { seo } from "@/lib/seo";
+
+// Single key for the auth-failure notification: a new failure replaces the old rather than
+// stacking, and advancing a step can retire it via dismissKey.
+const AUTH_ERROR_KEY = "auth-error";
 
 export const Route = createFileRoute("/_auth/login")({
   head: () =>
@@ -24,13 +28,12 @@ export const Route = createFileRoute("/_auth/login")({
 });
 
 function Login() {
-  const theme = useTheme();
   const navigate = useNavigate();
+  const { notify, dismissKey } = useNotifications();
   const {
     methods,
     step,
     otpData,
-    serverErrorMessage,
     handleNext,
     onEnter,
     onSubmit,
@@ -38,15 +41,21 @@ function Login() {
     isCompleting,
     loginHeaderConfig,
     LOGIN_TOTAL_STEPS,
-  } = useLogin({ replace: (path) => navigate({ to: path, replace: true }) }, axiosInstance);
+  } = useLogin(
+    { replace: (path) => navigate({ to: path, replace: true }) },
+    axiosInstance,
+    undefined,
+    (message) => notify({ severity: "error", message, key: AUTH_ERROR_KEY }),
+  );
+
+  // An auth error only keeps you on the current step; advancing means the failure is stale, so
+  // retire it rather than let it linger into the next step.
+  useEffect(() => {
+    dismissKey(AUTH_ERROR_KEY);
+  }, [step, dismissKey]);
 
   return (
     <FormContainer step={step}>
-      {serverErrorMessage && (
-        <Alert severity="error" sx={{ color: theme.palette.text.primary, fontSize: 16 }}>
-          {serverErrorMessage}
-        </Alert>
-      )}
       <FormProvider {...methods}>
         <form onSubmit={methods.handleSubmit(onSubmit)} onKeyDown={onEnter}>
           <Stack sx={{

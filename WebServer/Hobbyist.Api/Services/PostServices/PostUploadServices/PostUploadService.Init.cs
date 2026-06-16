@@ -6,59 +6,14 @@ namespace Hobbyist.Api.Services.PostServices.PostUploadServices;
 
 public partial class PostUploadService
 {
-    public async Task<Result<InitPostResponse>> InitPublishAsync(
-        InitPublishRequest request,
+    public async Task<Result<InitPostResponse>> InitAsync(
+        InitPostRequest request,
         string userId,
         CancellationToken ct
     )
     {
-        if (request.AvailableForTrade && string.IsNullOrWhiteSpace(request.LookingFor))
-            return Result<InitPostResponse>.BadRequest("Please describe what you're looking for.");
+        var media = request.Media;
 
-        return await InitAsync(
-            userId,
-            request.Hobby,
-            request.Title,
-            request.Description,
-            request.AvailableForTrade,
-            request.LookingFor,
-            request.Media,
-            PostStatus.Uploading,
-            ct
-        );
-    }
-
-    public async Task<Result<InitPostResponse>> InitDraftAsync(
-        InitDraftRequest request,
-        string userId,
-        CancellationToken ct
-    )
-    {
-        return await InitAsync(
-            userId,
-            request.Hobby,
-            request.Title,
-            request.Description,
-            request.AvailableForTrade,
-            request.LookingFor,
-            request.Media,
-            PostStatus.Draft,
-            ct
-        );
-    }
-
-    private async Task<Result<InitPostResponse>> InitAsync(
-        string userId,
-        string? hobby,
-        string? title,
-        string? description,
-        bool availableForTrade,
-        string? lookingFor,
-        MediaManifestItem[] media,
-        PostStatus status,
-        CancellationToken ct
-    )
-    {
         var manifestError = PostHelpers.ValidateManifest(media, _allowedContentTypes);
         if (manifestError is not null)
             return Result<InitPostResponse>.BadRequest(manifestError);
@@ -69,23 +24,23 @@ public partial class PostUploadService
         // Server-owned identifiers/timestamps generated once so all writes stay consistent.
         var slug = SlugGenerator.Generate();
 
+        // Always born Draft; publish intent isn't stored — the client supplies it at finalize.
         var post = new PostEntity
         {
             Id = slug,
             UserId = userGuid,
-            Hobby = hobby,
-            Title = title,
-            Description = description,
-            AvailableForTrade = availableForTrade,
-            LookingFor = lookingFor,
+            Hobby = request.Hobby,
+            Title = request.Title,
+            Description = request.Description,
+            AvailableForTrade = request.AvailableForTrade,
+            LookingFor = request.LookingFor,
             CreatedAt = DateTimeOffset.UtcNow,
-            Status = status,
+            Status = PostStatus.Draft,
             Likes = 0,
         };
 
-        // Sign an upload URL per file and stage a Pending media row for each. Presigning is local
-        // (no storage write) and happens before SaveChanges, so a failure leaves nothing persisted
-        // and no objects in storage to clean up.
+        // Sign a URL + stage a Pending row per file. Presigning is local and pre-SaveChanges, so a
+        // failure leaves nothing persisted and no objects to clean up.
         var uploads = new List<PresignedUpload>(media.Length);
         foreach (var item in media)
         {

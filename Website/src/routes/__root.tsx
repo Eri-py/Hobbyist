@@ -5,6 +5,7 @@ import { CustomThemeProvider } from "@/providers/shared/CustomThemeProvider";
 import { BreakpointProvider } from "@/providers/shared/BreakpointProvider";
 import { AuthProvider } from "@/providers/app/AuthProvider";
 import { FeatureFlagsProvider } from "@/providers/root/FeatureFlagsProvider";
+import { NotificationProvider } from "@/providers/app/NotificationProvider";
 import { seo } from "@/lib/seo";
 
 export const Route = createRootRoute({
@@ -19,11 +20,13 @@ function Root() {
       <HeadContent />
       <CssBaseline />
       <BreakpointProvider>
-        <FeatureFlagsProvider>
-          <AuthProvider>
-            <Outlet />
-          </AuthProvider>
-        </FeatureFlagsProvider>
+        <NotificationProvider>
+          <FeatureFlagsProvider>
+            <AuthProvider>
+              <Outlet />
+            </AuthProvider>
+          </FeatureFlagsProvider>
+        </NotificationProvider>
       </BreakpointProvider>
     </CustomThemeProvider>
   );

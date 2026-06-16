@@ -23,11 +23,9 @@ public class SignUpService(
         CancellationToken ct
     )
     {
-        // Normalize input for consistent database queries
         var username = request.Username.ToLower();
         var email = request.Email.ToLower();
 
-        // Check for existing user conflicts
         var (exists, errorMessage) = await CheckExistingUserAsync(username, email, ct);
         if (exists)
         {
@@ -40,13 +38,11 @@ public class SignUpService(
             return Result<OtpResponse>.Conflict(errorMessage);
         }
 
-        // Send OTP for email verification
         return await otpService.SendOtpAsync(email, SignUpConfig.SignUpPurpose, ct);
     }
 
     public Result VerifyOtp(VerifyOtpRequest request)
     {
-        // Normalize email and verify OTP
         var email = request.Email.ToLower();
         var otp = request.Otp;
 
@@ -58,7 +54,6 @@ public class SignUpService(
         CancellationToken ct
     )
     {
-        // Normalize email and resend OTP
         var email = request.Email.ToLower();
 
         return await otpService.SendOtpAsync(email, SignUpConfig.SignUpPurpose, ct);
@@ -69,17 +64,15 @@ public class SignUpService(
         CancellationToken ct
     )
     {
-        // Normalize input
         var email = request.Email.ToLower();
         var username = request.Username.ToLower();
 
-        // Verify OTP was completed before proceeding
         if (!otpService.IsVerified(email, SignUpConfig.SignUpPurpose))
         {
             return Result<AuthResult>.BadRequest(ErrorMessages.EmailVerificationRequired);
         }
 
-        // Final check for existing user
+        // Re-check: another sign-up may have claimed the username/email since StartSignUp.
         var (exists, errorMessage) = await CheckExistingUserAsync(username, email, ct);
         if (exists)
         {
@@ -98,15 +91,13 @@ public class SignUpService(
             return Result<AuthResult>.BadRequest(validationError!);
         }
 
-        // Hash password securely
         var hasher = new PasswordHasher<UserEntity>();
         var passwordHash = hasher.HashPassword(null!, request.Password);
 
-        // Use transaction for atomic operation
+        // Atomic: user + interests + refresh token persisted together.
         using var transaction = await context.Database.BeginTransactionAsync(ct);
         try
         {
-            // Create user entity
             var user = new UserEntity
             {
                 Username = username,
@@ -121,23 +112,19 @@ public class SignUpService(
 
             await AttachInterestsAsync(user, request.Interests, ct);
 
-            // Generate refresh token
             var refreshTokenDetails = tokenService.CreateRefreshToken(user.Id);
             user.RefreshTokens.Add(refreshTokenDetails.Entry);
 
-            // Save all changes to database
             await context.SaveChangesAsync(ct);
             await transaction.CommitAsync(ct);
 
             otpService.ClearVerification(email, SignUpConfig.SignUpPurpose);
 
-            // Generate access token for immediate use
             var accessTokenDetails = tokenService.CreateAccessToken(
                 user,
                 TokenConfig.AccessTokenValidForMinutes
             );
 
-            // Return authentication tokens to client
             return Result<AuthResult>.Success(
                 new AuthResult
                 {
@@ -176,7 +163,6 @@ public class SignUpService(
             return (false, string.Empty);
         }
 
-        // Return specific error message for username vs email conflict
         if (existingUser.Username == username)
         {
             return (true, ErrorMessages.UsernameTaken);

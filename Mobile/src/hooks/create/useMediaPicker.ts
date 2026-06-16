@@ -106,8 +106,7 @@ export function useMediaPicker() {
       const uri = info.localUri ?? info.uri;
       const size = new File(uri).size;
 
-      // Images are compressed before upload so skip the per-file check for them —
-      // a large raw photo will shrink significantly. Videos are not compressed, so enforce strictly.
+      // Images are compressed before upload, so skip the per-file check; videos aren't, so enforce.
       const isVideo = asset.mediaType === MediaLibrary.MediaType.video;
       if (isVideo && size > MAX_FILE_SIZE) {
         setMediaError(

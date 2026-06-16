@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, useBlocker } from "@tanstack/react-router";
 import { FormProvider } from "react-hook-form";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useRef } from "react";
 import type { KeyboardEvent } from "react";
 
 import Stack from "@mui/material/Stack";
@@ -10,7 +10,6 @@ import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 
 import { useMediaUpload } from "@/hooks/create/useMediaUpload";
 import { useDeviceType } from "@/hooks/shared/useDeviceType";
-import { ErrorStack } from "@/components/shared/ErrorStack";
 import { useCreate } from "@/hooks/create/useCreate";
 import { DesktopCreateForm } from "@/components/create/desktop/DesktopCreateForm";
 import { MobileCreateForm } from "@/components/create/mobile/MobileCreateForm";
@@ -34,7 +33,7 @@ function CreatePage() {
     navigate({ to: user?.username ? `/profile/${user.username}` : "/profile" });
   }, [navigate, user]);
 
-  const { methods, handleSubmit, activeStep, handleNext, handleBack, saveDraft, isSavingDraft } =
+  const { methods, handleSubmit, activeStep, handleNext, handleBack, saveDraft } =
     useCreate(handlePostCreated);
 
   const {
@@ -44,8 +43,6 @@ function CreatePage() {
     isDragActive,
     removeFile,
     reorderFiles,
-    errors,
-    removeError,
     addError,
     clearFiles,
   } = useMediaUpload();
@@ -56,25 +53,18 @@ function CreatePage() {
     withResolver: true,
   });
 
-  const [saveError, setSaveError] = useState<string | null>(null);
-
-  const handleSaveDraftAndProceed = async () => {
-    setSaveError(null);
-    try {
-      await saveDraft(files);
-      blocker.proceed?.();
-    } catch {
-      setSaveError("Couldn't save your draft. Discard or try again.");
-    }
+  // Fire-and-forget: dispatch the draft save, then proceed to wherever the user was headed. Failure
+  // surfaces via the global notification banner, not here.
+  const handleSaveDraftAndProceed = () => {
+    saveDraft(files);
+    blocker.proceed?.();
   };
 
   const handleDiscardAndProceed = () => {
-    setSaveError(null);
     blocker.proceed?.();
   };
 
   const handleStay = () => {
-    setSaveError(null);
     blocker.reset?.();
   };
 
@@ -97,7 +87,7 @@ function CreatePage() {
     <>
       <FormProvider {...methods}>
         <form
-          onSubmit={methods.handleSubmit((data) => handleSubmit(data, files, addError))}
+          onSubmit={methods.handleSubmit(() => handleSubmit(files, addError))}
           onKeyDown={preventEnterSubmit}
           style={{ display: "flex", flex: 1 }}
         >
@@ -123,12 +113,6 @@ function CreatePage() {
               />
             )}
 
-            <ErrorStack
-              errors={errors}
-              onRemoveError={removeError}
-              position={isDesktop ? "top-right" : "bottom-center"}
-            />
-
             <input {...getInputProps()} />
           </Stack>
         </form>
@@ -140,14 +124,10 @@ function CreatePage() {
         icon={<BookmarkBorderOutlinedIcon />}
         iconColor="primary"
         title="Save as draft?"
-        description={
-          saveError ??
-          "You have an unsaved post. Would you like to save it as a draft to finish later?"
-        }
+        description="You have an unsaved post. Would you like to save it as a draft to finish later?"
         primaryAction={{
           label: "Save Draft",
           onClick: handleSaveDraftAndProceed,
-          loading: isSavingDraft,
         }}
         secondaryAction={{
           label: "Discard",
