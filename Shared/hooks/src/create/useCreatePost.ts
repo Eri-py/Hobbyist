@@ -27,7 +27,7 @@ export function useCreatePost<TFile>(
   });
 
   const resource = createPostUploadResource<TFile>(axiosInstance);
-  const { submit, resume } = createUploadEngine<TFile, CreatePostPayload<TFile>>(resource, transport);
+  const { submit } = createUploadEngine<TFile, CreatePostPayload<TFile>>(resource, transport);
 
   // Snapshots the live form + ordered sources into a self-contained payload (empty metadata -> null).
   const buildPayload = (
@@ -45,5 +45,5 @@ export function useCreatePost<TFile>(
     publish,
   });
 
-  return { methods, buildPayload, submit, resume };
+  return { methods, buildPayload, submit };
 }

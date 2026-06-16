@@ -26,13 +26,12 @@ const makeSources = (count: number): UploadSource<File>[] =>
 // ---------------------------------------------------------------------------
 
 describe("useCreatePost", () => {
-  it("exposes the form methods plus buildPayload, submit, and resume", () => {
+  it("exposes the form methods plus buildPayload and submit", () => {
     const result = renderCreatePost();
 
     expect(result.current.methods).toBeDefined();
     expect(result.current.buildPayload).toBeTypeOf("function");
     expect(result.current.submit).toBeTypeOf("function");
-    expect(result.current.resume).toBeTypeOf("function");
   });
 
   it("snapshots the live form into the payload metadata, empty fields as null", () => {
