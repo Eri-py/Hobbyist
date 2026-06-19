@@ -1,10 +1,12 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import Box from "@mui/material/Box";
 import type { BoxProps } from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import type { TextFieldProps } from "@mui/material/TextField";
 
 import { useOtpInput } from "@hobbyist/hooks";
+
+type OtpMode = "numeric" | "alphanumeric";
 
 type OtpTextFieldProps = Omit<
   TextFieldProps,
@@ -16,6 +18,7 @@ type OtpBoxProps = Omit<BoxProps, "onChange" | "onBlur">;
 type OtpInputProps = OtpBoxProps & {
   value?: string;
   length?: number;
+  mode?: OtpMode;
   autoFocus?: boolean;
   textFieldsProps?: OtpTextFieldProps | ((index: number) => OtpTextFieldProps);
   onComplete?: (value: string) => void;
@@ -24,9 +27,13 @@ type OtpInputProps = OtpBoxProps & {
   onBlur?: (value: string, isCompleted: boolean) => void;
 };
 
+const NUMERIC_CHARACTER_REGEX = /^[0-9]$/;
+const ALPHANUMERIC_CHARACTER_REGEX = /^[a-zA-Z0-9]$/;
+
 export function OtpInput({
   value = "",
   length = 4,
+  mode = "numeric",
   autoFocus = false,
   textFieldsProps,
   onChange,
@@ -35,6 +42,14 @@ export function OtpInput({
   onBlur,
   ...boxProps
 }: OtpInputProps) {
+  // An explicit validateChar wins; otherwise restrict characters by mode.
+  const resolvedValidateChar = useMemo(() => {
+    if (validateChar) return validateChar;
+
+    const regex = mode === "numeric" ? NUMERIC_CHARACTER_REGEX : ALPHANUMERIC_CHARACTER_REGEX;
+    return (character: string) => regex.test(character);
+  }, [validateChar, mode]);
+
   const {
     characters,
     inputRefs,
@@ -48,7 +63,7 @@ export function OtpInput({
     length,
     onChange,
     onComplete,
-    validateChar,
+    validateChar: resolvedValidateChar,
     onBlur,
   });
 
@@ -90,6 +105,12 @@ export function OtpInput({
           <TextField
             key={index}
             autoComplete="one-time-code"
+            slotProps={{
+              htmlInput:
+                mode === "numeric"
+                  ? { inputMode: "numeric", pattern: "[0-9]*" }
+                  : { inputMode: "text" },
+            }}
             value={character}
             inputRef={inputRefs[index]}
             onPaste={(event) => {
