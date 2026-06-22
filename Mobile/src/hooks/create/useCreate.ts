@@ -1,6 +1,5 @@
 import { Alert } from "react-native";
 import { createContext, useCallback, useContext, useState } from "react";
-import * as MediaLibrary from "expo-media-library";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 
@@ -25,7 +24,6 @@ export function useCreateContext() {
 
 // --- Re-exports for consumers ---
 
-export type { ValidActiveAlbumTypes } from "./useMediaPicker";
 export { MAX_FILES } from "./useMediaPicker";
 
 // --- Constants ---
@@ -103,10 +101,7 @@ export function useCreate() {
             router.back();
             (async () => {
               try {
-                const resolvedAssets = await Promise.all(
-                  assets.map((asset) => MediaLibrary.getAssetInfoAsync(asset)),
-                );
-                const mediaItems = await processMediaForUpload(resolvedAssets);
+                const mediaItems = await processMediaForUpload(assets);
                 const formData = new FormData();
                 mediaItems.forEach((item) => {
                   formData.append("media", item as unknown as Blob);
@@ -134,10 +129,7 @@ export function useCreate() {
 
     (async () => {
       try {
-        const resolvedAssets = await Promise.all(
-          assets.map((asset) => MediaLibrary.getAssetInfoAsync(asset)),
-        );
-        const mediaItems = await processMediaForUpload(resolvedAssets);
+        const mediaItems = await processMediaForUpload(assets);
         const formData = new FormData();
         mediaItems.forEach((item) => {
           formData.append("media", item as unknown as Blob);
@@ -153,10 +145,9 @@ export function useCreate() {
   return {
     // Media picker
     media: mediaPicker.media,
-    activeAlbum: mediaPicker.activeAlbum,
-    setAlbum: mediaPicker.setAlbum,
     selectedAssets: mediaPicker.selectedAssets,
     toggleAsset: mediaPicker.toggleAsset,
+    loadMore: mediaPicker.loadMore,
     mediaError: mediaPicker.mediaError,
     // Step navigation
     activeStep,

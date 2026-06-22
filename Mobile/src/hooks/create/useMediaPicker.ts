@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import * as MediaLibrary from "expo-media-library";
-import { File } from "expo-file-system";
 import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
-import { MAX_FILE_SIZE, MAX_TOTAL_SIZE, MAX_FILES } from "@hobbyist/hooks";
-
-export type ValidActiveAlbumTypes = "Recents" | "Videos" | "Favorites";
+import { MAX_FILES } from "@hobbyist/hooks";
 
 export { MAX_FILES };
+
+const PAGE_SIZE = 50;
+const MAX_DIMENSION = 1920;
+
+// --- Upload processing ---
 
 function getVideoMimeType(filename: string): string {
   const ext = filename.split(".").pop()?.toLowerCase() ?? "";
@@ -22,11 +24,9 @@ function getVideoMimeType(filename: string): string {
   return mimeTypes[ext] ?? "video/mp4";
 }
 
-const MAX_DIMENSION = 1920;
-
 async function processAssetForUpload(asset: MediaLibrary.AssetInfo, index: number) {
-  const uri = asset.localUri ?? asset.uri;
-  if (asset.mediaType === MediaLibrary.MediaType.video) {
+  const uri = asset.uri;
+  if (asset.mediaType === MediaLibrary.MediaType.VIDEO) {
     const filename = asset.filename ?? `media_${index}.mp4`;
     return { uri, name: filename, type: getVideoMimeType(filename) };
   }
@@ -39,7 +39,7 @@ async function processAssetForUpload(asset: MediaLibrary.AssetInfo, index: numbe
     }
   }
   const image = await context.renderAsync();
-  // Preserve PNG format so transparency survives; compress everything else as JPEG.
+  // Keep PNG to preserve transparency; everything else compresses to JPEG.
   const isPng = (asset.filename ?? "").toLowerCase().endsWith(".png");
   if (isPng) {
     const result = await image.saveAsync({ format: SaveFormat.PNG });
@@ -53,85 +53,99 @@ export async function processMediaForUpload(assets: MediaLibrary.AssetInfo[]) {
   return Promise.all(assets.map(processAssetForUpload));
 }
 
-export function useMediaPicker() {
-  const [permission] = MediaLibrary.usePermissions();
-  const [media, setMedia] = useState<MediaLibrary.Asset[]>();
-  const [activeAlbum, setAlbum] = useState<ValidActiveAlbumTypes>("Recents");
-  const [selectedAssets, setSelectedAssets] = useState<MediaLibrary.Asset[]>([]);
-  const [totalSize, setTotalSize] = useState(0);
-  const [mediaError, setMediaError] = useState<string | null>(null);
-  const assetSizes = useRef(new Map<string, number>());
+// --- Hook ---
 
+export function useMediaPicker() {
+  const [media, setMedia] = useState<MediaLibrary.Asset[]>([]);
+  const [selectedAssets, setSelectedAssets] = useState<MediaLibrary.AssetInfo[]>([]);
+  const [mediaError, setMediaError] = useState<string | null>(null);
+  const loadingRef = useRef(false);
+  const hasMoreRef = useRef(true);
+  const grantedRef = useRef(false);
+  const selectedRef = useRef<MediaLibrary.AssetInfo[]>([]);
+
+  // Mirror selection into a ref so toggleAsset can stay a stable callback (keeps tiles memoized).
+  useEffect(() => {
+    selectedRef.current = selectedAssets;
+  }, [selectedAssets]);
+
+  // Auto-clear transient errors (e.g. the selection limit message).
   useEffect(() => {
     if (!mediaError) return;
     const timer = setTimeout(() => setMediaError(null), 5000);
     return () => clearTimeout(timer);
   }, [mediaError]);
 
+  // Fetch one page of recents. Returns raw Asset[] (sync ids); per-tile metadata
+  // resolves lazily, so there's no getInfo flood that hangs the scroll.
+  const fetchPage = useCallback(async (offset: number) => {
+    const assets = await new MediaLibrary.Query()
+      .orderBy({ key: MediaLibrary.AssetField.CREATION_TIME, ascending: false })
+      .limit(PAGE_SIZE)
+      .offset(offset)
+      .exe();
+    hasMoreRef.current = assets.length === PAGE_SIZE;
+    return assets;
+  }, []);
+
+  // Load the first page on every mount, checking permission directly so it never
+  // depends on a reactive hook re-resolving across modal close/reopen.
   useEffect(() => {
-    if (!permission?.granted) return;
+    let active = true;
+    loadingRef.current = true;
     (async () => {
-      const albums = await MediaLibrary.getAlbumsAsync({ includeSmartAlbums: true });
-      const album = albums.find((a) => a.title === activeAlbum);
-      if (!album) return;
-      // Loads up to 1000 assets — users with larger libraries won't see older items.
-      const { assets } = await MediaLibrary.getAssetsAsync({
-        mediaType: ["photo", "video"],
-        sortBy: MediaLibrary.SortBy.creationTime,
-        first: 1000,
-        album,
-      });
-      setMedia(assets);
+      try {
+        let perm = await MediaLibrary.getPermissionsAsync();
+        if (!perm.granted && perm.canAskAgain) {
+          perm = await MediaLibrary.requestPermissionsAsync();
+        }
+        if (!perm.granted) {
+          if (active) setMediaError("Photo access is needed to add media.");
+          return;
+        }
+        grantedRef.current = true;
+        const assets = await fetchPage(0);
+        if (active) setMedia(assets);
+      } catch {
+        if (active) setMediaError("Couldn't load your photos.");
+      } finally {
+        loadingRef.current = false;
+      }
     })();
-  }, [activeAlbum, permission?.granted]);
+    return () => {
+      active = false;
+    };
+  }, [fetchPage]);
 
-  const toggleAsset = useCallback(
-    async (asset: MediaLibrary.Asset) => {
-      const isSelected = selectedAssets.some((a) => a.id === asset.id);
-
-      if (isSelected) {
-        const cachedSize = assetSizes.current.get(asset.id) ?? 0;
-        assetSizes.current.delete(asset.id);
-        setSelectedAssets((prev) => prev.filter((a) => a.id !== asset.id));
-        setTotalSize((prev) => Math.max(0, prev - cachedSize));
-        return;
+  // Append the next page as the grid nears its end.
+  const loadMore = useCallback(() => {
+    if (!grantedRef.current || loadingRef.current || !hasMoreRef.current) return;
+    loadingRef.current = true;
+    (async () => {
+      try {
+        const assets = await fetchPage(media.length);
+        setMedia((prev) => [...prev, ...assets]);
+      } catch {
+        // best-effort; keep what we already have
+      } finally {
+        loadingRef.current = false;
       }
+    })();
+  }, [fetchPage, media.length]);
 
-      if (selectedAssets.length >= MAX_FILES) {
-        setMediaError(`You can select up to ${MAX_FILES} files.`);
-        return;
-      }
+  const toggleAsset = useCallback((asset: MediaLibrary.AssetInfo) => {
+    const current = selectedRef.current;
+    const alreadySelected = current.some((a) => a.id === asset.id);
+    if (!alreadySelected && current.length >= MAX_FILES) {
+      setMediaError(`You can select up to ${MAX_FILES} files.`);
+      return;
+    }
+    setSelectedAssets((prev) =>
+      prev.some((a) => a.id === asset.id)
+        ? prev.filter((a) => a.id !== asset.id)
+        : [...prev, asset],
+    );
+  }, []);
 
-      const info = await MediaLibrary.getAssetInfoAsync(asset);
-      const uri = info.localUri ?? info.uri;
-      const size = new File(uri).size;
-
-      // Images are compressed before upload, so skip the per-file check; videos aren't, so enforce.
-      const isVideo = asset.mediaType === MediaLibrary.MediaType.video;
-      if (isVideo && size > MAX_FILE_SIZE) {
-        setMediaError(
-          `"${asset.filename}" exceeds the ${MAX_FILE_SIZE / 1024 / 1024}MB per-file limit.`,
-        );
-        return;
-      }
-      if (totalSize + size > MAX_TOTAL_SIZE) {
-        setMediaError(`Total upload limit of ${MAX_TOTAL_SIZE / 1024 / 1024}MB reached.`);
-        return;
-      }
-
-      assetSizes.current.set(asset.id, size);
-      setSelectedAssets((prev) => [...prev, asset]);
-      setTotalSize((prev) => prev + size);
-    },
-    [selectedAssets, totalSize],
-  );
-
-  return {
-    media,
-    activeAlbum,
-    setAlbum,
-    selectedAssets,
-    toggleAsset,
-    mediaError,
-  };
+  return { media, selectedAssets, toggleAsset, loadMore, mediaError };
 }

@@ -8,10 +8,9 @@ import { CreateForm } from "@/components/create/CreateForm";
 export default function CreateScreen() {
   const {
     media,
-    activeAlbum,
-    setAlbum,
     selectedAssets,
     toggleAsset,
+    loadMore,
     mediaError,
     activeStep,
     handleNext,
@@ -47,9 +46,8 @@ export default function CreateScreen() {
           <MediaPicker
             media={media}
             selectedAssets={selectedAssets}
-            activeAlbum={activeAlbum}
-            onAlbumChange={setAlbum}
             onToggleAsset={toggleAsset}
+            onEndReached={loadMore}
             mediaError={mediaError}
           />
         )}

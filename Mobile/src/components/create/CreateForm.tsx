@@ -1,6 +1,6 @@
 import { StyleSheet } from "react-native";
 import { Divider } from "react-native-paper";
-import { type Asset } from "expo-media-library";
+import { type AssetInfo } from "expo-media-library";
 
 import { ThemedKeyboardView } from "@/components/shared/views/ThemedKeyboardView";
 import { MediaStrip } from "./MediaStrip";
@@ -10,7 +10,7 @@ import { HobbyField } from "./fields/HobbyField";
 import { TradeField } from "./fields/TradeField";
 
 type CreateFormProps = {
-  selectedAssets: Asset[];
+  selectedAssets: AssetInfo[];
 };
 
 export function CreateForm({ selectedAssets }: CreateFormProps) {

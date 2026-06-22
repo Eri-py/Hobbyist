@@ -1,4 +1,4 @@
-import React, { ReactNode } from "react";
+import { ReactNode } from "react";
 import { View, Text } from "react-native";
 import { SymbolView } from "expo-symbols";
 import { useTheme } from "react-native-paper";

@@ -21,7 +21,7 @@ export default function AppLayout() {
                 <Stack.Screen name="(auth)" options={{ presentation: "formSheet" }} />
                 <Stack.Screen
                   name="(create)"
-                  options={{ presentation: "formSheet", gestureEnabled: false }}
+                  options={{ presentation: "modal", gestureEnabled: false }}
                 />
                 <Stack.Screen name="(profile)" />
               </Stack>

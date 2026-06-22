@@ -1,13 +1,18 @@
 import { View, StyleSheet, TouchableOpacity } from "react-native";
+import { memo } from "react";
 import { Image } from "expo-image";
+import { SymbolView } from "expo-symbols";
 import { Text, useTheme } from "react-native-paper";
-import { MediaType, type Asset } from "expo-media-library";
+import { MediaType, type Asset, type AssetInfo } from "expo-media-library";
+
+import { useAssetInfo } from "@/components/shared/Media/assetMetadata";
+import { useVideoThumbnail } from "@/components/shared/Media/videoThumbnails";
 
 type MediaItemProps = {
-  item: Asset;
+  asset: Asset;
   size: number;
   selectedIndex: number | null;
-  onPress: () => void;
+  onToggle: (info: AssetInfo) => void;
 };
 
 const formatDuration = (seconds: number) => {
@@ -16,23 +21,49 @@ const formatDuration = (seconds: number) => {
   return `${m}:${s.toString().padStart(2, "0")}`;
 };
 
-const blurhash =
-  "|rF?hV%2WCj[ayj[a|j[az_NaeWBj@ayfRayfQfQM{M|azj[azf6fQfQfQIpWXofj[ayj[j[fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[j[ayofayayayj[fQj[ayayj[ayfjj[j[ayjuayj[";
-
-export function MediaItem({ item, size, selectedIndex, onPress }: MediaItemProps) {
+// Memoized so selecting one tile doesn't re-render every visible tile.
+export const MediaItem = memo(function MediaItem({
+  asset,
+  size,
+  selectedIndex,
+  onToggle,
+}: MediaItemProps) {
   const theme = useTheme();
-  const isVideo = item.mediaType === MediaType.video;
+  // Metadata (type/duration) resolves lazily per visible tile — no bulk getInfo on page load.
+  const info = useAssetInfo(asset);
+  const isVideo = info?.mediaType === MediaType.VIDEO;
   const isSelected = selectedIndex !== null;
+  // Videos can't be drawn from their ph:// uri directly; use a generated poster frame.
+  const thumbnail = useVideoThumbnail(asset.id, isVideo);
 
   return (
-    <TouchableOpacity activeOpacity={0.8} onPress={onPress} style={{ width: size, height: size }}>
-      <Image
-        style={StyleSheet.absoluteFill}
-        source={item.uri}
-        placeholder={{ blurhash }}
-        contentFit="cover"
-        transition={250}
-      />
+    <TouchableOpacity
+      activeOpacity={0.8}
+      disabled={!info}
+      onPress={() => info && onToggle(info)}
+      style={[styles.tile, { width: size, height: size }]}
+    >
+      {isVideo ? (
+        thumbnail ? (
+          <Image
+            style={StyleSheet.absoluteFill}
+            source={thumbnail}
+            contentFit="cover"
+            transition={150}
+          />
+        ) : (
+          <View style={[StyleSheet.absoluteFill, styles.videoFill]}>
+            <SymbolView name="video.fill" size={22} tintColor="rgba(255,255,255,0.7)" />
+          </View>
+        )
+      ) : info ? (
+        <Image
+          style={StyleSheet.absoluteFill}
+          source={asset.id}
+          contentFit="cover"
+          transition={150}
+        />
+      ) : null}
 
       {isSelected && <View style={styles.dimOverlay} />}
 
@@ -48,16 +79,24 @@ export function MediaItem({ item, size, selectedIndex, onPress }: MediaItemProps
         {isSelected && <Text style={styles.circleNumber}>{selectedIndex + 1}</Text>}
       </View>
 
-      {isVideo && (
+      {isVideo && info?.duration != null && (
         <View style={styles.badge}>
-          <Text style={styles.badgeText}>{formatDuration(item.duration)}</Text>
+          <Text style={styles.badgeText}>{formatDuration(info.duration / 1000)}</Text>
         </View>
       )}
     </TouchableOpacity>
   );
-}
+});
 
 const styles = StyleSheet.create({
+  tile: {
+    backgroundColor: "rgba(128,128,128,0.12)",
+  },
+  videoFill: {
+    backgroundColor: "rgba(80,80,80,0.35)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   dimOverlay: {
     position: "absolute",
     top: 0,

@@ -3,21 +3,45 @@ import { useMemo } from "react";
 import { Text } from "react-native-paper";
 import { SymbolView } from "expo-symbols";
 import { Image } from "expo-image";
-import { MediaType, type Asset } from "expo-media-library";
+import { MediaType, type AssetInfo } from "expo-media-library";
+
+import { useVideoThumbnail } from "@/components/shared/Media/videoThumbnails";
 
 const THUMB_SIZE = 110;
 
+type Thumb = { id: string; isVideo: boolean; isCover: boolean };
+
+// id is the ph:// reference for display; videos need a generated poster frame.
+function StripThumb({ id, isVideo, isCover }: Thumb) {
+  const thumbnail = useVideoThumbnail(id, isVideo);
+  return (
+    <View style={styles.thumb}>
+      <Image source={isVideo ? thumbnail : id} style={StyleSheet.absoluteFill} contentFit="cover" />
+      {isVideo && (
+        <View style={styles.videoIcon}>
+          <SymbolView name="play.fill" size={10} tintColor="white" />
+        </View>
+      )}
+      {isCover && (
+        <View style={styles.coverBadge}>
+          <Text style={styles.coverText}>Cover</Text>
+        </View>
+      )}
+    </View>
+  );
+}
+
 type MediaStripProps = {
-  selectedAssets: Asset[];
+  selectedAssets: AssetInfo[];
 };
 
 export function MediaStrip({ selectedAssets }: MediaStripProps) {
-  const thumbnails = useMemo(
+  const thumbnails = useMemo<Thumb[]>(
     () =>
-      selectedAssets.map((a) => ({
+      selectedAssets.map((a, index) => ({
         id: a.id,
-        uri: a.uri,
-        mediaType: a.mediaType === MediaType.video ? ("video" as const) : ("photo" as const),
+        isVideo: a.mediaType === MediaType.VIDEO,
+        isCover: index === 0,
       })),
     [selectedAssets],
   );
@@ -32,20 +56,8 @@ export function MediaStrip({ selectedAssets }: MediaStripProps) {
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={styles.strip}
       ItemSeparatorComponent={() => <View style={{ width: 8 }} />}
-      renderItem={({ item, index }) => (
-        <View style={styles.thumb}>
-          <Image source={item.uri} style={StyleSheet.absoluteFill} contentFit="cover" />
-          {item.mediaType === "video" && (
-            <View style={styles.videoIcon}>
-              <SymbolView name="play.fill" size={10} tintColor="white" />
-            </View>
-          )}
-          {index === 0 && (
-            <View style={styles.coverBadge}>
-              <Text style={styles.coverText}>Cover</Text>
-            </View>
-          )}
-        </View>
+      renderItem={({ item }) => (
+        <StripThumb id={item.id} isVideo={item.isVideo} isCover={item.isCover} />
       )}
     />
   );

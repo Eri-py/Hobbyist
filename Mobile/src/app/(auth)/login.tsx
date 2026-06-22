@@ -7,7 +7,7 @@ import { axiosInstance } from "@/api/axiosInstance";
 import { useLogin } from "@hobbyist/hooks";
 import * as TokenManager from "@/api/tokenManager";
 import type { components } from "@hobbyist/types";
-import { UsernamePasswordStepNative } from "@/components/auth/login/UsernamePasswordStepNative";
+import { UsernameAndPasswordStep } from "@/components/auth/login/UsernamePasswordStep";
 import { OtpStep } from "@/components/auth/OtpStep/OtpStep";
 import { ErrorMessage } from "@/components/shared/ErrorMessage";
 import { FormHeader } from "@/components/auth/FormHeader";
@@ -39,38 +39,31 @@ export default function Login() {
   );
 
   return (
-    <FormProvider {...methods}>
-      {step === 0 ? (
-        // Expo UI (SwiftUI) pilot — full native screen owns its own layout.
-        <UsernamePasswordStepNative
-          handleNext={handleNext}
-          isPending={isStarting}
-          serverError={serverError}
-        />
-      ) : (
-        <ThemedKeyboardView safeArea contentContainerStyle={styles.container}>
-          {/* Header */}
-          <FormHeader
-            header={loginHeaderConfig[step].header}
-            subtext={loginHeaderConfig[step].subtext}
-            currentStep={step}
-            totalSteps={LOGIN_TOTAL_STEPS}
+    <ThemedKeyboardView safeArea contentContainerStyle={styles.container}>
+      {/* Header */}
+      <FormHeader
+        header={loginHeaderConfig[step].header}
+        subtext={loginHeaderConfig[step].subtext}
+        currentStep={step}
+        totalSteps={LOGIN_TOTAL_STEPS}
+      />
+
+      {/* Form content */}
+      <FormProvider {...methods}>
+        {serverError && <ErrorMessage>{serverError}</ErrorMessage>}
+
+        {step === 0 && <UsernameAndPasswordStep handleNext={handleNext} isPending={isStarting} />}
+        {step === 1 && otpData && (
+          <OtpStep
+            mode="login"
+            email={otpData.email}
+            intitialOtpExpiresAt={new Date(otpData.otpExpiresAt)}
+            handleSubmit={methods.handleSubmit(onSubmit)}
+            isPending={isCompleting}
           />
-
-          {serverError && <ErrorMessage>{serverError}</ErrorMessage>}
-
-          {step === 1 && otpData && (
-            <OtpStep
-              mode="login"
-              email={otpData.email}
-              intitialOtpExpiresAt={new Date(otpData.otpExpiresAt)}
-              handleSubmit={methods.handleSubmit(onSubmit)}
-              isPending={isCompleting}
-            />
-          )}
-        </ThemedKeyboardView>
-      )}
-    </FormProvider>
+        )}
+      </FormProvider>
+    </ThemedKeyboardView>
   );
 }
 

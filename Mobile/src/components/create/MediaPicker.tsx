@@ -1,32 +1,29 @@
-import { View, FlatList, StyleSheet, Dimensions } from "react-native";
+import { StyleSheet, Dimensions } from "react-native";
 import { useMemo } from "react";
+import { FlashList } from "@shopify/flash-list";
 import { Text, useTheme } from "react-native-paper";
-import { MediaType, type Asset } from "expo-media-library";
+import { MediaType, type Asset, type AssetInfo } from "expo-media-library";
 
 import { MediaCarousel } from "@/components/shared/Media/MediaCarousel";
 import { MediaItem } from "@/components/create/MediaItem";
-import { AlbumPicker } from "@/components/create/AlbumPicker";
-import type { ValidActiveAlbumTypes } from "@/hooks/create/useCreate";
 
 const NUM_COLUMNS = 4;
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const ITEM_SIZE = SCREEN_WIDTH / NUM_COLUMNS;
 
 type MediaPickerProps = {
-  media: Asset[] | undefined;
-  selectedAssets: Asset[];
-  activeAlbum: ValidActiveAlbumTypes;
-  onAlbumChange: (album: ValidActiveAlbumTypes) => void;
-  onToggleAsset: (asset: Asset) => void;
+  media: Asset[];
+  selectedAssets: AssetInfo[];
+  onToggleAsset: (info: AssetInfo) => void;
+  onEndReached: () => void;
   mediaError?: string | null;
 };
 
 export function MediaPicker({
   media,
   selectedAssets,
-  activeAlbum,
-  onAlbumChange,
   onToggleAsset,
+  onEndReached,
   mediaError,
 }: MediaPickerProps) {
   const theme = useTheme();
@@ -34,11 +31,19 @@ export function MediaPicker({
     () =>
       selectedAssets.map((a) => ({
         id: a.id,
-        uri: a.uri,
-        mediaType: a.mediaType === MediaType.video ? ("video" as const) : ("photo" as const),
+        // a.id is the ph:// reference expo-image/expo-video can load; a.uri is the file:// path (upload only).
+        uri: a.id,
+        mediaType: a.mediaType === MediaType.VIDEO ? ("video" as const) : ("photo" as const),
       })),
     [selectedAssets],
   );
+
+  // O(1) lookup so each tile doesn't scan the whole selection on every render.
+  const selectedIndexById = useMemo(() => {
+    const map = new Map<string, number>();
+    selectedAssets.forEach((a, i) => map.set(a.id, i));
+    return map;
+  }, [selectedAssets]);
 
   return (
     <>
@@ -48,36 +53,30 @@ export function MediaPicker({
         <Text style={[styles.error, { color: theme.colors.error }]}>{mediaError}</Text>
       )}
 
-      <View style={styles.pickerSection}>
-        <AlbumPicker activeAlbum={activeAlbum} onAlbumChange={onAlbumChange} />
-
-        {media && (
-          <FlatList
-            data={media}
-            keyExtractor={(item) => item.id}
-            numColumns={NUM_COLUMNS}
-            renderItem={({ item }) => {
-              const idx = selectedAssets.findIndex((a) => a.id === item.id);
-              return (
-                <MediaItem
-                  item={item}
-                  size={ITEM_SIZE}
-                  selectedIndex={idx === -1 ? null : idx}
-                  onPress={() => onToggleAsset(item)}
-                />
-              );
-            }}
+      <FlashList
+        style={styles.grid}
+        data={media}
+        extraData={selectedIndexById}
+        keyExtractor={(item) => item.id}
+        numColumns={NUM_COLUMNS}
+        onEndReached={onEndReached}
+        onEndReachedThreshold={0.6}
+        renderItem={({ item }) => (
+          <MediaItem
+            asset={item}
+            size={ITEM_SIZE}
+            selectedIndex={selectedIndexById.get(item.id) ?? null}
+            onToggle={onToggleAsset}
           />
         )}
-      </View>
+      />
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  pickerSection: {
+  grid: {
     flex: 1,
-    gap: 16,
   },
   error: {
     fontSize: 13,
