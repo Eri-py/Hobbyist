@@ -70,7 +70,7 @@
     "@tanstack/eslint-plugin-query": "^5.101.0",
     "axios-mock-adapter": "^2.1.0",
     "baseline-browser-mapping": "^2.10.37",
-    "eslint-config-expo": "~55.0.1",
+    "eslint-config-expo": "~57.0.2",
     "eslint-import-resolver-alias": "^1.1.2",
     "eslint-import-resolver-typescript": "^4.4.5",
     "jsdom": "^29.1.1",
